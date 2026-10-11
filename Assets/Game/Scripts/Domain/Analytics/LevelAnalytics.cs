@@ -46,6 +46,7 @@ namespace GlimmerGrove.Analytics
         /// </summary>
         public const string ContinueOffered = "continue_offered";
         public const string ContinueBought = "continue_bought";
+        public const string ContinueWatched = "continue_watched";
 
         /// <summary>
         /// The two halves of the heart-rescue funnel, which is the continue's funnel one step
@@ -215,6 +216,13 @@ namespace GlimmerGrove.Analytics
             => TrackContinue(ContinueBought, level, offer);
 
         /// <summary>
+        /// A video was watched to the end and the run carried on (<c>ContinueVideo</c>). The same
+        /// shape as the gem funnel's two ends, so a chart can set the two ways out side by side.
+        /// </summary>
+        public static void TrackContinueWatched(LevelId level, ContinueOffer offer)
+            => TrackContinue(ContinueWatched, level, offer);
+
+        /// <summary>
         /// One shape for both halves, so the funnel's two ends stay joinable on every field.
         /// The chapter is looked up rather than passed because the caller is <c>RunScreen</c>,
         /// which holds the staked level id and not the definition behind it.
@@ -230,7 +238,9 @@ namespace GlimmerGrove.Analytics
                 "gems", offer.Gems,
                 "amount", offer.Amount,
                 "taken", offer.Taken,
-                "choice", offer.Choice == GemChoice.Spend ? "spend" : "buy_gems");
+                "choice", offer.Choice == GemChoice.Spend ? "spend"
+                        : offer.Choice == GemChoice.BuyGems ? "buy_gems" : "none",
+                "video", offer.Video ? 1 : 0);
         }
 
         /// <summary>

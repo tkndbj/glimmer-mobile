@@ -1,4 +1,7 @@
 using System;
+using System.Threading.Tasks;
+using GlimmerGrove.Ads;
+using GlimmerGrove.Async;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
@@ -176,6 +179,12 @@ namespace GlimmerGrove
         Image _pill;
         float _lift;
 
+        /// <summary>
+        /// The turret discount's key (<see cref="WardDiscount"/>), in the lower slot, which an
+        /// unheld turret never uses - the equip key is only drawn for a turret already owned.
+        /// </summary>
+        WardDiscountKey _discount;
+
 
         protected override void Build()
         {
@@ -230,6 +239,10 @@ namespace GlimmerGrove
             WardLedger.Changed += Paint;
             WardLoadout.Changed += Paint;
             WardStarLedger.Changed += Paint;
+
+            // A video loading is the network's news and arrives on its own clock, so the discount
+            // key repaints when readiness moves rather than staying dead for as long as this is open.
+            RewardedAds.Changed += Paint;
         }
 
         void OnDestroy()
@@ -238,6 +251,7 @@ namespace GlimmerGrove
             WardLedger.Changed -= Paint;
             WardLoadout.Changed -= Paint;
             WardStarLedger.Changed -= Paint;
+            RewardedAds.Changed -= Paint;
         }
 
         void BuildStage(RectTransform panel)
@@ -292,6 +306,10 @@ namespace GlimmerGrove
             _coin = UIKit.Img("Coin", _act.transform, null, Color.white, new Vector2(46f, 46f),
                               new Vector2(.5f, .5f), new Vector2(-118f, _lift));
             _coin.preserveAspect = true;
+
+            _discount = WardDiscountKey.Build(panel, new Vector2(480f, ActH), new Vector2(.5f, 1f),
+                                              new Vector2(0f, -ActLower), Discount);
+            _discount.Show(false);
         }
 
         /// <summary>
@@ -473,6 +491,10 @@ namespace GlimmerGrove
 
             _act.gameObject.SetActive(keys.Upper);
 
+            // Off unless the for-sale branch below draws it: every other state is either owned
+            // already or behind a wall a discount cannot answer (invariant 15a's order).
+            _discount?.Show(false);
+
             // A lone key takes the middle of the band rather than sitting over a gap - see
             // `ActBand`, which is always two keys tall so the panel never resizes under a finger.
             if (keys.Upper)
@@ -554,12 +576,92 @@ namespace GlimmerGrove
 
                     Skin(shut ? Skins.Shut : Skins.Affirm, live: !shut);
                     Coin(gems);
+
+                    PaintDiscount(offer);
                     break;
             }
 
             // Centred unless there is a coin to leave room for - see `PriceShift`.
             _label.rectTransform.anchoredPosition =
                 new Vector2(_coin.enabled ? PriceShift : 0f, _lift);
+        }
+
+        /// <summary>
+        /// The discount key under the price, when the offer is on: the full price takes the upper
+        /// slot and the discounted one the lower, so the two choices stand one above the other
+        /// where a lone price would have stood in the middle.
+        /// </summary>
+        void PaintDiscount(WardOffer offer)
+        {
+            if (_discount == null || !WardDiscount.Offered) return;
+
+            var cut = offer.Discounted();
+
+            _discount.Show(true);
+            _discount.Place(new Vector2(0f, -ActLower));
+            _act.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -ActUpper);
+
+            _discount.Paint(cut.Cost, cut.CanBuy);
+
+            // The line says what the lower key does whenever it is the one that can be taken -
+            // which includes a player short of the full price, the case this offer exists for.
+            string says = _discount.Status(cut.CanBuy);
+            if (says != null)
+            {
+                _status.text = says;
+                _status.color = Held;
+            }
+        }
+
+        void Discount() => Fire.AndForget(DiscountAsync, "WardPreviewOverlay.Discount");
+
+        /// <summary>
+        /// Plays the video, then buys at the discounted price.
+        ///
+        /// <b>The purchase does not wait on this panel surviving the video</b> - the turret and
+        /// seat are captured first and bought whatever happened to the screen, because a player
+        /// who watched has paid (<see cref="WardDiscountKey"/>).
+        /// </summary>
+        async Task DiscountAsync()
+        {
+            if (_discount == null || _discount.Watching) return;
+
+            var model = Model;
+            int colour = Colour;
+            var changed = Changed;
+
+            if (!WardLedger.OfferFor(model, colour, PlayerProgression.Level.Level).Discounted().CanBuy)
+            {
+                Audio.Sfx("blocked", .45f);
+                return;
+            }
+
+            var watching = _discount.Watch();
+            Paint();
+
+            var result = await watching;
+            WardDiscount.Note(result, "ward");
+
+            bool bought = result.Rewarded
+                       && WardLedger.TryBuy(model, colour, PlayerProgression.Level.Level,
+                                            discounted: true);
+
+            if (bought) changed?.Invoke();
+
+            if (this == null) return;
+
+            if (!bought)
+            {
+                Paint();
+                Audio.Sfx("blocked", .45f);
+                _status.text = result.Rewarded ? Loc.Get("ui.shop.no_coins")
+                                               : WardDiscountKey.Refusal(result);
+                _status.color = Short;
+                return;
+            }
+
+            Audio.Sfx("coin", .6f);
+            Reveal(model, colour, changed);
         }
 
         /// <summary>
@@ -668,10 +770,15 @@ namespace GlimmerGrove
 
             Changed?.Invoke();
 
-            var model = Model;
-            int colour = Colour;
-            var changed = Changed;
+            Reveal(Model, Colour, Changed);
+        }
 
+        /// <summary>
+        /// Closes onto the ceremony for a turret just bought - outright or at the discount, one
+        /// ending for both.
+        /// </summary>
+        void Reveal(WardModel model, int colour, Action changed)
+        {
             Close(() =>
             {
                 // Nothing to give up by hand any more, and the deletion is the point. This

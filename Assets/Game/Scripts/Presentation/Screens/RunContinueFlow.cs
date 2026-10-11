@@ -45,6 +45,12 @@ namespace GlimmerGrove
         /// <summary>Continues bought on this run. Reset with the run, not with the screen.</summary>
         int _taken;
 
+        /// <summary>
+        /// Continues watched for on this run (<see cref="ContinueVideo"/>). Counted apart from
+        /// <see cref="_taken"/>, so a video never raises the gem price that follows it.
+        /// </summary>
+        int _watched;
+
         /// <summary>True while the offer, the gem shop or a payment sheet is up.</summary>
         bool _deciding;
 
@@ -57,11 +63,18 @@ namespace GlimmerGrove
         /// <summary>How many continues this run has been bought. For a mode that wants to say so.</summary>
         public int Taken => _taken;
 
+        /// <summary>How many continues this run has been given for a video.</summary>
+        public int Watched => _watched;
+
         /// <summary>True while the player is deciding. The run must not advance.</summary>
         public bool Deciding => _deciding;
 
         /// <summary>Back to nothing bought. Every path that hands out a fresh run calls it.</summary>
-        public void Reset() => _taken = 0;
+        public void Reset()
+        {
+            _taken = 0;
+            _watched = 0;
+        }
 
         /// <summary>
         /// Whether a store is reachable that could sell gems right now.
@@ -121,9 +134,14 @@ namespace GlimmerGrove
             if (!_run.Staked) { lose(); return; }
 
             var offer = RunContinue.Offer(_run.MeasuredIn, _run.ContinueDeficit, _taken,
-                                          Profile.Gems, GemsForSale);
+                                          Profile.Gems, GemsForSale,
+                                          video: ContinueVideo.CanOffer(_watched));
 
             if (!offer.Exists) { lose(); return; }
+
+            // An offer standing on its video alone, with no video loaded, would be a panel whose
+            // only live key is the one that loses - the run is lost as it was before videos.
+            if (!offer.ForGems && !ContinueVideo.Ready) { lose(); return; }
 
             _deciding = true;
             _hold.Take(RunHold.Deciding);
@@ -135,6 +153,7 @@ namespace GlimmerGrove
                 v.Offer = offer;
                 v.Level = _run.StakeLevel;
                 v.Bought = amount => { if (StillOnScreen) Bought(amount); };
+                v.Watched = amount => { if (StillOnScreen) WatchedFor(amount); };
                 v.Declined = () => { if (!StillOnScreen) return; Done(); lose(); };
 
             });
@@ -174,6 +193,18 @@ namespace GlimmerGrove
         void Bought(int amount)
         {
             _taken++;
+            Done();
+
+            _run.ContinueWith(amount);
+        }
+
+        /// <summary>
+        /// A video was watched to the end. <see cref="Bought"/>'s order, counted as a video so the
+        /// gem price that may follow is the one this run would have been quoted anyway.
+        /// </summary>
+        void WatchedFor(int amount)
+        {
+            _watched++;
             Done();
 
             _run.ContinueWith(amount);

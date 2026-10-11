@@ -2423,6 +2423,20 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public AdWheelDto wheel;
+
+        /// <summary>
+        /// What watching <c>turret_discount</c> takes off a turret's or a star's price, in
+        /// percent. -1 (absent) inherits the built-in 50; nought switches the offer off; above 90
+        /// is clamped. See <c>WardDiscount</c>.
+        /// </summary>
+        public int turretDiscountPercent = -1;
+
+        /// <summary>
+        /// How many times one lost run may be carried on by watching <c>continue_video</c>. -1
+        /// (absent) inherits the built-in 1; nought switches the offer off; above 3 is clamped.
+        /// See <c>ContinueVideo</c>.
+        /// </summary>
+        public int continueVideosPerRun = -1;
     }
 
     /// <summary>

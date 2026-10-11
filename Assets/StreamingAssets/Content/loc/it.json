@@ -8396,6 +8396,26 @@
     {
       "key": "shuffle.bullet_hell.note",
       "text": "Le torrette sparano il doppio più in fretta e ogni dardo costa metà carburante."
+    },
+    {
+      "key": "ui.loadout.discount_badge",
+      "text": "-{0}%"
+    },
+    {
+      "key": "ui.loadout.discount_note",
+      "text": "Guarda un video per avere il {0}% di sconto."
+    },
+    {
+      "key": "ui.ads.turret_discount_title",
+      "text": "Sconto torrette"
+    },
+    {
+      "key": "ui.continue.watch",
+      "text": "Guarda un video"
+    },
+    {
+      "key": "ui.ads.continue_video_title",
+      "text": "Continua con un video"
     }
   ]
 }

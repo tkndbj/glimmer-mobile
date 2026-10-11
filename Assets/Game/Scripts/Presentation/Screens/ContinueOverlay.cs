@@ -1,4 +1,8 @@
 using System;
+using System.Threading.Tasks;
+using GlimmerGrove.Ads;
+using GlimmerGrove.Analytics;
+using GlimmerGrove.Async;
 using GlimmerGrove.Content;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Persistence;
@@ -11,7 +15,8 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The offer to carry a lost run on, for a handful of gems.
+    /// The offer to carry a lost run on, for a handful of gems or, once a run, for a video
+    /// (<see cref="ContinueVideo"/>, 2026-10-11).
     ///
     /// <para>
     /// <b>It sits in front of the defeat panel rather than on it.</b> A defeat has already
@@ -59,6 +64,12 @@ namespace GlimmerGrove
         /// </summary>
         public Action<int> Bought;
 
+        /// <summary>
+        /// A video was watched to the end (<see cref="ContinueVideo"/>). Carries the allowance, as
+        /// <see cref="Bought"/> does; apart from it so the flow counts a video as a video.
+        /// </summary>
+        public Action<int> Watched;
+
         /// <summary>The offer was turned down, however that happened. The run is now lost.</summary>
         public Action Declined;
 
@@ -89,7 +100,21 @@ namespace GlimmerGrove
         /// <summary>What the offer's price can be met with right now. Re-read on every repaint.</summary>
         GemChoice _choice;
 
-        bool _reported, _paid;
+        /// <summary>How the panel ended, reported once. See <see cref="Report"/>.</summary>
+        enum Ending { Declined, Paid, Watched }
+
+        bool _reported;
+        Ending _ending;
+
+        /// <summary>The video key, or null when this run is not offered one.</summary>
+        Btn _video;
+
+        /// <summary>
+        /// True from the tap on the video key until the SDK answers. Every exit but the video's own
+        /// is dead for all of it: a decline landing under a video that then finishes would lose a
+        /// run the player had just paid for with their time.
+        /// </summary>
+        bool _watching;
 
         /// <summary>
         /// True from the moment the spend button is pressed until the panel closes.
@@ -110,24 +135,36 @@ namespace GlimmerGrove
             // push withdrawing the feature, a balance that moved - is not a panel worth
             // showing. Closing reports a decline, which loses the run exactly as it would have
             // been lost had the offer never been made.
-            if (!Offer.Exists) { Flow.Dismiss(this); Report(false); return; }
+            if (!Offer.Exists) { Flow.Dismiss(this); Report(Ending.Declined); return; }
 
             _choice = Choice();
 
+            // The gem key stands unless no gems can be had at all (no store, short), and then the
+            // offer is standing on its video alone (`RunContinueFlow` only raises it that way with
+            // a video loaded).
+            bool gems = _choice != GemChoice.Unavailable;
             bool buying = _choice == GemChoice.BuyGems;
+            bool video = Offer.Video;
 
             // Every row's offset is the centre of its slot, because UIKit.Box always pivots
             // centre whatever it is anchored to. The note alone used to be placed at the top
             // of its slot, which drew it half its own height too high - straight through the
             // "more turns" line above it. The house rule the map nodes and the weave band
             // both landed on: whether two things overlap is arithmetic, so do the arithmetic.
+            // `ContinuePanel.HeightFor` is the same walk, and the fit check is made of it.
             float y = HeadRoom;
             float offerY = y + OfferH * .5f;     y += OfferH + ContinuePanel.OfferGap;
 
-            float shortY = 0f;
-            if (buying) { shortY = y + ShortH * .5f; y += ShortH + ContinuePanel.ShortGap; }
+            float videoY = 0f;
+            if (video) { videoY = y + ContinuePanel.VideoH * .5f; y += ContinuePanel.VideoH + ContinuePanel.VideoGap; }
 
-            float buyY = y + ButtonH * .5f;      y += ButtonH + ContinuePanel.ButtonGap;
+            float shortY = 0f, buyY = 0f;
+            if (gems)
+            {
+                if (buying) { shortY = y + ShortH * .5f; y += ShortH + ContinuePanel.ShortGap; }
+                buyY = y + ButtonH * .5f;        y += ButtonH + ContinuePanel.ButtonGap;
+            }
+
             float giveY = y + GiveUpH * .5f;     y += GiveUpH + ContinuePanel.FootRoom;
 
             // Never dismissed by a stray tap on the scrim. The same judgement DefeatOverlay
@@ -173,7 +210,22 @@ namespace GlimmerGrove
                              new Vector2(0f, -offerY), outline: 0f, shadow: 0f, wrap: true,
                              rich: true), 26);
 
-            if (buying)
+            // The free way on, first and green: the kit's "do the thing" pill (44), with the play
+            // mark, so it reads as a video before a word of it is read. Painted from the network's
+            // readiness on every change (`PaintVideo`), never latched at build.
+            _video = null;
+            if (video)
+            {
+                _video = UIKit.TextButton("Video", Panel, Skins.Affirm, Loc.Get("ui.continue.watch"),
+                                          42, new Vector2(600f, ContinuePanel.VideoH),
+                                          new Vector2(.5f, 1f), new Vector2(0f, -videoY),
+                                          WatchVideo, "ic_play");
+                UIKit.Shrinkable(_video.Label, 24);
+                UIKit.FitLabel(_video);
+                PaintVideo();
+            }
+
+            if (gems && buying)
                 UIKit.Shrinkable(
                     UIKit.Titled("Short", Panel, Loc.Format("ui.continue.short",
                                                             Compact.Number(Offer.Gems)),
@@ -184,15 +236,18 @@ namespace GlimmerGrove
             // One button, two jobs, and it always does what its own label says. Asking about
             // the blocking condition before the price is the house rule HintPrompt follows;
             // what is different here is that the answer stays on this screen.
-            var buy = UIKit.TextButton("Buy", Panel, "btn_violet",
-                                       buying ? Loc.Get("ui.continue.get_gems")
-                                              : Loc.Format("ui.shop.gem_price",
-                                                           Compact.Number(Offer.Gems)),
-                                       42, new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
-                                       new Vector2(0f, -buyY),
-                                       buying ? (Action)OpenGems : Spend, "ic_gem");
-            UIKit.Shrinkable(buy.Label, 24);
-            UIKit.FitLabel(buy);
+            if (gems)
+            {
+                var buy = UIKit.TextButton("Buy", Panel, "btn_violet",
+                                           buying ? Loc.Get("ui.continue.get_gems")
+                                                  : Loc.Format("ui.shop.gem_price",
+                                                               Compact.Number(Offer.Gems)),
+                                           42, new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
+                                           new Vector2(0f, -buyY),
+                                           buying ? (Action)OpenGems : Spend, "ic_gem");
+                UIKit.Shrinkable(buy.Label, 24);
+                UIKit.FitLabel(buy);
+            }
 
             // A whole button rather than a corner cross, which is where this parts company
             // with AdOfferOverlay. There, declining costs nothing and a button spent on it
@@ -211,6 +266,11 @@ namespace GlimmerGrove
             // four times, and then eight.
             PlayerProgression.Changed -= OnBalanceChanged;
             PlayerProgression.Changed += OnBalanceChanged;
+
+            // A video loading is what lights the video key, so readiness repaints it - in place,
+            // never by a rebuild, for `Refresh`'s reason.
+            RewardedAds.Changed -= PaintVideo;
+            if (video) RewardedAds.Changed += PaintVideo;
         }
 
         /// <summary>
@@ -283,12 +343,13 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             PlayerProgression.Changed -= OnBalanceChanged;
+            RewardedAds.Changed -= PaintVideo;
 
-            // The backstop, not the normal path. Reporting from here as well as from the two
+            // The backstop, not the normal path. Reporting from here as well as from the
             // buttons means the caller hears exactly once however the panel ended, including
             // the ending no button knows about: this screen being torn down with the offer
             // still standing.
-            Report(_paid);
+            Report(_ending);
         }
 
         /// <summary>
@@ -304,7 +365,7 @@ namespace GlimmerGrove
         /// </summary>
         void Spend()
         {
-            if (_reported || _spending) return;
+            if (_reported || _spending || _watching) return;
             _spending = true;
 
             if (!RunContinue.TryBuy(Offer, Level))
@@ -319,7 +380,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            _paid = true;
+            _ending = Ending.Paid;
 
             // A sound and no haptic, which is the rule the victory panel and the shop both
             // arrived at: Handheld.Vibrate is one fixed-length buzz on Android, so a small
@@ -331,7 +392,81 @@ namespace GlimmerGrove
             Close(null, quiet: true);
         }
 
-        void Decline() => Close();
+        /// <summary>Declines, unless a video is up - see <see cref="_watching"/>.</summary>
+        void Decline()
+        {
+            if (_watching) return;
+            Close();
+        }
+
+        // ------------------------------------------------------------------ the video
+        /// <summary>
+        /// The video key's caption and whether it takes a tap: live only with a video loaded and
+        /// none already up. Written whole on every call (44mc) and safe on any change event.
+        /// </summary>
+        void PaintVideo()
+        {
+            if (!this || _video == null || _reported) return;
+
+            bool live = !_watching && ContinueVideo.Ready;
+
+            _video.Interactable = live;
+            _video.GetComponent<Image>().sprite = Art.S("Ui/" + (live ? Skins.Affirm : Skins.Shut));
+            _video.SetCaption(Loc.Get(_watching ? "ui.ads.btn_opening"
+                                    : live ? "ui.continue.watch" : "ui.ads.btn_loading"));
+        }
+
+        void WatchVideo() => Fire.AndForget(WatchVideoAsync, "ContinueOverlay.WatchVideo");
+
+        /// <summary>
+        /// Plays the video and, when it finished, carries the run on. Nothing is spent and nothing
+        /// is recorded, so a video that did not finish leaves the panel exactly as it was, saying
+        /// why.
+        /// </summary>
+        async Task WatchVideoAsync()
+        {
+            if (_reported || _spending || _watching || _video == null) return;
+            if (!ContinueVideo.Ready) { PaintVideo(); return; }
+
+            var impression = AdImpression.New(AdPlacement.ContinueVideo);
+            _watching = true;
+            PaintVideo();
+
+            AdShowResult result;
+            try
+            {
+                result = await RewardedAds.Provider.ShowAsync(impression);
+            }
+            catch (Exception e)
+            {
+                // A fault is a refusal like any other (`RewardedVideo.Watch`'s rule): a panel left
+                // on OPENING with every key dead is a run nobody can finish or lose.
+                Debug.LogException(e);
+                result = AdShowResult.Failed(AdOutcome.Error, impression, e.Message);
+            }
+            finally
+            {
+                _watching = false;
+            }
+
+            // Gone with the screen: OnDestroy has already reported a decline, and the flow drops
+            // anything arriving for a run that is no longer on screen.
+            if (this == null || _reported) return;
+
+            if (!result.Rewarded)
+            {
+                Audio.SfxVaried("back", .5f);
+                PaintVideo();
+                Scenery.Toast(Content, AdOfferButton.Refusal(result.Outcome), Pal.Gold, 2.6f);
+                return;
+            }
+
+            LevelAnalytics.TrackContinueWatched(Level, Offer);
+
+            _ending = Ending.Watched;
+            Audio.Sfx("collect", .7f);
+            Close(null, quiet: true);
+        }
 
         /// <summary>
         /// Brings the gem shelf to the player instead of taking the player to it.
@@ -345,7 +480,7 @@ namespace GlimmerGrove
         /// </summary>
         void OpenGems()
         {
-            if (_reported) return;
+            if (_reported || _watching) return;
 
             Flow.Modal<GemShopOverlay>(v => v.Bought = Refresh);
         }
@@ -386,7 +521,7 @@ namespace GlimmerGrove
         /// </summary>
         void Refresh()
         {
-            if (!this || _reported || _spending) return;
+            if (!this || _reported || _spending || _watching) return;
             if (Choice() == _choice) return;
 
             Rebuild();
@@ -397,22 +532,28 @@ namespace GlimmerGrove
         /// Tells the caller how this ended, exactly once. See the class remarks for why the
         /// latch is the substance rather than the bookkeeping.
         /// </summary>
-        void Report(bool paid)
+        void Report(Ending ending)
         {
             if (_reported) return;
             _reported = true;
 
             var bought = Bought;
+            var watched = Watched;
             var declined = Declined;
             Bought = null;
+            Watched = null;
             Declined = null;
 
             // Swallowed, because this can run during teardown: a caller that throws would
             // leave the rest of the destroy chain unrun.
             try
             {
-                if (paid) bought?.Invoke(Offer.Amount);
-                else declined?.Invoke();
+                switch (ending)
+                {
+                    case Ending.Paid: bought?.Invoke(Offer.Amount); break;
+                    case Ending.Watched: watched?.Invoke(Offer.Amount); break;
+                    default: declined?.Invoke(); break;
+                }
             }
             catch (Exception e) { Debug.LogException(e); }
         }

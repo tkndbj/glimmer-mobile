@@ -114,6 +114,22 @@ namespace GlimmerGrove.Ads
         public const string IosChallengePlay = "wklicdx1zdrdjx3y";
 
         /// <summary>
+        /// The turret discount (2026-10-10). Both dashboard apps carry a unit named
+        /// <c>turret_discount</c> (2026-10-11). Put back to <see cref="Unset"/> and the offer is
+        /// not drawn at all (<see cref="HasUnit"/>) rather than drawn as a key that never fills.
+        /// </summary>
+        public const string AndroidTurretDiscount = "hn39e91n5ru9lvaa";
+        public const string IosTurretDiscount = "203rvrdcc1j9cp96";
+
+        /// <summary>
+        /// The video continue on a lost run (2026-10-11). Both dashboard apps carry a unit named
+        /// <c>continue_video</c>. Put back to <see cref="Unset"/> and the panel offers gems alone,
+        /// as it always did (<see cref="HasUnit"/>).
+        /// </summary>
+        public const string AndroidContinueVideo = "pz2v7agzyfoxv4ny";
+        public const string IosContinueVideo = "ylxaadfpwwu4hafu";
+
+        /// <summary>
         /// Whether real identifiers have been filled in.
         ///
         /// The app key alone is checked: without it nothing initialises at all, so a missing
@@ -154,6 +170,8 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.HintRefill, Real(IosHintRefill) },
                 { AdPlacement.XpBoost, Real(IosXpBoost) },
                 { AdPlacement.ChallengePlay, Real(IosChallengePlay) },
+                { AdPlacement.TurretDiscount, Real(IosTurretDiscount) },
+                { AdPlacement.ContinueVideo, Real(IosContinueVideo) },
             };
 #else
             return new Dictionary<string, string>
@@ -164,8 +182,25 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.HintRefill, Real(AndroidHintRefill) },
                 { AdPlacement.XpBoost, Real(AndroidXpBoost) },
                 { AdPlacement.ChallengePlay, Real(AndroidChallengePlay) },
+                { AdPlacement.TurretDiscount, Real(AndroidTurretDiscount) },
+                { AdPlacement.ContinueVideo, Real(AndroidContinueVideo) },
             };
 #endif
+        }
+
+        static Dictionary<string, string> _units;
+
+        /// <summary>
+        /// Whether this platform has a real ad unit for a placement. Asked by an offer that is
+        /// not drawn at all until the dashboard can fill it, rather than drawn as a key that
+        /// finds a video for ever.
+        /// </summary>
+        public static bool HasUnit(string placementId)
+        {
+            _units ??= AdUnits();
+            return placementId != null
+                && _units.TryGetValue(placementId, out var unit)
+                && !string.IsNullOrEmpty(unit);
         }
 
         /// <summary>Turns a placeholder into an empty string, which the provider skips.</summary>

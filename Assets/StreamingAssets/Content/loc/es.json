@@ -8396,6 +8396,26 @@
     {
       "key": "shuffle.bullet_hell.note",
       "text": "Las torres disparan el doble de rápido y cada rayo gasta la mitad de combustible."
+    },
+    {
+      "key": "ui.loadout.discount_badge",
+      "text": "-{0}%"
+    },
+    {
+      "key": "ui.loadout.discount_note",
+      "text": "Mira un video y obtén un {0}% de descuento."
+    },
+    {
+      "key": "ui.ads.turret_discount_title",
+      "text": "Descuento en torres"
+    },
+    {
+      "key": "ui.continue.watch",
+      "text": "Ver un vídeo"
+    },
+    {
+      "key": "ui.ads.continue_video_title",
+      "text": "Continuar con un vídeo"
     }
   ]
 }

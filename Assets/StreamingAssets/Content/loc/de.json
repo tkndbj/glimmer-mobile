@@ -8396,6 +8396,26 @@
     {
       "key": "shuffle.bullet_hell.note",
       "text": "Türme feuern doppelt so schnell und Bolzen kosten nur halb so viel Treibstoff."
+    },
+    {
+      "key": "ui.loadout.discount_badge",
+      "text": "-{0}%"
+    },
+    {
+      "key": "ui.loadout.discount_note",
+      "text": "Sieh dir ein Video an und spare {0}%."
+    },
+    {
+      "key": "ui.ads.turret_discount_title",
+      "text": "Turm-Rabatt"
+    },
+    {
+      "key": "ui.continue.watch",
+      "text": "Video ansehen"
+    },
+    {
+      "key": "ui.ads.continue_video_title",
+      "text": "Mit Video weiterspielen"
     }
   ]
 }

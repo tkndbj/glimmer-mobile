@@ -8396,6 +8396,26 @@
     {
       "key": "shuffle.bullet_hell.note",
       "text": "الأبراج تطلق بسرعة مضاعفة والسهام تستهلك نصف الوقود."
+    },
+    {
+      "key": "ui.loadout.discount_badge",
+      "text": "-{0}%"
+    },
+    {
+      "key": "ui.loadout.discount_note",
+      "text": "شاهد فيديو واحصل على خصم {0}%."
+    },
+    {
+      "key": "ui.ads.turret_discount_title",
+      "text": "خصم الأبراج"
+    },
+    {
+      "key": "ui.continue.watch",
+      "text": "شاهد فيديو"
+    },
+    {
+      "key": "ui.ads.continue_video_title",
+      "text": "تابع بمشاهدة فيديو"
     }
   ]
 }

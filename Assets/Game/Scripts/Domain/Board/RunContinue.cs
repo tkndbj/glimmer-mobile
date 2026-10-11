@@ -138,31 +138,44 @@ namespace GlimmerGrove
         /// <summary>What the player can do about it. See <see cref="GemChoice"/>.</summary>
         public readonly GemChoice Choice;
 
-        ContinueOffer(ContinueUnit unit, int amount, long gems, int taken, GemChoice choice)
+        /// <summary>
+        /// Whether the same allowance may be had for a video instead (<c>ContinueVideo</c>,
+        /// 2026-10-11). Whether one is <em>loaded</em> is not here - that moves while the panel is
+        /// up - only whether this run may take one at all.
+        /// </summary>
+        public readonly bool Video;
+
+        ContinueOffer(ContinueUnit unit, int amount, long gems, int taken, GemChoice choice, bool video)
         {
             Unit = unit;
             Amount = amount;
             Gems = gems;
             Taken = taken;
             Choice = choice;
+            Video = video;
         }
 
         /// <summary>No offer at all: the run ends the way it always did.</summary>
         public static readonly ContinueOffer None =
-            new ContinueOffer(ContinueUnit.Turns, 0, 0L, 0, GemChoice.Unavailable);
+            new ContinueOffer(ContinueUnit.Turns, 0, 0L, 0, GemChoice.Unavailable, false);
+
+        /// <summary>True when the gem half of the offer can be drawn: bought, or gems bought for it.</summary>
+        public bool ForGems => Choice != GemChoice.Unavailable && Amount > 0 && Gems > 0L;
 
         /// <summary>True when there is something worth putting in front of the player.</summary>
-        public bool Exists => Choice != GemChoice.Unavailable && Amount > 0 && Gems > 0L;
+        public bool Exists => ForGems || (Video && Amount > 0);
 
         /// <summary>True when the gems are already in hand.</summary>
         public bool Affordable => Choice == GemChoice.Spend;
 
         internal static ContinueOffer Make(ContinueUnit unit, int amount, long gems, int taken,
-                                           GemChoice choice)
-            => new ContinueOffer(unit, amount, gems, taken, choice);
+                                           GemChoice choice, bool video)
+            => new ContinueOffer(unit, amount, gems, taken, choice, video);
 
         public override string ToString()
-            => Exists ? $"+{Amount} {Unit} for {Gems} gems ({Choice}, {Taken} taken)" : "none";
+            => Exists ? $"+{Amount} {Unit} for {Gems} gems ({Choice}, {Taken} taken" +
+                        (Video ? ", or a video)" : ")")
+                      : "none";
     }
 
     /// <summary>
@@ -286,8 +299,13 @@ namespace GlimmerGrove
         /// store SDK, in the Editor, and while the store has not connected - and a "buy gems"
         /// button in any of those leads nowhere, which is worse than no button at all.
         /// </param>
+        /// <param name="video">
+        /// Whether this run may still be carried on for a video (<c>ContinueVideo.CanOffer</c>).
+        /// It keeps the offer standing for a player with no way to pay gems, who is exactly who
+        /// the video is for.
+        /// </param>
         public static ContinueOffer Offer(ContinueUnit unit, int deficit, int taken,
-                                          long gemsHeld, bool gemsForSale)
+                                          long gemsHeld, bool gemsForSale, bool video = false)
         {
             var table = ContinueRules.Table;
             if (table == null || !table.Enabled) return ContinueOffer.None;
@@ -307,9 +325,9 @@ namespace GlimmerGrove
             if (price <= 0L) return ContinueOffer.None;
 
             var choice = GemPrice.ChoiceFor(gemsHeld, price, gemsForSale);
-            if (choice == GemChoice.Unavailable) return ContinueOffer.None;
+            if (choice == GemChoice.Unavailable && !video) return ContinueOffer.None;
 
-            return ContinueOffer.Make(unit, amount, price, taken, choice);
+            return ContinueOffer.Make(unit, amount, price, taken, choice, video);
         }
 
         /// <summary>
@@ -329,7 +347,9 @@ namespace GlimmerGrove
         /// </summary>
         public static bool TryBuy(ContinueOffer offer, LevelId level)
         {
-            if (!offer.Exists) return false;
+            // The gem half, never merely an offer: one standing on its video alone has no price
+            // the player was shown.
+            if (!offer.ForGems) return false;
 
             if (!PlayerProgression.TrySpend(Currency.Gems, offer.Gems,
                                             SpendReason + level.Value))

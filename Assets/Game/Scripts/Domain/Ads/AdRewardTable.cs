@@ -46,6 +46,31 @@ namespace GlimmerGrove.Ads
 
         /// <summary>Default gap between two rewarded ads, in seconds.</summary>
         public const int DefaultCooldownSeconds = 45;
+
+        /// <summary>
+        /// What the turret discount takes off a price, in percent, when the ads block does not
+        /// say (<c>turretDiscountPercent</c> absent). The owner's figure, 2026-10-10.
+        /// </summary>
+        public const int DefaultTurretDiscountPercent = 50;
+
+        /// <summary>
+        /// The most a turret discount may take off. Above this a video is a purchase, and a
+        /// typo of 100 would give the whole shelf away for adverts.
+        /// </summary>
+        public const int MaxTurretDiscountPercent = 90;
+
+        /// <summary>
+        /// Video continues one run may take when the ads block does not say
+        /// (<c>continueVideosPerRun</c> absent). One, so the second continue is the gem price and
+        /// the video never replaces it (2026-10-11).
+        /// </summary>
+        public const int DefaultContinueVideosPerRun = 1;
+
+        /// <summary>
+        /// The most video continues a run may take. Above this a lost run is never lost, and the
+        /// gem continue beside it is never bought.
+        /// </summary>
+        public const int MaxContinueVideosPerRun = 3;
     }
 
     /// <summary>
@@ -113,11 +138,14 @@ namespace GlimmerGrove.Ads
     {
         readonly Dictionary<string, AdOffer> _offers;
 
-        AdRewardTable(int cooldownSeconds, Dictionary<string, AdOffer> offers, BonusWheel wheel)
+        AdRewardTable(int cooldownSeconds, Dictionary<string, AdOffer> offers, BonusWheel wheel,
+                      int turretDiscountPercent, int continueVideosPerRun)
         {
             CooldownSeconds = cooldownSeconds;
             _offers = offers;
             Wheel = wheel ?? BonusWheel.None;
+            TurretDiscountPercent = turretDiscountPercent;
+            ContinueVideosPerRun = continueVideosPerRun;
         }
 
         /// <summary>Seconds a player must wait between two rewarded ads, across all placements.</summary>
@@ -136,6 +164,18 @@ namespace GlimmerGrove.Ads
         /// </para>
         /// </summary>
         public BonusWheel Wheel { get; }
+
+        /// <summary>
+        /// What watching <see cref="AdPlacement.TurretDiscount"/> takes off a turret's or a star's
+        /// price, in percent. Nought switches the offer off. See <c>WardDiscount</c>.
+        /// </summary>
+        public int TurretDiscountPercent { get; }
+
+        /// <summary>
+        /// How many times one run may be carried on by watching <see cref="AdPlacement.ContinueVideo"/>.
+        /// Nought switches the offer off. See <c>ContinueVideo</c>.
+        /// </summary>
+        public int ContinueVideosPerRun { get; }
 
         /// <summary>
         /// The offer for a placement, or <see cref="AdOffer.None"/> when it has none.
@@ -228,7 +268,46 @@ namespace GlimmerGrove.Ads
             for (int i = 0; i < offers.Length; i++)
                 if (offers[i].IsValid) map[offers[i].PlacementId] = offers[i];
 
-            return new AdRewardTable(cooldownSeconds, map, wheel);
+            return new AdRewardTable(cooldownSeconds, map, wheel, AdRules.DefaultTurretDiscountPercent,
+                                     AdRules.DefaultContinueVideosPerRun);
+        }
+
+        /// <summary>
+        /// Video continues per run as authored: absent (-1) inherits the built-in figure, nought
+        /// switches the offer off, and anything above <see cref="AdRules.MaxContinueVideosPerRun"/>
+        /// is clamped and named.
+        /// </summary>
+        static int ReadContinueVideos(int authored, List<string> problems)
+        {
+            if (authored < 0) return AdRules.DefaultContinueVideosPerRun;
+
+            if (authored > AdRules.MaxContinueVideosPerRun)
+            {
+                problems.Add($"ads continueVideosPerRun is {authored}, above the supported " +
+                             $"{AdRules.MaxContinueVideosPerRun}; clamped");
+                return AdRules.MaxContinueVideosPerRun;
+            }
+
+            return authored;
+        }
+
+        /// <summary>
+        /// The discount as authored: absent (-1) inherits the built-in figure, nought switches it
+        /// off, and anything above <see cref="AdRules.MaxTurretDiscountPercent"/> is clamped and
+        /// named.
+        /// </summary>
+        static int ReadDiscount(int authored, List<string> problems)
+        {
+            if (authored < 0) return AdRules.DefaultTurretDiscountPercent;
+
+            if (authored > AdRules.MaxTurretDiscountPercent)
+            {
+                problems.Add($"ads turretDiscountPercent is {authored}, above the supported " +
+                             $"{AdRules.MaxTurretDiscountPercent}; clamped");
+                return AdRules.MaxTurretDiscountPercent;
+            }
+
+            return authored;
         }
 
         // ------------------------------------------------------------- building
@@ -266,6 +345,8 @@ namespace GlimmerGrove.Ads
             // documents: a published file that has never heard of the wheel must keep paying
             // exactly what it authored.
             var wheel = BonusWheel.Resolve(dto.wheel, problems);
+            int discount = ReadDiscount(dto.turretDiscountPercent, problems);
+            int continues = ReadContinueVideos(dto.continueVideosPerRun, problems);
 
             var map = new Dictionary<string, AdOffer>(StringComparer.Ordinal);
 
@@ -302,7 +383,7 @@ namespace GlimmerGrove.Ads
                 wheel = BonusWheel.None;
             }
 
-            return new AdRewardTable(cooldown, map, wheel);
+            return new AdRewardTable(cooldown, map, wheel, discount, continues);
         }
 
         /// <summary>
@@ -320,6 +401,25 @@ namespace GlimmerGrove.Ads
             if (!AdPlacement.IsKnown(dto.id))
             {
                 problems.Add($"ads placement {index} names unknown placement '{dto.id}'; skipped");
+                return false;
+            }
+
+            // A discount is worth a share of a price only the panel knows, so it has no amount
+            // to author here and is spent on the purchase it was watched for. A row for it would
+            // be read as a reward and paid by the generic path on top of the discount.
+            if (string.Equals(dto.id, AdPlacement.TurretDiscount, StringComparison.Ordinal))
+            {
+                problems.Add($"ads placement '{dto.id}' is a discount, not a reward; it is " +
+                             "authored as turretDiscountPercent beside the placements; skipped");
+                return false;
+            }
+
+            // A continue is spent on the board it was watched for, so it has no amount to author
+            // either; a row would be paid by the generic path as well as carrying the run on.
+            if (string.Equals(dto.id, AdPlacement.ContinueVideo, StringComparison.Ordinal))
+            {
+                problems.Add($"ads placement '{dto.id}' is a continue, not a reward; it is " +
+                             "authored as continueVideosPerRun beside the placements; skipped");
                 return false;
             }
 

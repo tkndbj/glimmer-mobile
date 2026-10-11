@@ -46,6 +46,20 @@ namespace GlimmerGrove.Wards
         public bool CanBuy => State == WardUpgradeState.Ready;
 
         public long Shortfall => Cost > Balance ? Cost - Balance : 0L;
+
+        /// <summary>
+        /// The same star at the turret discount's price (<see cref="WardDiscount"/>). Only a star
+        /// that is for sale moves; a topped or unheld turret answers as it was.
+        /// </summary>
+        public WardUpgradeOffer Discounted()
+        {
+            if (State != WardUpgradeState.Ready && State != WardUpgradeState.Short) return this;
+
+            long cost = WardDiscount.PriceOf(Cost);
+            var state = Balance >= cost ? WardUpgradeState.Ready : WardUpgradeState.Short;
+
+            return new WardUpgradeOffer(state, Star, cost, Balance);
+        }
     }
 
     /// <summary>
@@ -110,9 +124,10 @@ namespace GlimmerGrove.Wards
         /// <c>WardLedger.TryBuy</c>'s rule: a panel can be looking at a price that a sync, a
         /// purchase or another panel has moved since it was drawn.
         /// </summary>
-        public static bool TryBuy(WardModel model, char colour)
+        public static bool TryBuy(WardModel model, char colour, bool discounted = false)
         {
             var offer = OfferFor(model, colour);
+            if (discounted) offer = offer.Discounted();
             if (!offer.CanBuy) return false;
 
             // The reason carries the seat and the star, because support reading a debit has to
@@ -124,13 +139,14 @@ namespace GlimmerGrove.Wards
             string row = WardHolding.Row(model, colour);
 
             if (!PlayerProgression.TrySpend(Currency.Credits, offer.Cost,
-                                            SpendReason + row + ":" + offer.Star))
+                                            SpendReason + row + ":" + offer.Star
+                                            + (discounted ? ":ad" : "")))
                 return false;
 
             if (!WardStarLedger.Raise(model, colour, offer.Star)) return false;
 
             Telemetry.Track("ward_upgraded", "ward", model.Id, "colour", colour.ToString(),
-                            "star", offer.Star, "cost", offer.Cost);
+                            "star", offer.Star, "cost", offer.Cost, "discounted", discounted);
 
             SaveService.Save();
 
@@ -141,8 +157,8 @@ namespace GlimmerGrove.Wards
         }
 
         /// <summary>The same for a colour index (0..3).</summary>
-        public static bool TryBuy(WardModel model, int colour)
+        public static bool TryBuy(WardModel model, int colour, bool discounted = false)
             => TryBuy(model, WardLine.Colours[colour < 0 || colour >= WardLine.Colours.Length
-                                              ? 0 : colour]);
+                                              ? 0 : colour], discounted);
     }
 }

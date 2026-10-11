@@ -8396,6 +8396,26 @@
     {
       "key": "shuffle.bullet_hell.note",
       "text": "Wieże strzelają dwa razy szybciej, a pociski zużywają połowę paliwa."
+    },
+    {
+      "key": "ui.loadout.discount_badge",
+      "text": "-{0}%"
+    },
+    {
+      "key": "ui.loadout.discount_note",
+      "text": "Obejrzyj film i zyskaj {0}% zniżki."
+    },
+    {
+      "key": "ui.ads.turret_discount_title",
+      "text": "Zniżka na wieże"
+    },
+    {
+      "key": "ui.continue.watch",
+      "text": "Obejrzyj film"
+    },
+    {
+      "key": "ui.ads.continue_video_title",
+      "text": "Kontynuuj z filmem"
     }
   ]
 }

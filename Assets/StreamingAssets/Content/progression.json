@@ -295,6 +295,8 @@
   },
   "ads": {
     "cooldownSeconds": 45,
+    "turretDiscountPercent": 50,
+    "continueVideosPerRun": 1,
     "placements": [
       {
         "id": "heart_refill",

@@ -68,11 +68,11 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Two shapes: the short-of-gems line is the only row that comes and goes, which is why
+        /// The short-of-gems line and the video key are the rows that come and go, which is why
         /// the offsets are walked rather than written down.
         /// </summary>
         [Test]
-        public void TheShortOfGemsLineIsTheOnlyRowThatChangesTheHeight()
+        public void EachOptionalRowTakesExactlyItsOwnRoom()
         {
             float plain = ContinuePanel.HeightFor(false);
             float shortOfGems = ContinuePanel.HeightFor(true);
@@ -81,8 +81,18 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(ContinuePanel.ShortH + ContinuePanel.ShortGap, shortOfGems - plain,
                             .001f, "and takes exactly its own room");
 
-            Assert.AreEqual(shortOfGems, ContinuePanel.Tallest, .001f,
-                            "the taller shape is what has to fit");
+            float withVideo = ContinuePanel.HeightFor(false, video: true, gems: true);
+            Assert.AreEqual(ContinuePanel.VideoH + ContinuePanel.VideoGap, withVideo - plain, .001f,
+                            "the video key takes exactly its own room");
+
+            // An offer standing on its video alone draws no gem key and so no short line either,
+            // whatever the balance says.
+            float videoOnly = ContinuePanel.HeightFor(true, video: true, gems: false);
+            Assert.AreEqual(withVideo - ContinuePanel.ButtonH - ContinuePanel.ButtonGap, videoOnly, .001f,
+                            "a video-only panel is the video panel without the gem key");
+
+            Assert.AreEqual(ContinuePanel.HeightFor(true, video: true, gems: true), ContinuePanel.Tallest,
+                            .001f, "the tallest shape, every row drawn, is what has to fit");
         }
 
         /// <summary>
@@ -107,8 +117,9 @@ namespace GlimmerGrove.Tests
         public void TheBannerRestsClearOfThePanelAndItsRibbon()
         {
             foreach (bool shortOfGems in new[] { false, true })
+            foreach (bool video in new[] { false, true })
             {
-                float height = ContinuePanel.HeightFor(shortOfGems);
+                float height = ContinuePanel.HeightFor(shortOfGems, video, gems: true);
                 float centre = ContinuePanel.BannerCentre(height);
 
                 float bannerFoot = centre - ContinuePanel.BannerHeight * .5f;
@@ -116,7 +127,8 @@ namespace GlimmerGrove.Tests
 
                 Assert.GreaterOrEqual(bannerFoot, ribbonTop,
                                       "the word is drawn through the title ribbon on the " +
-                                      (shortOfGems ? "short" : "affordable") + " shape");
+                                      (shortOfGems ? "short" : "affordable") +
+                                      (video ? " video" : "") + " shape");
             }
         }
     }

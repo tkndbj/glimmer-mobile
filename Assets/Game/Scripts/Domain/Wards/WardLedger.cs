@@ -71,6 +71,22 @@ namespace GlimmerGrove.Wards
         public bool CanBuy => State == WardPurchaseState.Ready;
 
         public long Shortfall => Cost > Balance ? Cost - Balance : 0L;
+
+        /// <summary>
+        /// The same offer at the turret discount's price (<see cref="WardDiscount"/>). Only a
+        /// price that is for sale moves: a held, gated or unpriced turret answers as it was, so
+        /// the gate is still tested before the price (invariant 15a).
+        /// </summary>
+        public WardOffer Discounted()
+        {
+            if (State != WardPurchaseState.Ready && State != WardPurchaseState.TooExpensive)
+                return this;
+
+            long cost = WardDiscount.PriceOf(Cost);
+            var state = Balance >= cost ? WardPurchaseState.Ready : WardPurchaseState.TooExpensive;
+
+            return new WardOffer(state, cost, Currency, Balance, RequiredLevel);
+        }
     }
 
     /// <summary>
@@ -258,9 +274,11 @@ namespace GlimmerGrove.Wards
         /// already held on the second pass and returns false without charging.
         /// </para>
         /// </summary>
-        public static bool TryBuy(WardModel model, char colour, int keeperLevel)
+        public static bool TryBuy(WardModel model, char colour, int keeperLevel,
+                                  bool discounted = false)
         {
             var offer = OfferFor(model, colour, keeperLevel);
+            if (discounted) offer = offer.Discounted();
             if (!offer.CanBuy) return false;
 
             // **`Row` rather than `Key`, and the two answer the same thing today.** `Row` is
@@ -270,12 +288,17 @@ namespace GlimmerGrove.Wards
             // shelf - and this is the call site that would have to move if that stopped being
             // true.
             return Pay(model, WardHolding.Row(model, colour), offer, colour.ToString(),
-                       keeperLevel);
+                       keeperLevel, discounted);
         }
 
-        /// <summary>The same purchase for a colour index (0..3).</summary>
-        public static bool TryBuy(WardModel model, int colour, int keeperLevel)
-            => TryBuy(model, Letter(colour), keeperLevel);
+        /// <summary>
+        /// The same purchase for a colour index (0..3). <paramref name="discounted"/> pays the
+        /// turret discount's price, and only a panel that has just been told a video finished
+        /// may pass it.
+        /// </summary>
+        public static bool TryBuy(WardModel model, int colour, int keeperLevel,
+                                  bool discounted = false)
+            => TryBuy(model, Letter(colour), keeperLevel, discounted);
 
         /// <summary>
         /// Hands a turret over on <em>one seat</em> with no debit - the welcome bonus's path
@@ -332,11 +355,15 @@ namespace GlimmerGrove.Wards
         /// of the four seats a player paid for.
         /// </para>
         /// </summary>
-        static bool Pay(WardModel model, string row, WardOffer offer, string seat, int keeperLevel)
+        static bool Pay(WardModel model, string row, WardOffer offer, string seat, int keeperLevel,
+                        bool discounted)
         {
             if (string.IsNullOrEmpty(row)) return false;
 
-            if (!PlayerProgression.TrySpend(offer.Currency, offer.Cost, SpendReason + row))
+            // A discounted debit says so, because support reading a spend smaller than the
+            // roster's price has to be able to tell a video from a fault.
+            if (!PlayerProgression.TrySpend(offer.Currency, offer.Cost,
+                                            SpendReason + row + (discounted ? ":ad" : "")))
                 return false;
 
             _bought.Add(row);
@@ -346,7 +373,8 @@ namespace GlimmerGrove.Wards
             // twenty turrets and another for ten - and the question this event is asked is "which
             // colours do people buy for", which a legendary now has an honest answer to.
             Telemetry.Track("ward_bought", "ward", model.Id, "colour", seat,
-                            "cost", offer.Cost, "currency", offer.Currency, "level", keeperLevel);
+                            "cost", offer.Cost, "currency", offer.Currency, "level", keeperLevel,
+                            "discounted", discounted);
 
             SaveService.Save();
             Raise();

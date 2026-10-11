@@ -118,8 +118,45 @@ namespace GlimmerGrove.Ads
         /// </summary>
         public const string ChallengePlay = "challenge_play";
 
+        /// <summary>
+        /// Offered beside a turret's price and a star's price: watch, and pay part of it
+        /// (2026-10-10, the owner's answer to players who were not watching enough).
+        ///
+        /// <para>
+        /// <b>A discount, not a reward</b>, so it has no row in <see cref="AdRewardTable"/>'s
+        /// placements and is refused if one is authored: what it is worth is a percentage of a
+        /// price only the panel knows, authored once as <c>turretDiscountPercent</c>. It is
+        /// spent the moment the video ends, on the purchase the player tapped, so it banks
+        /// nothing and nothing about it is paced or capped - the owner's call: always offered.
+        /// </para>
+        /// <para>
+        /// <b>Nothing reaches the server as a grant.</b> A turret and a star are client-held
+        /// entitlements priced on the device (invariant 15), so a forged discount buys exactly
+        /// what a forged price already could. The signed callback is acknowledged and pays
+        /// nothing, as <see cref="HintRefill"/>'s is. See <c>WardDiscount</c>.
+        /// </para>
+        /// </summary>
+        public const string TurretDiscount = "turret_discount";
+
+        /// <summary>
+        /// Offered on the panel that follows a lost run, beside the gem price: watch, and the run
+        /// carries on (2026-10-11). <b>Not <c>run_continue</c></b>, which is retired above and
+        /// bought seconds on a clock; this hands over exactly what the gem continue hands over.
+        ///
+        /// <para>
+        /// <b>Pays nothing the server could grant</b>, as <see cref="TurretDiscount"/> does not: a
+        /// continue is spent on the board it was watched for and gone when the run ends, and it
+        /// cannot buy a grade (<c>RunContinue.Toll</c> charges a continued run past the two-star
+        /// line whichever way it was paid for). So there is no row in <see cref="AdRewardTable"/>'s
+        /// placements - one is refused - and how many a run may take is authored once as
+        /// <c>continueVideosPerRun</c>. See <c>ContinueVideo</c>.
+        /// </para>
+        /// </summary>
+        public const string ContinueVideo = "continue_video";
+
         public static readonly string[] All =
-            { HeartRefill, CoinBonus, WinBonus, HintRefill, XpBoost, ChallengePlay };
+            { HeartRefill, CoinBonus, WinBonus, HintRefill, XpBoost, ChallengePlay, TurretDiscount,
+              ContinueVideo };
 
         /// <summary>
         /// Whether an id names a placement this build knows.

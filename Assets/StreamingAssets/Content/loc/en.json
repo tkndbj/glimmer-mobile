@@ -8396,6 +8396,26 @@
     {
       "key": "shuffle.bullet_hell.note",
       "text": "Turrets fire twice as fast and bolts cost half the fuel."
+    },
+    {
+      "key": "ui.loadout.discount_badge",
+      "text": "-{0}%"
+    },
+    {
+      "key": "ui.loadout.discount_note",
+      "text": "Watch a video for {0}% off."
+    },
+    {
+      "key": "ui.ads.turret_discount_title",
+      "text": "Turret discount"
+    },
+    {
+      "key": "ui.continue.watch",
+      "text": "Watch a video"
+    },
+    {
+      "key": "ui.ads.continue_video_title",
+      "text": "Continue with a video"
     }
   ]
 }

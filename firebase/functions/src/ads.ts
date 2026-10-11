@@ -55,6 +55,18 @@ export const AD_PLACEMENTS = [
   // a won play is a coin claim, and `claimAwards` bounds every claim past the day's own
   // allowance by the plays this callback has counted (`challenges.ts`, `drawAdPlay`).
   "challenge_play",
+
+  // Part of a turret's or a star's price off, spent on the purchase it was watched for
+  // (2026-10-10). Pays nothing here: turrets and stars are client-held entitlements priced on
+  // the device, so there is nothing to adjudicate. Named so its callback is acknowledged as one
+  // of ours rather than logged as a refusal. It is authored as `turretDiscountPercent`, never as
+  // a placement row, so `adCurrencyOf` finds no entry and answers null.
+  "turret_discount",
+
+  // A lost run carried on for a video (2026-10-11). Pays nothing here: a continue mints nothing
+  // and is gone with the run. Authored as `continueVideosPerRun`, never as a placement row, so
+  // `adCurrencyOf` finds no entry and answers null.
+  "continue_video",
 ] as const;
 export type AdPlacementId = (typeof AD_PLACEMENTS)[number];
 

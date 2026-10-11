@@ -49,6 +49,12 @@ namespace GlimmerGrove.Layout
         /// <summary>The button that spends, or that goes and gets the gems to spend with.</summary>
         public const float ButtonH = 148f, ButtonGap = 16f;
 
+        /// <summary>
+        /// The video key (<c>ContinueVideo</c>, 2026-10-11), above the gem key: the free way on,
+        /// and the one most players can take. Drawn only when the run may take one.
+        /// </summary>
+        public const float VideoH = 148f, VideoGap = 16f;
+
         /// <summary>The free way out, always drawn.</summary>
         public const float GiveUpH = 96f;
 
@@ -98,23 +104,33 @@ namespace GlimmerGrove.Layout
             => PanelStack.TitleOverhang + BannerGap + BannerHeight;
 
         // ------------------------------------------------------------------ the sum
+        /// <summary>The gem-only panel's height. See the full overload.</summary>
+        public static float HeightFor(bool @short) => HeightFor(@short, video: false, gems: true);
+
         /// <summary>
         /// How tall the panel has to be. <paramref name="short"/> is the line shown when the
-        /// price cannot be met, and is the only row that comes and goes.
+        /// price cannot be met, <paramref name="video"/> the video key, and
+        /// <paramref name="gems"/> the gem key - absent only when the offer stands on its video
+        /// alone, which also takes the short line with it.
         /// </summary>
-        public static float HeightFor(bool @short)
+        public static float HeightFor(bool @short, bool video, bool gems)
         {
             float y = HeadRoom;
 
             y += OfferH + OfferGap;
-            if (@short) y += ShortH + ShortGap;
-            y += ButtonH + ButtonGap;
+            if (video) y += VideoH + VideoGap;
+
+            if (gems)
+            {
+                if (@short) y += ShortH + ShortGap;
+                y += ButtonH + ButtonGap;
+            }
 
             return y + GiveUpH + FootRoom;
         }
 
         /// <summary>The tallest the panel ever is, which is the one that has to fit.</summary>
-        public static float Tallest => HeightFor(true);
+        public static float Tallest => HeightFor(true, video: true, gems: true);
 
         /// <summary>
         /// Whether every shape of this panel, banner and all, is drawn on screen on the shortest

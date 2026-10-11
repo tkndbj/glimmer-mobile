@@ -306,7 +306,13 @@ namespace GlimmerGrove
             // Sold on the challenges' deal sheet rather than on this panel, and named all the
             // same, so the day a door opens this panel for it the heading says what it pays.
             if (placementId == AdPlacement.ChallengePlay) return "ui.ads.challenge_play_title";
-            
+
+            // Sold beside a turret's price (`WardDiscountKey`), never on this panel; named so it
+            // is never described as hearts.
+            if (placementId == AdPlacement.TurretDiscount) return "ui.ads.turret_discount_title";
+
+            // Sold on the panel after a lost run (`ContinueOverlay`), never on this one.
+            if (placementId == AdPlacement.ContinueVideo) return "ui.ads.continue_video_title";
 
             if (placementId == AdPlacement.HintRefill)
                 return Wallet.Hints.CanSpend ? "ui.ads.hints_title" : "ui.ads.hints_empty_title";

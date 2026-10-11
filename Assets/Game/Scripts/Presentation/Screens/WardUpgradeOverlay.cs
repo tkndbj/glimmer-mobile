@@ -1,4 +1,7 @@
 using System;
+using System.Threading.Tasks;
+using GlimmerGrove.Ads;
+using GlimmerGrove.Async;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Wards;
@@ -55,6 +58,13 @@ namespace GlimmerGrove
         const float StatusMid = StatusTop + StatusH * .5f;
         const float ActH = 124f, ActTop = 700f, ActMid = ActTop + ActH * .5f;
 
+        /// <summary>
+        /// The turret discount's key, under the price. The panel grows by one key and its gap
+        /// when the offer is on and keeps its old height when it is not, so a build or a content
+        /// file without the offer draws exactly the panel that shipped.
+        /// </summary>
+        const float ActGap = 16f, DiscountMid = ActTop + ActH + ActGap + ActH * .5f;
+
         // The parchment palette the preview panel writes in, so the two read as one room.
         static readonly Color Ink = new Color(.36f, .25f, .18f);
         static readonly Color Short = new Color(.58f, .31f, .06f);
@@ -78,6 +88,7 @@ namespace GlimmerGrove
         Btn _act;
         Image _coin, _pill;
         float _lift;
+        WardDiscountKey _discount;
 
         char Seat => WardLine.Colours[Colour < 0 || Colour >= WardLine.Colours.Length ? 0 : Colour];
 
@@ -87,7 +98,12 @@ namespace GlimmerGrove
         {
             if (Model == null) { Close(); return; }
 
-            var panel = MakePanel(new Vector2(PanelW, PanelH), Loc.Get(Model.NameKey));
+            // Decided once, at build: whether the offer exists does not move while a panel is up
+            // (content and the ad unit), only whether a video is loaded does.
+            bool discount = WardDiscount.Offered;
+            float height = PanelH + (discount ? ActH + ActGap : 0f);
+
+            var panel = MakePanel(new Vector2(PanelW, height), Loc.Get(Model.NameKey));
 
             UIKit.IconButton("Close", panel, Skins.Nav, "ic_close", new Vector2(92f, 92f),
                              new Vector2(1f, 1f), new Vector2(-44f, -44f), () => Close());
@@ -105,18 +121,27 @@ namespace GlimmerGrove
                                   new Vector2(.5f, 1f), new Vector2(0f, -StatusMid));
 
             BuildButton(panel);
+
+            if (discount)
+                _discount = WardDiscountKey.Build(panel, new Vector2(480f, ActH),
+                                                  new Vector2(.5f, 1f), new Vector2(0f, -DiscountMid),
+                                                  Discount);
+
             Paint();
 
             // A balance can move while this is open - a sync, a reward landing - so the key is
-            // repainted from the ledgers rather than latched when the panel was drawn.
+            // repainted from the ledgers rather than latched when the panel was drawn. A video
+            // loading moves the discount key, so readiness repaints too.
             PlayerProgression.Changed += Paint;
             WardStarLedger.Changed += Paint;
+            RewardedAds.Changed += Paint;
         }
 
         void OnDestroy()
         {
             PlayerProgression.Changed -= Paint;
             WardStarLedger.Changed -= Paint;
+            RewardedAds.Changed -= Paint;
         }
 
         void BuildButton(RectTransform panel)
@@ -165,6 +190,8 @@ namespace GlimmerGrove
                 _act.Interactable = true;
                 _pill.sprite = Art.S("Ui/" + Skins.Settled);
 
+                _discount?.Show(false);
+
                 Place();
                 return;
             }
@@ -204,6 +231,19 @@ namespace GlimmerGrove
             // the `Ui/Coin` flipbook, so an `Image` with the sprite cleared is a white rectangle
             // rather than a coin (invariant 7b).
             Flipbook.Attach(_coin, "Ui/Coin", 11f);
+
+            if (_discount != null)
+            {
+                var cut = offer.Discounted();
+
+                _discount.Show(true);
+                _discount.Paint(cut.Cost, cut.CanBuy);
+
+                // Says what the lower key does whenever it can be taken - including when the
+                // full price cannot, which is the case the offer exists for.
+                string says = _discount.Status(cut.CanBuy);
+                if (says != null) _status.text = says;
+            }
 
             Place();
         }
@@ -258,6 +298,56 @@ namespace GlimmerGrove
             WardStarRow.Build(_ladder, new Vector2(0f, -StarsMid), stars, 58f);
         }
 
+        void Discount() => Fire.AndForget(DiscountAsync, "WardUpgradeOverlay.Discount");
+
+        /// <summary>
+        /// Plays the video, then buys the star at the discounted price - whatever happened to this
+        /// panel meanwhile, because a player who watched has paid (<see cref="WardDiscountKey"/>).
+        /// </summary>
+        async Task DiscountAsync()
+        {
+            if (_discount == null || _discount.Watching) return;
+
+            var model = Model;
+            int colour = Colour;
+            char seat = Seat;
+            var changed = Changed;
+            var was = Stood;
+
+            if (!WardUpgrade.OfferFor(model, seat).Discounted().CanBuy)
+            {
+                Refuse();
+                return;
+            }
+
+            var watching = _discount.Watch();
+            Paint();
+
+            var result = await watching;
+            WardDiscount.Note(result, "ward_star");
+
+            bool bought = result.Rewarded && WardUpgrade.TryBuy(model, seat, discounted: true);
+
+            if (bought) changed?.Invoke();
+
+            if (this == null) return;
+
+            if (!bought)
+            {
+                Paint();
+
+                if (result.Rewarded) { Refuse(); return; }
+
+                Audio.Sfx("blocked", .45f);
+                _status.text = WardDiscountKey.Refusal(result);
+                _status.color = Deny;
+                return;
+            }
+
+            Audio.Sfx("coin", .6f);
+            Reveal(model, colour, was, changed);
+        }
+
         void Act()
         {
             var offer = WardUpgrade.OfferFor(Model, Seat);
@@ -280,12 +370,18 @@ namespace GlimmerGrove
             // to the ceremony about to play it - `WardPreviewOverlay`'s split, for its reason.
             Audio.Sfx("coin", .6f);
 
-            var model = Model;
-            int colour = Colour;
-            var changed = Changed;
-            var risen = Stood;
+            Changed?.Invoke();
 
-            changed?.Invoke();
+            Reveal(Model, Colour, was, Changed);
+        }
+
+        /// <summary>
+        /// Closes onto the ceremony for a star just bought - outright or at the discount, one
+        /// ending for both.
+        /// </summary>
+        void Reveal(WardModel model, int colour, WardBuild was, Action changed)
+        {
+            var risen = Stood;
 
             Close(() => Flow.Modal<WardUpgradeRevealOverlay>(v =>
             {
