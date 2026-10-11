@@ -25,7 +25,7 @@ UI = K.UI
 # DealOverlay
 PANEL_W = 1030.0
 MOST_ROWS = 3
-CELL_W, CELL_H = 950.0, 190.0 + (K.DEAL_SEAL_SIZE / 2 - K.DEAL_SEAL_DROP) + 18.0
+CELL_W, CELL_H = 950.0, 330.0 + 30.0
 PAD_TOP, PAD_BOTTOM = 6.0, 6.0
 ROWS_TOP, TAIL, FOOT_H = 196.0, 30.0, 170.0  # the Daily Challenges deals sheet's layout
 KEY_W, KEY_H, KEY_Y = 400.0, 110.0, 85.0
@@ -36,9 +36,14 @@ PANEL_INK = (150, 184, 176)
 CROWN_Y, BANNER_Y, BANNER_W, BANNER_H = 114.0, -30.0, 566.0, 157.0
 WORD_LIFT, WORD_W, WORD_H = 34.0, 356.0, 74.0
 
-# DealOverlay.DealRow - a `DealCard` at the foot of the row; the clock over the price key on its right.
-CARD_W, CARD_H, AMOUNT_W = 940.0, 190.0, 380.0
-RIGHT_X, TIMER_W, TIMER_H, KEY_W, KEY_H = 172.0, 300.0, 58.0, 300.0, 82.0
+# DealOverlay.DealRow - `DealCard.BuildOpen`: no box, the coffer big on a warm glow at the left, the
+# seal over its corner, and a column on the right with the amount, COINS, the clock and the price key.
+ROW_W, ROW_H = 940.0, 330.0
+ART, ART_LEFT, GLOW, GLOW_INK, GLOW_ALPHA = 360.0, 20.0, 520.0, (255, 209, 97), .50
+SEAL_X, SEAL_Y = 74.0, 70.0                     # the seal's middle, from the row's top-left
+COLUMN_W, AMOUNT_SIZE = 520.0, 100
+AMOUNT_Y, UNIT_Y, TIMER_Y, BUY_Y = 108.0, 44.0, -16.0, -108.0   # up from the row's middle
+TIMER_W, TIMER_H, BUY_W, BUY_H = 360.0, 62.0, 400.0, 96.0
 URGENT = (255, 92, 72)
 
 LOCS = {e["key"]: e["text"] for e in json.loads(
@@ -57,24 +62,31 @@ def timer(seconds):
 
 
 def row(sheet, cx, cy, credits, gems, left, state):
-    """One row, centred on (cx, cy) - `CellH` tall, the card at its foot."""
-    ccy = cy + CELL_H / 2 - CARD_H / 2 - 4
-    _lx, rx = K.deal_card(sheet, cx, ccy, CARD_W, CARD_H, credits, gems,
-                          txt("ui.deal.value"), txt("ui.endless.coins").upper(), AMOUNT_W)
+    """One row, centred on (cx, cy) - `CellH` tall, the open card in its middle."""
+    lx = cx - ROW_W / 2
+    top = cy - ROW_H / 2
+    ax = lx + ART_LEFT + ART / 2
+    K.paste(sheet, K.glow(GLOW, 2.4, GLOW_INK, GLOW_ALPHA), ax, cy)
+    K.paste(sheet, K.fit(Image.open(UI / "Shop" / "coins_3.png").convert("RGBA"), (ART, ART)), ax, cy)
+    K.deal_seal(sheet, lx + SEAL_X, top + SEAL_Y, credits, gems, txt("ui.deal.value"))
 
-    tx = rx - RIGHT_X
-    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), tx, ccy - 40)
+    col = lx + ROW_W - COLUMN_W / 2
+    K.text(sheet, f"{credits:,}", col, cy - AMOUNT_Y - round(AMOUNT_SIZE * .044), AMOUNT_SIZE, fill=K.SUN, outline=5)
+    K.text(sheet, txt("ui.endless.coins").upper(), col, cy - UNIT_Y, 34, fill=K.CREAM, outline=3)
+
+    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), col, cy - TIMER_Y)
     fill = (158, 168, 184) if state == "ended" else URGENT if state == "ready" and left < 3600 else (255, 255, 255)
-    K.text(sheet, timer(0 if state == "ended" else left), tx, ccy - 40, 36, fill=fill, outline=3)
+    K.text(sheet, timer(0 if state == "ended" else left), col, cy - TIMER_Y, 36, fill=fill, outline=3)
 
+    by = cy - BUY_Y
     pill = {"ready": "btn_violet", "bought": "btn_blue", "ended": "btn_gray"}[state]
-    K.paste(sheet, K.skin(pill, KEY_W, KEY_H), tx, ccy + 36)
+    K.paste(sheet, K.skin(pill, BUY_W, BUY_H), col, by)
     if state == "ready":
-        K.paste(sheet, K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (48, 48)), tx - 50, ccy + 34)
-        K.text(sheet, f"{gems:,}", tx + 20, ccy + 34, 38, fill=K.CREAM, outline=3)
+        K.paste(sheet, K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (54, 54)), col - 56, by - 2)
+        K.text(sheet, f"{gems:,}", col + 22, by - 2, 42, fill=K.CREAM, outline=3)
     else:
         word = txt("ui.deal.bought_row" if state == "bought" else "ui.deal.ended_row").upper()
-        K.text(sheet, word, tx, ccy + 34, 36, fill=K.CREAM, outline=3)
+        K.text(sheet, word, col, by - 2, 38, fill=K.CREAM, outline=3)
 
 
 def panel(deals):

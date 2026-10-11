@@ -150,7 +150,7 @@ namespace GlimmerGrove
             icon.enabled = picture != null;
 
             // The name, two lines at most, shrunk before it wraps a third time.
-            var name = UIKit.Titled("Name", t, Loc.Get(card.NameKey), L.NameSize, Pal.Cream,
+            var name = UIKit.Titled("Name", t, Loc.Get(card.NameKey), L.NameSize, Pal.Gold,
                                     TextAnchor.MiddleCenter,
                                     new Vector2(L.CardWidth - L.Inset * 2f, L.NameHeight),
                                     new Vector2(.5f, .5f), new Vector2(0f, top - L.NameDown), 3f, 3f,
@@ -159,7 +159,7 @@ namespace GlimmerGrove
             name.raycastTarget = false;
 
             var note = UIKit.Titled("Note", t, Loc.Get(card.NoteKey), L.NoteSize,
-                                    Pal.A(Pal.Cream, .86f), TextAnchor.UpperCenter,
+                                    Color.white, TextAnchor.UpperCenter,
                                     new Vector2(L.CardWidth - L.Inset * 2f, L.NoteHeight),
                                     new Vector2(.5f, .5f), new Vector2(0f, top - L.NoteDown), 2f, 0f,
                                     wrap: true);

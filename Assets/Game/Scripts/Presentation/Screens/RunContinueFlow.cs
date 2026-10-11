@@ -1,6 +1,7 @@
 using System;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Store;
+using UnityEngine;
 
 namespace GlimmerGrove
 {
@@ -54,6 +55,12 @@ namespace GlimmerGrove
         /// <summary>True while the offer, the gem shop or a payment sheet is up.</summary>
         bool _deciding;
 
+        /// <summary>
+        /// The count a continued run is handed back on (<see cref="ResumeCountdown"/>), for a mode
+        /// that asks for one (<see cref="RunScreen.ResumeStep"/>). Gem and video continues alike.
+        /// </summary>
+        readonly ResumeCountdown _resume = new ResumeCountdown();
+
         public RunContinueFlow(RunScreen run, RunHold hold)
         {
             _run = run;
@@ -69,11 +76,46 @@ namespace GlimmerGrove
         /// <summary>True while the player is deciding. The run must not advance.</summary>
         public bool Deciding => _deciding;
 
-        /// <summary>Back to nothing bought. Every path that hands out a fresh run calls it.</summary>
+        /// <summary>True while a continued run is being counted back in.</summary>
+        public bool Resuming => _resume.Active;
+
+        /// <summary>
+        /// Back to nothing bought and nothing counting. Every path that hands out a fresh run
+        /// calls it, so a restart or a retry mid-count is never left holding the new run.
+        /// </summary>
         public void Reset()
         {
             _taken = 0;
             _watched = 0;
+            StopResume();
+        }
+
+        /// <summary>
+        /// One frame of the count, from <see cref="RunScreen"/>'s own frame and before the run's
+        /// tick, so the frame that says GO is the frame the run moves.
+        ///
+        /// <para>
+        /// <b>Counted only on frames the countdown is the sole thing holding the run</b> and the
+        /// mode says its board may run. A pause menu, a panel or a lesson opened mid-count holds the
+        /// run for its own reason, and the count waits with it rather than running out behind it.
+        /// </para>
+        /// </summary>
+        public void Frame(bool runnable)
+        {
+            if (!_resume.Active) return;
+            if (!runnable || _hold.Count != 1 || !_hold.Holds(RunHold.Resuming)) return;
+
+            int beat = _resume.Advance(Time.unscaledDeltaTime);
+            if (beat != ResumeCountdown.Nothing) _run.ResumeBeat(beat, _resume.Step);
+
+            if (!_resume.Active) _hold.Release(RunHold.Resuming);
+        }
+
+        /// <summary>Stops a count and lets the run go. Idempotent.</summary>
+        void StopResume()
+        {
+            _resume.Cancel();
+            _hold.Release(RunHold.Resuming);
         }
 
         /// <summary>
@@ -120,6 +162,10 @@ namespace GlimmerGrove
             // Guarded rather than assumed: a run decided twice charges two hearts for one loss,
             // and a panel raised twice charges two lots of gems for one continue.
             if (_deciding) return;
+
+            // A run is held for the whole of a count, so it cannot be lost during one - but if it
+            // ever is, the new decision owns the run and the old count must not let it go on GO.
+            StopResume();
 
             // **A run nobody is charged for is a run nobody is sold**, and it is one predicate
             // rather than a rule each mode keeps, for this class's own reason.
@@ -193,21 +239,51 @@ namespace GlimmerGrove
         void Bought(int amount)
         {
             _taken++;
-            Done();
-
-            _run.ContinueWith(amount);
+            Resume(amount);
         }
 
         /// <summary>
-        /// A video was watched to the end. <see cref="Bought"/>'s order, counted as a video so the
+        /// A video was watched to the end. <see cref="Bought"/>'s ending, counted as a video so the
         /// gem price that may follow is the one this run would have been quoted anyway.
         /// </summary>
         void WatchedFor(int amount)
         {
             _watched++;
-            Done();
+            Resume(amount);
+        }
 
+        /// <summary>
+        /// Hands the board back on a count, for gems and for a video alike.
+        ///
+        /// <para>
+        /// <b>The order is the substance.</b> (1) The count's hold is taken while the decision's is
+        /// still held, so there is no frame between them in which the run is free. (2) The decision
+        /// is let go - <see cref="Bought"/>'s rule: a board that is somehow still lost must reach a
+        /// fresh offer rather than the guard against deciding twice. (3) The mode is extended: the
+        /// line stands up. (4) The count starts, unless step 3 lost the run again and a new offer
+        /// already owns it - then the count is dropped with its hold (<see cref="OfferOrLose"/>
+        /// did that). The run moves on GO, from <see cref="Frame"/>.
+        /// </para>
+        /// <para>
+        /// A mode with no count (<see cref="RunScreen.ResumeStep"/> nought - every turn-based board,
+        /// where nothing moves until the player does) is handed back at once, exactly as before.
+        /// </para>
+        /// </summary>
+        void Resume(int amount)
+        {
+            float step = _run.ResumeStep;
+            bool counts = step > 0f;
+
+            if (counts) _hold.Take(RunHold.Resuming);
+
+            Done();
             _run.ContinueWith(amount);
+
+            if (!counts) return;
+
+            if (_deciding) { StopResume(); return; }
+
+            _resume.Start(step);
         }
 
         /// <summary>

@@ -665,6 +665,21 @@ namespace GlimmerGrove
         /// </summary>
         protected internal virtual void ContinueWith(int amount) { }
 
+        /// <summary>
+        /// Seconds a beat of the count a continued run is handed back on, or nought for no count
+        /// (<see cref="ResumeCountdown"/>). Nought by default: on a turn-based board nothing moves
+        /// until the player does, so a count would be a wait for nothing. A mode whose board moves
+        /// on its own answers a step, and the run is held until GO.
+        /// </summary>
+        protected internal virtual float ResumeStep => 0f;
+
+        /// <summary>
+        /// Draws one beat of that count: <see cref="ResumeCountdown.Numbers"/> down to 1, then
+        /// <see cref="ResumeCountdown.Go"/>. Drawing only - when the run moves is
+        /// <see cref="RunContinueFlow"/>'s, so a mode cannot release its own hold early.
+        /// </summary>
+        protected internal virtual void ResumeBeat(int beat, float step) { }
+
         // ------------------------------------------------------------ when a run may begin
         /// <summary>
         /// Why this run may not be under way yet. A mode's clock asks this before it starts
@@ -775,7 +790,12 @@ namespace GlimmerGrove
             if (Flow.Covered) Hold.Take(RunHold.Covered);
             else Hold.Release(RunHold.Covered);
 
-            Running(Tick(Runnable));
+            // After the cover is read and before the tick, so a count is held by a panel on the
+            // frame the panel appears, and the frame that says GO is the frame the run moves.
+            bool runnable = Runnable;
+            Continue.Frame(runnable);
+
+            Running(Tick(runnable));
         }
 
         /// <summary>

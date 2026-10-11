@@ -120,13 +120,13 @@ def card(sheet, L, cid, tier, cx, top, strings, held):
     name = strings.get("shuffle.%s.name" % cid, cid)
     size, lines = wrapped(sheet, name, cx, top + L["NameDown"] - L["NameHeight"] / 2,
                           cw - L["Inset"] * 2, L["NameHeight"], int(L["NameSize"]), int(L["NameFloor"]),
-                          K.CREAM, 3, False)
+                          K.GOLD, 3, False)
     print("  %-16s name %-34r %2d lines at %dpx (floor %d)" % (cid, name, lines, size, L["NameFloor"]))
 
     note = strings.get("shuffle.%s.note" % cid, "")
     size, lines = wrapped(sheet, note, cx, top + L["NoteDown"] - L["NoteHeight"] / 2,
                           cw - L["Inset"] * 2, L["NoteHeight"], int(L["NoteSize"]), int(L["NoteFloor"]),
-                          (255, 243, 220), 2, True)
+                          (255, 255, 255), 2, True)
     flag = "  !!" if size <= L["NoteFloor"] else ""
     print("  %-16s note %2d lines at %dpx (floor %d)%s" % ("", lines, size, L["NoteFloor"], flag))
 

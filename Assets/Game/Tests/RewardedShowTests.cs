@@ -6,25 +6,30 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// One rewarded video's answer, in every order the network's callbacks can arrive.
+    /// One rewarded video's answer, in every order the network's callbacks can arrive - and never
+    /// before the video has left the screen.
     ///
     /// <para>
-    /// <b>The case this file exists for is
-    /// <see cref="AFinishedVideoWhoseCloseArrivesFirstIsStillFinished"/></b>: watched to the end on an
-    /// Android device, closed, and answered as closed early because the close beat the reward -
-    /// so a lost run stayed lost behind a panel that had just been paid with a video (2026-10-11).
+    /// Two device reports, both 2026-10-11, each pinned by name:
+    /// <see cref="AFinishedVideoWhoseCloseArrivesFirstIsStillFinished"/> (the close beat the reward,
+    /// and a watched video was answered as skipped) and
+    /// <see cref="ARewardIsNotAnsweredWhileTheAdIsStillOnScreen"/> (the reward arrived under the end
+    /// card, the siege resumed behind the ad, and the rallied line fell before the player was back).
     /// </para>
     /// <para>
-    /// The grace is a tenth of a second here rather than the shipped three, so the suite proves the
-    /// timing without waiting on it; every wait is bounded, so a regression fails rather than hangs.
+    /// The timings are a tenth and a quarter of a second here rather than the shipped three seconds
+    /// and two minutes, so the suite proves them without waiting on them; every wait is bounded, so
+    /// a regression fails rather than hangs.
     /// </para>
     /// </summary>
     public sealed class RewardedShowTests
     {
         static readonly TimeSpan Grace = TimeSpan.FromMilliseconds(100);
+        static readonly TimeSpan Backstop = TimeSpan.FromMilliseconds(250);
         static readonly TimeSpan Bound = TimeSpan.FromSeconds(5);
 
-        static RewardedShow Show() => new RewardedShow(AdImpression.New(AdPlacement.ContinueVideo), Grace);
+        static RewardedShow Show()
+            => new RewardedShow(AdImpression.New(AdPlacement.ContinueVideo), Grace, Backstop);
 
         static async Task<AdShowResult> Within(RewardedShow show)
         {
@@ -33,18 +38,24 @@ namespace GlimmerGrove.Tests
             return await show.Answer;
         }
 
+        // ---------------------------------------------------------------- the order of events
         [Test]
-        public async Task ARewardThenACloseIsFinished()
+        public async Task ARewardIsNotAnsweredWhileTheAdIsStillOnScreen()
         {
             var show = Show();
 
-            show.Rewarded();
+            var waiting = show.Rewarded();
+            Assert.IsFalse(show.Settled,
+                           "answered under the end card: the caller would resume the run behind the ad");
+
             await show.Closed();
 
             var result = await Within(show);
             Assert.AreEqual(AdOutcome.Rewarded, result.Outcome);
-            Assert.IsTrue(result.Rewarded);
             Assert.AreEqual(show.Impression.TraceId, result.Impression.TraceId, "the answer carries its own impression");
+
+            await waiting;
+            Assert.AreEqual(AdOutcome.Rewarded, (await show.Answer).Outcome, "the backstop running out changes nothing");
         }
 
         [Test]
@@ -55,10 +66,11 @@ namespace GlimmerGrove.Tests
             var waiting = show.Closed();
             Assert.IsFalse(show.Settled, "a close alone is not an answer while the reward may follow it");
 
-            show.Rewarded();
+            await show.Rewarded();
 
             var result = await Within(show);
             Assert.AreEqual(AdOutcome.Rewarded, result.Outcome);
+            Assert.IsTrue(show.Settled, "the video had already gone, so the reward answers at once");
             Assert.IsFalse(show.RewardedLate);
 
             await waiting;
@@ -86,7 +98,7 @@ namespace GlimmerGrove.Tests
             var show = Show();
             await show.Closed();
 
-            show.Rewarded();
+            await show.Rewarded();
 
             Assert.AreEqual(AdOutcome.Dismissed, (await Within(show)).Outcome, "an answer is given once");
             Assert.IsTrue(show.RewardedLate, "and the provider is told the grace was too short");
@@ -100,7 +112,7 @@ namespace GlimmerGrove.Tests
             show.DisplayFailed("no activity");
             Assert.IsTrue(show.Settled);
 
-            show.Rewarded();
+            await show.Rewarded();
             await show.Closed();
 
             var result = await Within(show);
@@ -110,25 +122,42 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public async Task TwoClosesAreOneClose()
+        public async Task TwoClosesAndTwoRewardsAreOneOfEach()
         {
             var show = Show();
 
-            var first = show.Closed();
-            var second = show.Closed();
-            show.Rewarded();
+            var first = show.Rewarded();
+            var second = show.Rewarded();
+            Assert.IsFalse(show.Settled);
+
+            await Task.WhenAll(show.Closed(), show.Closed());
+            Assert.AreEqual(AdOutcome.Rewarded, (await Within(show)).Outcome);
 
             await Task.WhenAll(first, second);
-            Assert.AreEqual(AdOutcome.Rewarded, (await Within(show)).Outcome);
         }
 
-        // ------------------------------------------------------- the net under a missing close
+        // ---------------------------------------------------------- the nets under a lost callback
         /// <summary>
         /// The SDK never raises its close: the game regaining focus after losing it to the video is
-        /// the close instead, so the panel is never left on OPENING... with every key dead.
+        /// the departure instead, so the panel is never left on OPENING... with every key dead.
         /// </summary>
         [Test]
-        public async Task ComingBackFromTheVideoAnswersWhenTheSdkNeverCloses()
+        public async Task ComingBackFromTheVideoIsADeparture()
+        {
+            var show = Show();
+
+            show.Left();
+            var waiting = show.Rewarded();
+            Assert.IsFalse(show.Settled, "still on the video");
+
+            var back = show.Returned();
+
+            Assert.AreEqual(AdOutcome.Rewarded, (await Within(show)).Outcome);
+            await Task.WhenAll(waiting, back);
+        }
+
+        [Test]
+        public async Task ComingBackWithNoRewardIsASkipOnceTheGraceRunsOut()
         {
             var show = Show();
 
@@ -138,19 +167,6 @@ namespace GlimmerGrove.Tests
 
             await waiting;
             Assert.AreEqual(AdOutcome.Dismissed, (await Within(show)).Outcome);
-        }
-
-        [Test]
-        public async Task ARewardAfterComingBackIsStillFinished()
-        {
-            var show = Show();
-
-            show.Left();
-            var waiting = show.Returned();
-            show.Rewarded();
-
-            Assert.AreEqual(AdOutcome.Rewarded, (await Within(show)).Outcome);
-            await waiting;
         }
 
         /// <summary>Focus wobbling before the video has taken the screen answers nothing.</summary>
@@ -164,17 +180,41 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(show.Settled);
 
-            show.Rewarded();
+            show.Left();
+            var back = show.Returned();
+            var waiting = show.Rewarded();
+            Assert.AreEqual(AdOutcome.Rewarded, (await Within(show)).Outcome);
+            await Task.WhenAll(back, waiting);
+        }
+
+        /// <summary>
+        /// A reward whose ad never reports leaving is answered all the same once the backstop runs
+        /// out, so a missing close can delay a continue but never withhold it.
+        /// </summary>
+        [Test]
+        public async Task ARewardWithNoDepartureIsAnsweredWhenTheBackstopRunsOut()
+        {
+            var show = Show();
+
+            var waiting = show.Rewarded();
+            Assert.IsFalse(show.Settled);
+
+            await waiting;
             Assert.AreEqual(AdOutcome.Rewarded, (await Within(show)).Outcome);
         }
 
         [Test]
-        public void TheShippedGraceIsLongEnoughToWaitAndShortEnoughToTell()
+        public void TheShippedTimingsAreLongEnoughToWaitAndShortEnoughToTell()
         {
             Assert.GreaterOrEqual(RewardedShow.CloseGrace, TimeSpan.FromSeconds(1),
                                   "shorter than a reward takes to arrive on a slow device");
             Assert.LessOrEqual(RewardedShow.CloseGrace, TimeSpan.FromSeconds(5),
                                "a player who skipped would stare at OPENING... for too long");
+
+            Assert.GreaterOrEqual(RewardedShow.DepartureBackstop, TimeSpan.FromSeconds(60),
+                                  "would cut short an end card somebody is still reading");
+            Assert.LessOrEqual(RewardedShow.DepartureBackstop, TimeSpan.FromMinutes(5),
+                               "a lost close would hold a paid continue for too long");
         }
     }
 }

@@ -7987,7 +7987,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Ogni dardo colpisce il 15% più forte."
+      "text": "I colpi fanno il 15% di danni in più."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -7995,7 +7995,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Le torrette sparano il 12% più in fretta."
+      "text": "Le torrette sparano il 12% più veloce."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8003,7 +8003,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Ogni dardo brucia il 12% di carburante in meno."
+      "text": "I colpi consumano il 12% di carburante in meno."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8011,7 +8011,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Ogni gemma vale il 20% di carburante in più."
+      "text": "Le gemme danno il 20% di carburante in più."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8019,7 +8019,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Le torrette reggono il 30% di danni in più prima di cadere."
+      "text": "Le torrette hanno il 30% di vita in più."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8035,7 +8035,7 @@
     },
     {
       "key": "shuffle.brace.note",
-      "text": "Ogni colpo alla linea toglie 1 in meno."
+      "text": "Le torrette subiscono 1 danno in meno da ogni colpo."
     },
     {
       "key": "shuffle.field_medic.name",
@@ -8043,7 +8043,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Le torrette recuperano vita lentamente."
+      "text": "Le torrette recuperano 1 punto vita ogni 6 secondi."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "Il 10% dei dardi fa il doppio dei danni."
+      "text": "Il 10% dei colpi fa danni doppi."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "La calma tra le ondate dura il 20% in più."
+      "text": "Le pause tra le ondate durano il 20% in più."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "I dardi colpiscono i predoni vicini al 40%."
+      "text": "I colpi colpiscono anche i predoni vicini con il 40% dei danni."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "I dardi saltano su un altro predone al 50%."
+      "text": "I colpi saltano su 1 predone in più con il 50% dei danni."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Un dardo su tre trapassa tutta la corsia."
+      "text": "Un colpo su 3 colpisce tutti i predoni della sua corsia."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "I dardi gelano i predoni rallentandoli del 30%."
+      "text": "I colpi rallentano i predoni del 30%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8099,7 +8099,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "I dardi incendiano i predoni per 3 secondi."
+      "text": "I colpi incendiano i predoni per 3 secondi."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8107,7 +8107,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "Il 12% dei dardi blocca un predone sul posto."
+      "text": "Il 12% dei colpi stordisce un predone per mezzo secondo."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Ogni predone abbattuto restituisce un po' di carburante alla torretta."
+      "text": "Ogni uccisione dà 1 carburante alla torretta."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Le sovraccariche colpiscono il 50% più forte e le torrette ne tengono una in più."
+      "text": "I colpi carichi fanno il 50% di danni in più e le torrette ne tengono 1 in più."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.thorns.note",
-      "text": "Un predone che colpisce la linea viene ferito a sua volta."
+      "text": "I predoni che colpiscono una torretta subiscono danni."
     },
     {
       "key": "shuffle.rally_cry.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Ogni ondata riempie ogni torretta al 30% quando arriva."
+      "text": "Ogni nuova ondata dà il 30% di carburante a tutte le torrette."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8147,7 +8147,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Ogni predone abbattuto cura un po' la torretta."
+      "text": "Ogni uccisione cura la torretta di 1 punto vita."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Tutta la collina avanza il 15% più lentamente."
+      "text": "I predoni camminano il 15% più lenti."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8163,7 +8163,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "I dardi colpiscono bruti e armature il 50% più forte."
+      "text": "I colpi fanno il 50% di danni in più a bruti e predoni corazzati."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Una torretta caduta si rialza una volta con metà vita."
+      "text": "Una torretta distrutta torna una volta con metà vita."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8179,7 +8179,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Ogni ondata blocca la collina per 2 secondi quando arriva."
+      "text": "Ogni nuova ondata blocca i predoni per 2 secondi."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "Il 35% dei predoni che raggiungono la linea viene respinto su per la collina."
+      "text": "Il 35% dei predoni che raggiungono le tue torrette viene respinto."
     },
     {
       "key": "shuffle.execution.name",
@@ -8195,7 +8195,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "I dardi finiscono subito i predoni sotto il 15% di vita."
+      "text": "I colpi uccidono subito i predoni sotto il 15% di vita."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "Il 25% dei dardi colpisce due volte."
+      "text": "Il 25% dei colpi colpisce una seconda volta con metà danni."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8211,7 +8211,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Una torretta inattiva spara a qualsiasi colore a metà potenza."
+      "text": "Una torretta senza bersaglio spara agli altri colori con metà danni."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "Un predone abbattuto colpisce i vicini con il 30% della sua vita."
+      "text": "I predoni uccisi esplodono e danneggiano quelli vicini."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "Il 6% dei dardi maledice il bersaglio per 3 secondi."
+      "text": "Il 6% dei colpi maledice un predone: subisce il 20% di danni in più per 3 secondi."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8235,7 +8235,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Ogni ondata carica una sovraccarica su una torretta."
+      "text": "Ogni nuova ondata dà a una torretta 1 colpo carico gratis."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8243,7 +8243,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Quando cade l'ultima torretta, tutta la linea si rialza una volta a vita piena."
+      "text": "Quando cade la tua ultima torretta, tornano tutte una volta con vita piena."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "I dardi colpiscono il 40% più forte e le torrette sparano il 25% più in fretta."
+      "text": "I colpi fanno il 40% di danni in più e le torrette sparano il 25% più veloce."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Un quarto di ogni abbinamento alimenta anche le altre tre torrette."
+      "text": "Ogni abbinamento dà carburante anche alle altre tre torrette."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Una torretta sotto il 30% di vita spara il 60% più forte e più in fretta."
+      "text": "Le torrette sotto il 30% di vita fanno il 60% di danni in più e sparano il 60% più veloce."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8275,7 +8275,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Ogni dardo lancia 2 pallini sui predoni successivi al 40%."
+      "text": "Ogni colpo spara anche 2 pallini ai predoni vicini."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8283,7 +8283,7 @@
     },
     {
       "key": "shuffle.ricochet.note",
-      "text": "Un dardo che uccide rimbalza sul predone più vicino all'80%."
+      "text": "Un colpo che uccide rimbalza sul predone più vicino."
     },
     {
       "key": "shuffle.missile_pod.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Un dardo su quattro lancia 2 missili a ricerca."
+      "text": "Un colpo su 4 lancia anche 2 missili a ricerca."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8299,7 +8299,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Un dardo su cinque manda un'onda lungo la sua fila e respinge i predoni."
+      "text": "Un colpo su 5 manda un'onda d'urto lungo la sua fila che respinge i predoni."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8307,7 +8307,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "I dardi lasciano pozze tossiche che feriscono chi ci passa."
+      "text": "I colpi lasciano pozze di veleno che feriscono i predoni che ci passano."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Le torrette folgorano il predone più vicino, anche senza carburante."
+      "text": "Le torrette fulminano il predone più vicino, anche senza carburante."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8323,7 +8323,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Ogni colpo di fila spara il 15% più in fretta, fino al 150%."
+      "text": "Più a lungo sparano, più le torrette accelerano, fino al 150%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "I predoni congelati o storditi esplodono in schegge di ghiaccio quando muoiono."
+      "text": "I predoni rallentati o storditi esplodono in schegge quando muoiono e colpiscono quelli vicini."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8339,7 +8339,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "I predoni in fiamme passano il fuoco ai vicini quando muoiono."
+      "text": "I predoni in fiamme passano il fuoco a quelli vicini quando muoiono."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8347,7 +8347,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Ogni 6 secondi una meteora si schianta sul gruppo più grande."
+      "text": "Ogni 6 secondi, una meteora colpisce il gruppo più grande di predoni."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8355,7 +8355,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Ogni 9 secondi un vortice trascina insieme il gruppo più grande."
+      "text": "Ogni 9 secondi, un vortice raduna il gruppo più grande di predoni."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8363,7 +8363,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Ogni 15 uccisioni, una bomba toglie il 30% della vita a ogni predone."
+      "text": "Ogni 15 uccisioni, una bomba nucleare toglie il 30% di vita a tutti i predoni."
     },
     {
       "key": "shuffle.death_ray.name",
@@ -8371,7 +8371,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Ogni 10 secondi la linea spara un raggio gigante sulla collina."
+      "text": "Ogni 10 secondi, un laser gigante spazza la collina."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8379,7 +8379,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Ogni dardo si divide in 2 teste, e ogni testa si divide ancora."
+      "text": "Ogni colpo si divide in 2, e ogni metà si divide di nuovo."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Ogni dardo diventa fuoco, veleno, ghiaccio o fulmine a caso."
+      "text": "Ogni colpo diventa a caso fuoco, veleno, ghiaccio o fulmine."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8395,7 +8395,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Le torrette sparano il doppio più in fretta e ogni dardo costa metà carburante."
+      "text": "Le torrette sparano il doppio più veloce e i colpi consumano metà carburante."
     },
     {
       "key": "ui.loadout.discount_badge",

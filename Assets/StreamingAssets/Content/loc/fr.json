@@ -7987,7 +7987,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Chaque tir frappe 15 % plus fort."
+      "text": "Les tirs font 15 % de dégâts en plus."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8003,7 +8003,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Chaque tir brûle 12 % de carburant en moins."
+      "text": "Les tirs coûtent 12 % de carburant en moins."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8011,7 +8011,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Chaque gemme vaut 20 % de carburant en plus."
+      "text": "Les gemmes donnent 20 % de carburant en plus."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8019,7 +8019,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Les tourelles encaissent 30 % de dégâts en plus avant de tomber."
+      "text": "Les tourelles ont 30 % de vie en plus."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8035,7 +8035,7 @@
     },
     {
       "key": "shuffle.brace.note",
-      "text": "Chaque coup sur la ligne retire 1 de moins."
+      "text": "Les tourelles subissent 1 dégât de moins par coup."
     },
     {
       "key": "shuffle.field_medic.name",
@@ -8043,7 +8043,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Les tourelles regagnent lentement de la vie."
+      "text": "Les tourelles regagnent 1 point de vie toutes les 6 secondes."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10 % des tirs font le double de dégâts."
+      "text": "10 % des tirs font double dégâts."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Le calme entre deux vagues dure 20 % plus longtemps."
+      "text": "Les pauses entre les vagues durent 20 % plus longtemps."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Les tirs éclaboussent les pillards voisins à 40 %."
+      "text": "Les tirs touchent aussi les pillards proches pour 40 % des dégâts."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Les tirs rebondissent sur un pillard de plus à 50 %."
+      "text": "Les tirs rebondissent sur 1 pillard de plus pour 50 % des dégâts."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Un tir sur trois transperce toute sa voie."
+      "text": "Un tir sur 3 touche tous les pillards de son couloir."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Les tirs gèlent les pillards et les ralentissent de 30 %."
+      "text": "Les tirs ralentissent les pillards de 30 %."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8107,7 +8107,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12 % des tirs stoppent net un pillard."
+      "text": "12 % des tirs étourdissent un pillard une demi-seconde."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Chaque pillard abattu rend un peu de carburant à la tourelle."
+      "text": "Chaque pillard abattu donne 1 carburant à la tourelle."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Les surcharges frappent 50 % plus fort et les tourelles en gardent une de plus."
+      "text": "Les tirs chargés font 50 % de dégâts en plus, et les tourelles en stockent 1 de plus."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.thorns.note",
-      "text": "Un pillard qui frappe la ligne est blessé en retour."
+      "text": "Les pillards qui frappent une tourelle subissent des dégâts en retour."
     },
     {
       "key": "shuffle.rally_cry.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Chaque vague remplit chaque tourelle à 30 % en arrivant."
+      "text": "Chaque nouvelle vague donne 30 % de carburant à toutes les tourelles."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8147,7 +8147,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Chaque pillard abattu soigne un peu la tourelle."
+      "text": "Chaque pillard abattu soigne la tourelle de 1 point de vie."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Toute la colline avance 15 % plus lentement."
+      "text": "Les pillards marchent 15 % moins vite."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8163,7 +8163,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Les tirs frappent les brutes et les armures 50 % plus fort."
+      "text": "Les tirs font 50 % de dégâts en plus aux brutes et aux pillards en armure."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Une tourelle tombée se relève une fois, à moitié de vie."
+      "text": "Une tourelle détruite revient une fois avec la moitié de sa vie."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8179,7 +8179,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Chaque vague fige la colline 2 secondes en arrivant."
+      "text": "Chaque nouvelle vague fige les pillards pendant 2 secondes."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35 % des pillards qui atteignent la ligne sont rejetés vers le haut de la colline."
+      "text": "35 % des pillards qui atteignent tes tourelles sont repoussés."
     },
     {
       "key": "shuffle.execution.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25 % des tirs touchent deux fois."
+      "text": "25 % des tirs frappent une 2e fois pour moitié moins de dégâts."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8211,7 +8211,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Une tourelle inactive tire sur n'importe quelle couleur, à moitié de puissance."
+      "text": "Une tourelle sans cible tire sur les autres couleurs pour moitié moins de dégâts."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "Un pillard abattu frappe ses voisins à 30 % de sa vie."
+      "text": "Les pillards abattus explosent et blessent leurs voisins."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6 % des tirs maudissent leur cible pendant 3 secondes."
+      "text": "6 % des tirs maudissent un pillard : il subit 20 % de dégâts en plus pendant 3 secondes."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8235,7 +8235,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Chaque vague stocke une surcharge sur une tourelle."
+      "text": "Chaque nouvelle vague donne 1 tir chargé gratuit à une tourelle."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8243,7 +8243,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Quand la dernière tourelle tombe, toute la ligne se relève une fois à pleine vie."
+      "text": "Quand ta dernière tourelle tombe, toutes reviennent une fois avec toute leur vie."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Les tirs frappent 40 % plus fort et les tourelles tirent 25 % plus vite."
+      "text": "Les tirs font 40 % de dégâts en plus et les tourelles tirent 25 % plus vite."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Un quart de chaque alignement alimente aussi les trois autres tourelles."
+      "text": "Chaque alignement donne aussi du carburant aux trois autres tourelles."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Une tourelle sous 30 % de vie tire 60 % plus fort et plus vite."
+      "text": "Sous 30 % de vie, les tourelles font 60 % de dégâts en plus et tirent 60 % plus vite."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8275,7 +8275,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Chaque tir lance 2 plombs sur les pillards suivants à 40 %."
+      "text": "Chaque tir lance aussi 2 plombs sur les pillards proches."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8283,7 +8283,7 @@
     },
     {
       "key": "shuffle.ricochet.note",
-      "text": "Un tir qui tue rebondit sur le pillard le plus proche à 80 %."
+      "text": "Un tir qui tue rebondit sur le pillard le plus proche."
     },
     {
       "key": "shuffle.missile_pod.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Un tir sur quatre lance 2 missiles à tête chercheuse."
+      "text": "Un tir sur 4 lance aussi 2 missiles à tête chercheuse."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8299,7 +8299,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Un tir sur cinq envoie une onde sur toute sa rangée et repousse les pillards."
+      "text": "Un tir sur 5 envoie une onde de choc le long de sa ligne qui repousse les pillards."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8307,7 +8307,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Les tirs laissent des flaques toxiques qui blessent qui les traverse."
+      "text": "Les tirs laissent des flaques de poison qui blessent les pillards qui passent."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8323,7 +8323,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Chaque tir à la suite part 15 % plus vite, jusqu'à 150 %."
+      "text": "Plus les tourelles tirent longtemps, plus elles tirent vite, jusqu'à 150 %."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Les pillards gelés ou étourdis explosent en glace en mourant."
+      "text": "Les pillards ralentis ou étourdis éclatent en éclats en mourant et blessent leurs voisins."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8339,7 +8339,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Les pillards en feu propagent leur feu à leurs voisins en mourant."
+      "text": "Les pillards en feu propagent les flammes à leurs voisins en mourant."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8347,7 +8347,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Toutes les 6 secondes, un météore s'écrase sur le plus gros groupe."
+      "text": "Toutes les 6 secondes, une météorite frappe le plus gros groupe de pillards."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8355,7 +8355,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Toutes les 9 secondes, un vortex rassemble le plus gros groupe."
+      "text": "Toutes les 9 secondes, un vortex rassemble le plus gros groupe de pillards."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8363,7 +8363,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Tous les 15 kills, une bombe retire 30 % de sa vie à chaque pillard."
+      "text": "Tous les 15 pillards abattus, une bombe nucléaire retire 30 % de vie à tous les pillards."
     },
     {
       "key": "shuffle.death_ray.name",
@@ -8371,7 +8371,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Toutes les 10 secondes, la ligne tire un rayon géant sur la colline."
+      "text": "Toutes les 10 secondes, un laser géant balaie la colline."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8379,7 +8379,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Chaque tir se divise en 2 têtes, et chaque tête se divise encore."
+      "text": "Chaque tir se divise en 2, et chaque moitié se divise encore."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Chaque tir devient feu, venin, glace ou foudre au hasard."
+      "text": "Chaque tir devient au hasard feu, poison, glace ou foudre."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8395,7 +8395,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Les tourelles tirent deux fois plus vite et chaque tir coûte moitié moins de carburant."
+      "text": "Les tourelles tirent deux fois plus vite et les tirs coûtent moitié moins de carburant."
     },
     {
       "key": "ui.loadout.discount_badge",

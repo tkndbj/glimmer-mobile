@@ -57,7 +57,7 @@ namespace GlimmerGrove.Layout
 
         public float NameHeight = 92f, NameDown = 266f;
 
-        public int NoteSize = 31, NoteFloor = 20;
+        public int NoteSize = 32, NoteFloor = 20;
 
         public float NoteHeight = 180f, NoteDown = 408f;
 

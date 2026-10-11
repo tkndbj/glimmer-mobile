@@ -562,17 +562,22 @@ def deal_card(sheet, cx, cy, w, h, credits, gems, value_word, unit_word, amount_
     text(sheet, f"{credits:,}", left, cy - 14 - round(76 * .044), 76, fill=SUN, outline=4, anchor="l")
     text(sheet, unit_word, left, cy + 46, 32, fill=CREAM, outline=3, anchor="l")
 
-    pct = deal_value(credits, gems)
-    if pct:
-        sx, sy = lx + DEAL_SEAL_IN, top + DEAL_SEAL_DROP
-        paste(sheet, tint(skin("Hud/burst", round(DEAL_SEAL_SIZE), round(DEAL_SEAL_SIZE)), DEAL_SEAL)
-              .rotate(8, Image.BICUBIC), sx, sy)
-        word = value_word.replace("{0}", str(pct)).upper()
-        parts = word.split(" ", 1)
-        size = 30
-        if len(parts) == 2:
-            text(sheet, parts[0], sx, sy - 14, size, fill=(255, 255, 255), outline=3)
-            text(sheet, parts[1], sx, sy + 18, 24, fill=(255, 255, 255), outline=3)
-        else:
-            text(sheet, word, sx, sy, size, fill=(255, 255, 255), outline=3)
+    deal_seal(sheet, lx + DEAL_SEAL_IN, top + DEAL_SEAL_DROP, credits, gems, value_word)
     return lx, rx
+
+
+def deal_seal(sheet, sx, sy, credits, gems, value_word):
+    """`DealCard`'s red value seal centred on (sx, sy), or nothing when the deal is no better than the shop."""
+    pct = deal_value(credits, gems)
+    if not pct:
+        return
+    paste(sheet, tint(skin("Hud/burst", round(DEAL_SEAL_SIZE), round(DEAL_SEAL_SIZE)), DEAL_SEAL)
+          .rotate(8, Image.BICUBIC), sx, sy)
+    word = value_word.replace("{0}", str(pct)).upper()
+    parts = word.split(" ", 1)
+    size = 30
+    if len(parts) == 2:
+        text(sheet, parts[0], sx, sy - 14, size, fill=(255, 255, 255), outline=3)
+        text(sheet, parts[1], sx, sy + 18, 24, fill=(255, 255, 255), outline=3)
+    else:
+        text(sheet, word, sx, sy, size, fill=(255, 255, 255), outline=3)

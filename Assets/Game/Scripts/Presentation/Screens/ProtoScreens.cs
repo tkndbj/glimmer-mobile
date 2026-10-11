@@ -1017,6 +1017,22 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// Seconds a beat of the count a continued siege is handed back on. The hill walks on its
+        /// own and is standing at the line it just broke, so the player is given the start-of-run
+        /// count's three-two-one before it moves again (<see cref="ResumeCountdown"/>); a little
+        /// brisker than that count's beat, because the board is already known.
+        /// </summary>
+        public const float ResumeBeatSeconds = .7f;
+
+        protected internal override float ResumeStep => ResumeBeatSeconds;
+
+        /// <summary>The count drawn as the start-of-run count is: the same numbers, GO! and bell.</summary>
+        protected internal override void ResumeBeat(int beat, float step)
+        {
+            if (_siege != null) _siege.ResumeCount(beat, step);
+        }
+
+        /// <summary>
         /// Three numbers, and the middle one is not the one every other mode on this shape shows.
         ///
         /// <para>

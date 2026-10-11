@@ -111,6 +111,19 @@ namespace GlimmerGrove
         public const string Covered = "covered";
 
         /// <summary>
+        /// A continued run is being counted back in (<see cref="ResumeCountdown"/>).
+        ///
+        /// <para>
+        /// Taken by <c>RunContinueFlow</c> <em>before</em> it lets go of <see cref="Deciding"/>, so
+        /// not one frame of play falls between the purchase and the count; released on GO, or the
+        /// moment the run is handed back some other way. The count advances only on frames this
+        /// is the sole reason held, so anything else holding the run - a pause, a panel - holds
+        /// the count with it.
+        /// </para>
+        /// </summary>
+        public const string Resuming = "resuming";
+
+        /// <summary>
         /// Small enough that a list beats a set on every count that matters here - no
         /// hashing, no allocation on the first take, and it keeps the order for a log line.
         /// </summary>

@@ -7987,7 +7987,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Cada rayo golpea un 15% más fuerte."
+      "text": "Los disparos hacen un 15% más de daño."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8003,7 +8003,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Cada rayo gasta un 12% menos de combustible."
+      "text": "Los disparos gastan un 12% menos de combustible."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8011,7 +8011,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Cada gema vale un 20% más de combustible."
+      "text": "Las gemas dan un 20% más de combustible."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8019,7 +8019,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Las torres aguantan un 30% más de daño antes de caer."
+      "text": "Las torres tienen un 30% más de vida."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8027,7 +8027,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Las torres almacenan un 25% más de combustible."
+      "text": "Las torres guardan un 25% más de combustible."
     },
     {
       "key": "shuffle.brace.name",
@@ -8035,7 +8035,7 @@
     },
     {
       "key": "shuffle.brace.note",
-      "text": "Cada golpe en la línea quita 1 menos."
+      "text": "Las torres reciben 1 de daño menos por cada golpe."
     },
     {
       "key": "shuffle.field_medic.name",
@@ -8043,7 +8043,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Las torres recuperan vida poco a poco."
+      "text": "Las torres recuperan 1 de vida cada 6 segundos."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "El 10% de los rayos hace el doble de daño."
+      "text": "El 10% de los disparos hace el doble de daño."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "La calma entre oleadas dura un 20% más."
+      "text": "Las pausas entre oleadas duran un 20% más."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Los rayos salpican a los invasores cercanos con un 40%."
+      "text": "Los disparos también dañan a los invasores cercanos un 40%."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Los rayos saltan a otro invasor con un 50%."
+      "text": "Los disparos saltan a 1 invasor más con un 50% de daño."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Cada tercer rayo atraviesa todo su carril."
+      "text": "Cada 3.er disparo golpea a todos los invasores de su carril."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Los rayos enfrían a los invasores y los frenan un 30%."
+      "text": "Los disparos frenan a los invasores un 30%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8099,7 +8099,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "Los rayos prenden fuego a los invasores durante 3 segundos."
+      "text": "Los disparos queman a los invasores durante 3 segundos."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8107,7 +8107,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "El 12% de los rayos detiene en seco al invasor."
+      "text": "El 12% de los disparos aturde a un invasor medio segundo."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Cada baja devuelve a la torre un poco de combustible."
+      "text": "Cada baja da 1 de combustible a la torre."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Las sobrecargas golpean un 50% más fuerte y las torres guardan una más."
+      "text": "Los disparos cargados hacen un 50% más de daño y las torres guardan 1 más."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.thorns.note",
-      "text": "El invasor que golpea la línea recibe daño a cambio."
+      "text": "Los invasores que golpean una torre reciben daño."
     },
     {
       "key": "shuffle.rally_cry.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Cada oleada llena cada torre un 30% al salir."
+      "text": "Cada nueva oleada da un 30% de combustible a todas las torres."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8147,7 +8147,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Cada baja cura un poco a la torre."
+      "text": "Cada baja cura 1 de vida a la torre."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Toda la colina avanza un 15% más despacio."
+      "text": "Los invasores caminan un 15% más lento."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8163,7 +8163,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Los rayos golpean a brutos y armaduras un 50% más fuerte."
+      "text": "Los disparos hacen un 50% más de daño a brutos e invasores con armadura."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Una torre caída se levanta una vez con la mitad de vida."
+      "text": "Una torre destruida vuelve una vez con la mitad de vida."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8179,7 +8179,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Cada oleada congela la colina 2 segundos al salir."
+      "text": "Cada nueva oleada congela a los invasores 2 segundos."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "El 35% de los invasores que llegan a la línea salen despedidos colina arriba."
+      "text": "El 35% de los invasores que llegan a tus torres es empujado hacia atrás."
     },
     {
       "key": "shuffle.execution.name",
@@ -8195,7 +8195,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Los rayos rematan a los invasores con menos del 15% de vida."
+      "text": "Los disparos matan al instante a invasores con menos del 15% de vida."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "El 25% de los rayos impacta dos veces."
+      "text": "El 25% de los disparos golpea otra vez con la mitad de daño."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8211,7 +8211,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Una torre sin objetivo dispara a cualquier color con la mitad de fuerza."
+      "text": "Una torre sin objetivo dispara a otros colores con la mitad de daño."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "Un invasor abatido daña a sus vecinos con el 30% de su vida."
+      "text": "Los invasores abatidos explotan y dañan a los cercanos."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "El 6% de los rayos maldice a su objetivo durante 3 segundos."
+      "text": "El 6% de los disparos maldice a un invasor: recibe un 20% más de daño durante 3 segundos."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8235,7 +8235,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Cada oleada guarda una sobrecarga en una torre."
+      "text": "Cada nueva oleada da a una torre 1 disparo cargado gratis."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8243,7 +8243,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Cuando cae la última torre, toda la línea se levanta una vez con la vida completa."
+      "text": "Cuando cae tu última torre, todas vuelven una vez con la vida llena."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Los rayos golpean un 40% más fuerte y las torres disparan un 25% más rápido."
+      "text": "Los disparos hacen un 40% más de daño y las torres disparan un 25% más rápido."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Una cuarta parte de cada combinación alimenta también a las otras tres torres."
+      "text": "Cada combinación también da combustible a las otras tres torres."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Una torre con menos del 30% de vida dispara un 60% más fuerte y más rápido."
+      "text": "Las torres con menos del 30% de vida hacen un 60% más de daño y disparan un 60% más rápido."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8275,7 +8275,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Cada rayo lanza 2 perdigones a los siguientes invasores con un 40%."
+      "text": "Cada disparo también lanza 2 perdigones a invasores cercanos."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8283,7 +8283,7 @@
     },
     {
       "key": "shuffle.ricochet.note",
-      "text": "Un rayo que mata rebota al invasor más cercano con un 80%."
+      "text": "Un disparo que mata rebota al invasor más cercano."
     },
     {
       "key": "shuffle.missile_pod.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Cada cuarto rayo lanza 2 misiles teledirigidos."
+      "text": "Cada 4.º disparo también lanza 2 misiles teledirigidos."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8299,7 +8299,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Cada quinto rayo lanza una onda por su fila y empuja atrás a los invasores."
+      "text": "Cada 5.º disparo lanza una onda por su fila que empuja a los invasores hacia atrás."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8307,7 +8307,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Los rayos dejan charcos tóxicos que dañan a quien los pisa."
+      "text": "Los disparos dejan charcos de veneno que dañan a los invasores que los pisan."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Las torres electrocutan al invasor más cercano, incluso sin combustible."
+      "text": "Las torres lanzan rayos al invasor más cercano, incluso sin combustible."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8323,7 +8323,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Cada disparo seguido es un 15% más rápido, hasta un 150%."
+      "text": "Las torres disparan más rápido cuanto más tiempo disparan, hasta un 150%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Los invasores congelados o aturdidos estallan en hielo al morir."
+      "text": "Los invasores frenados o aturdidos estallan en esquirlas al morir y dañan a los cercanos."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8339,7 +8339,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Los invasores en llamas pasan su fuego a sus vecinos al morir."
+      "text": "Los invasores en llamas propagan el fuego a los cercanos al morir."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8347,7 +8347,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Cada 6 segundos un meteoro cae sobre el grupo más grande."
+      "text": "Cada 6 segundos, un meteorito cae sobre el grupo más grande de invasores."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8355,7 +8355,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Cada 9 segundos un vórtice arrastra y junta al grupo más grande."
+      "text": "Cada 9 segundos, un vórtice junta al grupo más grande de invasores."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8363,7 +8363,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Cada 15 bajas, una bomba quita a cada invasor un 30% de su vida."
+      "text": "Cada 15 bajas, una bomba nuclear quita un 30% de vida a todos los invasores."
     },
     {
       "key": "shuffle.death_ray.name",
@@ -8371,7 +8371,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Cada 10 segundos la línea dispara un rayo gigante por la colina."
+      "text": "Cada 10 segundos, un láser gigante barre la colina."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8379,7 +8379,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Cada rayo se divide en 2 cabezas, y cada cabeza vuelve a dividirse."
+      "text": "Cada disparo se divide en 2, y cada mitad se divide otra vez."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Cada rayo se vuelve fuego, veneno, hielo o relámpago al azar."
+      "text": "Cada disparo se vuelve fuego, veneno, hielo o rayo al azar."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8395,7 +8395,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Las torres disparan el doble de rápido y cada rayo gasta la mitad de combustible."
+      "text": "Las torres disparan el doble de rápido y los disparos gastan la mitad de combustible."
     },
     {
       "key": "ui.loadout.discount_badge",

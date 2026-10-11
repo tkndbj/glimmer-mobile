@@ -7987,7 +7987,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Every bolt hits 15% harder."
+      "text": "Shots deal 15% more damage."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -7995,7 +7995,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Turrets fire 12% faster."
+      "text": "Turrets shoot 12% faster."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8003,7 +8003,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Each bolt burns 12% less fuel."
+      "text": "Shots use 12% less fuel."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8011,7 +8011,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Every gem is worth 20% more fuel."
+      "text": "Gems give 20% more fuel."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8019,7 +8019,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Turrets have 30% more health."
+      "text": "Turrets get 30% more health."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8035,7 +8035,7 @@
     },
     {
       "key": "shuffle.brace.note",
-      "text": "Every blow at the line takes 1 less."
+      "text": "Turrets take 1 less damage from every hit."
     },
     {
       "key": "shuffle.field_medic.name",
@@ -8043,7 +8043,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Turrets slowly regain health."
+      "text": "Turrets heal 1 health every 6 seconds."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10% of bolts hit for double."
+      "text": "10% of shots deal double damage."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "The quiet between waves lasts 20% longer."
+      "text": "Breaks between waves last 20% longer."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Bolts splash nearby raiders for 40%."
+      "text": "Shots also hit nearby raiders for 40% damage."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Bolts arc to one more raider for 50%."
+      "text": "Shots jump to 1 more raider for 50% damage."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Every third bolt lances its whole lane."
+      "text": "Every 3rd shot hits all raiders in its lane."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Bolts chill raiders, slowing them 30%."
+      "text": "Shots slow raiders by 30%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8099,7 +8099,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "Bolts set raiders burning for 3 seconds."
+      "text": "Shots set raiders on fire for 3 seconds."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8107,7 +8107,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12% of bolts stop a raider in its tracks."
+      "text": "12% of shots stun a raider for half a second."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Every kill gives the turret a little fuel back."
+      "text": "Each kill gives the turret 1 fuel."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Overcharges hit 50% harder and turrets bank one more."
+      "text": "Charged shots deal 50% more damage, and turrets store 1 more."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.thorns.note",
-      "text": "A raider that strikes the line is hurt back."
+      "text": "Raiders that hit a turret take damage back."
     },
     {
       "key": "shuffle.rally_cry.name",
@@ -8147,7 +8147,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Every kill heals the turret a little."
+      "text": "Each kill heals the turret 1 health."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "The whole hill walks 15% slower."
+      "text": "Raiders walk 15% slower."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8163,7 +8163,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Bolts hit brutes and armour 50% harder."
+      "text": "Shots deal 50% more damage to brutes and armoured raiders."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "A fallen turret stands back up once, at half health."
+      "text": "A destroyed turret comes back once with half health."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8179,7 +8179,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Every wave freezes the hill for 2 seconds as it steps out."
+      "text": "Each new wave freezes raiders for 2 seconds."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35% of raiders reaching the line are thrown back up the hill."
+      "text": "35% of raiders that reach your turrets are pushed back."
     },
     {
       "key": "shuffle.execution.name",
@@ -8195,7 +8195,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Bolts finish raiders under 15% health outright."
+      "text": "Shots instantly kill raiders under 15% health."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25% of bolts land twice."
+      "text": "25% of shots hit a second time for half damage."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8211,7 +8211,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "An idle turret fires at any colour, at half power."
+      "text": "A turret with no target shoots other colours for half damage."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "A felled raider blasts its neighbours for 30% of its health."
+      "text": "Killed raiders explode and damage nearby raiders."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6% of bolts curse their target for 3 seconds."
+      "text": "6% of shots curse a raider: it takes 20% more damage for 3 seconds."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8235,7 +8235,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Each new wave banks an overcharge on a turret."
+      "text": "Each new wave gives a turret 1 free charged shot."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8243,7 +8243,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "When the last turret falls, the whole line rises once at full health."
+      "text": "When your last turret falls, all turrets come back once at full health."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Bolts hit 40% harder and turrets fire 25% faster."
+      "text": "Shots deal 40% more damage and turrets shoot 25% faster."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "A quarter of every match also feeds the other three turrets."
+      "text": "Every match also gives fuel to the other three turrets."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "A turret under 30% health fires 60% harder and faster."
+      "text": "Turrets under 30% health deal 60% more damage and shoot 60% faster."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8275,7 +8275,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Every bolt throws 2 pellets at the next raiders for 40%."
+      "text": "Every shot also fires 2 pellets at nearby raiders."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8283,7 +8283,7 @@
     },
     {
       "key": "shuffle.ricochet.note",
-      "text": "A bolt that kills bounces to the nearest raider for 80%."
+      "text": "A shot that kills bounces to the nearest raider."
     },
     {
       "key": "shuffle.missile_pod.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Every 4th bolt launches 2 homing missiles."
+      "text": "Every 4th shot also fires 2 homing missiles."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8299,7 +8299,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Every 5th bolt sends a shockwave across its row and knocks raiders back."
+      "text": "Every 5th shot sends a shockwave along its row, pushing raiders back."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8307,7 +8307,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Bolts leave toxic pools that hurt raiders walking through."
+      "text": "Shots leave poison pools that hurt raiders walking through."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8323,7 +8323,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Each shot in a row fires 15% faster, up to 150%."
+      "text": "Turrets shoot faster the longer they keep shooting, up to 150%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Frozen or stunned raiders burst into ice shards when killed."
+      "text": "Slowed or stunned raiders burst into shards when killed, hitting nearby raiders."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8339,7 +8339,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Burning raiders spread their fire to their neighbours when killed."
+      "text": "Burning raiders spread fire to nearby raiders when killed."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8347,7 +8347,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Every 6 seconds a meteor crashes into the biggest crowd."
+      "text": "Every 6 seconds, a meteor hits the biggest group of raiders."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8355,7 +8355,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Every 9 seconds a vortex drags the biggest crowd together."
+      "text": "Every 9 seconds, a vortex pulls the biggest group of raiders together."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8363,7 +8363,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Every 15 kills, a nuke takes 30% of every raider's health."
+      "text": "Every 15 kills, a nuke takes 30% health from every raider."
     },
     {
       "key": "shuffle.death_ray.name",
@@ -8371,7 +8371,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Every 10 seconds the line fires a giant ray across the hill."
+      "text": "Every 10 seconds, a giant laser fires across the hill."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8379,7 +8379,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Every bolt splits into 2 heads, and each head splits again."
+      "text": "Every shot splits in 2, and each half splits again."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Every bolt turns into fire, venom, ice or lightning at random."
+      "text": "Every shot becomes fire, poison, ice or lightning at random."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8395,7 +8395,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Turrets fire twice as fast and bolts cost half the fuel."
+      "text": "Turrets shoot twice as fast, and shots use half the fuel."
     },
     {
       "key": "ui.loadout.discount_badge",

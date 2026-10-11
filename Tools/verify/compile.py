@@ -191,6 +191,15 @@ ASSEMBLIES = [
         src=sources("Assets/Game/Scripts/Ads"),
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
     )),
+    ("ads-ios", dict(
+        out="GlimmerGrove.Ads.iOS",
+        src=sources("Assets/Game/Scripts/Ads"),
+        # The same assembly with UNITY_IOS defined, for `pres-ios`'s reason: the provider's iOS-only
+        # calls (`LevelPlay.SetPauseGame`, which keeps the game from running under an ad) sit
+        # behind `#if UNITY_IOS && !UNITY_EDITOR`, so the pass above compiles none of them.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+        defines=DEFINES + ["UNITY_IOS"],
+    )),
     ("privacy", dict(
         out="GlimmerGrove.Privacy",
         src=sources("Assets/Game/Scripts/Privacy"),

@@ -753,6 +753,20 @@ namespace GlimmerGrove
         /// <summary>Whether a count-in number is still on the hill. See <see cref="_counting"/>.</summary>
         bool Counting => Time.unscaledTime < _counting;
 
+        /// <summary>
+        /// One beat of the count a continued run is handed back on (<c>ResumeCountdown</c>), drawn
+        /// exactly as the start-of-run count draws its own - one drawing for one meaning. When a
+        /// beat is drawn is the count's; this only draws it, and keeps <see cref="Counting"/>
+        /// answering for the number's whole life so nothing else is put over it.
+        /// </summary>
+        public void ResumeCount(int beat, float step)
+        {
+            if (_fx == null || beat < 0) return;
+
+            _counting = Time.unscaledTime + step * .95f;
+            CountBeat(beat, step);
+        }
+
         void CountBeat(int i, float step)
         {
             if (Muted) return;

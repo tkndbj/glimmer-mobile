@@ -176,6 +176,16 @@ namespace GlimmerGrove.Ads
             LevelPlay.OnInitSuccess += OnInitSuccess;
             LevelPlay.OnInitFailed += OnInitFailed;
 
+#if UNITY_IOS && !UNITY_EDITOR
+            // **Nothing in the game runs under an ad.** iOS presents the ad over Unity's own view
+            // and Unity keeps running beneath it - so a siege resumed by an early answer walked
+            // its hill into the line behind the end card (RewardedShow). LevelPlay pauses the game
+            // for the ad's life and resumes it on close; once a session covers every ad. iOS only
+            // because Android shows the ad as its own activity, which already pauses the player
+            // (the Android SDK logs this call as unexpected).
+            LevelPlay.SetPauseGame(true);
+#endif
+
             // The account id is passed at start-up when there is one, and refreshed before
             // every impression by ShowAsync - see the note there about sign-in landing late.
             LevelPlay.Init(AppKey, CloudState.UserId);
@@ -259,7 +269,10 @@ namespace GlimmerGrove.Ads
                 var show = _show;
                 if (show == null) return;
 
-                show.Rewarded();
+                // Remembered, and answered only once the ad has left the screen - the reward
+                // arrives at the end of the video with the end card still up, and a caller acting
+                // then acts behind the ad (RewardedShow's second fault).
+                Fire.AndForget(show.Rewarded(), "LevelPlay.RewardBackstop");
                 if (show.RewardedLate)
                     Debug.LogWarning($"[Ads] '{placementId}' rewarded {RewardedShow.CloseGrace.TotalSeconds:0}s+ " +
                                      "after it closed; the player was told it did not finish. Lengthen " +

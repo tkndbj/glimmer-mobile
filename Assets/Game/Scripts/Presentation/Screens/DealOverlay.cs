@@ -51,11 +51,8 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ geometry
         const float PanelW = 1030f;
         const int MostRows = 3;
-        /// <summary>
-        /// A row: the deal card and the room above it its value seal rises into
-        /// (<see cref="DealCard.SealRise"/>), with air so a seal clears the card of the row above.
-        /// </summary>
-        const float CellW = 950f, CellH = 190f + DealCard.SealRise + 18f;
+        /// <summary>A row: the open deal card (<see cref="DealCard.BuildOpen"/>), with air between rows.</summary>
+        const float CellW = 950f, CellH = DealRow.CardH + 30f;
         const float ListPadTop = 6f, ListPadBottom = 6f;
 
         /// <summary>
@@ -310,16 +307,18 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ one row
         /// <summary>
         /// One deal, built once and rebound as the list recycles (44mc: every field written on every
-        /// bind). The shop band's frame in miniature - the gold rim round the navy window, the coffer
-        /// on its turning burst, the amount in full - with the clock and the price key on the right.
+        /// bind). The open card (<see cref="DealCard.BuildOpen"/>) - the coffer big at the left with
+        /// the value seal over it, no box - and down the right column the amount, the clock and the
+        /// price key. Mirrored by <c>Tools/render_deals.py</c>.
         /// </summary>
         sealed class DealRow : IGridCell
         {
-            // The shop's card exactly (`DealCard`, one builder for both - the owner, 2026-10-09:
-            // "identical on the panel and on shop"). The right side carries the clock over the price
-            // key, where the shop's carries ENDS IN over the clock: the panel is where it is bought.
-            const float CardW = 940f, CardH = 190f, AmountW = 380f;
-            const float RightX = 172f, TimerW = 300f, TimerH = 58f, KeyW = 300f, KeyH = 82f;
+            // The open shape, not the shop's boxed card (the owner, 2026-10-11: the green box looked
+            // too thin on a green window). The amount and seal still come from `DealCard`, so the
+            // two can never say different things about a deal.
+            public const float CardH = 330f;
+            const float CardW = 940f, ColumnW = 520f;
+            const float TimerY = -16f, TimerW = 360f, TimerH = 62f, KeyY = -108f, KeyW = 400f, KeyH = 96f;
             const float Pulse = .12f, PulseTime = .25f;
 
             static readonly Color Calm = Color.white;
@@ -345,19 +344,19 @@ namespace GlimmerGrove
                 _panel = panel;
                 _root = UIKit.Box("Deal", parent, new Vector2(CellW, CellH), new Vector2(.5f, 1f), Vector2.zero);
 
-                // The card stands at the foot of the row; the seal rises into the room above it.
-                _card = DealCard.Build("Card", _root, new Vector2(CardW, CardH), new Vector2(.5f, .5f),
-                                       new Vector2(0f, -CellH * .5f + CardH * .5f + 4f), AmountW, null);
+                _card = DealCard.BuildOpen("Card", _root, new Vector2(CardW, CardH), new Vector2(.5f, .5f),
+                                           Vector2.zero, ColumnW);
 
+                // The clock and the key under the amount, on the column's middle.
                 _timerBox = (RectTransform)UIKit.Img("Trough", _card.Root, Art.S("Ui/" + Skins.Trough), Color.white,
-                                                     new Vector2(TimerW, TimerH), new Vector2(1f, .5f),
-                                                     new Vector2(-RightX, 40f)).transform;
+                                                     new Vector2(TimerW, TimerH), new Vector2(0f, .5f),
+                                                     new Vector2(_card.ColumnX, TimerY)).transform;
                 _timer = UIKit.Shrinkable(
                     UIKit.Titled("Timer", _timerBox, string.Empty, 36, Calm, TextAnchor.MiddleCenter,
                                  new Vector2(TimerW - 24f, TimerH), new Vector2(.5f, .5f), Vector2.zero, 3f, 2f), 22);
 
-                _key = UIKit.TextButton("Buy", _card.Root, Skins.Gem, string.Empty, 38,
-                                        new Vector2(KeyW, KeyH), new Vector2(1f, .5f), new Vector2(-RightX, -36f),
+                _key = UIKit.TextButton("Buy", _card.Root, Skins.Gem, string.Empty, 42,
+                                        new Vector2(KeyW, KeyH), new Vector2(0f, .5f), new Vector2(_card.ColumnX, KeyY),
                                         () => _panel.Buy(_deal), "ic_gem");
                 _keyPlate = _key.GetComponent<Image>();
             }
@@ -406,8 +405,8 @@ namespace GlimmerGrove
                 {
                     case RowState.Bought:
                         _key.SetCaption(Loc.Get("ui.deal.bought_row").Upper());
-                        // Blue rather than `Skins.Settled`'s green: the row is a green key, and a
-                        // green key on it would read as no key at all.
+                        // Blue rather than `Skins.Settled`'s green: the panel is a green window, and
+                        // a green key on it would read as no key at all.
                         _keyPlate.sprite = Art.S("Ui/" + Skins.Alternate);
                         _key.Interactable = false;
                         break;
@@ -428,7 +427,7 @@ namespace GlimmerGrove
                 if (_key.Icon) _key.Icon.enabled = state == RowState.Ready;
             }
 
-            /// <summary>Every frame: the burst turns, an urgent second lands with a pulse, the wanted key breathes.</summary>
+            /// <summary>Every frame: an urgent second lands with a pulse, the wanted key breathes.</summary>
             public void Animate(float now)
             {
                 if (_deal == null) return;

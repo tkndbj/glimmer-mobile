@@ -7987,7 +7987,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Jeder Bolzen trifft 15% härter."
+      "text": "Schüsse machen 15% mehr Schaden."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -7995,7 +7995,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Türme feuern 12% schneller."
+      "text": "Türme schießen 12% schneller."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8003,7 +8003,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Jeder Bolzen verbrennt 12% weniger Treibstoff."
+      "text": "Schüsse verbrauchen 12% weniger Treibstoff."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8011,7 +8011,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Jedes Juwel ist 20% mehr Treibstoff wert."
+      "text": "Juwelen geben 20% mehr Treibstoff."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8019,7 +8019,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Türme halten 30% mehr Schaden aus, bevor sie fallen."
+      "text": "Türme haben 30% mehr Leben."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8035,7 +8035,7 @@
     },
     {
       "key": "shuffle.brace.note",
-      "text": "Jeder Schlag auf die Linie nimmt 1 weniger."
+      "text": "Türme nehmen bei jedem Treffer 1 Schaden weniger."
     },
     {
       "key": "shuffle.field_medic.name",
@@ -8043,7 +8043,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Türme erholen sich langsam."
+      "text": "Türme heilen alle 6 Sekunden 1 Leben."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10% der Bolzen treffen doppelt."
+      "text": "10% der Schüsse machen doppelten Schaden."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Die Ruhe zwischen den Wellen dauert 20% länger."
+      "text": "Pausen zwischen Wellen dauern 20% länger."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Bolzen treffen nahe Plünderer mit 40%."
+      "text": "Schüsse treffen auch Plünderer in der Nähe mit 40% Schaden."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Bolzen springen auf einen weiteren Plünderer mit 50% über."
+      "text": "Schüsse springen auf 1 weiteren Plünderer über, mit 50% Schaden."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Jeder dritte Bolzen durchschlägt die ganze Bahn."
+      "text": "Jeder 3. Schuss trifft alle Plünderer in seiner Spur."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Bolzen kühlen Plünderer und bremsen sie um 30%."
+      "text": "Schüsse bremsen Plünderer um 30%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8099,7 +8099,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "Bolzen setzen Plünderer 3 Sekunden in Brand."
+      "text": "Schüsse setzen Plünderer 3 Sekunden in Brand."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8107,7 +8107,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12% der Bolzen stoppen einen Plünderer auf der Stelle."
+      "text": "12% der Schüsse betäuben einen Plünderer eine halbe Sekunde."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Jeder Abschuss gibt dem Turm etwas Treibstoff zurück."
+      "text": "Jeder Abschuss gibt dem Turm 1 Treibstoff."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Überladungen treffen 50% härter und Türme speichern eine mehr."
+      "text": "Geladene Schüsse machen 50% mehr Schaden, und Türme speichern 1 mehr."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.thorns.note",
-      "text": "Ein Plünderer, der die Linie trifft, wird selbst verletzt."
+      "text": "Plünderer, die einen Turm treffen, nehmen selbst Schaden."
     },
     {
       "key": "shuffle.rally_cry.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Jede Welle füllt jeden Turm beim Erscheinen zu 30%."
+      "text": "Jede neue Welle gibt allen Türmen 30% Treibstoff."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8147,7 +8147,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Jeder Abschuss heilt den Turm ein wenig."
+      "text": "Jeder Abschuss heilt den Turm um 1 Leben."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Der ganze Hügel marschiert 15% langsamer."
+      "text": "Plünderer laufen 15% langsamer."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8163,7 +8163,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Bolzen treffen Schläger und Panzer 50% härter."
+      "text": "Schüsse machen 50% mehr Schaden an Schlägern und gepanzerten Plünderern."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Ein gefallener Turm steht einmal mit halber Gesundheit wieder auf."
+      "text": "Ein zerstörter Turm kommt einmal mit halbem Leben zurück."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8179,7 +8179,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Jede Welle friert den Hügel beim Erscheinen 2 Sekunden ein."
+      "text": "Jede neue Welle friert die Plünderer 2 Sekunden ein."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35% der Plünderer, die die Linie erreichen, werden den Hügel hinaufgeschleudert."
+      "text": "35% der Plünderer, die deine Türme erreichen, werden zurückgestoßen."
     },
     {
       "key": "shuffle.execution.name",
@@ -8195,7 +8195,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Bolzen erledigen Plünderer unter 15% Gesundheit sofort."
+      "text": "Schüsse töten Plünderer unter 15% Leben sofort."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25% der Bolzen treffen zweimal."
+      "text": "25% der Schüsse treffen ein zweites Mal mit halbem Schaden."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8211,7 +8211,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Ein untätiger Turm feuert auf jede Farbe, mit halber Kraft."
+      "text": "Ein Turm ohne Ziel schießt mit halbem Schaden auf andere Farben."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "Ein gefallener Plünderer trifft seine Nachbarn mit 30% seiner Gesundheit."
+      "text": "Getötete Plünderer explodieren und verletzen Plünderer in der Nähe."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6% der Bolzen verfluchen ihr Ziel 3 Sekunden lang."
+      "text": "6% der Schüsse verfluchen einen Plünderer: Er nimmt 3 Sekunden lang 20% mehr Schaden."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8235,7 +8235,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Jede Welle speichert eine Überladung auf einem Turm."
+      "text": "Jede neue Welle gibt einem Turm 1 geladenen Schuss gratis."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8243,7 +8243,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Fällt der letzte Turm, steht die ganze Linie einmal mit voller Gesundheit wieder auf."
+      "text": "Fällt dein letzter Turm, kommen alle Türme einmal mit vollem Leben zurück."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Bolzen treffen 40% härter und Türme feuern 25% schneller."
+      "text": "Schüsse machen 40% mehr Schaden und Türme schießen 25% schneller."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Ein Viertel jeder Kombination füllt auch die anderen drei Türme."
+      "text": "Jede Kombination gibt auch den anderen drei Türmen Treibstoff."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Ein Turm unter 30% Gesundheit feuert 60% härter und schneller."
+      "text": "Türme unter 30% Leben machen 60% mehr Schaden und schießen 60% schneller."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8275,7 +8275,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Jeder Bolzen wirft 2 Schrotkugeln auf die nächsten Plünderer mit 40%."
+      "text": "Jeder Schuss feuert auch 2 Schrotkugeln auf Plünderer in der Nähe."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8283,7 +8283,7 @@
     },
     {
       "key": "shuffle.ricochet.note",
-      "text": "Ein tödlicher Bolzen prallt zum nächsten Plünderer ab, mit 80%."
+      "text": "Ein tödlicher Schuss prallt zum nächsten Plünderer ab."
     },
     {
       "key": "shuffle.missile_pod.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Jeder 4. Bolzen startet 2 Lenkraketen."
+      "text": "Jeder 4. Schuss feuert auch 2 Lenkraketen."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8299,7 +8299,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Jeder 5. Bolzen schickt eine Druckwelle durch seine Reihe und wirft Plünderer zurück."
+      "text": "Jeder 5. Schuss schickt eine Druckwelle durch seine Reihe, die Plünderer zurückstößt."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8307,7 +8307,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Bolzen hinterlassen Giftpfützen, die jeden verletzen, der hindurchläuft."
+      "text": "Schüsse hinterlassen Giftpfützen, die Plünderer beim Durchlaufen verletzen."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Türme schocken den nächsten Plünderer mit Blitzen, auch ohne Treibstoff."
+      "text": "Türme schlagen mit Blitzen auf den nächsten Plünderer ein, auch ohne Treibstoff."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8323,7 +8323,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Jeder Schuss in Folge feuert 15% schneller, bis zu 150%."
+      "text": "Türme schießen schneller, je länger sie feuern, bis zu 150%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Gefrorene oder betäubte Plünderer zerspringen beim Tod in Eissplitter."
+      "text": "Gebremste oder betäubte Plünderer zerspringen beim Tod in Splitter und treffen Plünderer in der Nähe."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8339,7 +8339,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Brennende Plünderer geben ihr Feuer beim Tod an ihre Nachbarn weiter."
+      "text": "Brennende Plünderer geben ihr Feuer beim Tod an Plünderer in der Nähe weiter."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8347,7 +8347,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Alle 6 Sekunden schlägt ein Meteor in die größte Gruppe ein."
+      "text": "Alle 6 Sekunden trifft ein Meteor die größte Gruppe Plünderer."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8355,7 +8355,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Alle 9 Sekunden zieht ein Wirbel die größte Gruppe zusammen."
+      "text": "Alle 9 Sekunden zieht ein Wirbel die größte Gruppe Plünderer zusammen."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8363,7 +8363,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Alle 15 Kills nimmt eine Bombe jedem Plünderer 30% seiner Gesundheit."
+      "text": "Alle 15 Abschüsse nimmt eine Atombombe allen Plünderern 30% Leben."
     },
     {
       "key": "shuffle.death_ray.name",
@@ -8371,7 +8371,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Alle 10 Sekunden feuert die Linie einen riesigen Strahl über den Hügel."
+      "text": "Alle 10 Sekunden fegt ein riesiger Laser über den Hügel."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8379,7 +8379,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Jeder Bolzen teilt sich in 2 Köpfe, und jeder Kopf teilt sich erneut."
+      "text": "Jeder Schuss teilt sich in 2, und jede Hälfte teilt sich noch einmal."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Jeder Bolzen wird zufällig zu Feuer, Gift, Eis oder Blitz."
+      "text": "Jeder Schuss wird zufällig zu Feuer, Gift, Eis oder Blitz."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8395,7 +8395,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Türme feuern doppelt so schnell und Bolzen kosten nur halb so viel Treibstoff."
+      "text": "Türme schießen doppelt so schnell, und Schüsse verbrauchen halb so viel Treibstoff."
     },
     {
       "key": "ui.loadout.discount_badge",
