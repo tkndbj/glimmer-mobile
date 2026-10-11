@@ -2446,6 +2446,14 @@
       "text": "Herzquelle"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Juwelen-Pass"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Münzen-Pass"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Solange das läuft, bringt jedes Level, jede Wacht und jede Welle {0} % mehr EP. Lässt sich mit jedem anderen EP-Boost kombinieren."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "{0}-TAGE-PASS"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Juwelen jeden Tag, {0} Tage lang"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Münzen jeden Tag, {0} Tage lang"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Verbleibende Tage: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Abholen"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Morgen"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Belohnung von heute abgeholt!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Die Belohnung von heute ist abgeholt. Komm morgen für die nächste wieder."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Verbinde dich mit dem Internet, um deine Belohnung abzuholen."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Dein Pass läuft noch. Hol die Belohnung von heute auf seiner Karte ab."
     },
     {
       "key": "ui.shop.xp_surge_added",

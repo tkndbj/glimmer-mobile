@@ -2446,6 +2446,14 @@
       "text": "Source de cœurs"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Passe Gemmes"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Passe Pièces"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Tant que c'est actif, chaque niveau, garde et vague rapporte {0} % d'XP en plus. Se cumule avec tous les autres bonus d'XP."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "PASSE DE {0} JOURS"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Des gemmes chaque jour pendant {0} jours"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Des pièces chaque jour pendant {0} jours"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Jours restants : {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Récupérer"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Demain"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Récompense du jour récupérée !"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Tu as déjà récupéré la récompense du jour. Reviens demain pour la suivante."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Connecte-toi à Internet pour récupérer ta récompense."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Ton passe est toujours actif. Récupère la récompense du jour sur sa carte."
     },
     {
       "key": "ui.shop.xp_surge_added",

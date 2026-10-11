@@ -467,7 +467,7 @@ namespace GlimmerGrove.EditorTools
             {
                 var rungs = new List<StoreProduct>();
                 foreach (var product in catalog.Shelf(shelf))
-                    if (!product.IsOneTime) rungs.Add(product);
+                    if (!product.IsOneTime && !product.IsDailyPass) rungs.Add(product);
 
                 rungs.Sort((a, b) => a.ReferenceUsdCents.CompareTo(b.ReferenceUsdCents));
 
@@ -597,6 +597,16 @@ namespace GlimmerGrove.EditorTools
                                   $"hearts refill to {product.HeartCapacity} (from " +
                                   $"{table.Hearts.RefillCap}) at " +
                                   $"${product.ReferenceUsdCents / 100f:0.00}, once and for ever");
+                        continue;
+                    }
+
+                    // A pass's amounts are one day's, so the line says so and prints the whole.
+                    if (product.IsDailyPass)
+                    {
+                        Debug.Log($"[Glimmer] store {shelf} pass: '{product.Id}' {product.Gems} gems + " +
+                                  $"{product.Credits} credits a day for {product.PassDays} days " +
+                                  $"({product.TotalGems} gems + {product.TotalCredits} credits in all) at " +
+                                  $"${product.ReferenceUsdCents / 100f:0.00}");
                         continue;
                     }
 

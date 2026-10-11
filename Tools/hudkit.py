@@ -526,7 +526,8 @@ def credits_per_gem():
     shelf of the shipped `progression.json`, or None when either shelf is empty."""
     import json
     store = json.loads((REPO / "Assets/StreamingAssets/Content/progression.json").read_text(encoding="utf-8"))["store"]
-    products = store.get("products", [])
+    # A seven-day pass is not a rung: its figures are per day (`StoreCatalog.BasesOf`).
+    products = [p for p in store.get("products", []) if not p.get("passDays")]
     gems = [p for p in products if p.get("shelf") == "gems" and p.get("gems")]
     coins = [p for p in products if p.get("shelf") == "coins" and p.get("credits")]
     if not gems or not coins:
@@ -568,7 +569,12 @@ def deal_card(sheet, cx, cy, w, h, credits, gems, value_word, unit_word, amount_
 
 def deal_seal(sheet, sx, sy, credits, gems, value_word):
     """`DealCard`'s red value seal centred on (sx, sy), or nothing when the deal is no better than the shop."""
-    pct = deal_value(credits, gems)
+    value_seal(sheet, sx, sy, deal_value(credits, gems), value_word)
+
+
+def value_seal(sheet, sx, sy, pct, value_word):
+    """`DealCard.PaintSeal`: the seal for a figure already worked out (a deal's or a bundle's), or
+    nothing for nought."""
     if not pct:
         return
     paste(sheet, tint(skin("Hud/burst", round(DEAL_SEAL_SIZE), round(DEAL_SEAL_SIZE)), DEAL_SEAL)

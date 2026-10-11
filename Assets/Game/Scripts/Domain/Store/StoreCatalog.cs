@@ -92,6 +92,13 @@ namespace GlimmerGrove.Store
 
         /// <summary>Dearest a product may claim to be, in US cents.</summary>
         public const int MaxReferenceCents = 100_000;
+
+        /// <summary>
+        /// The most daily pieces a pass may be split into. Mirrors <c>MAX_PASS_DAYS</c> in
+        /// <c>functions/src/daily-pass.ts</c> and the seeder's bound; a pass the server would
+        /// refuse is a real payment with nothing behind it, so the three agree.
+        /// </summary>
+        public const int MaxPassDays = 31;
     }
 
     /// <summary>
@@ -141,7 +148,9 @@ namespace GlimmerGrove.Store
             foreach (var good in _goods) _goodsById[good.Id] = good;
 
             CreditsPerGem = DeriveCreditsPerGem(_products);
-            HasExchangeRate = BasesOf(_products, out _, out _);
+            HasExchangeRate = BasesOf(_products, out var gemBase, out var coinBase);
+            GemBase = gemBase;
+            CoinBase = coinBase;
             RankShelves(_products, CreditsPerGem);
         }
 
@@ -152,6 +161,16 @@ namespace GlimmerGrove.Store
         /// shelf and meaningless as a figure printed for a player.
         /// </summary>
         public bool HasExchangeRate { get; }
+
+        /// <summary>
+        /// The cheapest repeatable gem pack and coin pack - what the shop's ordinary price of a gem
+        /// and of a coin is measured off (<see cref="HasExchangeRate"/>, <c>DealValue.BundlePercent</c>).
+        /// Null when that shelf sells none.
+        /// </summary>
+        public StoreProduct GemBase { get; }
+
+        /// <summary>See <see cref="GemBase"/>.</summary>
+        public StoreProduct CoinBase { get; }
 
         public IReadOnlyList<StoreProduct> Products => _products;
 
@@ -208,7 +227,8 @@ namespace GlimmerGrove.Store
         {
             get
             {
-                foreach (var product in _products) if (product.Gems > 0L) return true;
+                foreach (var product in _products)
+                    if (product.Gems > 0L && !product.IsDailyPass) return true;
                 return false;
             }
         }
@@ -332,6 +352,14 @@ namespace GlimmerGrove.Store
                                  0, 0, 2999, StoreBadge.Popular, 20),
                 new StoreProduct("gg_heart_vessel_3", StoreProductKind.NonConsumable, StoreShelf.Supplies,
                                  0, 0, 3999, StoreBadge.BestValue, 50),
+
+                // --- seven-day passes ---------------------------------------------------
+                // Currency paid in daily pieces (StoreProduct.PassDays): the amounts are one
+                // day's. Not rungs of their shelves, so they move no ladder, rate or bonus.
+                new StoreProduct("gg_gem_pass_7d", StoreProductKind.Consumable, StoreShelf.Gems,
+                                 0, 500, 199, StoreBadge.None, passDays: 7),
+                new StoreProduct("gg_coin_pass_7d", StoreProductKind.Consumable, StoreShelf.Coins,
+                                 20000, 0, 199, StoreBadge.None, passDays: 7),
             },
             new[]
             {
@@ -486,6 +514,7 @@ namespace GlimmerGrove.Store
             long credits = dto.credits < 0 ? 0 : dto.credits;
             long gems = dto.gems < 0 ? 0 : dto.gems;
             int capacity = dto.heartCapacity < 0 ? 0 : dto.heartCapacity;
+            int passDays = dto.passDays < 0 ? 0 : dto.passDays;
             string passId = dto.eventPassId ?? string.Empty;
             if ((passId.Length > 0 && (!IsUsableId(passId) || !oneTime || credits != 0 || gems != 0 || capacity != 0 || shelf != StoreShelf.EventPass)) ||
                 (shelf == StoreShelf.EventPass && passId.Length == 0))
@@ -571,13 +600,42 @@ namespace GlimmerGrove.Store
                 return null;
             }
 
+            // A seven-day pass (StoreProduct.PassDays): currency paid in daily pieces, so a
+            // repeatable currency product on a money shelf, split into at least two pieces and
+            // never more than the server pays. Refused rather than repaired, for the grant
+            // bound's reason: a card the server would not honour is worse than no card.
+            if (passDays != 0)
+            {
+                bool shelfOk = shelf == StoreShelf.Gems || shelf == StoreShelf.Coins;
+                if (passDays < 2 || passDays > StoreLimits.MaxPassDays || oneTime || capacity > 0 ||
+                    passId.Length > 0 || !shelfOk ||
+                    Math.Max(credits, gems) * passDays > StoreLimits.MaxGrant)
+                {
+                    problems.Add($"store product '{id}' is a pass of {passDays} days that is not a " +
+                                 $"consumable currency product on the gems or coins shelf, split into " +
+                                 $"2..{StoreLimits.MaxPassDays} days, paying at most " +
+                                 $"{StoreLimits.MaxGrant} in all; dropped");
+                    return null;
+                }
+            }
+
             var badge = ReadBadge(dto.badge, id, problems);
+
+            // A pass wears its own ribbon and no shelf badge: a badge points at a rung of a ladder,
+            // and a pass is not on one.
+            if (passDays > 0 && badge != StoreBadge.None)
+            {
+                problems.Add($"store product '{id}' is a pass and carries the '{badge}' badge; a badge " +
+                             "points at a rung of its shelf's ladder, which a pass is not on, so it is dropped");
+                badge = StoreBadge.None;
+            }
 
             // At most one Popular and one BestValue per shelf. Two of either is not a
             // content error the player can see as an error - it reads as a shop that cannot
             // make up its mind, which is exactly what a badge exists to prevent.
             if (badge == StoreBadge.Popular || badge == StoreBadge.BestValue)
             {
+                // (A pass has had its badge dropped above, so it never reaches this count.)
                 if (badged.TryGetValue(shelf, out var already) && already == badge)
                 {
                     problems.Add($"store shelf '{shelf}' already carries a '{badge}' badge; " +
@@ -596,7 +654,8 @@ namespace GlimmerGrove.Store
             }
 
             return new StoreProduct(id, oneTime ? StoreProductKind.NonConsumable : StoreProductKind.Consumable,
-                                    shelf, credits, gems, dto.referenceUsdCents, badge, capacity, passId);
+                                    shelf, credits, gems, dto.referenceUsdCents, badge, capacity, passId,
+                                    passDays);
         }
 
         static StoreGood ReadGood(StoreGoodDto dto, HashSet<string> seen, List<string> problems)
@@ -717,6 +776,9 @@ namespace GlimmerGrove.Store
 
             foreach (var product in products)
             {
+                // A pass's figures are per day, so it would make a nonsense of the rate.
+                if (product.IsDailyPass) continue;
+
                 if (product.Shelf == StoreShelf.Gems && product.Gems > 0 &&
                     (gemBase == null || product.ReferenceUsdCents < gemBase.ReferenceUsdCents))
                     gemBase = product;
@@ -749,9 +811,11 @@ namespace GlimmerGrove.Store
         {
             foreach (StoreShelf shelf in Enum.GetValues(typeof(StoreShelf)))
             {
+                // A pass is not a rung of its shelf (StoreProduct.PassDays): it keeps Tier nought,
+                // no bonus, and takes no part in the ladder the rest of the shelf is ranked on.
                 var onShelf = new List<StoreProduct>();
                 foreach (var product in products)
-                    if (product.Shelf == shelf) onShelf.Add(product);
+                    if (product.Shelf == shelf && !product.IsDailyPass) onShelf.Add(product);
 
                 if (onShelf.Count == 0) continue;
 

@@ -66,28 +66,26 @@ def summary_row(saying):
 RESTORE = 92.0
 COLUMNS, CELLW, CELLH = 2, 508.0, 560.0
 
-# `ShopScreen.ReferW` / `ReferH` / `ReferGap` - the invite banner's reserved band, between the
-# tabs and the store's one sentence. The whole point of drawing it here is the question the
-# owner asked when they asked for it: does it clear the buttons above and the line below. Both
-# edges come out of the same sum the screen uses, so neither can be answered by accident.
-REFER_W, REFER_H, REFER_GAP = CELLW * COLUMNS, 200.0, 16.0
-REFER_ROW = REFER_GAP + REFER_H + REFER_GAP
-SHELF_TOP = HEADER + TABROW + REFER_ROW
+# `ShopScreen.BandW` / `BandGap` - the band under the tabs and the air either side of it. The
+# invite banner that stood there is gone (the owner, 2026-10-11), so the shelf starts under the
+# tabs, or under the deal band when one is on sale.
+BAND_W, BAND_GAP = CELLW * COLUMNS, 16.0
+SHELF_TOP = HEADER + TABROW
 
-# `ShopScreen.DealH` / `DealLead` / `DealRow` - the limited-time deal's band (invariant 60),
-# directly under the invite band, in the storefront's orange (`Skins.Buy`), with the 26,000-coin
+# `ShopScreen.DealH` / `DealRow` - the limited-time deal's band (invariant 60),
+# directly under the tabs, in the storefront's orange (`Skins.Buy`), with the 26,000-coin
 # card's coffer (`Shop/coins_3`). `--deal` draws it and moves the shelf down by its row, exactly
 # as `ShopScreen.ShelfTop` does; without it the screen is pixel-identical to what shipped.
 DEAL_CARD_H = 204.0
 DEAL_SEAL_RISE = K.DEAL_SEAL_SIZE / 2 - K.DEAL_SEAL_DROP      # DealCard.SealRise
 DEAL_H = DEAL_CARD_H + DEAL_SEAL_RISE + 4.0
 DEAL_AMOUNT_W = 420.0
-DEAL_ROW = DEAL_H + REFER_GAP          # the invite band's trailing gap is the deal band's lead
+DEAL_ROW = BAND_GAP + DEAL_H + BAND_GAP
 DEAL = None                            # (credits, gems, seconds left) when drawn
 
 
 def shelf_top():
-    """`ShopScreen.ShelfTop`: the header, the tabs, the invite band and the deal band."""
+    """`ShopScreen.ShelfTop`: the header, the tabs and the deal band."""
     return SHELF_TOP + (DEAL_ROW if DEAL else 0.0)
 
 
@@ -133,9 +131,9 @@ def deal_band(sheet):
     """`ShopScreen.BuildDeal`: a `DealCard` at the foot of its slot, with ENDS IN over a ticking
     timer in a trough on its right, red in the last hour."""
     credits, gems, left = DEAL
-    slot_bottom = HEADER + TABROW + REFER_ROW + DEAL_H
+    slot_bottom = HEADER + TABROW + BAND_GAP + DEAL_H
     cy = slot_bottom - DEAL_CARD_H / 2
-    _lx, rx = K.deal_card(sheet, W / 2, cy, REFER_W, DEAL_CARD_H, credits, gems,
+    _lx, rx = K.deal_card(sheet, W / 2, cy, BAND_W, DEAL_CARD_H, credits, gems,
                           txt("ui.deal.value"), txt("ui.endless.coins").upper(), DEAL_AMOUNT_W)
 
     tx = rx - DEAL_TIMER_X
@@ -298,7 +296,8 @@ def pile(total, token):
 
 
 # --------------------------------------------------------------------------- the card
-def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, live=True, bundle=False):
+def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, live=True, bundle=False,
+         face_skin="btn_orange", amount_fill=None):
     """One product card, laid out the way `ProductCard`'s constructor lays one out."""
     plate_cx, plate_cy = x, top + CELLH / 2
     K.paste(sheet, K.skin("Hud/card", PLATEW, PLATEH), plate_cx, plate_cy)
@@ -313,7 +312,10 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
     art = Image.open(UI / "Shop" / f"{picture}.png").convert("RGBA")
     K.paste(sheet, K.fit(art, (ART, ART)), plate_cx, ptop + ART_DROP)
 
-    K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, outline=4)
+    if amount_fill:
+        K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, fill=amount_fill, outline=4)
+    else:
+        K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, outline=4)
     if bundle:
         # Gold, as `ProductCard` draws a bundle's coins, and fitted to its box as Best Fit would.
         got = K.shrunk(sheet, sub, plate_cx, pbot - BUNDLE_SUB_RISE, CELLW - 76.0, BUNDLE_SUB_BOX,
@@ -322,7 +324,7 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
     else:
         K.text(sheet, sub, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
 
-    face = K.skin("btn_orange", FACEW, FACEH)               # Skins.Buy
+    face = K.skin(face_skin, FACEW, FACEH)                  # Skins.Buy, or Skins.Affirm for CLAIM
     if not live:
         face = K.tint(face, K.MUTED)
     K.paste(sheet, face, plate_cx, pbot - FACE_RISE)
@@ -349,6 +351,34 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
         seal.alpha_composite(face)
         seal = seal.rotate(SEAL_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
+
+
+# How a seven-day pass card faces (`ProductCard.DrawPass`): for sale, CLAIM, or TOMORROW.
+PASS_STATE, PASS_LEFT = "price", 6
+
+
+def pass_card(sheet, x, top, shelf, p):
+    """`ProductCard.DrawPass`: the gift picture, one day's amount in its currency's colour, a
+    line saying how long (or how many days are left), the ribbon naming the pass, and a face that
+    sells it, claims today's piece in the affirm green, or says tomorrow, muted."""
+    gems = bool(p.get("gems"))
+    days = int(p["passDays"])
+    amount = p.get("gems") if gems else p.get("credits")
+
+    if PASS_STATE == "price":
+        sub = txt("ui.shop.pass_gems_daily" if gems else "ui.shop.pass_coins_daily").replace("{0}", str(days))
+        price, face, live = f"${p['referenceUsdCents'] / 100:.2f}", "btn_orange", True
+    else:
+        sub = txt("ui.shop.pass_left").replace("{0}", str(PASS_LEFT))
+        if PASS_STATE == "claim":
+            price, face, live = txt("ui.shop.pass_claim").upper(), "btn_green", True
+        else:
+            price, face, live = txt("ui.shop.pass_tomorrow").upper(), "btn_orange", False
+
+    card(sheet, x, top, shelf, "pass_gems" if gems else "pass_coins", compact(amount), sub, price, None,
+         bonus=txt("ui.shop.pass_ribbon").replace("{0}", str(days)), live=live, face_skin=face,
+         amount_fill=K.BLOOM if gems else K.GOLD)
+    print("  pass card: %s, %s a day for %d days, face %r" % (p["id"], f"{amount:,}", days, price))
 
 
 # `ui.shop.xp_boost_card` — the one headline on either shelf that is a sentence rather than a
@@ -771,31 +801,7 @@ def kit_card(sheet, x, top, item, gems):
     K.text(sheet, f"{gems:,}", plate_cx + 26, pbot - FACE_RISE, 34, fill=K.CREAM, outline=3)
 
 
-def invite_banner(sheet, waiting=0):
-    """`ShopScreen.BuildInvite` - `DoorKey`: the violet BUY LEVEL pill, "Refer a Friend" on
-    two lines and the owner's chest hoard on the right, at the foot of its band.
-
-    `waiting` is `ReferralLedger.WaitingCount`: the chests behind the door, on the hub's gift
-    starburst at the key's top-left corner (`WaitingBadge.HubGiftTopLeft`). Nought draws no
-    badge, which is what the band says until a friend finishes.
-    """
-    slot_bottom = HEADER + TABROW + REFER_GAP + REFER_H
-    ky, size, room = K.door_key(sheet, W / 2, slot_bottom, REFER_W, REFER_H,
-                                txt("ui.referral.door").upper(), "refer_door")
-    if waiting > 0:
-        # `WaitingBadge.HubGiftTopLeft` - the hub's scale, 1.2.
-        bx, by, sc = W / 2 - REFER_W / 2 + 46, ky - K.DOOR_KEY_H / 2 + 44, 1.2
-        K.paste(sheet, K.glow(round(190 * sc), 2.0, K.GOLD, .40), bx, by)
-        K.paste(sheet, K.tint(K.skin("Hud/burst", round(104 * sc), round(104 * sc)), K.GOLD)
-                .rotate(8, Image.BICUBIC), bx, by)
-        K.paste(sheet, K.fit(Image.open(K.UI / "ic_gift.png").convert("RGBA"),
-                             (round(66 * sc), round(66 * sc))), bx, by)
-
-    print("  invite door: tabs end at %d, slot %d..%d, caption %d in %d of room"
-          % (HEADER + TABROW, HEADER + TABROW + REFER_GAP, slot_bottom, size, room))
-
-
-def screen(shelf, offline=False, waiting=0):
+def screen(shelf, offline=False):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     # `ShopScreen.Build` calls `Scenery.Plain`, not `Scenery.Room`. This drew the forest
     # for as long as the mirror has existed, and it is not a cosmetic drift: a sentence
@@ -868,10 +874,7 @@ def screen(shelf, offline=False, waiting=0):
                  fill=K.CREAM if live else (205, 215, 232), outline=2)
 
 
-    # ---- the invite banner, directly under the tabs
-    invite_banner(sheet, waiting)
-
-    # ---- the deal band, directly under that (invariant 60)
+    # ---- the deal band, directly under the tabs (invariant 60)
     if DEAL:
         deal_band(sheet)
 
@@ -944,6 +947,17 @@ def screen(shelf, offline=False, waiting=0):
         utilities(sheet, top, shift)
         shop_nav(sheet)
         return sheet.convert("RGB")
+
+    # `ShopScreen.ShelfOrder`: a seven-day pass leads its shelf, and is on no ladder - so the
+    # rung a pack is drawn at is counted among the packs alone.
+    passes = [p for p in rows if p.get("passDays")]
+    packs = [p for p in rows if not p.get("passDays")]
+    for n, p in enumerate(passes):
+        i = n + shift
+        col, row = i % COLUMNS, i // COLUMNS
+        pass_card(sheet, W / 2 + (col - (COLUMNS - 1) * .5) * CELLW, top + row * CELLH, shelf, p)
+    shift += len(passes)
+    rows = packs
 
     for n, p in enumerate(rows):
         i = n + shift
@@ -1058,11 +1072,13 @@ def main():
                     help="the shelf after the one-time bundle has been bought")
     ap.add_argument("--offline", action="store_true",
                     help="the store never answered - what an unreachable shelf says")
-    ap.add_argument("--waiting", type=int, default=0,
-                    help="referral chests waiting behind the invite band; draws its badge")
     ap.add_argument("--deal", nargs=3, type=int, metavar=("COINS", "GEMS", "SECONDS"),
-                    help="a live shop deal (invariant 60): its band under the invite band and the "
+                    help="a live shop deal (invariant 60): its band under the tabs and the "
                          "purple alert on the shop tab, e.g. --deal 26000 900 93784")
+    ap.add_argument("--pass", dest="pass_state", choices=("price", "claim", "tomorrow"), default="price",
+                    help="how a seven-day pass card faces: for sale, today's piece to claim, or "
+                         "claimed today (with --left days left)")
+    ap.add_argument("--left", type=int, default=6, help="days a running pass still owes")
     ap.add_argument("--measure", action="store_true",
                     help="measure Hud/burst and hold the badge constants to it; draws nothing")
     ap.add_argument("--out", type=Path, default=Path("shop.png"))
@@ -1071,18 +1087,19 @@ def main():
     if args.measure:
         sys.exit(0 if measure_seal() else 1)
 
-    global SOLD, DEAL
+    global SOLD, DEAL, PASS_STATE, PASS_LEFT
     SOLD = args.sold
     DEAL = tuple(args.deal) if args.deal else None
+    PASS_STATE, PASS_LEFT = args.pass_state, args.left
 
     if args.all:
         shelves = [s for s in SHELVES if s in LADDER or s == "supplies"]
-        sheets = [screen(s, args.offline, args.waiting) for s in shelves]
+        sheets = [screen(s, args.offline) for s in shelves]
         out = Image.new("RGB", (W * len(sheets), H))
         for i, one in enumerate(sheets):
             out.paste(one, (i * W, 0))
     else:
-        out = screen(args.shelf, args.offline, args.waiting)
+        out = screen(args.shelf, args.offline)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)

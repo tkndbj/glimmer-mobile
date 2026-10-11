@@ -37,7 +37,8 @@ namespace GlimmerGrove.Cloud
     /// </para>
     /// </summary>
     public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
-                                                   Referral.IReferralBackend, IWalletFeed, Store.IDealBackend
+                                                   Referral.IReferralBackend, IWalletFeed, Store.IDealBackend,
+                                                   Store.IDailyPassBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -1819,6 +1820,50 @@ namespace GlimmerGrove.Cloud
             return read;
         }
 
+        /// <summary>
+        /// Asks the server to pay today's piece of a seven-day pass. The outcome, what it paid
+        /// and the balances come back together; a spelling this build does not know reads as
+        /// <c>Unavailable</c>, which changes nothing a screen draws.
+        /// </summary>
+        public async Task<(CloudResult result, Store.DailyPassClaim claim, List<CloudWalletState> wallets)>
+            ClaimDailyPassAsync(string productId, CancellationToken cancellation = default)
+        {
+            var nothing = new Store.DailyPassClaim(Store.DailyPassClaimOutcome.Unavailable);
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), nothing, Empty());
+
+            try
+            {
+                var reply = await CallAsync("claimDailyPass", new Dictionary<string, object>
+                {
+                    { "product", productId ?? string.Empty },
+                }, cancellation);
+
+                var outcome = Store.DailyPassClaimOutcome.Unavailable;
+                switch (reply != null && reply.TryGetValue("outcome", out object o) ? o as string : null)
+                {
+                    case "paid":    outcome = Store.DailyPassClaimOutcome.Paid; break;
+                    case "not_yet": outcome = Store.DailyPassClaimOutcome.NotYet; break;
+                    case "none":    outcome = Store.DailyPassClaimOutcome.None; break;
+                }
+
+                long credits = 0L, gems = 0L;
+                if (reply != null && reply.TryGetValue("granted", out object raw) &&
+                    raw is IDictionary<string, object> granted)
+                {
+                    credits = ReadLong(granted, "credits");
+                    gems = ReadLong(granted, "gems");
+                }
+
+                return (CloudResult.Success, new Store.DailyPassClaim(outcome, credits, gems), ReadWalletStates(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "claim daily pass"), nothing, Empty());
+            }
+        }
+
         static bool ReadBool(IDictionary<string, object> map, string key)
             => map.TryGetValue(key, out object value) && value is bool b && b;
 
@@ -1937,6 +1982,25 @@ namespace GlimmerGrove.Cloud
                     state.CarriesDeals = true;
                     foreach (var id in dealList)
                         if (id is string s && s.Length > 0) state.DealsBought.Add(s);
+                }
+
+                // The seven-day passes still owed, presence first for the same reason.
+                if (entry.TryGetValue("dailyPasses", out object passes) && passes is IEnumerable<object> passList)
+                {
+                    state.CarriesDailyPasses = true;
+                    foreach (var passElement in passList)
+                    {
+                        if (!(passElement is IDictionary<string, object> row)) continue;
+                        string id = row.TryGetValue("id", out object rawId) ? rawId as string : null;
+                        if (string.IsNullOrEmpty(id)) continue;
+
+                        state.DailyPasses.Add(new CloudPassRow
+                        {
+                            Id = id,
+                            Remaining = (int)ReadLong(row, "remaining"),
+                            Day = (int)ReadLong(row, "day"),
+                        });
+                    }
                 }
 
                 states.Add(state);

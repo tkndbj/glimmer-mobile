@@ -124,7 +124,7 @@ namespace GlimmerGrove.Daily
         /// player being quoted it.
         /// </para>
         /// </summary>
-        public const int DefaultShieldGems = 120;
+        public const int DefaultShieldGems = 100;
         public const int MaxShieldGems = 5000;
     }
 

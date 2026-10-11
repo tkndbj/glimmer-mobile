@@ -2446,6 +2446,14 @@
       "text": "Heart Wellspring"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Gem Pass"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Coin Pass"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Every glade, watch and wave pays {0}% more XP while this is running. It stacks with every other XP boost."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "{0}-DAY PASS"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Gems every day for {0} days"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Coins every day for {0} days"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Days left: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Claim"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Tomorrow"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Today's reward collected!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Today's reward is collected. Come back tomorrow for the next one."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Connect to the internet to claim your reward."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Your pass is still running. Claim today's reward from its card."
     },
     {
       "key": "ui.shop.xp_surge_added",

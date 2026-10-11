@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
+using GlimmerGrove.Async;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
-using GlimmerGrove.Referral;
 using GlimmerGrove.Store;
 using GlimmerGrove.Utilities;
 using UnityEngine;
@@ -115,8 +116,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// So the band collapses, and it collapses to <em>something</em> rather than to nought:
-        /// the grid's first row would otherwise sit 16 units under the invite banner, or 16
-        /// under the tab buttons on an account with no invite page, and a card touching the
+        /// the grid's first row would otherwise sit 16 units under the deal band, or 16
+        /// under the tab buttons when no deal is on sale, and a card touching the
         /// control above it reads as a layout that has come apart rather than as a tidy one.
         /// </para>
         /// </summary>
@@ -141,76 +142,49 @@ namespace GlimmerGrove
         float SummaryRow => _saying ? SummaryLine : QuietRow;
 
         /// <summary>
-        /// The invite banner under the tabs, and the air either side of it.
+        /// A band under the tabs - the deal band (invariant 60) - and the air either side of it.
         ///
-        /// <para>
-        /// <b>A reserved band, for <see cref="SummaryH"/>'s reason and with its history.</b> The
-        /// store's one sentence used to be squeezed into the gap that happened to be under the
-        /// tabs, and it drew through the bottom of five buttons for as long as the line existed.
-        /// The owner's instruction here was "under the tab buttons, and make sure it never
-        /// overlaps with the texts" - so this is a band that everything below is measured from,
-        /// rather than a card placed at a number that happens to clear things today.
-        /// </para>
         /// <para>
         /// As wide as the grid it sits over - <c>CellW * Columns</c> rather than a figure - so a
-        /// shelf retuned to three columns takes the banner with it.
+        /// shelf retuned to three columns takes the band with it.
         /// </para>
         /// <para>
-        /// <b>The height is the key plus the room its picture rises into</b> (<see cref="DoorKey"/>):
-        /// the chest hoard is wide, so it is drawn at <see cref="DoorKey.ArtWidest"/> and stands
-        /// about 190 tall - 200 holds it.
+        /// <b>The invite band that used to stand above it is gone</b> (the owner, 2026-10-11:
+        /// "remove the refer a friend card from the shop"). Inviting friends is still reached from
+        /// the profile; only the storefront's copy of the door went.
         /// </para>
         /// </summary>
-        const float ReferW = CellW * Columns, ReferH = 200f, ReferGap = 16f;
-
-        /// <summary>
-        /// The whole band, or nought where there is no invite page to reach.
-        ///
-        /// <para>
-        /// Drawn on exactly the rule the profile's card is drawn on
-        /// (<c>ReferralLedger.IsAvailable</c>): a card promising chests a server cannot pay is
-        /// the one lie a storefront must not tell. Nought rather than hidden, because a band
-        /// nothing stands in is a hole in the middle of the shop.
-        /// </para>
-        /// </summary>
-        static float ReferRow => ReferralLedger.IsAvailable ? ReferGap + ReferH + ReferGap : 0f;
+        const float BandW = CellW * Columns, BandGap = 16f;
 
         /// <summary>
         /// The deal band's slot (invariant 60): the card and the room above it the value seal rises
-        /// into (<see cref="DealCard.SealRise"/>), so the seal never reaches the invite band.
+        /// into (<see cref="DealCard.SealRise"/>), so the seal never reaches the tabs.
         /// </summary>
         const float DealH = DealCardH + DealCard.SealRise + 4f;
 
-        /// <summary>
-        /// The air above the deal band: the invite band's trailing gap when there is one, its own
-        /// when there is not, so the band never touches the tabs.
-        /// </summary>
-        static float DealLead => ReferralLedger.IsAvailable ? 0f : ReferGap;
-
         /// <summary>The deal band's whole row, or nought while no deal is offered.</summary>
-        float DealRow => _deal != null ? DealLead + DealH + ReferGap : 0f;
+        float DealRow => _deal != null ? BandGap + DealH + BandGap : 0f;
 
         /// <summary>
         /// Where the deal band's slot is centred. Not conditional on a deal being shown, so the
         /// coins a purchase pays can still leave from where the band stood after it has gone.
         /// </summary>
-        static float DealCentreY => -(HeaderHeight + TabRow + ReferRow + DealLead + DealH * .5f);
+        static float DealCentreY => -(HeaderHeight + TabRow + BandGap + DealH * .5f);
 
         /// <summary>
-        /// The top of everything under the chrome: the header, the tabs, the invite band and the
-        /// deal band, each if there is one. <b>Written once</b>, because the summary line, the
-        /// guest notice, the grid and the empty plate all hang off it and four copies of a sum is
-        /// four places for a band to be forgotten. An instance property since the deal band came
-        /// and went on its own clock.
+        /// The top of everything under the chrome: the header, the tabs and the deal band when
+        /// there is one. <b>Written once</b>, because the summary line, the guest notice, the grid
+        /// and the empty plate all hang off it and four copies of a sum is four places for a band
+        /// to be forgotten. An instance property since the deal band came and went on its own clock.
         /// </summary>
-        float ShelfTop => HeaderHeight + TabRow + ReferRow + DealRow;
+        float ShelfTop => HeaderHeight + TabRow + DealRow;
 
         RectTransform _viewport, _tabs;
         GridView _grid;
         Text _summary;
 
-        /// <summary>The count on the invite band's corner. Null while the band is not drawn.</summary>
-        WaitingBadge _inviteBadge;
+        /// <summary>The UTC day the pass cards were last drawn for, so a card saying TOMORROW turns to CLAIM at midnight.</summary>
+        int _passDay;
 
         /// <summary>The deal the band is showing, or null (<see cref="DealLedger.Offered"/>).</summary>
         ShopDeal _deal;
@@ -316,7 +290,7 @@ namespace GlimmerGrove
             // </para>
             Scenery.Plain(Content);
 
-            // Decided before the grid, because whether a deal band stands under the invite band
+            // Decided before the grid, because whether a deal band stands under the tabs
             // decides where the shelf starts (`ShelfTop`).
             _deal = DealLedger.Offered;
 
@@ -367,10 +341,10 @@ namespace GlimmerGrove
             // them. See CloudSaveService.IdentityChanged.
             CloudSaveService.IdentityChanged += Repaint;
 
-            // The invite band's badge counts chests the server has agreed to pay - other
-            // people's play (invariant 51), which no local event announces. `BuildInvite`
-            // attaches the watch that asks; this is where its answers land.
-            ReferralLedger.Changed += PaintInvite;
+            // A seven-day pass: a wallet reply saying what this account holds brings the pass
+            // cards onto the shelf (membership), and a purchase or a claim moves what one says.
+            DailyPassLedger.Changed += Restock;
+            _passDay = DailyPassLedger.Today(GameClock.NowUnix());
 
             // A deal made on the admin page, bought here or on another phone, or ended: the band
             // comes or goes and the shelf moves with it (invariant 60). Its own clock says when it
@@ -382,7 +356,7 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             DealLedger.Changed -= OnDealsChanged;
-            ReferralLedger.Changed -= PaintInvite;
+            DailyPassLedger.Changed -= Restock;
             StoreService.Changed -= OnStoreChanged;
             StoreService.Granted -= OnGranted;
             StoreService.Failed -= OnFailed;
@@ -553,13 +527,12 @@ namespace GlimmerGrove
 
             BuildBalances();
             BuildTabs();
-            BuildInvite();
             BuildDeal();
             BuildNotice();
         }
 
         /// <summary>
-        /// The limited-time deal (invariant 60), directly under the invite band: a <see cref="DealCard"/>
+        /// The limited-time deal (invariant 60), directly under the tabs: a <see cref="DealCard"/>
         /// - the flat emerald box with the breathing coffer, the amount and the value seal, the same
         /// card every row of the deals panel wears - with ENDS IN over a timer on its right that ticks
         /// to the second and turns red and pulses in the last hour (<see cref="DealClock"/>). The whole
@@ -576,10 +549,10 @@ namespace GlimmerGrove
 
             // A holder the size of the slot, so the band comes and goes as one and the clock has
             // somewhere to live; the card stands at its foot, the seal rising into the room above.
-            var band = UIKit.Box("Deal", Safe, new Vector2(ReferW, DealH), new Vector2(.5f, 1f),
+            var band = UIKit.Box("Deal", Safe, new Vector2(BandW, DealH), new Vector2(.5f, 1f),
                                  new Vector2(0f, DealCentreY));
 
-            var card = DealCard.Build("Card", band, new Vector2(ReferW, DealCardH), new Vector2(.5f, 0f),
+            var card = DealCard.Build("Card", band, new Vector2(BandW, DealCardH), new Vector2(.5f, 0f),
                                       new Vector2(0f, DealCardH * .5f), DealAmountW, () => TapDeal(deal));
             DealCard.Paint(card, deal);
 
@@ -603,7 +576,7 @@ namespace GlimmerGrove
             _dealBand = band;
         }
 
-        /// <summary>The card's height inside its slot - a big box, taller than the invite key above it.</summary>
+        /// <summary>The card's height inside its slot - a big box.</summary>
         const float DealCardH = 204f;
 
         /// <summary>The amount column's width, between the coffer and the clock.</summary>
@@ -662,47 +635,6 @@ namespace GlimmerGrove
                 v.Deals = offered;
                 v.Trigger = DealTrigger.None;
             });
-        }
-
-        /// <summary>
-        /// The invite door, directly under the tabs: the profile's door, on the storefront.
-        ///
-        /// <para>
-        /// <b>The same control twice rather than a second drawing of one idea</b> -
-        /// <see cref="DoorKey"/>, the violet BUY LEVEL pill with "Refer a Friend" on the left and
-        /// the owner's chest hoard on the right (2026-09-28), shared with the profile and the
-        /// hub's Daily Challenges door. A shop is where somebody is already thinking about what
-        /// things cost, which is the one place a free source of chests is worth saying out loud.
-        /// </para>
-        /// </summary>
-        void BuildInvite()
-        {
-            _inviteBadge = null;
-            if (!ReferralLedger.IsAvailable) return;
-
-            // The shared door key (`DoorKey`): the profile's invite door and the hub's Daily
-            // Challenges door, at the foot of the band's slot.
-            var card = DoorKey.Build("Invite", Safe, ReferW, ReferH, new Vector2(.5f, 1f),
-                                     new Vector2(0f, -(HeaderHeight + TabRow + ReferGap + ReferH * .5f)),
-                                     "ui.referral.door", "refer_door", () => Flow.Go<ReferralScreen>());
-            Sheen.Attach((RectTransform)card.transform, 3.1f);
-
-            // The chests waiting behind the band, on its top-left corner as on the other two
-            // doors. Built last so it draws over the key; before the pop, so it rides in with
-            // the card and does not pop twice.
-            _inviteBadge = WaitingBadge.HubGiftTopLeft(card.transform, Pal.Gold);
-            PaintInvite();
-            ReferralWatch.Attach(this);
-
-            card.transform.localScale = Vector3.zero;
-            Tween.Pop(card.transform, 0f, .55f, .18f);
-        }
-
-        /// <summary>Writes the referral ledger's waiting count onto the invite band.</summary>
-        void PaintInvite()
-        {
-            if (!this || _inviteBadge == null) return;
-            _inviteBadge.Paint(ReferralLedger.WaitingCount);
         }
 
         /// <summary>
@@ -1207,7 +1139,7 @@ namespace GlimmerGrove
                     _products.Add(product);
                 }
 
-                _products.Sort((a, b) => a.Tier.CompareTo(b.Tier));
+                _products.Sort(ShelfOrder);
             }
 
             PaintTabs();
@@ -1215,6 +1147,25 @@ namespace GlimmerGrove
             PaintNotice();
 
             _grid.Show(ShelfRows());
+        }
+
+        /// <summary>
+        /// The order a money shelf is drawn in: a seven-day pass first, then the ladder cheapest
+        /// first.
+        ///
+        /// <para>
+        /// <b>The pass leads its shelf</b>, after only the free video: it is the one card on the
+        /// shelf a player comes back to every day (it turns into CLAIM), and a card that has to be
+        /// found again each morning is one nobody claims. It is on no ladder (Tier nought), so the
+        /// tier sort would put it first anyway, by accident; this says so on purpose, and orders
+        /// two passes by id so two devices agree.
+        /// </para>
+        /// </summary>
+        static int ShelfOrder(StoreProduct a, StoreProduct b)
+        {
+            if (a.IsDailyPass != b.IsDailyPass) return a.IsDailyPass ? -1 : 1;
+            if (a.IsDailyPass) return string.CompareOrdinal(a.Id, b.Id);
+            return a.Tier.CompareTo(b.Tier);
         }
 
         /// <summary>
@@ -1462,12 +1413,121 @@ namespace GlimmerGrove
         /// </summary>
         void Tap(StoreProduct product)
         {
+            // A pass that still owes pieces is claimed, not bought (StoreOfferState.Running).
+            if (product != null && product.IsDailyPass &&
+                StoreService.OfferFor(product).State == StoreOfferState.Running)
+            {
+                ClaimPass(product);
+                return;
+            }
+
             // The sheet, the six refusals and the reasoning behind having no confirmation all
             // live in StoreTap now - the panel a lost run raises has to do exactly this, and
             // six sentences maintained twice on the screen where money changes hands is
             // invariant 9a's argument at its smallest scale. Repainting afterwards is this
             // screen's own business: it draws cards whose state the tap may have moved.
             StoreTap.Buy(this, product);
+            Repaint();
+        }
+
+        // ------------------------------------------------------------ daily passes
+        /// <summary>
+        /// Tapping a pass that owes a piece today: the server pays it, the balance comes back with
+        /// the answer, and the currency flies into the pills above (<see cref="DailyPassLedger.ClaimAsync"/>).
+        ///
+        /// <para>
+        /// <b>Nothing is credited on the device first</b>, so no outcome here can leave a reward
+        /// stranded or doubled: a reply lost on the way back is a retry the server answers "already
+        /// paid today" with the balance it raised. Each refusal is a toast and the card repaints
+        /// from whatever the server said; a second tap while a claim is out does nothing.
+        /// </para>
+        /// </summary>
+        void ClaimPass(StoreProduct product)
+        {
+            if (DailyPassLedger.IsClaiming(product.Id)) return;
+
+            if (!DailyPassLedger.CanClaim(product.Id, GameClock.NowUnix()))
+            {
+                Scenery.Toast(Content, Loc.Get("ui.shop.pass_not_yet"), Pal.Sun, 2.6f);
+                return;
+            }
+
+            if (Net.Offline)
+            {
+                Scenery.Toast(Content, Loc.Get("ui.shop.pass_offline"), Pal.Sun, 2.6f);
+                return;
+            }
+
+            Fire.AndForget(() => ClaimPassAsync(product), "ShopScreen.ClaimPass");
+        }
+
+        async Task ClaimPassAsync(StoreProduct product)
+        {
+            var claim = await DailyPassLedger.ClaimAsync(product);
+            if (!this) return;
+
+            switch (claim.Outcome)
+            {
+                case DailyPassClaimOutcome.Paid:
+                    Audio.Sfx("coin", .6f);
+                    Scenery.Toast(Content, Loc.Get("ui.shop.pass_claimed"), Pal.Gold, 2.4f);
+                    FlyPass(claim);
+                    break;
+
+                case DailyPassClaimOutcome.NotYet:
+                    Scenery.Toast(Content, Loc.Get("ui.shop.pass_not_yet"), Pal.Sun, 2.6f);
+                    break;
+
+                // Paid out (or refunded) on another device: the card goes back to its price.
+                case DailyPassClaimOutcome.None:
+                    break;
+
+                // Unavailable, and anything added later: said as a connection problem, never as a
+                // payment (44e). The card is untouched and can be tapped again.
+                default:
+                    Scenery.Toast(Content, Loc.Get("ui.shop.pass_offline"), Pal.Sun, 2.6f);
+                    break;
+            }
+
+            Restock();
+        }
+
+        /// <summary>
+        /// Today's piece flying into the pills. <see cref="RewardFlight.AfterGrant"/>, because the
+        /// balance has already been adopted from the server's reply, and credits and gems are the
+        /// two things nothing clamps, so the rewind is exact.
+        /// </summary>
+        void FlyPass(DailyPassClaim claim)
+        {
+            if (claim.Credits <= 0L && claim.Gems <= 0L) return;
+
+            var flight = RewardFlight.AfterGrant(claim.Credits, claim.Gems);
+            flight.Hold(this);
+
+            var source = UIKit.Box("PassReward", Content, new Vector2(200f, 200f), new Vector2(.5f, .5f), Vector2.zero);
+            if (claim.Gems > 0L)
+                flight.Add(new Daily.ChestDrop(Daily.ChestDropKind.Gems, (int)Math.Min(claim.Gems, int.MaxValue)), source);
+            if (claim.Credits > 0L)
+                flight.Add(new Daily.ChestDrop(Daily.ChestDropKind.Credits, (int)Math.Min(claim.Credits, int.MaxValue)), source);
+            flight.Play(Content, () => { if (source) Destroy(source.gameObject); });
+        }
+
+        /// <summary>When the UTC day is next asked about. See <see cref="Update"/>.</summary>
+        float _nextDayCheck;
+
+        /// <summary>
+        /// A pass card saying TOMORROW has to say CLAIM once the UTC day turns, and nothing else
+        /// announces midnight. Asked once a second; a repaint only on the tick the day changes.
+        /// </summary>
+        void Update()
+        {
+            if (Time.unscaledTime < _nextDayCheck) return;
+            _nextDayCheck = Time.unscaledTime + 1f;
+
+            int today = DailyPassLedger.Today(GameClock.NowUnix());
+            if (today == _passDay) return;
+
+            _passDay = today;
             Repaint();
         }
 

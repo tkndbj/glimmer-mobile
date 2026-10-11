@@ -205,6 +205,14 @@ namespace GlimmerGrove.Cloud
         }
     }
 
+    /// <summary>One row of a wallet reply's <c>dailyPasses</c>: a product, the pieces it still owes, and the UTC day one was last paid.</summary>
+    public sealed class CloudPassRow
+    {
+        public string Id;
+        public int Remaining;
+        public int Day;
+    }
+
     public sealed class CloudWalletState
     {
         public string Currency;
@@ -360,6 +368,19 @@ namespace GlimmerGrove.Cloud
         /// answers nothing, and only the first may open the shop's deal band.
         /// </summary>
         public bool CarriesDeals;
+
+        /// <summary>
+        /// The seven-day passes the server still owes this account pieces of (<c>dailyPasses</c>,
+        /// <c>functions/src/daily-pass.ts</c>). An account fact repeated on every row, for
+        /// <see cref="RevokedContainers"/>' reason. Folded in by <c>DailyPassLedger.ApplyServerState</c>.
+        /// </summary>
+        public List<CloudPassRow> DailyPasses = new List<CloudPassRow>();
+
+        /// <summary>
+        /// Whether the reply carried the list at all, for <see cref="CarriesDeals"/>' reason: only a
+        /// deployment that pays passes sends it, and until one has the shop offers no pass.
+        /// </summary>
+        public bool CarriesDailyPasses;
 
         /// <summary>
         /// Whether the reply carried the lane's figure at all.

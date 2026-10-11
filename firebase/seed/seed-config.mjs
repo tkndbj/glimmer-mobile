@@ -333,6 +333,7 @@ function readStore(progression) {
     const credits = Math.floor(entry.credits ?? 0);
     const gems = Math.floor(entry.gems ?? 0);
     const capacity = Math.floor(entry.heartCapacity ?? 0);
+    const passDays = Math.floor(entry.passDays ?? 0);
     // A season's pass is bought with gems, so no real-money product grants one. `products.ts`
     // refuses such a product on the way in; refusing here is what stops one being published
     // in the first place, which is the difference between a seed that fails on a terminal
@@ -393,6 +394,24 @@ function readStore(progression) {
       );
     }
 
+    // A seven-day pass (`daily-pass.ts`): its amounts are what one day pays. Every rule
+    // `products.ts` refuses a pass by is refused here first, so a pass the server would not
+    // honour is never published - a refused receipt is a real payment with nothing behind it.
+    if (passDays !== 0) {
+      if (!Number.isFinite(passDays) || passDays < 2 || passDays > 31) {
+        throw new Error(`store product '${id}' is a pass of ${entry.passDays} days, outside 2..31`);
+      }
+      if (entry.kind !== "consumable" || capacity > 0 || !["gems", "coins"].includes(entry.shelf)) {
+        throw new Error(
+          `store product '${id}' is a pass but is not a consumable currency product on the gems or ` +
+          "coins shelf"
+        );
+      }
+      if (Math.max(credits, gems) * passDays > MAX_GRANT) {
+        throw new Error(`store product '${id}' pays more than ${MAX_GRANT} over its ${passDays} days`);
+      }
+    }
+
     const cents = Math.floor(entry.referenceUsdCents ?? 0);
     if (!Number.isFinite(cents) || cents < 49 || cents > 100000) {
       throw new Error(
@@ -411,7 +430,10 @@ function readStore(progression) {
     // currency at all, so their value per unit of money is zero and ranking them would
     // fail every ladder they were part of. What proves a container ladder is right is
     // `Validate Content`, which compares capacity against price instead.
-    if (entry.kind !== "nonconsumable") {
+    // A pass is left out for the one-time offer's reason: it is not a rung of its shelf's
+    // ladder but a different shape of purchase (currency paid over days), and its per-day
+    // figures ranked against a pack's whole grant would mean nothing in either direction.
+    if (entry.kind !== "nonconsumable" && passDays === 0) {
       if (!shelves.has(entry.shelf)) shelves.set(entry.shelf, []);
       shelves.get(entry.shelf).push({ id, credits, gems, cents });
     }
@@ -419,7 +441,9 @@ function readStore(progression) {
     // Only what the server needs in order to honour a receipt. The shelf, the badge and
     // the reference price are display and validation; publishing them would invite
     // somebody to think the server had an opinion about them.
-    products[id] = { credits, gems, kind: entry.kind, capacity };
+    products[id] = passDays > 0
+      ? { credits, gems, kind: entry.kind, capacity, passDays }
+      : { credits, gems, kind: entry.kind, capacity };
   }
 
   // The ladder has to get better as it gets bigger. A middle rung worth less per unit of
@@ -1886,14 +1910,16 @@ if (products) {
   await writeDoc(token, "config/products", products, { replace: true });
 
   const ids = Object.keys(products);
-  const gemPacks = ids.filter((id) => products[id].gems > 0 && products[id].credits === 0).length;
-  const coinPacks = ids.filter((id) => products[id].credits > 0 && products[id].gems === 0).length;
-  const vessels = ids.filter((id) => (products[id].capacity ?? 0) > 0).length;
+  const passes = ids.filter((id) => (products[id].passDays ?? 0) > 0).length;
+  const packs = ids.filter((id) => !((products[id].passDays ?? 0) > 0));
+  const gemPacks = packs.filter((id) => products[id].gems > 0 && products[id].credits === 0).length;
+  const coinPacks = packs.filter((id) => products[id].credits > 0 && products[id].gems === 0).length;
+  const vessels = packs.filter((id) => (products[id].capacity ?? 0) > 0).length;
 
   console.log(
     `config/products: ${ids.length} product(s) — ${gemPacks} gem, ${coinPacks} coin, ` +
-    `${vessels} heart container, ` +
-    `${ids.length - gemPacks - coinPacks - vessels} bundle`
+    `${vessels} heart container, ${passes} daily pass, ` +
+    `${packs.length - gemPacks - coinPacks - vessels} bundle`
   );
 } else {
   console.log("config/products: skipped, progression.json has no store block — purchases stay inert");

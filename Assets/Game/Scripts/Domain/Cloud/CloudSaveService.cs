@@ -1450,6 +1450,10 @@ namespace GlimmerGrove.Cloud
                 // The shop deals bought (invariant 60): the wallet document is the entitlement,
                 // and until a reply has said what this account holds the shop offers no deal.
                 Store.DealLedger.ApplyServerState(state.CarriesDeals, state.DealsBought);
+
+                // The seven-day passes: the wallet document is the entitlement, and the shop's
+                // pass cards claim or sell by what it last said.
+                Store.DailyPassLedger.ApplyServerState(state.CarriesDailyPasses, state.DailyPasses);
             }
 
             SaveService.MarkDirty();

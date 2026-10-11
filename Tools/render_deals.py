@@ -3,6 +3,7 @@
     python Tools/render_deals.py                       # one deal, a day left
     python Tools/render_deals.py --deals 3 --urgent    # three rows, the first in its last hour
     python Tools/render_deals.py --deals 5 --states    # a scrolling list with a bought and an ended row
+    python Tools/render_deals.py --welcome             # the unbought welcome bundle heading the list
 
 A mirror, not a gate: every number here is `DealOverlay`'s and `DealOverlay.DealRow`'s, and the
 two are kept in step by hand (44d). The panel is `ModalView.MakePanel`'s: `panel_main` with the
@@ -46,6 +47,10 @@ AMOUNT_Y, UNIT_Y, TIMER_Y, BUY_Y = 108.0, 44.0, -16.0, -108.0   # up from the ro
 TIMER_W, TIMER_H, BUY_W, BUY_H = 360.0, 62.0, 400.0, 96.0
 URGENT = (255, 92, 72)
 
+# DealOverlay.DealRow.RuleW / RuleH / Rule - the thin white rule on every row's top edge but the
+# first, which is the middle of the air between two cards.
+RULE_W, RULE_H, RULE_ALPHA = 860.0, 3.0, .85
+
 LOCS = {e["key"]: e["text"] for e in json.loads(
     (K.REPO / "Assets/StreamingAssets/Content/loc/en.json").read_text(encoding="utf-8"))["entries"]}
 
@@ -59,6 +64,72 @@ def timer(seconds):
     s = max(0, int(seconds))
     d, h, m, sec = s // 86400, s % 86400 // 3600, s % 3600 // 60, s % 60
     return ("%dd " % d if d else "") + "%02d:%02d:%02d" % (h, m, sec)
+
+
+def rule(sheet, cx, cy):
+    """The rule above a row centred on (cx, cy): on the cell's top edge."""
+    bar = Image.new("RGBA", (int(RULE_W), int(RULE_H)), (255, 255, 255, int(255 * RULE_ALPHA)))
+    K.paste(sheet, bar, cx, cy - CELL_H / 2)
+
+
+def bundle_value(product, store):
+    """`DealValue.BundlePercent`: the bundle's gems and coins at the cheapest packs' prices, over
+    its own price - floored to ten, nought at or under 100, capped at 9990. Passes are not packs."""
+    packs = [p for p in store if not p.get("passDays")]
+    gems = [p for p in packs if p.get("shelf") == "gems" and p.get("gems")]
+    coins = [p for p in packs if p.get("shelf") == "coins" and p.get("credits")]
+    if not gems or not coins:
+        return 0
+    g = min(gems, key=lambda p: p["referenceUsdCents"])
+    c = min(coins, key=lambda p: p["referenceUsdCents"])
+    worth = (product.get("credits", 0) * c["referenceUsdCents"] * g["gems"]
+             + product.get("gems", 0) * g["referenceUsdCents"] * c["credits"])
+    price = product["referenceUsdCents"] * c["credits"] * g["gems"]
+    pct = worth * 100 // price
+    return 0 if pct <= 100 else min(9990, pct - pct % 10)
+
+
+def welcome_row(sheet, cx, cy, product, store, state):
+    """`DealRow.Bind` for the welcome bundle - `DealCard.PaintBundle` and `PaintBundle`: the top
+    bundle chest, the gems in their colour over the coins in gold, the value seal, ONE TIME ONLY in
+    the trough and the store's price on the money face."""
+    lx = cx - ROW_W / 2
+    top = cy - ROW_H / 2
+    ax = lx + ART_LEFT + ART / 2
+    K.paste(sheet, K.glow(GLOW, 2.4, GLOW_INK, GLOW_ALPHA), ax, cy)
+    K.paste(sheet, K.fit(Image.open(UI / "Shop" / "bundles_3.png").convert("RGBA"), (ART, ART)), ax, cy)
+
+    pct = bundle_value(product, store)
+    K.value_seal(sheet, lx + SEAL_X, top + SEAL_Y, pct, txt("ui.deal.value"))
+
+    col = lx + ROW_W - COLUMN_W / 2
+    K.text(sheet, compact(product["gems"]), col, cy - AMOUNT_Y - round(AMOUNT_SIZE * .044), AMOUNT_SIZE,
+           fill=K.BLOOM, outline=5)
+    K.text(sheet, txt("ui.shop.plus_coins").replace("{0}", compact(product["credits"])).upper(),
+           col, cy - UNIT_Y, 34, fill=K.GOLD, outline=3)
+
+    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), col, cy - TIMER_Y)
+    K.text(sheet, txt("ui.shop.badge_starter").upper(), col, cy - TIMER_Y, 36, fill=(255, 255, 255), outline=3)
+
+    by = cy - BUY_Y
+    pill = {"ready": "btn_orange", "bought": "btn_blue", "waiting": "btn_gray"}[state]
+    word = {"ready": f"${product['referenceUsdCents'] / 100:.2f}",
+            "bought": txt("ui.deal.bought_row").upper(),
+            "waiting": txt("ui.shop.purchasing")}[state]
+    K.paste(sheet, K.skin(pill, BUY_W, BUY_H), col, by)
+    K.text(sheet, word, col, by - 2, 42 if state == "ready" else 38, fill=K.CREAM, outline=3)
+    print(f"  welcome row: {product['id']}, {product['gems']} gems + {product['credits']:,} coins, "
+          f"seal {pct}%, key {word!r}")
+
+
+def compact(n):
+    """`Compact.Number`: digits up to 9,999, then one tenth digit truncated - 22500 -> 22.5K."""
+    if -9_999 <= n <= 9_999:
+        return str(n)
+    scale, suffix = (1_000_000, "M") if abs(n) >= 1_000_000 else (1_000, "K")
+    whole = int(n / scale)
+    tenth = abs(int((n % scale) * 10 / scale))
+    return "%d%s" % (whole, suffix) if tenth == 0 else "%d.%d%s" % (whole, tenth, suffix)
 
 
 def row(sheet, cx, cy, credits, gems, left, state):
@@ -89,7 +160,7 @@ def row(sheet, cx, cy, credits, gems, left, state):
         K.text(sheet, word, col, by - 2, 38, fill=K.CREAM, outline=3)
 
 
-def panel(deals):
+def panel(deals, welcome=None):
     """`DealOverlay` on `VictoryFrame`: the scrim, the fan and bloom, the green window with the
     crown and banner carrying the title, the deal rows, and the blue key at the foot. The fit is
     mirrored, so a tall list is drawn scaled as the device draws it."""
@@ -98,7 +169,8 @@ def panel(deals):
     K.navbar(sheet, "home")
     sheet.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * .72))))
 
-    visible = min(len(deals), MOST_ROWS)
+    lead = 1 if welcome else 0
+    visible = min(lead + len(deals), MOST_ROWS)
     list_h = PAD_TOP + visible * CELL_H + PAD_BOTTOM
     ph = ROWS_TOP + list_h + TAIL + FOOT_H
 
@@ -124,8 +196,15 @@ def panel(deals):
     K.paste(block, K.fit(K.load("Win/banner")[0], (BANNER_W, BANNER_H)), bcx, top - BANNER_Y)
     K.shrunk(block, txt("ui.deal.title"), bcx, top - BANNER_Y - WORD_LIFT, WORD_W, WORD_H, 58, 32, outline=5)
 
-    for i, (credits, gems, left, state) in enumerate(deals[:visible]):
+    for i in range(visible):
         cy = top + ROWS_TOP + PAD_TOP + i * CELL_H + CELL_H / 2
+        if i > 0:
+            rule(block, bcx, cy)
+        if welcome and i == 0:
+            product, store, state = welcome
+            welcome_row(block, bcx, cy, product, store, state)
+            continue
+        credits, gems, left, state = deals[i - lead]
         row(block, bcx, cy, credits, gems, left, state)
 
     ky = top + ph - KEY_Y
@@ -145,6 +224,8 @@ def main():
     ap.add_argument("--deals", type=int, default=1)
     ap.add_argument("--urgent", action="store_true", help="the first row in its last hour")
     ap.add_argument("--states", action="store_true", help="a bought second row and an ended third")
+    ap.add_argument("--welcome", choices=("ready", "bought", "waiting"), nargs="?", const="ready",
+                    help="the welcome bundle heading the list (unbought), in the state given")
     ap.add_argument("--out", type=Path, default=Path("deals.png"))
     args = ap.parse_args()
 
@@ -161,7 +242,14 @@ def main():
             state = "ended"
         deals.append((credits, gems, left, state))
 
-    out = panel(deals)
+    welcome = None
+    if args.welcome:
+        store = json.loads((K.REPO / "Assets/StreamingAssets/Content/progression.json")
+                           .read_text(encoding="utf-8"))["store"]["products"]
+        starter = next(p for p in store if p.get("badge") == "starter" and p.get("kind") == "nonconsumable")
+        welcome = (starter, store, args.welcome)
+
+    out = panel(deals, welcome)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print(f"  wrote {args.out}")

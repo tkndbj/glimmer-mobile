@@ -67,6 +67,7 @@ import argparse
 import io
 import math
 import sys
+import tarfile
 from pathlib import Path
 
 try:
@@ -121,6 +122,26 @@ LADDERS = {
     # then the one wearing both. They used to borrow the coin ladder, which said only half
     # of what a bundle sells.
 }
+
+# The seven-day passes (`StoreProduct.PassDays`): not rungs of their shelves, so not ladders.
+# Each is the Casual Icon Pack's blue gift box - "a gift every day" - with the currency it pays
+# standing in front of it at the lower right: the shop's own cut gem, and the pack's gold coin.
+# Composed here rather than on the card, so the card draws one picture like every other and
+# the composition is reproducible (`--check`). Both the box and the coin were unused anywhere
+# in the game before; the gem is `gems_1`'s source, so the pass wears the shop's gem.
+CASUAL = (Path.home() / "AppData" / "Roaming" / "Unity" / "Asset Store-5.x" / "LAYERLAB" /
+          "Textures MaterialsIcons UI" / "2D Icons - Casual Icon Pack.unitypackage")
+GIFT = "Assets/Layer Lab/2D Icons-CasualIconPack/Icons/512/Icon_Misc_GiftBox01_Blue.png"
+
+#: name -> (the token in front, its long edge as a fraction of the canvas)
+PASSES = {
+    "pass_gems": ("gem_diamond_purple", .52),
+    "pass_coins": ("coin_gold", .46),
+}
+GIFT_EDGE = .84          # the box's long edge, as a fraction of the canvas
+GIFT_SHIFT = (-26, -10)  # nudged up and left so the token has the corner to itself
+TOKEN_INSET = 8          # the token's distance from the lower-right edges, in canvas pixels
+
 
 # Deliberately not cut: the pack's crowned `chest_event`, which is the obvious picture for
 # the event pass and reads at card size as a crowned **owl face** — cream front, two dark
@@ -188,6 +209,9 @@ def shelves():
 
     counted = {}
     for product in store["products"]:
+        # A pass is drawn from its own picture (`PASSES`), not from its shelf's ladder.
+        if product.get("passDays"):
+            continue
         shelf = product.get("shelf")
         counted[shelf] = counted.get(shelf, 0) + 1
     return counted
@@ -221,7 +245,60 @@ def build(source):
         for name, im, d in zip(names_of(prefix, ladder), cut, sizes):
             made[name] = placed(im, max(FLOOR, d / widest))
 
+    made.update(passes(folder))
     return made
+
+
+def gift_box():
+    """The Casual Icon Pack's blue gift box, read straight out of its `.unitypackage`."""
+    if not CASUAL.exists():
+        sys.exit(f"the Casual Icon Pack is not in Unity's download cache: {CASUAL}. "
+                 "Download it from the Asset Store window (My Assets); see the art-source-packs note")
+
+    with tarfile.open(CASUAL, "r:gz") as tar:
+        members = {}
+        for m in tar.getmembers():
+            parts = m.name.split("/")
+            if len(parts) == 2:
+                members.setdefault(parts[0], {})[parts[1]] = m
+        for d in members.values():
+            if "pathname" not in d or "asset" not in d:
+                continue
+            name = tar.extractfile(d["pathname"]).read().decode("utf8").splitlines()[0]
+            if name == GIFT:
+                im = Image.open(io.BytesIO(tar.extractfile(d["asset"]).read())).convert("RGBA")
+                a = np.asarray(im)[..., 3]
+                ys, xs = np.nonzero(a > ALPHA)
+                return im.crop((int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1))
+
+    sys.exit(f"the Casual Icon Pack no longer carries {GIFT}")
+
+
+def pass_picture(folder, name, size=SIZE, box=None):
+    """One pass picture on a `size` square: the gift box with the currency it pays in front.
+    `make_iap_art.py` draws the console image from this same function, at its own size."""
+    stem, edge = PASSES[name]
+    box = box or gift_box()
+    token = trimmed(folder / f"{stem}.png")
+    k_ = size / SIZE                                       # the offsets are written for SIZE
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+
+    s = size * GIFT_EDGE / max(box.size)
+    b = box.resize((round(box.width * s), round(box.height * s)), Image.LANCZOS)
+    canvas.alpha_composite(b, ((size - b.width) // 2 + round(GIFT_SHIFT[0] * k_),
+                               (size - b.height) // 2 + round(GIFT_SHIFT[1] * k_)))
+
+    s = size * edge / max(token.size)
+    k = token.resize((round(token.width * s), round(token.height * s)), Image.LANCZOS)
+    inset = round(TOKEN_INSET * k_)
+    canvas.alpha_composite(k, (size - k.width - inset, size - k.height - inset))
+    return canvas
+
+
+def passes(folder):
+    """The two pass pictures, at the shop's sprite size."""
+    box = gift_box()
+    return {name: pass_picture(folder, name, SIZE, box) for name in PASSES}
 
 
 # --------------------------------------------------------------------------- looking
@@ -234,7 +311,7 @@ CELL = 236          # what a shelf card draws its picture at, in reference units
 
 def contact(made, path):
     """Lays every rung out at card size, one ladder to a row, in ladder order."""
-    rows = [names_of(prefix, ladder) for prefix, ladder in LADDERS.items()]
+    rows = [names_of(prefix, ladder) for prefix, ladder in LADDERS.items()] + [list(PASSES)]
     cols = max(len(r) for r in rows)
     sheet = Image.new("RGB", (cols * CELL, len(rows) * CELL), PLATE)
 

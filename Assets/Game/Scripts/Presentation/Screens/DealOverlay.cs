@@ -35,6 +35,15 @@ namespace GlimmerGrove
     /// behalf: a gem purchase has no store sheet, so the tap on the row is the confirmation.
     /// </para>
     /// <para>
+    /// <b>The welcome bundle stands at the top</b> (the owner, 2026-10-11) - the one-time starter
+    /// bundle, with its value seal (<see cref="DealValue.BundlePercent"/>) - for as long as this
+    /// account has not bought it, and never once it has: it is decided when the panel opens, from
+    /// the store's own answer (<see cref="WelcomeOffer"/>). Bought while the panel is open, its row
+    /// says so and stays put, the rule every deal row follows, and is gone the next time. It is a
+    /// real-money product, so its key opens the store's sheet (<see cref="StoreTap"/>) and the
+    /// receipt is raised by <c>Boot</c>, as everywhere else in the game.
+    /// </para>
+    /// <para>
     /// <b>Every buy is re-checked at the tap</b> (<see cref="DealLedger.TryBuy"/>): a deal can end,
     /// another phone can buy it, or a sync can move the balance while the panel is open. The coins
     /// fly home when the panel closes (<see cref="DealPayout"/>), from whatever screen is under it.
@@ -65,6 +74,12 @@ namespace GlimmerGrove
 
         readonly List<ShopDeal> _deals = new List<ShopDeal>();
         readonly List<DealRow> _rows = new List<DealRow>();
+
+        /// <summary>The welcome bundle, when it heads the list (<see cref="WelcomeOffer"/>); null otherwise.</summary>
+        StoreProduct _welcome;
+
+        /// <summary>How many rows sit above the first deal: one while the welcome bundle heads the list.</summary>
+        int Lead => _welcome != null ? 1 : 0;
         GridView _grid;
 
         /// <summary>The deals bought from this panel, paid out when it closes.</summary>
@@ -82,7 +97,11 @@ namespace GlimmerGrove
             if (Deals != null) foreach (var deal in Deals) if (deal != null) _deals.Add(deal);
             if (_deals.Count == 0) { Flow.Dismiss(this); return; }
 
-            int visible = Mathf.Min(_deals.Count, MostRows);
+            // Decided once, here: a row that appeared or left under a thumb is the jump this panel
+            // exists not to make. See the type's remarks.
+            _welcome = WelcomeOffer();
+
+            int visible = Mathf.Min(Lead + _deals.Count, MostRows);
             float listH = ListPadTop + visible * CellH + ListPadBottom;
 
             float panelH = RowsTop + listH + Tail + FootH;
@@ -111,7 +130,7 @@ namespace GlimmerGrove
                 _rows.Add(row);
                 return row;
             }, padTop: ListPadTop, padBottom: ListPadBottom);
-            _grid.Show(_deals.Count);
+            _grid.Show(Lead + _deals.Count);
 
             // The deals sheet's closing key: the kit's blue, at its foot.
             UIKit.TextButton("NotNow", Panel, Skins.Alternate, Loc.Get("ui.common.cancel").Upper(), 36,
@@ -132,12 +151,41 @@ namespace GlimmerGrove
 
             DealLedger.Changed += Repaint;
             PlayerProgression.Changed += Repaint;
+
+            // The welcome row's key follows the store: a price arriving, the sheet opening and
+            // closing, the purchase landing.
+            StoreService.Changed += Repaint;
         }
 
         void OnDestroy()
         {
             DealLedger.Changed -= Repaint;
             PlayerProgression.Changed -= Repaint;
+            StoreService.Changed -= Repaint;
+        }
+
+        /// <summary>
+        /// The welcome bundle to head the list, or null: the one-time product badged as the starter,
+        /// while the store can sell it to this account right now (or a purchase of it is already in
+        /// flight). Owned - by this store account or this game account - is never shown; nor is a
+        /// product the store has not priced, because a key with no price is a key that cannot work.
+        /// </summary>
+        static StoreProduct WelcomeOffer()
+        {
+            foreach (var product in StoreRules.Catalog.Products)
+            {
+                if (product == null || product.Badge != StoreBadge.Starter || !product.IsOneTime) continue;
+                if (product.IsContainer || product.IsDailyPass) continue;
+
+                switch (StoreService.OfferFor(product).State)
+                {
+                    case StoreOfferState.Ready:
+                    case StoreOfferState.Purchasing:
+                    case StoreOfferState.AwaitingGrant:
+                        return product;
+                }
+            }
+            return null;
         }
 
         public override bool OnBack() { Leave(); return true; }
@@ -163,7 +211,33 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ the states
-        enum RowState { Ready, Bought, Ended }
+        enum RowState { Ready, Bought, Ended, Waiting }
+
+        /// <summary>
+        /// The welcome row's state, from the store. Waiting covers the sheet being open, a purchase
+        /// paid and not yet credited, and prices still loading - none of them a key to press.
+        /// </summary>
+        static RowState WelcomeState(StoreProduct product)
+        {
+            switch (StoreService.OfferFor(product).State)
+            {
+                case StoreOfferState.Ready: return RowState.Ready;
+                case StoreOfferState.Owned: return RowState.Bought;
+                case StoreOfferState.Purchasing:
+                case StoreOfferState.AwaitingGrant:
+                case StoreOfferState.Loading: return RowState.Waiting;
+                // Missing or offline after it was offered: said as closed, never sold (44e).
+                default: return RowState.Ended;
+            }
+        }
+
+        /// <summary>The welcome bundle's key: the store's own sheet, or the store's own refusal.</summary>
+        void BuyWelcome(StoreProduct product)
+        {
+            if (_leaving || product == null) return;
+            StoreTap.Buy(this, product);
+            Repaint();
+        }
 
         /// <summary>
         /// The deal as the server last published it: a row is handed a copy when the panel opens,
@@ -280,6 +354,8 @@ namespace GlimmerGrove
 
         bool AnythingLeftToBuy()
         {
+            if (_welcome != null && WelcomeState(_welcome) == RowState.Ready) return true;
+
             long now = GameClock.NowUnix();
             foreach (var deal in _deals)
                 if (StateOf(deal, now) == RowState.Ready) return true;
@@ -310,6 +386,11 @@ namespace GlimmerGrove
         /// bind). The open card (<see cref="DealCard.BuildOpen"/>) - the coffer big at the left with
         /// the value seal over it, no box - and down the right column the amount, the clock and the
         /// price key. Mirrored by <c>Tools/render_deals.py</c>.
+        /// <para>
+        /// <b>Or the welcome bundle</b>, on the first row while it heads the list: its chest, its gems
+        /// over its coins, ONE TIME ONLY where a deal's clock stands, and the store's price on the key.
+        /// A thin white rule sits between rows (the owner, 2026-10-11), drawn by every row but the first.
+        /// </para>
         /// </summary>
         sealed class DealRow : IGridCell
         {
@@ -321,6 +402,10 @@ namespace GlimmerGrove
             const float TimerY = -16f, TimerW = 360f, TimerH = 62f, KeyY = -108f, KeyW = 400f, KeyH = 96f;
             const float Pulse = .12f, PulseTime = .25f;
 
+            /// <summary>The rule between two rows: across most of the card, a few units thick, on the gap's middle.</summary>
+            const float RuleW = 860f, RuleH = 3f;
+            static readonly Color Rule = new Color(1f, 1f, 1f, .85f);
+
             static readonly Color Calm = Color.white;
             static readonly Color Urgent = new Color(1f, .36f, .28f);
             static readonly Color Spent = new Color(.62f, .66f, .72f);
@@ -330,9 +415,12 @@ namespace GlimmerGrove
             readonly DealCard.Parts _card;
             readonly Text _timer;
             readonly Btn _key;
-            readonly Image _keyPlate;
+            readonly Image _keyPlate, _rule;
 
             ShopDeal _deal;
+
+            /// <summary>The welcome bundle, when this row is drawing it; null when it is drawing a deal.</summary>
+            StoreProduct _bundle;
             RowState _state;
             long _shownSeconds = -1;
             float _tickAt;
@@ -343,6 +431,13 @@ namespace GlimmerGrove
             {
                 _panel = panel;
                 _root = UIKit.Box("Deal", parent, new Vector2(CellW, CellH), new Vector2(.5f, 1f), Vector2.zero);
+
+                // The rule on the cell's top edge, which is the middle of the air between this card
+                // and the one above (each card is centred in its cell). Behind the card, so a seal
+                // rising over the edge is drawn over it.
+                _rule = UIKit.Img("Rule", _root, Art.Pixel, Rule, new Vector2(RuleW, RuleH),
+                                  new Vector2(.5f, .5f), new Vector2(0f, CellH * .5f));
+                _rule.raycastTarget = false;
 
                 _card = DealCard.BuildOpen("Card", _root, new Vector2(CardW, CardH), new Vector2(.5f, .5f),
                                            Vector2.zero, ColumnW);
@@ -357,25 +452,46 @@ namespace GlimmerGrove
 
                 _key = UIKit.TextButton("Buy", _card.Root, Skins.Gem, string.Empty, 42,
                                         new Vector2(KeyW, KeyH), new Vector2(0f, .5f), new Vector2(_card.ColumnX, KeyY),
-                                        () => _panel.Buy(_deal), "ic_gem");
+                                        Tapped, "ic_gem");
                 _keyPlate = _key.GetComponent<Image>();
             }
 
             public void Bind(int index)
             {
-                _deal = index >= 0 && index < _panel._deals.Count ? _panel._deals[index] : null;
-                _root.gameObject.SetActive(_deal != null);
-                if (_deal == null) return;
+                // The welcome bundle on the first row while it heads the list; the deals after it.
+                int lead = _panel.Lead;
+                _bundle = lead > 0 && index == 0 ? _panel._welcome : null;
 
-                DealCard.Paint(_card, _deal);
+                int dealIndex = index - lead;
+                _deal = _bundle == null && dealIndex >= 0 && dealIndex < _panel._deals.Count
+                    ? _panel._deals[dealIndex] : null;
+
+                bool drawn = _bundle != null || _deal != null;
+                _root.gameObject.SetActive(drawn);
+                if (!drawn) return;
+
+                // Every row but the first carries the rule above it.
+                _rule.enabled = index > 0;
+
                 _shownSeconds = -1;
                 _key.transform.localScale = Vector3.one;
+                _timer.rectTransform.localScale = Vector3.one;
+
+                if (_bundle != null)
+                {
+                    DealCard.PaintBundle(_card, _bundle);
+                    PaintBundle(force: true);
+                    return;
+                }
+
+                DealCard.Paint(_card, _deal);
                 Paint(GameClock.NowUnix(), force: true);
             }
 
             /// <summary>The clock and the key, from the deal and the ledger. Called on bind and four times a second.</summary>
             public void Tick(long nowUnix, float now)
             {
+                if (_bundle != null) { PaintBundle(force: false); return; }
                 if (_deal == null) return;
 
                 long left = Latest(_deal).SecondsLeft(nowUnix);
@@ -425,6 +541,48 @@ namespace GlimmerGrove
                 }
 
                 if (_key.Icon) _key.Icon.enabled = state == RowState.Ready;
+            }
+
+            /// <summary>
+            /// The welcome row: ONE TIME ONLY where a deal's clock stands, and a key that carries the
+            /// store's own price string (never one this game formats), waits, or says bought. Written
+            /// whole on a bind (<paramref name="force"/>), and again whenever its state or price moved.
+            /// </summary>
+            void PaintBundle(bool force)
+            {
+                var offer = StoreService.OfferFor(_bundle);
+                var state = WelcomeState(_bundle);
+
+                _timer.text = Loc.Get("ui.shop.badge_starter").Upper();
+                _timer.color = state == RowState.Ended ? Spent : Calm;
+
+                string caption = state == RowState.Ready ? offer.Price
+                               : state == RowState.Bought ? Loc.Get("ui.deal.bought_row").Upper()
+                               : state == RowState.Waiting ? Loc.Get(offer.State == StoreOfferState.AwaitingGrant
+                                                                     ? "ui.shop.awaiting_short" : "ui.shop.purchasing")
+                               : Loc.Get("ui.deal.ended_row").Upper();
+
+                if (!force && state == _state && caption == _bundleCaption) return;
+                _state = state;
+                _bundleCaption = caption;
+
+                _key.SetCaption(caption);
+                // The money face for a price, the deal rows' blue for bought, shut otherwise.
+                _keyPlate.sprite = Art.S("Ui/" + (state == RowState.Ready ? Skins.Buy
+                                                 : state == RowState.Bought ? Skins.Alternate
+                                                 : Skins.Shut));
+                _key.Interactable = state == RowState.Ready;
+                if (_key.Icon) _key.Icon.enabled = false;
+            }
+
+            /// <summary>The caption the welcome key last wore, so a price arriving repaints it.</summary>
+            string _bundleCaption;
+
+            /// <summary>The key: the welcome bundle's sheet, or the deal's gem purchase.</summary>
+            void Tapped()
+            {
+                if (_bundle != null) _panel.BuyWelcome(_bundle);
+                else _panel.Buy(_deal);
             }
 
             /// <summary>Every frame: an urgent second lands with a pulse, the wanted key breathes.</summary>

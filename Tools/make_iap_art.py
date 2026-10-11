@@ -141,10 +141,16 @@ def products():
         .read_text(encoding="utf8"))["store"]
 
     shelves = {}
+    out = []
     for p in store["products"]:
+        # A seven-day pass is on no ladder (`StoreCatalog.RankShelves`): its own picture.
+        if p.get("passDays"):
+            p = dict(p)
+            p["_shelf"], p["_tier"], p["_size"], p["_oneTime"] = p.get("shelf"), 0, 0, False
+            out.append(p)
+            continue
         shelves.setdefault(p.get("shelf"), []).append(p)
 
-    out = []
     for shelf, on in shelves.items():
         # Ordered by the reference price rather than by the file, exactly as the game does.
         on.sort(key=lambda p: p.get("referenceUsdCents", 0))
@@ -162,6 +168,10 @@ def picture_of(product):
 
     if product.get("eventPassId"):
         return "stem", PASS_STEM
+
+    # `ShopArt.Paint`'s pass branch: the gift box with the currency in front.
+    if product.get("passDays"):
+        return "pass", "pass_gems" if product.get("gems") else "pass_coins"
 
     # Ranked rather than shortcut to the top: `ShopArt.PaintContainer`'s reason - every
     # vessel is a non-consumable, so the one-time rule would draw all three the same.
@@ -188,6 +198,13 @@ def trimmed(path):
     ys, xs = np.nonzero(a > ALPHA)
     if not len(xs):
         sys.exit(f"source is empty: {path}")
+    return im.crop((int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1))
+
+
+def trimmed_image(im):
+    """An image already in hand, cropped to what is painted."""
+    a = np.asarray(im)[..., 3]
+    ys, xs = np.nonzero(a > ALPHA)
     return im.crop((int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1))
 
 
@@ -293,6 +310,10 @@ def build(source):
         if kind == "vessel":
             layer = vessel_layer(payload)
             soft.append(product["id"])
+        elif kind == "pass":
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            import make_shop_art
+            layer = on_frame(trimmed_image(make_shop_art.pass_picture(folder, payload, SIZE)), 1.0)
         else:
             if kind == "stem":
                 stem, scale = payload, 1.0

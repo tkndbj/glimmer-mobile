@@ -256,7 +256,7 @@
       }
     ],
     "shieldDays": 7,
-    "shieldGems": 120
+    "shieldGems": 100
   },
   "hearts": {
     "refillCap": 5,
@@ -488,6 +488,22 @@
         "heartCapacity": 50,
         "referenceUsdCents": 3999,
         "badge": "best_value"
+      },
+      {
+        "id": "gg_gem_pass_7d",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 500,
+        "passDays": 7,
+        "referenceUsdCents": 199
+      },
+      {
+        "id": "gg_coin_pass_7d",
+        "kind": "consumable",
+        "shelf": "coins",
+        "credits": 20000,
+        "passDays": 7,
+        "referenceUsdCents": 199
       }
     ],
     "goods": [

@@ -64,6 +64,13 @@ namespace GlimmerGrove
                     Say(host, ("ui.shop.already_included", Pal.Mint));
                     return false;
 
+                // A pass still paying out is claimed from its card, never bought on top of
+                // itself (StoreOfferState.Running). The shop routes the tap to the claim first;
+                // this is for any other caller that hands one here.
+                case StoreOfferState.Running:
+                    Say(host, ("ui.shop.pass_running", Pal.Mint));
+                    return false;
+
                 case StoreOfferState.AwaitingGrant:
                     Say(host, ("ui.shop.awaiting", Pal.Sun));
                     return false;

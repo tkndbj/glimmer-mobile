@@ -2446,6 +2446,14 @@
       "text": "Fonte di cuori"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Pass Gemme"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Pass Monete"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Finché è attivo, ogni livello, veglia e ondata dà il {0}% di XP in più. Si somma a tutti gli altri potenziamenti XP."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "PASS DI {0} GIORNI"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Gemme ogni giorno per {0} giorni"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Monete ogni giorno per {0} giorni"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Giorni rimasti: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Riscuoti"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Domani"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Ricompensa di oggi riscossa!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Hai già riscosso la ricompensa di oggi. Torna domani per la prossima."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Connettiti a Internet per riscuotere la tua ricompensa."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Il tuo pass è ancora attivo. Riscuoti la ricompensa di oggi dalla sua carta."
     },
     {
       "key": "ui.shop.xp_surge_added",

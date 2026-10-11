@@ -2446,6 +2446,14 @@
       "text": "Fonte de corações"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Passe de Gemas"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Passe de Moedas"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Enquanto estiver ativo, cada nível, vigília e onda paga {0}% mais XP. Soma com todos os outros bônus de XP."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "PASSE DE {0} DIAS"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Gemas todo dia por {0} dias"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Moedas todo dia por {0} dias"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Dias restantes: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Resgatar"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Amanhã"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Recompensa de hoje resgatada!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Você já resgatou a recompensa de hoje. Volte amanhã para a próxima."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Conecte-se à internet para resgatar sua recompensa."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Seu passe ainda está ativo. Resgate a recompensa de hoje no cartão dele."
     },
     {
       "key": "ui.shop.xp_surge_added",

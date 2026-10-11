@@ -2446,6 +2446,14 @@
       "text": "Manantial de corazones"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Pase de Gemas"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Pase de Monedas"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Mientras esté activo, cada nivel, guardia y oleada da un {0}% más de XP. Se suma a cualquier otro potenciador de XP."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "PASE DE {0} DÍAS"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Gemas cada día durante {0} días"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Monedas cada día durante {0} días"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Días restantes: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Reclamar"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Mañana"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "¡Recompensa de hoy recogida!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Ya recogiste la recompensa de hoy. Vuelve mañana por la siguiente."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Conéctate a internet para reclamar tu recompensa."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Tu pase sigue activo. Reclama la recompensa de hoy desde su tarjeta."
     },
     {
       "key": "ui.shop.xp_surge_added",

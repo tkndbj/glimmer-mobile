@@ -86,6 +86,19 @@ namespace GlimmerGrove.Store
         /// </para>
         /// </summary>
         Purchasing,
+
+        /// <summary>
+        /// A seven-day pass that still owes this account pieces (<see cref="DailyPassLedger"/>).
+        ///
+        /// <para>
+        /// Its card claims rather than sells, and it cannot be bought again until it is paid out:
+        /// a second pass bought on top would be paid in full by the server, but it is never what
+        /// somebody tapping a card that says CLAIM meant. Its own state rather than
+        /// <see cref="Owned"/>, because an owned product leaves the shelf and this one is the
+        /// card the player comes back to every day.
+        /// </para>
+        /// </summary>
+        Running,
     }
 
     /// <summary>What a card offers: a state, and a price when there is one.</summary>
@@ -534,6 +547,16 @@ namespace GlimmerGrove.Store
 
             if (IsAwaitingGrant(product.Id)) return new StoreOffer(StoreOfferState.AwaitingGrant);
 
+            // A seven-day pass is offered only once a wallet reply has said what this account
+            // holds (DailyPassLedger.Known) - a deployment that predates passes says nothing, so a
+            // client shipped ahead of the functions sells nothing the server cannot pay. While it
+            // still owes pieces it claims rather than sells, and that needs no store connection.
+            if (product.IsDailyPass)
+            {
+                if (!DailyPassLedger.Known) return new StoreOffer(StoreOfferState.Missing);
+                if (DailyPassLedger.Holds(product.Id)) return new StoreOffer(StoreOfferState.Running);
+            }
+
             if (string.Equals(_checkout, product.Id, StringComparison.Ordinal))
                 return new StoreOffer(StoreOfferState.Purchasing);
 
@@ -595,7 +618,8 @@ namespace GlimmerGrove.Store
             {
                 return StoreResult.Failed(
                     offer.State == StoreOfferState.Owned ||
-                    offer.State == StoreOfferState.Included ? StoreFailure.AlreadyOwned
+                    offer.State == StoreOfferState.Included ||
+                    offer.State == StoreOfferState.Running ? StoreFailure.AlreadyOwned
                     : offer.State == StoreOfferState.AwaitingGrant ? StoreFailure.AwaitingGrant
                     : offer.State == StoreOfferState.Offline ? StoreFailure.NotConnected
                     : StoreFailure.UnknownProduct);

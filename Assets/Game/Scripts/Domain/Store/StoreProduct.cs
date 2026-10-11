@@ -146,7 +146,7 @@ namespace GlimmerGrove.Store
     {
         public StoreProduct(string id, StoreProductKind kind, StoreShelf shelf,
                             long credits, long gems, int referenceUsdCents, StoreBadge badge,
-                            int heartCapacity = 0, string eventPassId = null)
+                            int heartCapacity = 0, string eventPassId = null, int passDays = 0)
         {
             Id = id ?? string.Empty;
             Kind = kind;
@@ -157,6 +157,7 @@ namespace GlimmerGrove.Store
             Badge = badge;
             HeartCapacity = heartCapacity < 0 ? 0 : heartCapacity;
             EventPassId = eventPassId ?? string.Empty;
+            PassDays = passDays < 0 ? 0 : passDays;
         }
 
         /// <summary>
@@ -235,6 +236,36 @@ namespace GlimmerGrove.Store
         public string EventPassId { get; }
         public bool IsEventPass => EventPassId.Length > 0;
 
+        /// <summary>
+        /// How many daily pieces this product's currency is paid in, or nought for an ordinary
+        /// product that pays it all at once.
+        ///
+        /// <para>
+        /// <b>A seven-day pass</b> (<c>functions/src/daily-pass.ts</c>): <see cref="Credits"/> and
+        /// <see cref="Gems"/> are what <em>one day</em> pays. The server pays the first piece in the
+        /// purchase's own transaction and the rest one a UTC day on request
+        /// (<see cref="DailyPassLedger"/>), and holds the whole entitlement on the wallet - so it is
+        /// still invariant 18 exactly: currency and nothing else, granted by the server, nothing
+        /// stored on the phone. It only arrives in instalments.
+        /// </para>
+        /// <para>
+        /// <b>Not a rung of its shelf.</b> A pass is ranked by nothing, badged by nothing and drawn
+        /// from its own picture, because its figures are per day and a pack's are whole - so it is
+        /// left out of <see cref="Tier"/>, <see cref="BonusPercent"/>, the exchange rate and every
+        /// value ladder (<c>StoreCatalog</c>, the seeder, <c>content.py</c>).
+        /// </para>
+        /// </summary>
+        public int PassDays { get; }
+
+        /// <summary>True when this product pays its currency in daily pieces.</summary>
+        public bool IsDailyPass => PassDays > 0;
+
+        /// <summary>The whole of what a pass pays over its days. The plain grant on any other product.</summary>
+        public long TotalCredits => IsDailyPass ? Credits * PassDays : Credits;
+
+        /// <summary>The whole of what a pass pays over its days. The plain grant on any other product.</summary>
+        public long TotalGems => IsDailyPass ? Gems * PassDays : Gems;
+
         public bool IsValid => Id.Length > 0 && (Credits > 0 || Gems > 0 || HeartCapacity > 0 || IsEventPass);
 
         /// <summary>True when the store will only ever sell this once per account.</summary>
@@ -308,6 +339,7 @@ namespace GlimmerGrove.Store
 
         public override string ToString()
             => IsContainer ? $"{Id} (heart capacity {HeartCapacity})"
+             : IsDailyPass ? $"{Id} ({Credits} credits, {Gems} gems a day for {PassDays} days)"
                            : $"{Id} ({Credits} credits, {Gems} gems)";
     }
 

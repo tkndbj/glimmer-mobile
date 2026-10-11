@@ -2446,6 +2446,14 @@
       "text": "Kalp Pınarı"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Mücevher Kartı"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Altın Kartı"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Bu aktifken her bölüm, nöbet ve aşama %{0} daha fazla XP verir. Diğer bütün XP güçlendirmeleriyle birleşir."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "{0} GÜNLÜK KART"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "{0} gün boyunca her gün mücevher"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "{0} gün boyunca her gün altın"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Kalan gün: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Al"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Yarın"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Bugünün ödülü alındı!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Bugünün ödülünü aldın. Sonraki için yarın tekrar gel."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Ödülünü almak için internete bağlan."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Kartın hâlâ devam ediyor. Bugünün ödülünü kartından al."
     },
     {
       "key": "ui.shop.xp_surge_added",

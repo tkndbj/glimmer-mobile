@@ -361,6 +361,8 @@ namespace GlimmerGrove
 
             ShopArt.Paint(_art, product);
 
+            if (product.IsDailyPass) { DrawPass(product, offer); return; }
+
             if (product.IsContainer)
             {
                 // A container leads with the cap it sells rather than with a currency, because
@@ -404,6 +406,60 @@ namespace GlimmerGrove
             PaintPrice(offer);
             PaintRibbon(product.BonusPercent);
             PaintSeal(StoreWording.Badge(product.Badge));
+        }
+
+        /// <summary>
+        /// A seven-day pass (<see cref="StoreProduct.PassDays"/>): what one day pays, in its own
+        /// currency's colour, and a face that sells it, claims today's piece, or says tomorrow.
+        ///
+        /// <para>
+        /// <b>Every field on every call</b> (44mc): the gem shelf rebinds this cell between the pass
+        /// and a gem pack as it scrolls, so a face, a mark, a ribbon or a line left over from the
+        /// other is a pack wearing CLAIM.
+        /// </para>
+        /// <para>
+        /// The ribbon names the pass ("7-DAY PASS") where a pack's says its bonus: a pass is on no
+        /// ladder, so a percentage over one would be a number nobody can check. No seal.
+        /// </para>
+        /// </summary>
+        void DrawPass(StoreProduct product, StoreOffer offer)
+        {
+            bool gems = product.Gems > 0;
+            _amount.text = Compact.Number(gems ? product.Gems : product.Credits);
+            _amount.color = gems ? Pal.A(Pal.Bloom, 1f) : Pal.A(Pal.Gold, 1f);
+            _sub.color = Unit;
+
+            PaintRibbon(Loc.Format("ui.shop.pass_ribbon", product.PassDays));
+            PaintSeal(null);
+
+            if (offer.State != StoreOfferState.Running)
+            {
+                _sub.text = Loc.Format(gems ? "ui.shop.pass_gems_daily" : "ui.shop.pass_coins_daily",
+                                       product.PassDays);
+                PaintPrice(offer);
+                return;
+            }
+
+            var standing = DailyPassLedger.StandingOf(product.Id);
+            _sub.text = Loc.Format("ui.shop.pass_left", standing.Remaining);
+            _price.color = Pal.Cream;
+
+            if (DailyPassLedger.IsClaiming(product.Id))
+            {
+                Face(Skins.Affirm, live: false);
+                SetPrice(Loc.Get("ui.shop.purchasing"), null);
+            }
+            else if (DailyPassLedger.CanClaim(product.Id, GameClock.NowUnix()))
+            {
+                Face(Skins.Affirm, live: true);
+                SetPrice(Loc.Get("ui.shop.pass_claim").Upper(), null);
+            }
+            else
+            {
+                Face(Skins.Buy, live: false);
+                _price.color = Pal.A(Pal.Cream, .85f);
+                SetPrice(Loc.Get("ui.shop.pass_tomorrow").Upper(), null);
+            }
         }
 
         /// <summary>

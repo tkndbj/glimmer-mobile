@@ -15,6 +15,7 @@
  */
 
 import { CURRENCIES, CurrencyId } from "./config";
+import { MAX_PASS_DAYS } from "./daily-pass";
 
 /** What one product grants. Absent currencies are zero rather than missing. */
 export interface ProductGrant {
@@ -46,6 +47,14 @@ export interface ProductGrant {
    * the receipt at grant time.
    */
   capacity: number;
+
+  /**
+   * How many daily pieces the currency is paid in, or 0 for an ordinary product that pays it
+   * all at once (`daily-pass.ts`). When set, `credits` and `gems` are what **one day** pays:
+   * the first piece in the purchase's own transaction, the rest one a UTC day through
+   * `claimDailyPass`. Still currency and nothing else (18) - just in instalments.
+   */
+  passDays: number;
 }
 
 export type ProductTable = Record<string, ProductGrant>;
@@ -108,6 +117,7 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     gems: nonNegative(raw.gems),
     kind: typeof raw.kind === "string" ? raw.kind : "consumable",
     capacity: nonNegative(raw.capacity),
+    passDays: nonNegative(raw.passDays),
   };
 
   // Refused by name rather than merely unread. A season's pass is bought with gems
@@ -127,6 +137,29 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
       "one or the other, never both — the mixture is what would put an amount back on the " +
       "client's half of a purchase"
     );
+  }
+
+  // A pass pays currency in daily pieces, so it is a currency product: never a capacity, always
+  // repeatable (the store would refuse to sell a non-consumable a second time, and the second
+  // pass is the one a returning player buys), and split into at least two pieces - a pass of
+  // one day is a gem pack published under the wrong shape.
+  if (grant.passDays !== 0) {
+    if (grant.passDays < 2 || grant.passDays > MAX_PASS_DAYS) {
+      throw new ProductRejected(
+        `product '${productId}' is a pass of ${grant.passDays} days, outside 2..${MAX_PASS_DAYS}`
+      );
+    }
+    if (Math.max(grant.credits, grant.gems) * grant.passDays > MAX_GRANT) {
+      throw new ProductRejected(
+        `product '${productId}' pays more than ${MAX_GRANT} over its ${grant.passDays} days`
+      );
+    }
+    if (grant.capacity > 0 || grant.kind !== "consumable") {
+      throw new ProductRejected(
+        `product '${productId}' is a pass but is not a consumable currency product; a pass is ` +
+        "bought again once it is paid out, and pays currency and nothing else"
+      );
+    }
   }
 
   if (grant.capacity > MAX_CAPACITY) {

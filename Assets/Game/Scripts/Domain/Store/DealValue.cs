@@ -35,6 +35,47 @@ namespace GlimmerGrove.Store
             return Percent(deal.Credits, deal.Gems, catalog.CreditsPerGem);
         }
 
+        /// <summary>
+        /// The percentage a real-money bundle's seal prints - the welcome bundle at the top of the
+        /// deals panel - or 0 for no seal.
+        ///
+        /// <para>
+        /// <b>The same sentence as a deal's, measured the same honest way</b>: what the bundle's
+        /// gems and coins would cost bought from the shop's own cheapest packs
+        /// (<see cref="StoreCatalog.GemBase"/>, <see cref="StoreCatalog.CoinBase"/>), over what the
+        /// bundle costs - all in the reference prices the ladder is proved against, never a figure
+        /// typed for the badge. At the shipped shop, 500 gems and 22,500 coins for $2.99 against
+        /// $4.95 and $5.97 of packs is "360% Value". Floored to ten, hidden at 100% or under, and
+        /// capped, exactly as <see cref="Percent(long, long, long)"/> is.
+        /// </para>
+        /// </summary>
+        public static int BundlePercent(StoreProduct product, StoreCatalog catalog)
+        {
+            if (product == null || catalog == null || !catalog.HasExchangeRate) return 0;
+            if (product.IsContainer || product.IsDailyPass || product.ReferenceUsdCents <= 0) return 0;
+
+            var gemBase = catalog.GemBase;
+            var coinBase = catalog.CoinBase;
+            if (gemBase == null || coinBase == null || gemBase.Gems <= 0 || coinBase.Credits <= 0) return 0;
+
+            // Everything over the common denominator (bundle cents x coin pack's coins x gem pack's
+            // gems), so no division happens until the end. In decimal, which is exact integer
+            // arithmetic to 28 digits - never a float deciding a figure shown for money - because
+            // the products of StoreLimits' bounds (grants 5e6, cents 1e5) overflow a long.
+            decimal worth = (decimal)product.Credits * coinBase.ReferenceUsdCents * gemBase.Gems
+                          + (decimal)product.Gems * gemBase.ReferenceUsdCents * coinBase.Credits;
+            decimal price = (decimal)product.ReferenceUsdCents * coinBase.Credits * gemBase.Gems;
+            if (worth <= 0m || price <= 0m) return 0;
+
+            decimal whole = decimal.Floor(worth * 100m / price);
+            if (whole > Most + Step) whole = Most + Step;
+            long percent = (long)whole;
+            if (percent <= 100L) return 0;
+
+            percent -= percent % Step;
+            return percent > Most ? Most : (int)percent;
+        }
+
         /// <summary>The arithmetic, on its own: <paramref name="credits"/> for <paramref name="gems"/> at <paramref name="creditsPerGem"/>.</summary>
         public static int Percent(long credits, long gems, long creditsPerGem)
         {

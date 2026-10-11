@@ -2446,6 +2446,14 @@
       "text": "ينبوع القلب"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "تذكرة الجواهر"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "تذكرة العملات"
+    },
+    {
       "key": "story.who.bolt",
       "text": "بولت"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "كل مرج وحراسة وموجة تمنح خبرة أكثر بنسبة {0}% ما دام هذا مفعلا. يتراكم مع كل تعزيز خبرة آخر."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "تذكرة الأيام: {0}"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "جواهر كل يوم، الأيام: {0}"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "عملات كل يوم، الأيام: {0}"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "الأيام المتبقية: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "استلم"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "غدا"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "تم استلام مكافأة اليوم!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "استلمت مكافأة اليوم. عد غدا للمكافأة التالية."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "اتصل بالإنترنت لاستلام مكافأتك."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "تذكرتك ما زالت سارية. استلم مكافأة اليوم من بطاقتها."
     },
     {
       "key": "ui.shop.xp_surge_added",

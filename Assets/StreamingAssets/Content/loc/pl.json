@@ -2446,6 +2446,14 @@
       "text": "Źródło serc"
     },
     {
+      "key": "store.product.gg_gem_pass_7d",
+      "text": "Przepustka Klejnotów"
+    },
+    {
+      "key": "store.product.gg_coin_pass_7d",
+      "text": "Przepustka Monet"
+    },
+    {
       "key": "story.who.bolt",
       "text": "BOLT"
     },
@@ -6704,6 +6712,46 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Gdy to działa, każdy poziom, warta i fala dają o {0}% więcej XP. Łączy się z każdym innym wzmocnieniem XP."
+    },
+    {
+      "key": "ui.shop.pass_ribbon",
+      "text": "PRZEPUSTKA NA {0} DNI"
+    },
+    {
+      "key": "ui.shop.pass_gems_daily",
+      "text": "Klejnoty codziennie, dni: {0}"
+    },
+    {
+      "key": "ui.shop.pass_coins_daily",
+      "text": "Monety codziennie, dni: {0}"
+    },
+    {
+      "key": "ui.shop.pass_left",
+      "text": "Pozostałe dni: {0}"
+    },
+    {
+      "key": "ui.shop.pass_claim",
+      "text": "Odbierz"
+    },
+    {
+      "key": "ui.shop.pass_tomorrow",
+      "text": "Jutro"
+    },
+    {
+      "key": "ui.shop.pass_claimed",
+      "text": "Dzisiejsza nagroda odebrana!"
+    },
+    {
+      "key": "ui.shop.pass_not_yet",
+      "text": "Dzisiejsza nagroda jest już odebrana. Wróć jutro po następną."
+    },
+    {
+      "key": "ui.shop.pass_offline",
+      "text": "Połącz się z internetem, aby odebrać nagrodę."
+    },
+    {
+      "key": "ui.shop.pass_running",
+      "text": "Twoja przepustka nadal działa. Odbierz dzisiejszą nagrodę z jej karty."
     },
     {
       "key": "ui.shop.xp_surge_added",

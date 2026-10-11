@@ -135,10 +135,22 @@ namespace GlimmerGrove
                 return;
             }
 
-            var ladder = LadderFor(product);
-
             float size = box.rect.width;
             if (size <= 1f) size = 200f;
+
+            // A seven-day pass is not a rung of its shelf, so it is not drawn from the ladder: its
+            // own picture, the gift box with the currency it pays in front (make_shop_art.PASSES).
+            if (product.IsDailyPass)
+            {
+                var gift = UIKit.Img("Pass", box,
+                                     Art.S(product.Gems > 0 ? "Ui/Shop/pass_gems" : "Ui/Shop/pass_coins"),
+                                     Color.white, Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
+                gift.preserveAspect = true;
+                Tween.Breathe(gift.transform, .03f, 2.6f);
+                return;
+            }
+
+            var ladder = LadderFor(product);
 
             // Drawn to the box rather than inside it: every sprite is square with a hair of
             // air baked in, and the box is already measured against the figure underneath it.

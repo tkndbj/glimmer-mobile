@@ -335,7 +335,7 @@ namespace GlimmerGrove.Tests
             {
                 var rungs = new List<StoreProduct>();
                 foreach (var product in catalog.Shelf(shelf))
-                    if (!product.IsOneTime) rungs.Add(product);
+                    if (!product.IsOneTime && !product.IsDailyPass) rungs.Add(product);
 
                 rungs.Sort((a, b) => a.ReferenceUsdCents.CompareTo(b.ReferenceUsdCents));
 
@@ -444,6 +444,7 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(product.Shelf, live.Shelf, product.Id + " shelf");
                 Assert.AreEqual(product.ReferenceUsdCents, live.ReferenceUsdCents, product.Id + " price");
                 Assert.AreEqual(product.Badge, live.Badge, product.Id + " badge");
+                Assert.AreEqual(product.PassDays, live.PassDays, product.Id + " pass days");
             }
 
             foreach (var good in built.Goods)

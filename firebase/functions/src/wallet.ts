@@ -19,6 +19,7 @@ import { EndlessDay, readEndlessDay } from "./endless";
 import { keeperBoughtOf } from "./keeper";
 import { ChallengeAdDays, ChallengeTiersHeld, adPlaysOn, readChallengeAds, readChallengeTiers } from "./challenges";
 import { DealsBought, readDealsBought } from "./deals";
+import { DailyPasses, PassReplyRow, passReply, readDailyPasses } from "./daily-pass";
 
 export interface CurrencyState {
   granted: number;
@@ -155,6 +156,14 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * debit or claim can name the deal any more.
    */
   deals?: DealsBought;
+
+  /**
+   * The seven-day passes this account bought and has not been paid in full for, product id to
+   * its open runs (`daily-pass.ts`). Server-owned for the streak floor's reason: it is the whole
+   * entitlement to every piece still owed. Written by `redeemPurchase` (a run opened, its first
+   * piece paid) and `claimDailyPass` (a piece paid); a refund removes the run (`revokeReceipt`).
+   */
+  dailyPasses?: DailyPasses;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -242,12 +251,19 @@ export interface WalletReply {
    * the client reads the field's presence as "this deployment sells deals" - the wheel's trick.
    */
   dealsBought: string[];
+
+  /**
+   * The seven-day passes still owed something: per product, the pieces left and the UTC day one
+   * was last paid. Always present, including empty, so the client reads the field's presence as
+   * "this deployment pays passes" and offers none before it does - the wheel's trick.
+   */
+  dailyPasses: PassReplyRow[];
 }
 
 /** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
 const MODELLED_WALLET_KEYS = new Set<string>([
   ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
-  "keeperBought", "challengeAds", "deals", "streak", "updatedAt",
+  "keeperBought", "challengeAds", "deals", "dailyPasses", "streak", "updatedAt",
 ]);
 
 /**
@@ -366,6 +382,11 @@ export function readWallet(
   const deals = readDealsBought((raw as { deals?: unknown } | undefined)?.deals, Math.floor(Date.now() / 1000));
   if (Object.keys(deals).length > 0) wallet.deals = deals;
 
+  // The seven-day passes, carried through for exactly the reason every field above it is - and
+  // deleting this one would be every piece a player has paid for and not yet collected.
+  const passes = readDailyPasses((raw as { dailyPasses?: unknown } | undefined)?.dailyPasses);
+  if (Object.keys(passes).length > 0) wallet.dailyPasses = passes;
+
   // **Everything else the document holds, carried through untouched - and this is the rule
   // the eight paragraphs above were each one instance of.** Every writer of this document
   // writes it whole, so a field this function does not copy is a field the next write deletes.
@@ -463,6 +484,7 @@ export function toReply(
     challengeAdDay: today,
     challengeAdPlays: adPlaysOn(wallet.challengeAds ?? {}, today),
     dealsBought: Object.keys(wallet.deals ?? {}).sort(),
+    dailyPasses: passReply(wallet.dailyPasses),
   }));
 }
 

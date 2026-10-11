@@ -504,6 +504,11 @@ namespace GlimmerGrove.AssetPipeline
             "Shop/gems_4", "Shop/gems_5", "Shop/gems_6",
             "Shop/bundles_1", "Shop/bundles_2", "Shop/bundles_3",
 
+            // The two seven-day passes, which are on no ladder and wear their own picture
+            // (`ShopArt.Paint`, cut by `make_shop_art.py`'s PASSES). Global for the line above's
+            // reason: each leads its shelf.
+            "Shop/pass_gems", "Shop/pass_coins",
+
             // The interface kit every screen's chrome is made of, cut by
             // `Tools/make_hud_kit_art.py`. Global rather than scoped, and that is a judgement
             // rather than laziness: this is what a *screen* is built out of, so it is wanted by
@@ -522,6 +527,12 @@ namespace GlimmerGrove.AssetPipeline
             "Hud/add", "Hud/burst", "Hud/btn_gold",
             "Hud/plate_blue", "Hud/plate_orange", "Hud/plate_violet", "Hud/plate_gold",
             "Hud/plate_navy",
+
+            // The kit's plate with its face flattened to white (`Skins.PlateFlat`), tinted by
+            // `DealCard` into the deal band's one-colour box (invariant 60d). Missing from this
+            // list since the deals drop, which `SkinsTests` caught: unlisted, the shop's deal band
+            // would draw a white rectangle (7b).
+            "Hud/plate_flat",
             "ic_nav_home", "ic_nav_shop",
             "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
             "Hud/lander", "Hud/beam", "Hud/room",

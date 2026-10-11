@@ -1757,6 +1757,14 @@ namespace GlimmerGrove.Content
         public int heartCapacity;
 
         /// <summary>
+        /// How many daily pieces the currency is paid in, for a seven-day pass; absent or nought
+        /// on an ordinary product. When set, <see cref="credits"/> and <see cref="gems"/> are what
+        /// one day pays. Nought is "not a pass", which is what <c>JsonUtility</c> writes into a file
+        /// that never had the field - see <c>StoreProduct.PassDays</c>.
+        /// </summary>
+        public int passDays;
+
+        /// <summary>
         /// What this is expected to cost, in US cents. <b>Never displayed.</b> It is what
         /// <c>Validate Content</c> proves the value ladder against, and what the "+40%
         /// extra" badge is derived from. The player is always shown the store's own

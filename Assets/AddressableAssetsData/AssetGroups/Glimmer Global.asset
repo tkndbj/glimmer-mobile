@@ -34780,6 +34780,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_cleaver_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d016b519154a82b6d08c8fb642c457dd
+    m_Address: Art/Ui/Shop/pass_gems
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d016d1101aae6ba44866837eec1366d6
     m_Address: Art/Fx/Siege/shot_howitzer_g/f03
     m_ReadOnly: 0
@@ -35211,6 +35216,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/glacier_r_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d28fd17393358fe96ad8e181e72d7426
+    m_Address: Art/Ui/Shop/pass_coins
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d2907551ec0cf9d498f55997a8a60d55
     m_Address: Art/Siege/fire5_g/f01

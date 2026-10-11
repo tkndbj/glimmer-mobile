@@ -29,6 +29,7 @@ import { JWT } from "google-auth-library";
 import { logger } from "firebase-functions";
 
 import { CURRENCIES, CurrencyId, PATHS } from "./config";
+import { readDailyPasses, revokeRun, runKey } from "./daily-pass";
 
 /** Where the sweep records how far it has read. Not under `config`: no client may see it. */
 export const SWEEP_PATH = "ops/refundSweep";
@@ -72,6 +73,9 @@ export interface RevocableReceipt {
   productId?: string;
   capacity?: number;
   granted?: Record<string, number>;
+
+  /** A seven-day pass's shape as bought (`redeemPurchase`): its days and what one day paid. */
+  pass?: { days?: number; credits?: number; gems?: number };
 }
 
 /** A wallet, as much of one as a reversal needs to read. */
@@ -102,12 +106,29 @@ export type RevocableWallet = Record<string, { granted?: number } | undefined>;
 export function revocationUpdate(
   receipt: RevocableReceipt,
   wallet: RevocableWallet,
-  union: (id: string) => unknown
+  union: (id: string) => unknown,
+  runTx = ""
 ): Record<string, unknown> {
   const update: Record<string, unknown> = {};
 
+  // A seven-day pass paid its first piece through `granted` and the rest one a day: the pieces
+  // after the first are reversed too, and its run is removed so nothing more is paid. What is
+  // reversed is what this purchase actually paid out - see `revokeRun`.
+  const later: Record<string, number> = {};
+  if (receipt.pass && receipt.productId) {
+    const passes = readDailyPasses((wallet as Record<string, unknown>).dailyPasses);
+    const taken = revokeRun(passes, receipt.productId, runTx, {
+      days: Math.floor(receipt.pass.days ?? 0),
+      credits: Math.floor(receipt.pass.credits ?? 0),
+      gems: Math.floor(receipt.pass.gems ?? 0),
+    });
+    later.credits = taken.credits;
+    later.gems = taken.gems;
+    update.dailyPasses = passes;
+  }
+
   for (const currency of CURRENCIES) {
-    const amount = Math.floor(receipt.granted?.[currency] ?? 0);
+    const amount = Math.floor(receipt.granted?.[currency] ?? 0) + (later[currency] ?? 0);
     if (amount <= 0) continue;
 
     const held = Math.floor(wallet[currency]?.granted ?? 0);
@@ -176,7 +197,8 @@ export async function revokeReceipt(
       const update = revocationUpdate(
         receipt,
         walletSnapshot.data() as RevocableWallet,
-        (id) => FieldValue.arrayUnion(id)
+        (id) => FieldValue.arrayUnion(id),
+        runKey(store, transactionId)
       );
 
       update.updatedAt = FieldValue.serverTimestamp();

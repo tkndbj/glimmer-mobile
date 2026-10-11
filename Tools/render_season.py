@@ -159,7 +159,9 @@ def strings():
 
 STR = strings()
 TASKS = json.loads(TABLE.read_text(encoding="utf-8"))["tasks"]
-STORE = json.loads(TABLE.read_text(encoding="utf-8"))["store"]["products"]
+# A seven-day pass is on no ladder and its figures are per day, so the price of a gem is read off
+# the packs alone (`StoreCatalog.BasesOf`).
+STORE = [p for p in json.loads(TABLE.read_text(encoding="utf-8"))["store"]["products"] if not p.get("passDays")]
 #: The season the page draws, and which cycle of it.
 #:
 #: **The shipped season repeats** (`SeasonCycle`), so the manifest holds a *stem* and a window

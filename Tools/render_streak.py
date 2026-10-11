@@ -98,7 +98,7 @@ STREAK = TABLE_JSON.get("streak") or {}
 TIERS = [t["id"] for t in (TABLE_JSON.get("tasks") or {}).get("tiers") or []]
 RUNGS = STREAK.get("rungs") or []
 SHIELD_DAYS = STREAK.get("shieldDays") or 7
-SHIELD_GEMS = STREAK.get("shieldGems") or 120
+SHIELD_GEMS = STREAK.get("shieldGems") or 100
 
 
 def txt(key, *args):

@@ -54,7 +54,7 @@ REPEATS = True
 #: against what a player already holds rather than against a store listing. 350 is about
 #: seven weeks of free play at ~7 gems a day — dear enough that it is a decision and cheap
 #: enough that it is not a second economy, and comfortably inside the smallest gem pack.
-PASS_GEMS = 350
+PASS_GEMS = 100
 
 # 2026-09-15 00:00:00 UTC — the morning after the drop, so the window starts clean.
 START = 1789430400

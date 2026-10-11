@@ -226,7 +226,9 @@ namespace GlimmerGrove
 
             foreach (var product in StoreRules.Catalog.Products)
             {
-                if (product == null || product.Gems <= 0L) continue;
+                // A pass pays its gems over days and claims from its own card, so it is no answer
+                // to "I need gems now" (StoreProduct.PassDays).
+                if (product == null || product.Gems <= 0L || product.IsDailyPass) continue;
                 if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
                 _products.Add(product);
             }

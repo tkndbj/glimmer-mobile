@@ -3534,7 +3534,7 @@ def check_keeper_levels(progression, warnings, wards=None):
 
     # What it costs. The best gem rate the shop sells, for the dollar column.
     packs = [(p.get("gems", 0), p.get("referenceUsdCents", 0)) for p in ((progression.get("store") or {}).get("products") or [])
-             if p.get("gems", 0) > 0 and p.get("referenceUsdCents", 0) > 0]
+             if p.get("gems", 0) > 0 and p.get("referenceUsdCents", 0) > 0 and not p.get("passDays")]
     best = max((g / c for g, c in packs), default=0)          # gems per cent
     coins_total = gems_total = 0
     marks = {}
@@ -4138,6 +4138,26 @@ def check_store(progression, keys, manifest=None):
         gems = int(entry.get("gems") or 0)
         capacity = int(entry.get("heartCapacity") or 0)
         pass_id = entry.get("eventPassId") or ""
+        pass_days = int(entry.get("passDays") or 0)
+
+        # A seven-day pass (StoreProduct.PassDays, functions/src/daily-pass.ts): currency paid in
+        # daily pieces, so its amounts are one day's. Mirrors StoreCatalog.ReadProduct, the
+        # seeder and products.ts clause for clause - a pass any one of them would refuse is a
+        # real payment with nothing behind it.
+        if pass_days:
+            if not 2 <= pass_days <= 31:
+                errors.append(f"store product '{pid}' is a pass of {pass_days} days, outside 2..31")
+            if (entry.get("kind") != "consumable" or capacity or pass_id
+                    or entry.get("shelf") not in ("gems", "coins")):
+                errors.append(f"store product '{pid}' is a pass but is not a consumable currency "
+                              "product on the gems or coins shelf; a pass is bought again once it "
+                              "is paid out, and pays currency and nothing else")
+            if max(credits, gems) * pass_days > MAX_GRANT:
+                errors.append(f"store product '{pid}' pays more than {MAX_GRANT} over its "
+                              f"{pass_days} days")
+            if entry.get("badge"):
+                warnings.append(f"store product '{pid}' is a pass and carries a badge; the game "
+                                "drops it, because a badge points at a rung of a ladder")
 
         # An event pass: the second non-currency thing a real-money product may grant, and it
         # passes invariant 18d for the same reason a heart capacity does. What it buys is
@@ -4202,8 +4222,10 @@ def check_store(progression, keys, manifest=None):
             errors.append(f"store product '{pid}' missing string '{key}'")
 
         # One-time offers are deliberately better value than the ladder and cannot undercut
-        # it, because the store will not sell one twice. See ValidateStoreLadder.
-        if entry.get("kind") != "nonconsumable" and cents:
+        # it, because the store will not sell one twice. See ValidateStoreLadder. A pass is left
+        # out too: its figures are per day, so it is a different shape of purchase rather than a
+        # rung, and it is ranked by nothing in the game (StoreCatalog.RankShelves).
+        if entry.get("kind") != "nonconsumable" and cents and not pass_days:
             shelves.setdefault(entry["shelf"], []).append((cents, pid, credits, gems))
 
     # A season's pass used to be a store product, and this is where the two files were held
@@ -5159,7 +5181,7 @@ def main():
         # A price nobody can reach is the failure mode this whole block is content for.
         entry = min((int(x.get("gems") or 0)
                      for x in (progression.get("store") or {}).get("products") or []
-                     if int(x.get("gems") or 0) > 0), default=0)
+                     if int(x.get("gems") or 0) > 0 and not x.get("passDays")), default=0)
 
         if per_day_gems:
             line = f"       about {gems / per_day_gems:.1f} day(s) of free play"
@@ -5225,7 +5247,7 @@ def main():
 
         entry = min((int(x.get("gems") or 0)
                      for x in (progression.get("store") or {}).get("products") or []
-                     if int(x.get("gems") or 0) > 0), default=0)
+                     if int(x.get("gems") or 0) > 0 and not x.get("passDays")), default=0)
 
         if per_day_gems:
             line = f"       about {rescue_gems / per_day_gems:.1f} day(s) of free play"

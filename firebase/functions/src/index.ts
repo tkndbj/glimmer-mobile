@@ -42,6 +42,9 @@ import {
   usableTaskConfig,
 } from "./tasks";
 import { grantEntries, readProduct } from "./products";
+import {
+  claimPiece, isPassProductId, openRun, overBound, readDailyPasses, runKey,
+} from "./daily-pass";
 import { ReceiptRejected, lookupAppleTransaction, validateReceipt } from "./receipts";
 import {
   listVoidedPurchases, readSweepCursor, recordSweep, recordSweepFailure, recordSweepHealthy,
@@ -1630,6 +1633,21 @@ export const redeemPurchase = onCall(
         granted[currency] = amount;
       }
 
+      // A seven-day pass: the loop above has just paid its first piece (a pass's amounts are
+      // per day), and this opens the run that owes the rest - in the transaction that records
+      // the receipt, so a pass can never be paid for without its run existing or the reverse.
+      if (grant.passDays > 0) {
+        const passes = readDailyPasses(state.dailyPasses);
+        openRun(passes, purchase.productId, runKey(purchase.store, purchase.transactionId),
+                { credits: grant.credits, gems: grant.gems }, grant.passDays, todayKey(Date.now()));
+        if (overBound(passes, purchase.productId)) {
+          logger.warn("a pass carries more open runs than a player can reach", {
+            uid, productId: purchase.productId, runs: passes[purchase.productId]?.runs.length,
+          });
+        }
+        state.dailyPasses = passes;
+      }
+
       // Buying a container again after a refund lifts the revocation, in the transaction
       // that grants it. Doing it anywhere else would leave a window in which the server was
       // paid for a container it was still telling the client to take away.
@@ -1648,6 +1666,12 @@ export const redeemPurchase = onCall(
         // which may have been re-seeded by then. `revokeReceipt` reads exactly this.
         capacity: grant.capacity,
         granted,
+
+        // A pass's shape as bought, so a refund reverses the pieces paid after the first
+        // without re-reading a catalog that may have been re-seeded (`revokeRun`).
+        ...(grant.passDays > 0
+          ? { pass: { days: grant.passDays, credits: grant.credits, gems: grant.gems } }
+          : {}),
         sandbox: purchase.sandbox,
         purchasedAt: Timestamp.fromMillis(purchase.purchasedAtMillis),
         grantedAt: FieldValue.serverTimestamp(),
@@ -2240,6 +2264,68 @@ export const claimReferral = onCall(callOptions, async (request): Promise<{
     drops: reply.drops,
     wallets: reply.wallet ? toReply(reply.wallet, {}) : [],
   };
+});
+
+/**
+ * Pays today's piece of a seven-day pass (`daily-pass.ts`): `{ product }`.
+ *
+ * <p>Server-owned end to end, invariant 51's shape for a referral chest: the entitlement is on
+ * the wallet, the amount is the one copied onto the run when it was bought, and the client
+ * predicts nothing - it adopts the balances this answers with. Idempotent by the UTC day: a
+ * second ask the same day answers `not_yet` and pays nothing, so a lost reply costs a retry
+ * that reports the balance the first call already raised.</p>
+ *
+ * <p>Answers `paid`, `not_yet` or `none`, and the wallet every time, so a phone that thought it
+ * was owed something learns the truth in the same round trip. An audit record is written to
+ * the grant log under `pass:{product}:{day}` for support; nothing reads it back.</p>
+ */
+export const claimDailyPass = onCall(callOptions, async (request): Promise<{
+  outcome: string;
+  granted: Record<string, number>;
+  wallets: WalletReply[];
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const product = (request.data ?? {}).product;
+  if (!isPassProductId(product)) {
+    throw new HttpsError("invalid-argument", "a pass claim names the product it is for");
+  }
+
+  const result = await db.runTransaction(async (transaction) => {
+    const config = await loadProgressionConfig(transaction);
+    const walletRef = db.doc(PATHS.wallet(uid));
+    const snapshot = await transaction.get(walletRef);
+    const state = readWallet(snapshot, config);
+
+    const today = todayKey(Date.now());
+    const passes = readDailyPasses(state.dailyPasses);
+    const claim = claimPiece(passes, product, today);
+
+    const granted: Record<string, number> = {};
+    if (claim.outcome === "paid") {
+      if (claim.credits > 0) { state.credits.granted += claim.credits; granted.credits = claim.credits; }
+      if (claim.gems > 0) { state.gems.granted += claim.gems; granted.gems = claim.gems; }
+
+      if (Object.keys(passes).length > 0) state.dailyPasses = passes;
+      else delete state.dailyPasses;
+
+      transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+      transaction.set(db.doc(PATHS.grant(uid, `pass:${product}:${today}`)), {
+        reason: "daily_pass",
+        product,
+        day: today,
+        granted,
+        grantedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    return { state, outcome: claim.outcome, granted };
+  });
+
+  logger.info("daily pass claim", { uid, product, outcome: result.outcome, granted: result.granted });
+
+  return { outcome: result.outcome, granted: result.granted, wallets: toReply(result.state, {}) };
 });
 
 /** What a client is told when the block is unpublished: nothing, honestly. */

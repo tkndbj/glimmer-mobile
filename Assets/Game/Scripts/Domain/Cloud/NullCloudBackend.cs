@@ -16,7 +16,8 @@ namespace GlimmerGrove.Cloud
     /// refactor. Everything that would otherwise be written twice - the merge, the
     /// ledger arithmetic, the retry policy - is already exercised against this.
     /// </summary>
-    public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend, Referral.IReferralBackend
+    public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend, Referral.IReferralBackend,
+                                           Store.IDailyPassBackend
     {
         public bool IsAvailable => false;
 
@@ -186,5 +187,11 @@ namespace GlimmerGrove.Cloud
         /// draws a real distinction from it: with no watch it falls back to asking on a timer.
         /// </summary>
         public System.IDisposable WatchReferral(System.Action<long> onChanged) => null;
+
+        public Task<(CloudResult result, Store.DailyPassClaim claim, List<CloudWalletState> wallets)> ClaimDailyPassAsync(
+            string productId, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                new Store.DailyPassClaim(Store.DailyPassClaimOutcome.Unavailable),
+                                new List<CloudWalletState>()));
     }
 }

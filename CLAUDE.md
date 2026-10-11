@@ -570,6 +570,18 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 60d. **A deal's value seal is derived, never authored**: its coins over what its gems buy at the
    shop's own rate (`StoreCatalog.CreditsPerGem`), floored to ten, hidden at 100% or under or without
    a rate (`DealValue`). Shop band and panel rows are one `DealCard` (`Hud/plate_flat`, tinted).
+   The one-time welcome bundle heads the panel while this account can still buy it
+   (`DealOverlay.WelcomeOffer`, decided at open), sealed by `DealValue.BundlePercent` off the base packs.
+
+### Seven-day passes
+
+61. **A seven-day pass is currency paid in daily pieces, held whole on the wallet** (`daily-pass.ts`,
+   `DailyPassLedger`): `passDays` on a consumable gems/coins product, whose amounts are one day's.
+   `redeemPurchase` pays piece one and opens a run (amounts copied at purchase); `claimDailyPass` pays
+   one piece per UTC day per product, oldest run first, and nothing expires; a refund reverses every
+   piece the run paid. Nothing in the save; a pass is offered only once a reply carries `dailyPasses`,
+   and claims instead of selling while it owes. On no ladder (tier, bonus, rate and every value gate
+   skip it). Held by `test/daily-pass.mjs` and `DailyPassTests`.
 
 ### Art credits
 
@@ -702,7 +714,7 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 
 **Renders** (the gate for anything judged by eye; share `Tools/hudkit.py`): `render_home`, `render_shop`
 (`--measure` holds `ProductCardBadges` to the sprite; `--deal` draws a live shop deal), `render_tasks`, `render_season`, `render_streak`,
-`render_keeper`, `render_keeper_ladder`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
+`render_keeper`, `render_keeper_ladder`, `render_deals` (`--welcome`), `render_shop --pass claim`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
 `render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`, `render_reminders`
 (`--settings`, `--lang`, `--measure` fails on a caption at its floor), `render_ad_offers` (the video continue

@@ -61,6 +61,10 @@ namespace GlimmerGrove
             public RectTransform Root;
             public Btn Button;
             public Text Amount;
+
+            /// <summary>The picture at the left, and the line under the amount - both rewritten on every paint (44mc).</summary>
+            public Image Art;
+            public Text Unit;
             public RectTransform Seal;
             public Text SealWord;
 
@@ -98,11 +102,12 @@ namespace GlimmerGrove
             // The coffer, inside the box at its left, breathing - gently, so it reads as alive rather
             // than as something asking to be tapped.
             float art = size.y - 2f * ArtPad;
-            var coffer = UIKit.Img("Art", parts.Root, Art.S("Ui/Shop/coins_3"), Color.white,
+            var coffer = UIKit.Img("Art", parts.Root, Art.S(CofferArt), Color.white,
                                    new Vector2(art, art), new Vector2(0f, .5f), new Vector2(ArtLeft + art * .5f, 0f));
             coffer.preserveAspect = true;
             coffer.enabled = coffer.sprite != null;
             Tween.Breathe(coffer.transform, .035f, 2.4f);
+            parts.Art = coffer;
 
             // The amount, in full, on the box's vertical middle with COINS tucked under it.
             parts.AmountLeft = ArtLeft + art + AmountGap;
@@ -111,7 +116,7 @@ namespace GlimmerGrove
                              new Vector2(amountWidth, 90f), new Vector2(0f, .5f),
                              new Vector2(parts.AmountLeft + amountWidth * .5f, 14f + DealClock.DigitLift(AmountSize)),
                              4f, 3f), 40);
-            UIKit.Shrinkable(
+            parts.Unit = UIKit.Shrinkable(
                 UIKit.Titled("Unit", parts.Root, Loc.Get("ui.endless.coins").Upper(), UnitSize, Pal.Cream,
                              TextAnchor.MiddleLeft, new Vector2(amountWidth, 42f), new Vector2(0f, .5f),
                              new Vector2(parts.AmountLeft + amountWidth * .5f, -46f), 3f, 2f), 20);
@@ -137,11 +142,12 @@ namespace GlimmerGrove
             float artX = OpenArtLeft + OpenArt * .5f;
             UIKit.Img("Glow", parts.Root, Art.Glow(128, 2.4f), OpenGlowInk,
                       new Vector2(OpenGlow, OpenGlow), new Vector2(0f, .5f), new Vector2(artX, 0f));
-            var coffer = UIKit.Img("Art", parts.Root, Art.S("Ui/Shop/coins_3"), Color.white,
+            var coffer = UIKit.Img("Art", parts.Root, Art.S(CofferArt), Color.white,
                                    new Vector2(OpenArt, OpenArt), new Vector2(0f, .5f), new Vector2(artX, 0f));
             coffer.preserveAspect = true;
             coffer.enabled = coffer.sprite != null;
             Tween.Breathe(coffer.transform, .035f, 2.4f);
+            parts.Art = coffer;
 
             // The amount, big and centred on the column, with COINS under it.
             parts.ColumnX = size.x - columnW * .5f;
@@ -151,7 +157,7 @@ namespace GlimmerGrove
                              new Vector2(columnW, 110f), new Vector2(0f, .5f),
                              new Vector2(parts.ColumnX, OpenAmountY + DealClock.DigitLift(OpenAmountSize)),
                              5f, 3f), 48);
-            UIKit.Shrinkable(
+            parts.Unit = UIKit.Shrinkable(
                 UIKit.Titled("Unit", parts.Root, Loc.Get("ui.endless.coins").Upper(), OpenUnitSize, Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(columnW, 44f), new Vector2(0f, .5f),
                              new Vector2(parts.ColumnX, OpenUnitY), 3f, 2f), 22);
@@ -185,9 +191,62 @@ namespace GlimmerGrove
         {
             if (parts == null) return;
 
+            // The coffer, the colour and COINS put back, because a panel row may have been the
+            // welcome bundle on its last bind (44mc).
+            SetArt(parts, CofferArt);
             parts.Amount.text = deal != null ? deal.Credits.ToString("N0") : string.Empty;
+            parts.Amount.color = Pal.Sun;
+            if (parts.Unit)
+            {
+                parts.Unit.text = Loc.Get("ui.endless.coins").Upper();
+                parts.Unit.color = Pal.Cream;
+            }
 
-            int percent = DealValue.Percent(deal, StoreRules.Catalog);
+            PaintSeal(parts, DealValue.Percent(deal, StoreRules.Catalog));
+        }
+
+        /// <summary>
+        /// Writes a real-money bundle into a card - the welcome bundle at the top of the deals panel
+        /// (the owner, 2026-10-11): its own chest, its gems in their colour with its coins under
+        /// them, and the value seal (<see cref="DealValue.BundlePercent"/>). Every field, as
+        /// <see cref="Paint(Parts, ShopDeal)"/> writes every field, so either can follow the other
+        /// on a recycled row.
+        /// </summary>
+        public static void PaintBundle(Parts parts, StoreProduct product)
+        {
+            if (parts == null) return;
+
+            // The top bundle chest - the rung ShopArt draws a one-time bundle on (ShopLadder.Rung).
+            SetArt(parts, BundleArt);
+
+            bool gems = product != null && product.Gems > 0;
+            parts.Amount.text = product == null ? string.Empty
+                              : Compact.Number(gems ? product.Gems : product.Credits);
+            parts.Amount.color = gems ? Pal.Bloom : Pal.Sun;
+
+            if (parts.Unit)
+            {
+                parts.Unit.text = product == null ? string.Empty
+                    : gems && product.Credits > 0 ? Loc.Format("ui.shop.plus_coins", Compact.Number(product.Credits)).Upper()
+                    : Loc.Get(gems ? "ui.shop.gems" : "ui.endless.coins").Upper();
+                parts.Unit.color = gems && product != null && product.Credits > 0 ? Pal.Gold : Pal.Cream;
+            }
+
+            PaintSeal(parts, DealValue.BundlePercent(product, StoreRules.Catalog));
+        }
+
+        /// <summary>The pictures a card can wear. Written out so the art scanner sees both.</summary>
+        const string CofferArt = "Ui/Shop/coins_3", BundleArt = "Ui/Shop/bundles_3";
+
+        static void SetArt(Parts parts, string address)
+        {
+            if (!parts.Art) return;
+            parts.Art.sprite = Art.S(address);
+            parts.Art.enabled = parts.Art.sprite != null;
+        }
+
+        static void PaintSeal(Parts parts, int percent)
+        {
             bool show = percent > 0;
             if (parts.Seal.gameObject.activeSelf != show) parts.Seal.gameObject.SetActive(show);
             parts.SealWord.text = show ? Loc.Format("ui.deal.value", percent).Upper() : string.Empty;
