@@ -48,5 +48,8 @@ namespace GlimmerGrove
 
         /// <summary>Whether a video is loaded right now. Moves while the panel is up.</summary>
         public static bool Ready => Offered && RewardedAds.Provider.IsReady(AdPlacement.ContinueVideo);
+
+        /// <summary>What a watched continue reports as its reward (<c>RewardedAds.NoteSpent</c>).</summary>
+        public const string Reward = "continue";
     }
 }

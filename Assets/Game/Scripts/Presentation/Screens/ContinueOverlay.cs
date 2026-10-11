@@ -220,8 +220,12 @@ namespace GlimmerGrove
                                           42, new Vector2(600f, ContinuePanel.VideoH),
                                           new Vector2(.5f, 1f), new Vector2(0f, -videoY),
                                           WatchVideo, "ic_play");
-                UIKit.Shrinkable(_video.Label, 24);
-                UIKit.FitLabel(_video);
+
+                // One line, re-fitted on every caption change (`Btn.SetCaption` re-runs it),
+                // because this key says WATCH, FINDING A VIDEO... and OPENING... in turn - Best
+                // Fit on a caption that changes folds it onto two lines and springs it back a frame
+                // later (`UIKit.FitLabel`'s record). The floor is the other video keys' 24.
+                UIKit.OneLine(_video, 24);
                 PaintVideo();
             }
 
@@ -428,21 +432,25 @@ namespace GlimmerGrove
             if (_reported || _spending || _watching || _video == null) return;
             if (!ContinueVideo.Ready) { PaintVideo(); return; }
 
-            var impression = AdImpression.New(AdPlacement.ContinueVideo);
             _watching = true;
             PaintVideo();
 
+            // **The run is safe for the whole of the video, and that was traced rather than
+            // assumed.** The video is a fullscreen activity, so the app pauses under it: Boot's
+            // `OnApplicationPause` flushes the save, departs to the cloud and re-arms reminders,
+            // and touches no run. The run itself is held by `RunHold.Deciding` from the moment
+            // this panel was raised until it reports - the hold that already carries a gem
+            // purchase through the store's own payment sheet - and by `RunHold.Covered` while any
+            // panel stands over the board. Nothing on resume raises a panel over a run - the deals,
+            // consent and reminder moments all wait for a calm hub - except the update wall, which
+            // stands over everything by design and stops nothing underneath it (invariant 49e).
+            // A process killed under the
+            // video leaves `RunGuard`'s marker on disk and the heart is charged at the next launch,
+            // the designed fallback for a run the process lost track of.
             AdShowResult result;
             try
             {
-                result = await RewardedAds.Provider.ShowAsync(impression);
-            }
-            catch (Exception e)
-            {
-                // A fault is a refusal like any other (`RewardedVideo.Watch`'s rule): a panel left
-                // on OPENING with every key dead is a run nobody can finish or lose.
-                Debug.LogException(e);
-                result = AdShowResult.Failed(AdOutcome.Error, impression, e.Message);
+                result = await RewardedVideo.Show(AdPlacement.ContinueVideo);
             }
             finally
             {
@@ -461,6 +469,7 @@ namespace GlimmerGrove
                 return;
             }
 
+            RewardedAds.NoteSpent(result, ContinueVideo.Reward);
             LevelAnalytics.TrackContinueWatched(Level, Offer);
 
             _ending = Ending.Watched;

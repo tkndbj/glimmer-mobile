@@ -1,5 +1,4 @@
 using GlimmerGrove.Ads;
-using GlimmerGrove.Analytics;
 
 namespace GlimmerGrove.Wards
 {
@@ -73,18 +72,10 @@ namespace GlimmerGrove.Wards
             return cost - cost * percent / 100;
         }
 
-        /// <summary>
-        /// Records a finished view of the offer, for the same funnel every other placement reports
-        /// into. Called by the panel with the SDK's answer, whether or not it paid.
-        /// </summary>
-        public static void Note(AdShowResult result, string what)
-        {
-            if (!result.Rewarded) return;
+        /// <summary>What a discounted unlock reports as its reward (<see cref="RewardedAds.NoteSpent"/>).</summary>
+        public const string UnlockReward = "ward_unlock";
 
-            Telemetry.Track("rewarded_ad_completed",
-                            "placement", AdPlacement.TurretDiscount,
-                            "reward", what ?? string.Empty,
-                            "percent", Percent);
-        }
+        /// <summary>What a discounted star reports as its reward.</summary>
+        public const string StarReward = "ward_star";
     }
 }

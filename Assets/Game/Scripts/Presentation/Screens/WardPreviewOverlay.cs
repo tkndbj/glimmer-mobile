@@ -640,13 +640,17 @@ namespace GlimmerGrove
             Paint();
 
             var result = await watching;
-            WardDiscount.Note(result, "ward");
 
             bool bought = result.Rewarded
                        && WardLedger.TryBuy(model, colour, PlayerProgression.Level.Level,
                                             discounted: true);
 
-            if (bought) changed?.Invoke();
+            // Counted once the turret is held, so the event means a view that bought something.
+            if (bought)
+            {
+                RewardedAds.NoteSpent(result, WardDiscount.UnlockReward);
+                changed?.Invoke();
+            }
 
             if (this == null) return;
 

@@ -7983,11 +7983,11 @@
     },
     {
       "key": "shuffle.heavy_bolts.name",
-      "text": "Ağır Oklar"
+      "text": "Ağır Kurşunlar"
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Her ok %15 daha sert vurur."
+      "text": "Her kurşun %15 daha sert vurur."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8003,7 +8003,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Her ok %12 daha az yakıt harcar."
+      "text": "Her kurşun %12 daha az yakıt harcar."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "Okların %10 çift hasar vurur."
+      "text": "Kurşunların %10 çift hasar vurur."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Oklar yakındaki akıncılara %40 sıçrar."
+      "text": "Kurşunlar yakındaki akıncılara %40 sıçrar."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Oklar bir akıncıya daha %50 ile sıçrar."
+      "text": "Kurşunlar bir akıncıya daha %50 ile sıçrar."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Her üçüncü ok tüm şeridi deler."
+      "text": "Her üçüncü kurşun tüm şeridi deler."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Oklar akıncıları dondurup %30 yavaşlatır."
+      "text": "Kurşunlar akıncıları dondurup %30 yavaşlatır."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8099,7 +8099,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "Oklar akıncıları 3 saniye yakar."
+      "text": "Kurşunlar akıncıları 3 saniye yakar."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8107,7 +8107,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "Okların %12 akıncıyı olduğu yerde durdurur."
+      "text": "Kurşunların %12 akıncıyı olduğu yerde durdurur."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8163,7 +8163,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Oklar devlere ve zırhlara %50 daha sert vurur."
+      "text": "Kurşunlar devlere ve zırhlara %50 daha sert vurur."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8195,7 +8195,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Oklar canı %15 altındaki akıncıları anında bitirir."
+      "text": "Kurşunlar canı %15 altındaki akıncıları anında bitirir."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "Okların %25 iki kez vurur."
+      "text": "Kurşunların %25 iki kez vurur."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "Okların %6 hedefini 3 saniye lanetler."
+      "text": "Kurşunların %6 hedefini 3 saniye lanetler."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Oklar %40 daha sert vurur, kuleler %25 daha hızlı ateş eder."
+      "text": "Kurşunlar %40 daha sert vurur, kuleler %25 daha hızlı ateş eder."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8275,15 +8275,15 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Her ok sıradaki akıncılara %40 ile 2 saçma fırlatır."
+      "text": "Her kurşun sıradaki akıncılara %40 ile 2 saçma fırlatır."
     },
     {
       "key": "shuffle.ricochet.name",
-      "text": "Seken Ok"
+      "text": "Seken Kurşun"
     },
     {
       "key": "shuffle.ricochet.note",
-      "text": "Öldüren ok en yakın akıncıya %80 ile seker."
+      "text": "Öldüren kurşun en yakın akıncıya %80 ile seker."
     },
     {
       "key": "shuffle.missile_pod.name",
@@ -8291,23 +8291,23 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Her dördüncü ok 2 güdümlü füze fırlatır."
+      "text": "Her dördüncü kurşun 2 güdümlü füze fırlatır."
     },
     {
       "key": "shuffle.quake_rounds.name",
-      "text": "Deprem Okları"
+      "text": "Deprem Kurşunları"
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Her beşinci ok sırası boyunca şok dalgası yollar ve akıncıları geri iter."
+      "text": "Her beşinci kurşun sırası boyunca şok dalgası yollar ve akıncıları geri iter."
     },
     {
       "key": "shuffle.toxic_rounds.name",
-      "text": "Zehirli Oklar"
+      "text": "Zehirli Kurşunlar"
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Oklar, üstünden geçenleri yakan zehir birikintileri bırakır."
+      "text": "Kurşunlar, üstünden geçenleri yakan zehir birikintileri bırakır."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8379,7 +8379,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Her ok 2 başa ayrılır ve her baş yeniden ayrılır."
+      "text": "Her kurşun 2 başa ayrılır ve her baş yeniden ayrılır."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Her ok rastgele ateş, zehir, buz ya da yıldırıma dönüşür."
+      "text": "Her kurşun rastgele ateş, zehir, buz ya da yıldırıma dönüşür."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8395,7 +8395,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Kuleler iki kat hızlı ateş eder, oklar yarı yakıt harcar."
+      "text": "Kuleler iki kat hızlı ateş eder, kurşunlar yarı yakıt harcar."
     },
     {
       "key": "ui.loadout.discount_badge",

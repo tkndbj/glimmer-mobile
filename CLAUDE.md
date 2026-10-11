@@ -705,7 +705,8 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 `render_keeper`, `render_keeper_ladder`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
 `render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`, `render_reminders`
-(`--settings`, `--lang`, `--measure` fails on a caption at its floor). Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
+(`--settings`, `--lang`, `--measure` fails on a caption at its floor), `render_ad_offers` (the video continue
+and the turret discount where they are sold; `--contact`, `--lang`, `--measure` the same gate). Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
 **`--check` proves reproducibility, not quality.** Art tools pass with licensed packs absent (PNGs committed).
 
 **Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;

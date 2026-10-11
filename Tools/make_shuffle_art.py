@@ -89,7 +89,8 @@ WALL_TURN = -45
 WALL_SATURATION, WALL_VALUE = .85, .42
 
 #: The owner's crest pictures, one per language in `Loc.Languages` (English replaced 2026-10-09
-#: by "Shuffle Cards Game Logo", the other eight 2026-10-10), and the size they are cut at: the
+#: by "Shuffle Cards Game Logo", the other eight 2026-10-10, Turkish
+#: again 2026-10-11 by "KARIŞIK Crown Card Logo"), and the size they are cut at: the
 #: hub draws it up to 840 across on a 1080 canvas (`EndlessHubLayout.CrestWidest`), so 1020 is
 #: drawn down on any phone and under the `/Art/Ui/` folder's 1024 cap; both sides a multiple of
 #: four, as block compression wants. `EndlessHubTests.EveryLanguageHasItsOwnCrest` holds the
@@ -102,7 +103,7 @@ CREST_SOURCES = {
     "fr": DOWNLOADS / "MÉLANGE Tower Card Game Logo.png",
     "de": DOWNLOADS / "Mischen Card Game Logo.png",
     "it": DOWNLOADS / "MESCOLA_ Turret Card Shuffle Logo.png",
-    "tr": DOWNLOADS / "Glossy KARIŞTIR Turret Card Logo.png",
+    "tr": DOWNLOADS / "KARIŞIK Crown Card Logo.png",
     "pl": DOWNLOADS / "SZUFLA_ Neonowa Talia Wieżyczek.png",
     "ar": DOWNLOADS / "Glossy Arabic Shuffle Game Emblem.png",
 }

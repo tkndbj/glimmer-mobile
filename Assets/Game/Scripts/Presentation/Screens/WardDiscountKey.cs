@@ -36,6 +36,9 @@ namespace GlimmerGrove
         Image _pill, _coin;
         Text _price, _off;
 
+        /// <summary>The burst's size, and how far its centre stands in from the key's right edge.</summary>
+        public const float SealSize = 104f, SealInset = -6f;
+
         public static WardDiscountKey Build(Transform parent, Vector2 size, Vector2 anchor,
                                             Vector2 pos, Action onTap)
         {
@@ -64,10 +67,14 @@ namespace GlimmerGrove
                                       new Vector2(.5f, .5f), new Vector2(65f, lift), 0f, 3f);
             UIKit.Shrinkable(key._price, 22);
 
-            // The share off, on the kit's burst over the top-right corner - `DealCard`'s seal, at
-            // this key's scale. Built last so it draws over the pill.
+            // The share off, on the kit's burst - `DealCard`'s seal, at this key's scale. Built last
+            // so it draws over the pill. **Straddling the right edge at mid-height, never over the
+            // top corner**: the key above is the full price, sixteen units away, and a sticker
+            // reaching over its corner read as that price being the discounted one
+            // (`render_ad_offers.py`). Shorter than the key, so it stays inside the key's own band.
             var seal = UIKit.Img("Seal", key.Button.transform, Art.S("Ui/" + Skins.Badge), Pal.Rose,
-                                 new Vector2(104f, 104f), new Vector2(1f, 1f), new Vector2(-14f, -6f));
+                                 new Vector2(SealSize, SealSize), new Vector2(1f, .5f),
+                                 new Vector2(SealInset, lift));
             seal.transform.localRotation = Quaternion.Euler(0f, 0f, -9f);
 
             key._off = UIKit.Shrinkable(
@@ -124,22 +131,17 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Shows the video and answers whether it finished. Never throws - an SDK fault is a
-        /// refusal like any other, logged on the way past (<c>RewardedVideo.Watch</c>'s rule).
+        /// Shows the video and answers whether it finished, through
+        /// <see cref="RewardedVideo.Show"/> - so it never throws and owns nothing about the SDK
+        /// beyond holding the key dead while the video is up.
         /// </summary>
         public async Task<AdShowResult> Watch()
         {
-            var impression = AdImpression.New(AdPlacement.TurretDiscount);
             Watching = true;
 
             try
             {
-                return await RewardedAds.Provider.ShowAsync(impression);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                return AdShowResult.Failed(AdOutcome.Error, impression, e.Message);
+                return await RewardedVideo.Show(AdPlacement.TurretDiscount);
             }
             finally
             {

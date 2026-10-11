@@ -53,8 +53,12 @@ namespace GlimmerGrove.Ads
         readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
 
         TaskCompletionSource<bool> _ready;
-        TaskCompletionSource<AdShowResult> _pending;
-        AdImpression _showing;
+        /// <summary>
+        /// The video on screen, or the last one. Every callback is forwarded to it and it decides
+        /// the one answer, whatever order LevelPlay raises "rewarded" and "closed" in - see
+        /// <see cref="RewardedShow"/>, which is why this is not a bare completion source.
+        /// </summary>
+        RewardedShow _show;
         bool _starting;
 
         /// <summary>Whether anything has told this provider what it may collect.</summary>
@@ -70,6 +74,23 @@ namespace GlimmerGrove.Ads
         {
             AppKey = appKey ?? string.Empty;
             _adUnitIds = adUnitIds ?? new Dictionary<string, string>(StringComparer.Ordinal);
+
+            // The net under a close the SDK never raises (RewardedShow.Returned). Unity's own
+            // static event, so it needs no MonoBehaviour; the provider lives as long as the app.
+            Application.focusChanged += OnFocusChanged;
+        }
+
+        /// <summary>
+        /// Tells the show on screen that the game lost or regained focus. On Android the video is
+        /// its own activity, so regaining focus means it has gone - whatever the SDK has said.
+        /// </summary>
+        void OnFocusChanged(bool focused)
+        {
+            var show = _show;
+            if (show == null || show.Settled) return;
+
+            if (!focused) show.Left();
+            else Fire.AndForget(show.Returned(), "LevelPlay.FocusBack");
         }
 
         public string AppKey { get; }
@@ -231,19 +252,32 @@ namespace GlimmerGrove.Ads
                 RetryLater(placementId, attempt);
             };
 
-            unit.OnAdRewarded += (info, reward) => Settle(new AdShowResult(AdOutcome.Rewarded, _showing));
+            // Each callback reads the show once into a local, so a callback can never land on a
+            // show that started after it was raised. Ordering between them is RewardedShow's.
+            unit.OnAdRewarded += (info, reward) =>
+            {
+                var show = _show;
+                if (show == null) return;
+
+                show.Rewarded();
+                if (show.RewardedLate)
+                    Debug.LogWarning($"[Ads] '{placementId}' rewarded {RewardedShow.CloseGrace.TotalSeconds:0}s+ " +
+                                     "after it closed; the player was told it did not finish. Lengthen " +
+                                     "RewardedShow.CloseGrace if this repeats.");
+            };
 
             unit.OnAdDisplayFailed += (info, error) =>
             {
-                Settle(AdShowResult.Failed(AdOutcome.Error, _showing, error?.ErrorMessage));
+                _show?.DisplayFailed(error?.ErrorMessage);
                 Reload(placementId);
             };
 
             unit.OnAdClosed += _ =>
             {
-                // Only reaches a waiting caller when OnAdRewarded did not fire first, which
-                // is exactly the definition of a player who closed the video early.
-                Settle(AdShowResult.Failed(AdOutcome.Dismissed, _showing));
+                // Not an answer yet: LevelPlay may deliver the reward after the close, so the
+                // show waits RewardedShow.CloseGrace for it before calling the video skipped.
+                var show = _show;
+                if (show != null) Fire.AndForget(show.Closed(), "LevelPlay.CloseGrace");
                 Reload(placementId);
             };
 
@@ -361,13 +395,14 @@ namespace GlimmerGrove.Ads
                 return Task.FromResult(AdShowResult.Failed(AdOutcome.NoFill, impression, "nothing loaded"));
             }
 
-            // One at a time. Two overlapping shows would race for _pending and the second
-            // player-visible reward would be attributed to the first impression's nonce.
-            if (_pending != null && !_pending.Task.IsCompleted)
+            // One at a time. Two overlapping shows would share the callbacks and the second
+            // player-visible reward would be attributed to the first impression's nonce. A show
+            // still inside its close grace counts as on screen for this.
+            if (_show != null && !_show.Settled)
                 return Task.FromResult(AdShowResult.Failed(AdOutcome.Error, impression, "an ad is already showing"));
 
-            _showing = impression;
-            _pending = new TaskCompletionSource<AdShowResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var show = new RewardedShow(impression);
+            _show = show;
 
             // The line the whole grant path depends on. `[USER_ID]` in the network's
             // server-to-server callback is whatever was last set here, and it is how the
@@ -382,23 +417,7 @@ namespace GlimmerGrove.Ads
             // used verbatim, so the LevelPlay dashboard's placement names must match them.
             unit.ShowAd(impression.PlacementId);
 
-            return _pending.Task;
-        }
-
-        /// <summary>
-        /// Completes the waiting caller exactly once.
-        ///
-        /// The SDK fires more than one terminal event for a single view - a rewarded ad
-        /// that pays raises <c>OnAdRewarded</c> and then <c>OnAdClosed</c> - so whichever
-        /// arrives first decides, and the rest are dropped. Without this the reward would
-        /// be overwritten by the dismissal that always follows it.
-        /// </summary>
-        void Settle(AdShowResult result)
-        {
-            var pending = _pending;
-            if (pending == null) return;
-
-            pending.TrySetResult(result);
+            return show.Answer;
         }
 
         void Raise(string placementId)

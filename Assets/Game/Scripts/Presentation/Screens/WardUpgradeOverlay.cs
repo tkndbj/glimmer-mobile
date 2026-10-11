@@ -70,6 +70,12 @@ namespace GlimmerGrove
         static readonly Color Short = new Color(.58f, .31f, .06f);
 
         /// <summary>
+        /// The discount key's line, `WardPreviewOverlay.Held`'s green: an offer the player can
+        /// take, which the amber of a shortfall would read as the opposite of.
+        /// </summary>
+        static readonly Color Held = new Color(.18f, .42f, .21f);
+
+        /// <summary>
         /// What a refused press is written in, and how long it stands before the line goes back
         /// to saying how far short the purse is.
         ///
@@ -242,7 +248,11 @@ namespace GlimmerGrove
                 // Says what the lower key does whenever it can be taken - including when the
                 // full price cannot, which is the case the offer exists for.
                 string says = _discount.Status(cut.CanBuy);
-                if (says != null) _status.text = says;
+                if (says != null)
+                {
+                    _status.text = says;
+                    _status.color = Held;
+                }
             }
 
             Place();
@@ -324,11 +334,15 @@ namespace GlimmerGrove
             Paint();
 
             var result = await watching;
-            WardDiscount.Note(result, "ward_star");
 
             bool bought = result.Rewarded && WardUpgrade.TryBuy(model, seat, discounted: true);
 
-            if (bought) changed?.Invoke();
+            // Counted once the star is held, so the event means a view that bought something.
+            if (bought)
+            {
+                RewardedAds.NoteSpent(result, WardDiscount.StarReward);
+                changed?.Invoke();
+            }
 
             if (this == null) return;
 

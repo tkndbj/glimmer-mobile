@@ -527,13 +527,52 @@ namespace GlimmerGrove.Ads
             SaveService.Save();
             Raise();
 
-            Telemetry.Track("rewarded_ad_completed",
+            Telemetry.Track(CompletedEvent,
                             "placement", impression.PlacementId,
                             "reward", drop.ToString(),
                             "watched_today", WatchedToday(impression.PlacementId),
                             "day", _dayKey);
 
             return drop;
+        }
+
+        /// <summary>
+        /// The one event every finished, paid view reports into, whichever way it paid. A chart
+        /// of ad views is a count of this; a placement that reported elsewhere would be missing
+        /// from it without anything looking wrong.
+        /// </summary>
+        public const string CompletedEvent = "rewarded_ad_completed";
+
+        /// <summary>
+        /// Records a finished view of a placement that is <b>spent where it was watched</b> - the
+        /// turret discount, the video continue - once the thing it was watched for has been
+        /// applied.
+        ///
+        /// <para>
+        /// <see cref="CompletedEvent"/>, with <see cref="Redeem"/>'s fields, so these views are
+        /// counted beside every other. <c>watched_today</c> is the one field left out rather than
+        /// written as a nought: these placements keep no daily count (they are bounded per
+        /// purchase and per run, never per day), and a nought would read as "the first today" on
+        /// every row.
+        /// </para>
+        /// <para>
+        /// Touches no save state and starts no cooldown, which is what being outside the daily
+        /// caps and the shared pacing means (<see cref="AdPlacement.TurretDiscount"/>,
+        /// <see cref="AdPlacement.ContinueVideo"/>). Does nothing for a view that did not finish.
+        /// </para>
+        /// </summary>
+        /// <param name="reward">What the view bought, in a word a chart can group by.</param>
+        public static void NoteSpent(AdShowResult result, string reward)
+        {
+            if (!result.Rewarded) return;
+
+            // The day read off the clock rather than through `Sync`, which rolls the daily
+            // counters over and raises `Changed` - side effects a placement with no daily count
+            // has no business causing. The same key `Sync` would have settled on.
+            Telemetry.Track(CompletedEvent,
+                            "placement", result.Impression.PlacementId,
+                            "reward", reward ?? string.Empty,
+                            "day", DailyRules.DayKeyFor(GameClock.NowUnix()));
         }
 
         /// <summary>

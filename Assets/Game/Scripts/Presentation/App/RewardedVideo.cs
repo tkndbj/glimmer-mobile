@@ -31,7 +31,11 @@ namespace GlimmerGrove
         /// <summary>How the show attempt ended, in the SDK's terms.</summary>
         public readonly AdOutcome Outcome;
 
-        /// <summary>True when the attempt threw rather than merely refusing.</summary>
+        /// <summary>
+        /// True when the attempt failed rather than being refused - the SDK answered
+        /// <see cref="AdOutcome.Error"/> or threw (<see cref="RewardedVideo.Show"/> folds a throw
+        /// into that outcome). Either is "that did not work", never "try later".
+        /// </summary>
         public readonly bool Faulted;
 
         public VideoPayment(ChestDrop drop, RewardFlight flight, AdOutcome outcome, bool faulted)
@@ -90,25 +94,46 @@ namespace GlimmerGrove
         /// </summary>
         public static async Task<VideoPayment> Watch(string placementId)
         {
+            var result = await Show(placementId);
+
+            // Before the redeem, always. See the class remarks. On a fault it is still opened, so
+            // a caller never has to test it for null: it holds a snapshot of pills nothing has
+            // moved, so playing it would be a no-op and adding an invalid drop to it is refused.
+            var flight = RewardFlight.Begin();
+
+            bool faulted = result.Outcome == AdOutcome.Error;
+            return new VideoPayment(RewardedAds.Redeem(result), flight, result.Outcome, faulted);
+        }
+
+        /// <summary>
+        /// Shows <paramref name="placementId"/>'s video and answers how it ended, <b>redeeming
+        /// nothing</b>.
+        ///
+        /// <para>
+        /// For the placements that are spent where they were watched rather than paid from the ad
+        /// table - the turret discount and the video continue - whose reward is a purchase or a
+        /// run the caller applies itself (<see cref="RewardedAds.NoteSpent"/> records it). One
+        /// copy of the impression and the fault rule for every caller, <see cref="Watch"/>
+        /// included: it was written a second and a third time beside those two features, which
+        /// is the drift this class was lifted out to end.
+        /// </para>
+        /// <para>
+        /// Never throws: an SDK fault is answered as <see cref="AdOutcome.Error"/> and logged on
+        /// the way past, so no panel is left on OPENING with every key dead.
+        /// </para>
+        /// </summary>
+        public static async Task<AdShowResult> Show(string placementId)
+        {
             var impression = AdImpression.New(placementId);
 
             try
             {
-                var result = await RewardedAds.Provider.ShowAsync(impression);
-
-                // Before the redeem, always. See the class remarks.
-                var flight = RewardFlight.Begin();
-
-                return new VideoPayment(RewardedAds.Redeem(result), flight, result.Outcome, false);
+                return await RewardedAds.Provider.ShowAsync(impression);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-
-                // A flight all the same, so a caller never has to test it for null: it holds a
-                // snapshot of pills nothing has moved, so playing it would be a no-op and adding
-                // an invalid drop to it is already refused.
-                return new VideoPayment(default, RewardFlight.Begin(), AdOutcome.Error, true);
+                return AdShowResult.Failed(AdOutcome.Error, impression, e.Message);
             }
         }
 
