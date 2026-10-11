@@ -1322,6 +1322,84 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
+        /// Reads the published chapter standings (invariant 62): one document, a table per
+        /// chapter, every failure an empty answer rather than a propagated exception, because
+        /// nothing anywhere waits on it.
+        ///
+        /// <para>
+        /// A chapter whose cut points are not ninety-nine ascending numbers is read as
+        /// <see cref="Social.StandingTable.None"/> rather than repaired, for
+        /// <see cref="ReadRankTable"/>'s reason - and only that chapter, so one malformed row
+        /// cannot take the rest of the catalog's standings down with it. An empty list is the
+        /// ordinary shape for a chapter nobody has finished and is kept with its sample count of
+        /// nought, which the table reads as "not enough to say".
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, Social.ChapterStandingPublication published)>
+            ReadChapterStandingsAsync(CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
+                        Social.ChapterStandingPublication.None);
+
+            try
+            {
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("chapterStandings").GetSnapshotAsync(), ReadSeconds, cancellation);
+
+                // An absent document is the ordinary first-day state rather than a failure: no
+                // job has run yet, so there is nothing to say and every map prints "top 1%".
+                if (!snapshot.Exists)
+                    return (CloudResult.Success, Social.ChapterStandingPublication.None);
+
+                var document = snapshot.ToDictionary();
+                int minimum = (int)ReadLong(document, "minimumSamples");
+
+                var chapters = new Dictionary<string, Social.StandingTable>(StringComparer.Ordinal);
+                if (document.TryGetValue("chapters", out object rawChapters) &&
+                    rawChapters is IDictionary<string, object> rows)
+                {
+                    foreach (var pair in rows)
+                    {
+                        if (string.IsNullOrEmpty(pair.Key) || !(pair.Value is IDictionary<string, object> row)) continue;
+                        chapters[pair.Key] = ReadStandingTable(row, minimum);
+                    }
+                }
+
+                return (CloudResult.Success, new Social.ChapterStandingPublication(
+                    chapters, ReadLong(document, "builtUnix")));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read chapter standings"), Social.ChapterStandingPublication.None);
+            }
+        }
+
+        /// <summary>
+        /// One chapter's row: its finisher count and its cut points, which are either ninety-nine
+        /// ascending positive numbers or nothing at all.
+        /// </summary>
+        static Social.StandingTable ReadStandingTable(IDictionary<string, object> row, int minimumSamples)
+        {
+            int samples = (int)ReadLong(row, "samples");
+
+            if (!row.TryGetValue("percentiles", out object raw) || !(raw is IEnumerable<object> list))
+                return new Social.StandingTable(samples, minimumSamples, null);
+
+            var cuts = new List<long>(Social.StandingTable.CutCount);
+            foreach (var value in list) cuts.Add(ToLong(value));
+
+            if (cuts.Count == 0) return new Social.StandingTable(samples, minimumSamples, null);
+            if (cuts.Count != Social.StandingTable.CutCount) return Social.StandingTable.None;
+
+            for (int i = 0; i < cuts.Count; i++)
+                if (cuts[i] < 1L || (i > 0 && cuts[i] < cuts[i - 1]))
+                    return Social.StandingTable.None;
+
+            return new Social.StandingTable(samples, minimumSamples, cuts);
+        }
+
+        /// <summary>
         /// Turns a card document into a <see cref="Social.GroveCard"/>.
         ///
         /// <para>

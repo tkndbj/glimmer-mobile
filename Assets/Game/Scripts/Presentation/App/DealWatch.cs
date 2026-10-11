@@ -6,41 +6,54 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The shop tab's deal alert on the bottom bar (invariant 60): a purple starburst with a
-    /// white <c>!!!</c> on the tab's top-right corner while a deal is on sale that this account
-    /// has not bought (<see cref="DealLedger.Offered"/>).
+    /// The shop tab's one badge on the bottom bar, on its top-right corner (<see cref="ShopTabBadge"/>):
+    /// the gold gift burst the hub's boxes wear while a seven-day pass has today's reward waiting
+    /// (<see cref="DailyPassLedger.AnyClaimable"/>), else the purple <c>!!!</c> while a deal is on
+    /// sale that this account has not bought (invariant 60, <see cref="DealLedger.Offered"/>), else
+    /// nothing. Never both: the two are built on the same corner and exactly one is ever shown.
     ///
     /// <para>
     /// <b>Watched, never drawn</b> (44j's rule about readouts, said of a badge): it subscribes to
-    /// <see cref="DealLedger.Changed"/> and repaints, and it re-asks once a second because a
-    /// deal ends on the clock and nothing announces the clock. It is also where the deals are
-    /// asked for (<see cref="DealLedger.Refresh"/>): every screen with the bar builds one, and the
-    /// ledger's own cadence turns that into at most one read a quarter of an hour.
+    /// both ledgers and repaints, and it re-asks once a second, because a deal ends on the clock
+    /// and a pass's next reward arrives at UTC midnight, and nothing announces either. It is also
+    /// where the deals are asked for (<see cref="DealLedger.Refresh"/>): every screen with the bar
+    /// builds one, and the ledger's own cadence turns that into at most one read a quarter of an
+    /// hour. Claiming on the shop clears the gift at once (the claim raises the pass ledger).
     /// </para>
     /// </summary>
-    public sealed class DealAlert : MonoBehaviour
+    public sealed class ShopTabAlert : MonoBehaviour
     {
-        WaitingBadge _badge;
+        WaitingBadge _deal, _gift;
         float _next;
-        bool _shown;
+        ShopTabMark _shown;
 
         /// <summary>Hangs the alert on <paramref name="plate"/>'s top-right corner.</summary>
-        public static DealAlert Attach(RectTransform plate)
+        public static ShopTabAlert Attach(RectTransform plate)
         {
-            var alert = plate.gameObject.AddComponent<DealAlert>();
-            alert._badge = WaitingBadge.Alert(plate, new Vector2(1f, 1f), new Vector2(-16f, -12f),
-                                              WaitingBadge.DealPurple, 1f);
+            var alert = plate.gameObject.AddComponent<ShopTabAlert>();
+            var corner = new Vector2(1f, 1f);
+            var at = new Vector2(-16f, -12f);
+            alert._deal = WaitingBadge.Alert(plate, corner, at, WaitingBadge.DealPurple, 1f);
+            alert._gift = WaitingBadge.Gift(plate, corner, at, Pal.Gold, 1f);
             return alert;
         }
 
         void OnEnable()
         {
             DealLedger.Changed += Paint;
+            DailyPassLedger.Changed += Paint;
             DealLedger.Refresh();
-            Paint();
+
+            // Built hidden; the first paint decides from nothing shown.
+            _shown = ShopTabMark.None;
+            Paint(force: true);
         }
 
-        void OnDisable() => DealLedger.Changed -= Paint;
+        void OnDisable()
+        {
+            DealLedger.Changed -= Paint;
+            DailyPassLedger.Changed -= Paint;
+        }
 
         void Update()
         {
@@ -49,15 +62,23 @@ namespace GlimmerGrove
             Paint();
         }
 
-        void Paint()
+        void Paint() => Paint(force: false);
+
+        void Paint(bool force)
         {
-            if (!this || _badge == null) return;
+            if (!this || _deal == null || _gift == null) return;
 
-            bool show = DealLedger.Offered != null;
-            if (show == _shown) return;
-            _shown = show;
+            var mark = ShopTabBadge.Of(DailyPassLedger.AnyClaimable(GameClock.NowUnix()),
+                                       DealLedger.Offered != null);
+            if (!force && mark == _shown) return;
+            _shown = mark;
 
-            _badge.Paint(show ? WaitingBadge.AlertMarks : string.Empty);
+            // Hidden first, then shown, so the corner never carries two bursts for a frame.
+            if (mark != ShopTabMark.Gift) _gift.Paint(0);
+            if (mark != ShopTabMark.Deal) _deal.Paint(string.Empty);
+
+            if (mark == ShopTabMark.Gift) _gift.Paint(1);
+            else if (mark == ShopTabMark.Deal) _deal.Paint(WaitingBadge.AlertMarks);
         }
     }
 

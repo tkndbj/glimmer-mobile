@@ -4206,6 +4206,14 @@
       "text": "BİR BÖLÜM SEÇ"
     },
     {
+      "key": "ui.levels.standing_locked",
+      "text": "Sıralamanı görmek için tüm bölümleri bitir"
+    },
+    {
+      "key": "ui.levels.standing_top",
+      "text": "En iyi %{0} içindesin"
+    },
+    {
       "key": "ui.loadout.chest_only",
       "text": "Sandıklardan"
     },
@@ -6712,10 +6720,6 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Bu aktifken her bölüm, nöbet ve aşama %{0} daha fazla XP verir. Diğer bütün XP güçlendirmeleriyle birleşir."
-    },
-    {
-      "key": "ui.shop.pass_ribbon",
-      "text": "{0} GÜNLÜK KART"
     },
     {
       "key": "ui.shop.pass_gems_daily",

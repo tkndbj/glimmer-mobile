@@ -4206,6 +4206,14 @@
       "text": "WYBIERZ POZIOM"
     },
     {
+      "key": "ui.levels.standing_locked",
+      "text": "Ukończ wszystkie poziomy, by zobaczyć pozycję"
+    },
+    {
+      "key": "ui.levels.standing_top",
+      "text": "Jesteś w górnych {0}%"
+    },
+    {
       "key": "ui.loadout.chest_only",
       "text": "Ze skrzyń"
     },
@@ -6712,10 +6720,6 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Gdy to działa, każdy poziom, warta i fala dają o {0}% więcej XP. Łączy się z każdym innym wzmocnieniem XP."
-    },
-    {
-      "key": "ui.shop.pass_ribbon",
-      "text": "PRZEPUSTKA NA {0} DNI"
     },
     {
       "key": "ui.shop.pass_gems_daily",

@@ -94,6 +94,12 @@ namespace GlimmerGrove
         readonly RectTransform _ribbonArc;
         readonly int _ribbonFont;
         readonly float _ribbonRadius;
+
+        /// <summary>
+        /// How wide a ribbon's caption may run: the cloth's middle, between its tails. Measured off
+        /// the drawn ribbon rather than typed, so a retuned ribbon takes its room with it.
+        /// </summary>
+        readonly float _ribbonRoom;
         string _ribbonSaid;
 
         /// <summary>
@@ -248,6 +254,7 @@ namespace GlimmerGrove
             // the same sprite drawn smaller, so its curve is proportionally identical and a
             // fixed radius would bend a card's mark far harder than the header's.
             _ribbonRadius = ProductCardBadges.RibbonWidth * kh * 1.41f;
+            _ribbonRoom = ProductCardBadges.RibbonWidth * kh * ProductCardBadges.RibbonWritable;
             _ribbonArc = UIKit.Box("RT", _ribbon.transform, Vector2.zero, new Vector2(.5f, .5f),
                                    new Vector2(0f, ProductCardBadges.RibbonHeight * kv * Skins.RibbonLift));
 
@@ -355,6 +362,7 @@ namespace GlimmerGrove
             if (product == null) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            _amount.supportRichText = false;
             SubLine(false);
 
             Shelf(product.Shelf);
@@ -403,9 +411,13 @@ namespace GlimmerGrove
                 SubLine(bundle);
             }
 
+            // **The two marks traded places** (the owner, 2026-10-11): the badge the shelf points at
+            // ("MOST POPULAR", "BEST VALUE", "ONE TIME ONLY") hangs on the ribbon, and the bonus over
+            // the ladder ("+40% EXTRA") is stamped on the seal.
             PaintPrice(offer);
-            PaintRibbon(product.BonusPercent);
-            PaintSeal(StoreWording.Badge(product.Badge));
+            string badge = StoreWording.Badge(product.Badge);
+            PaintRibbon(badge == null ? null : Loc.Get(badge).Upper());
+            PaintSealCaption(product.BonusPercent >= 5 ? Loc.Format("ui.shop.bonus", product.BonusPercent) : null);
         }
 
         /// <summary>
@@ -418,19 +430,27 @@ namespace GlimmerGrove
         /// other is a pack wearing CLAIM.
         /// </para>
         /// <para>
-        /// The ribbon names the pass ("7-DAY PASS") where a pack's says its bonus: a pass is on no
-        /// ladder, so a percentage over one would be a number nobody can check. No seal.
+        /// No ribbon, and a value seal (the owner, 2026-10-11): everything the pass pays over its
+        /// days against the base packs' prices (<see cref="DealValue.PassPercent"/>), the figure a
+        /// deal's seal prints. The line under the amount is solid white, every state.
         /// </para>
         /// </summary>
         void DrawPass(StoreProduct product, StoreOffer offer)
         {
+            // One day's amount, then "x7" in green (the owner, 2026-10-11): the headline says the
+            // whole of what is bought before a word is read. The multiplier is a rich-text tag on
+            // the one label, so it stays beside the figure however the label shrinks; rich text is
+            // switched off again by every other draw (44mc), so no other headline parses a tag.
             bool gems = product.Gems > 0;
-            _amount.text = Compact.Number(gems ? product.Gems : product.Credits);
+            _amount.supportRichText = true;
+            _amount.text = Compact.Number(gems ? product.Gems : product.Credits) +
+                           "<color=#" + ColorUtility.ToHtmlStringRGB(Pal.Mint) + ">x" + product.PassDays + "</color>";
             _amount.color = gems ? Pal.A(Pal.Bloom, 1f) : Pal.A(Pal.Gold, 1f);
-            _sub.color = Unit;
+            _sub.color = Color.white;
 
-            PaintRibbon(Loc.Format("ui.shop.pass_ribbon", product.PassDays));
-            PaintSeal(null);
+            PaintRibbon((string)null);
+            int value = DealValue.PassPercent(product, StoreRules.Catalog);
+            PaintSealCaption(value > 0 ? Loc.Format("ui.deal.value", value) : null);
 
             if (offer.State != StoreOfferState.Running)
             {
@@ -477,6 +497,7 @@ namespace GlimmerGrove
             if (good == null) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            _amount.supportRichText = false;
             SubLine(false);
 
             bool ready = state == GoodOfferState.Ready;
@@ -613,6 +634,7 @@ namespace GlimmerGrove
             if (!offer.IsValid) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            _amount.supportRichText = false;
             SubLine(false);
 
             Shelf(shelf);
@@ -709,6 +731,7 @@ namespace GlimmerGrove
             if (item == null) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            _amount.supportRichText = false;
             SubLine(false);
 
             bool ready = refusal == UtilityRefusal.None;
@@ -916,17 +939,26 @@ namespace GlimmerGrove
 
             _ribbonSaid = said;
             // White over a black outline (`Arc` inks every outline black), at the owner's
-            // instruction on 2026-09-28 - the same ink the challenge badges' counts wear.
-            UIKit.Arc(_ribbonArc, said, _ribbonFont, Color.white, _ribbonRadius, 2.5f, 0f, 1f);
+            // instruction on 2026-09-28 - the same ink the challenge badges' counts wear. Fitted
+            // to the cloth's writable band, because a badge's translation can be twice the length
+            // of the English ("Melhor custo-benefício") and an arc cannot best-fit itself.
+            UIKit.Arc(_ribbonArc, said, _ribbonFont, Color.white, _ribbonRadius, 2.5f, 0f, 1f,
+                      _ribbonRoom, RibbonFloor);
         }
 
-        void PaintSeal(string key)
+        /// <summary>The smallest a ribbon's caption is drawn. Below it a word stops reading at card size.</summary>
+        const int RibbonFloor = 12;
+
+        void PaintSeal(string key) => PaintSealCaption(key == null ? null : Loc.Get(key));
+
+        /// <summary>The seal, top right, carrying <paramref name="said"/> in capitals - or no seal.</summary>
+        void PaintSealCaption(string said)
         {
             if (!_seal) return;
 
-            bool show = key != null;
+            bool show = said != null;
             _seal.gameObject.SetActive(show);
-            if (show) _sealText.text = Loc.Get(key).Upper();
+            if (show) _sealText.text = said.Upper();
         }
     }
 }

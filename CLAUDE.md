@@ -583,6 +583,21 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    and claims instead of selling while it owes. On no ladder (tier, bonus, rate and every value gate
    skip it). Held by `test/daily-pass.mjs` and `DailyPassTests`.
 
+### The chapter standing
+
+62. **Where a finished chapter stands is read off a published table, never a maintained ordering**
+   (19c, for the map). `publishChapterStandings` samples a bounded window of saves every six hours
+   (`select("levels")`, never a whole save, never a write to one) and writes `config/chapterStandings`:
+   per chapter, the p1..p99 cut points of every sampled finisher's score and how many that was. The
+   score is every level cleared, stars first, fewer moves second, one integer (`ChapterStanding.ScoreOf`
+   and `chapterScore`, held by `standingCases`); the handset folds its own save on every repaint, so
+   the player's number moves the moment a run ends and the table only decides the shape of everybody
+   else. Below `minimumSamples` finishers, or with no table at all, the map says **top 1%** (the owner's
+   rule). Drawn by `StandingReadout` under the back key on a laddered lane only, the star pill's own
+   furniture; a sync that finishes the chapter repaints it (`OnLearned`). The read is one document, on
+   the map, at most once an hour (`GroveBoard.BeginStandingsRefresh`); nothing in the save, no rules
+   release (`config/*` is already readable). `render_standing.py --measure` holds the sentences.
+
 ### Art credits
 
 46. **An art credit lives on the publisher's site, nowhere in the app.** No shipped vendor compels one.
@@ -693,7 +708,7 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 **Shared-rule vectors** (each `--check`; both sides run offline — never let one become Editor-only):
 `make_rank_vectors.py`, `make_keeper_vectors.py` (beside, not inside, `keeperCases`),
 `make_milestone_vectors.py`, `make_endless_vectors.py`, `make_xpboost_vectors.py` (clamp only),
-`make_challenge_vectors.py`. Chest generators: `make_task_vectors.py`, `make_mark_vectors.py`,
+`make_challenge_vectors.py`, `make_standing_vectors.py` (62). Chest generators: `make_task_vectors.py`, `make_mark_vectors.py`,
 `make_streak_vectors.py` — **run in that order** (each splices to end of file). Server half:
 `npm --prefix firebase/functions test`.
 
@@ -715,6 +730,7 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 **Renders** (the gate for anything judged by eye; share `Tools/hudkit.py`): `render_home`, `render_shop`
 (`--measure` holds `ProductCardBadges` to the sprite; `--deal` draws a live shop deal), `render_tasks`, `render_season`, `render_streak`,
 `render_keeper`, `render_keeper_ladder`, `render_deals` (`--welcome`), `render_shop --pass claim`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
+`render_standing` (the map's corner readings; `--locked`, `--lang`, `--contact`, `--measure` the same gate),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
 `render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`, `render_reminders`
 (`--settings`, `--lang`, `--measure` fails on a caption at its floor), `render_ad_offers` (the video continue
@@ -724,7 +740,7 @@ and the turret discount where they are sold; `--contact`, `--lang`, `--measure` 
 **Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;
 `Tools/make_name_blocklist.py --check`. Live e2e (differential on purpose — a stale function answers 200 with
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
-`ward-seats.mjs`, `keeper-spend.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
+`ward-seats.mjs`, `keeper-spend.mjs`, `daily-pass.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
 removes only those, preconditioned; players on a deals build can see them for the minute it runs).
 
 **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, Test Runner (EditMode). Reload the

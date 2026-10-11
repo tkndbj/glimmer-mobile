@@ -120,6 +120,7 @@ import {
   WalletDoc,
   WalletReply,
 } from "./wallet";
+import { rebuildChapterStandings } from "./standings";
 
 
 initializeApp();
@@ -2483,6 +2484,28 @@ export const publishGroveRanks = onSchedule(
   async () => {
     const { ranked, boards } = await rebuildGroveRanks();
     logger.info("grove ranks rebuilt", { ranked, boards });
+  }
+);
+
+/**
+ * Republishes where a finished chapter stands against everybody who finished it (invariant 62):
+ * a bounded sample of saves, projected to `levels`, cut into percentiles per chapter and written
+ * to `config/chapterStandings`. See `standings.ts` for why a sample and not a count.
+ *
+ * Every six hours, off the hour so it never lands beside the board rebuild. The player's own
+ * number is computed on the handset against this table every time the map is drawn, so what
+ * this cadence decides is only how old the *shape of everybody else* may be - and five thousand
+ * reads a run is a fraction of a penny whatever the player count. No retry policy and no
+ * alerting, like every schedule here: a run that never happens leaves the last table standing.
+ *
+ * 512 MiB rather than the default: five thousand `levels` maps are held at once, and the map
+ * grows with the catalog.
+ */
+export const publishChapterStandings = onSchedule(
+  { region: REGION, schedule: "7 */6 * * *", timeZone: "Etc/UTC", timeoutSeconds: 300, memory: "512MiB" },
+  async () => {
+    const { chapters, saves, usable } = await rebuildChapterStandings();
+    logger.info("chapter standings rebuilt", { chapters, saves, usable });
   }
 );
 

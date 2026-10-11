@@ -79,6 +79,13 @@ namespace GlimmerGrove.Layout
         public const float RibbonInset = 96f, RibbonDrop = 34f;
 
         /// <summary>
+        /// The share of the ribbon's width a caption may run across: the cloth between the tails.
+        /// What `ProductCard` fits a badge's caption to (`UIKit.Arc`'s width), so a long
+        /// translation shrinks instead of running onto the tails.
+        /// </summary>
+        public const float RibbonWritable = .72f;
+
+        /// <summary>
         /// How far the pinned ribbon reaches either side of its own centre.
         ///
         /// A rotated rectangle, so both of its sides contribute: the long side foreshortens and

@@ -67,6 +67,9 @@ namespace GlimmerGrove
         RectTransform _teaser, _hub;
         Text _starCount;
 
+        /// <summary>The chapter standing under the back key (62), a reading of the save like the star count.</summary>
+        StandingReadout _standing;
+
         /// <summary>The loadout bar along the foot, or null for a mode that has no line.</summary>
         LoadoutBar _kit;
 
@@ -324,6 +327,11 @@ namespace GlimmerGrove
             // The other device's play lands on its own schedule - a sync after the splash -
             // onto a map that was drawn from the local file a second earlier. See OnLearned.
             CloudSaveService.Learned += OnLearned;
+
+            // The published standings (62), asked for by the one screen that prints one and
+            // only when the held copy is stale; the readout under the back key repaints when
+            // they land. Fire-and-forget, like the ranks: nothing here waits on it.
+            if (Lane.Laddered) Social.GroveBoard.BeginStandingsRefresh();
         }
 
         void OnDestroy()
@@ -395,6 +403,10 @@ namespace GlimmerGrove
 
             if (_starCount)
                 _starCount.text = $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}";
+
+            // A clear that arrived from the other device can be the one that finishes the
+            // chapter, which turns the standing from a sentence into a number.
+            if (_standing) _standing.Repaint();
 
             if (_banner)
             {
@@ -1053,11 +1065,22 @@ namespace GlimmerGrove
             // a second copy under the back key said the same thing twice. The chapter map never
             // drew one (a rank is not a thing a chapter map says anything about).
             //
-            // The XP boost's clock is the column's only tenant. It takes itself off screen when
-            // no boost is running (`BoostReadout`), which is why it is attached unconditionally
-            // rather than behind a test here: a screen that decided for itself would have to be
-            // rebuilt when a window opens under it.
-            BoostReadout.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, BoostY));
+            // The chapter standing (62) heads the column, directly under the back key, on a
+            // laddered lane only: it is a reading of progress through a chapter, for exactly the
+            // reason the star count in the other corner is, and the Infinite lane's hub draws
+            // its own standing two hundred units high. Left-aligned with the key's own edge so
+            // the two read as one column, and narrow enough to clear the plaque beside it.
+            bool standing = Lane.Laddered && _entry != null;
+            if (standing)
+                _standing = StandingReadout.Attach(this, Safe, new Vector2(0f, 1f),
+                                                   new Vector2(StandingX, StandingY), _entry);
+
+            // The XP boost's clock sits under the standing, or at the top of the column on a lane
+            // with none. It takes itself off screen when no boost is running (`BoostReadout`),
+            // which is why it is attached unconditionally rather than behind a test here: a
+            // screen that decided for itself would have to be rebuilt when a window opens under it.
+            BoostReadout.Attach(this, Safe, new Vector2(0f, 1f),
+                                new Vector2(CornerX, standing ? BoostUnderStandingY : BoostY));
 
             // What a glade pays, and under what rule - the one thing this screen is full of
             // and cannot draw. A node shows its stars and says nothing about what the stars
@@ -1284,8 +1307,24 @@ namespace GlimmerGrove
         const float ColumnTop = CornerY - CornerSize * .5f - BoostGap;
 
         /// <summary>
-        /// Where the boost clock sits: the top of the column, its only tenant since the corner
-        /// rank badge was withdrawn (2026-09-28).
+        /// Where the chapter standing sits (62): the top of the column, its left edge on the back
+        /// key's own left edge rather than its centre - the pill is wider than the key, so
+        /// sharing a centre would push it off the safe edge, for the star pill's reason in the
+        /// other corner. Both halves read from the widget, as every seat here does.
+        /// </summary>
+        const float StandingX = CornerX - CornerSize * .5f + StandingReadout.Width * .5f;
+        const float StandingY = ColumnTop - StandingReadout.Height * .5f;
+
+        /// <summary>
+        /// Where the boost clock sits under the standing on a laddered lane: the standing's whole
+        /// height, one gap, then half the clock's own.
+        /// </summary>
+        const float BoostUnderStandingY = ColumnTop - StandingReadout.Height - BoostGap - BoostReadout.Height * .5f;
+
+        /// <summary>
+        /// Where the boost clock sits on a lane with no standing (the Infinite hub): the top of
+        /// the column, which was its only tenant from the corner rank badge's withdrawal
+        /// (2026-09-28) until the chapter standing took the first seat (62).
         /// </summary>
         const float BoostY = ColumnTop - BoostReadout.Height * .5f;
 

@@ -4206,6 +4206,14 @@
       "text": "CHOOSE A GLADE"
     },
     {
+      "key": "ui.levels.standing_locked",
+      "text": "Clear all levels to see your stat"
+    },
+    {
+      "key": "ui.levels.standing_top",
+      "text": "You are in the top {0}%"
+    },
+    {
       "key": "ui.loadout.chest_only",
       "text": "From chests"
     },
@@ -6712,10 +6720,6 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Every glade, watch and wave pays {0}% more XP while this is running. It stacks with every other XP boost."
-    },
-    {
-      "key": "ui.shop.pass_ribbon",
-      "text": "{0}-DAY PASS"
     },
     {
       "key": "ui.shop.pass_gems_daily",

@@ -4206,6 +4206,14 @@
       "text": "ELIGE UN NIVEL"
     },
     {
+      "key": "ui.levels.standing_locked",
+      "text": "Supera todos los niveles para ver tu posición"
+    },
+    {
+      "key": "ui.levels.standing_top",
+      "text": "Estás entre el {0}% mejor"
+    },
+    {
       "key": "ui.loadout.chest_only",
       "text": "De cofres"
     },
@@ -6712,10 +6720,6 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Mientras esté activo, cada nivel, guardia y oleada da un {0}% más de XP. Se suma a cualquier otro potenciador de XP."
-    },
-    {
-      "key": "ui.shop.pass_ribbon",
-      "text": "PASE DE {0} DÍAS"
     },
     {
       "key": "ui.shop.pass_gems_daily",

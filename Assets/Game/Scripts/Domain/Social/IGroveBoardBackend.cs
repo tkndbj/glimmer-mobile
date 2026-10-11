@@ -156,5 +156,16 @@ namespace GlimmerGrove.Social
         /// </summary>
         Task<(CloudResult result, GroveRankPublication published)> ReadGroveRanksAsync(
             CancellationToken cancellation = default);
+
+        /// <summary>
+        /// Reads the published chapter standings (invariant 62): per chapter, the cut points of
+        /// every sampled finisher's score, and how many that was.
+        ///
+        /// Public for <see cref="ReadGroveRanksAsync"/>'s reason, and read the same way: one
+        /// document for the whole catalog, and an absent one is "nothing to say" rather than a
+        /// failure. <see cref="GroveBoard.BeginStandingsRefresh"/> decides how often.
+        /// </summary>
+        Task<(CloudResult result, ChapterStandingPublication published)> ReadChapterStandingsAsync(
+            CancellationToken cancellation = default);
     }
 }

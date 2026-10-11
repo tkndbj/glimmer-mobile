@@ -51,8 +51,28 @@ namespace GlimmerGrove.Store
         /// </summary>
         public static int BundlePercent(StoreProduct product, StoreCatalog catalog)
         {
+            if (product == null || product.IsDailyPass) return 0;
+            return WorthPercent(product, product.Credits, product.Gems, catalog);
+        }
+
+        /// <summary>
+        /// The percentage a seven-day pass's value badge prints: everything the pass pays over its
+        /// days (<see cref="StoreProduct.TotalGems"/>, <see cref="StoreProduct.TotalCredits"/>) at
+        /// the base packs' prices, over what the pass costs - <see cref="BundlePercent"/>'s honest
+        /// arithmetic, on the whole of what is bought. At the shipped shop, 3,500 gems for $1.99
+        /// against $34.65 of packs is "1740% Value".
+        /// </summary>
+        public static int PassPercent(StoreProduct product, StoreCatalog catalog)
+        {
+            if (product == null || !product.IsDailyPass) return 0;
+            return WorthPercent(product, product.TotalCredits, product.TotalGems, catalog);
+        }
+
+        /// <summary><paramref name="credits"/> and <paramref name="gems"/> at the base packs' prices, over <paramref name="product"/>'s price.</summary>
+        static int WorthPercent(StoreProduct product, long credits, long gems, StoreCatalog catalog)
+        {
             if (product == null || catalog == null || !catalog.HasExchangeRate) return 0;
-            if (product.IsContainer || product.IsDailyPass || product.ReferenceUsdCents <= 0) return 0;
+            if (product.IsContainer || product.ReferenceUsdCents <= 0) return 0;
 
             var gemBase = catalog.GemBase;
             var coinBase = catalog.CoinBase;
@@ -62,8 +82,8 @@ namespace GlimmerGrove.Store
             // gems), so no division happens until the end. In decimal, which is exact integer
             // arithmetic to 28 digits - never a float deciding a figure shown for money - because
             // the products of StoreLimits' bounds (grants 5e6, cents 1e5) overflow a long.
-            decimal worth = (decimal)product.Credits * coinBase.ReferenceUsdCents * gemBase.Gems
-                          + (decimal)product.Gems * gemBase.ReferenceUsdCents * coinBase.Credits;
+            decimal worth = (decimal)credits * coinBase.ReferenceUsdCents * gemBase.Gems
+                          + (decimal)gems * gemBase.ReferenceUsdCents * coinBase.Credits;
             decimal price = (decimal)product.ReferenceUsdCents * coinBase.Credits * gemBase.Gems;
             if (worth <= 0m || price <= 0m) return 0;
 

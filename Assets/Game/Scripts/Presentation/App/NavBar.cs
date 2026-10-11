@@ -208,10 +208,10 @@ namespace GlimmerGrove
                              TextAnchor.MiddleCenter, new Vector2(btnW - 16f, 34f),
                              new Vector2(.5f, 0f), new Vector2(0f, 28f), 4f, 3f), 17);
 
-            // A deal on sale that this account has not bought (invariant 60): the purple alert on
-            // the shop's corner, on every screen that carries the bar. Built last so it draws over
-            // the glyph; it watches the deals itself, so no screen has to remember to repaint it.
-            if (tab == Tab.Shop) DealAlert.Attach((RectTransform)plate.transform);
+            // The shop's one badge (ShopTabBadge): a pass reward waiting outranks a deal on sale
+            // (invariant 60), on every screen that carries the bar. Built last so it draws over the
+            // glyph; it watches both ledgers itself, so no screen has to remember to repaint it.
+            if (tab == Tab.Shop) ShopTabAlert.Attach((RectTransform)plate.transform);
 
             cell.transform.localScale = Vector3.zero;
             Tween.Pop(cell.transform, 0f, .5f, .62f + Mathf.Abs(x) * .00035f)

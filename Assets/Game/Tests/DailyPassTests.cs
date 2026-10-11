@@ -198,6 +198,18 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
+        public void APassesValueSealCountsEveryDayItPays()
+        {
+            var catalog = Shipped();
+
+            // 3,500 gems at 100 for $0.99 is $34.65 against $1.99: 1741%, floored to ten.
+            Assert.AreEqual(1740, DealValue.PassPercent(catalog.Find(GemPass), catalog));
+            // 140,000 coins at 7,500 for $1.99 is $37.15 against $1.99: 1866%, floored to ten.
+            Assert.AreEqual(1860, DealValue.PassPercent(catalog.Find("gg_coin_pass_7d"), catalog));
+            Assert.AreEqual(0, DealValue.PassPercent(catalog.Find("gg_bundle_starter"), catalog), "a bundle is not a pass");
+        }
+
+        [Test]
         public void ASealIsNeverPrintedForWhatIsNotABundleBargain()
         {
             var catalog = Shipped();
@@ -305,6 +317,32 @@ namespace GlimmerGrove.Tests
             var claim = Run(DailyPassLedger.ClaimAsync(Shipped().Find("gg_gems_1")));
             Assert.AreEqual(DailyPassClaimOutcome.Unavailable, claim.Outcome);
             Assert.IsNull(_cloud.Asked, "and nothing is asked of the server");
+        }
+
+        // ------------------------------------------------------------ the shop tab's badge
+        [Test]
+        public void TheShopTabWearsOneMarkAndTheRewardComesFirst()
+        {
+            Assert.AreEqual(ShopTabMark.Gift, ShopTabBadge.Of(passClaimable: true, dealOffered: true),
+                            "a reward waiting outranks a deal");
+            Assert.AreEqual(ShopTabMark.Gift, ShopTabBadge.Of(true, false));
+            Assert.AreEqual(ShopTabMark.Deal, ShopTabBadge.Of(false, true), "claimed, the deal's alert comes back");
+            Assert.AreEqual(ShopTabMark.None, ShopTabBadge.Of(false, false), "and with neither, a bare tab");
+        }
+
+        [Test]
+        public void AReadyRewardIsOnlyWhatTheShopCanClaim()
+        {
+            ProgressionRules.Reset();       // the built-in catalog, which carries both passes
+            Assert.IsFalse(DailyPassLedger.AnyClaimable(_clock.Now), "nothing until a reply has spoken");
+
+            DailyPassLedger.ApplyServerState(true, new List<CloudPassRow> { Row(GemPass, 6, Day) });
+            Assert.IsFalse(DailyPassLedger.AnyClaimable(_clock.Now), "today's piece is already paid");
+            Assert.IsTrue(DailyPassLedger.AnyClaimable((Day + 1) * 86400L), "the next UTC day it is ready");
+
+            DailyPassLedger.ApplyServerState(true, new List<CloudPassRow> { Row("gg_not_a_product", 6, Day - 1) });
+            Assert.IsFalse(DailyPassLedger.AnyClaimable(_clock.Now),
+                           "a pass this catalog does not sell has no card to claim from, so no badge");
         }
 
         static T Run<T>(Task<T> task)

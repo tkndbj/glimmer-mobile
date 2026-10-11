@@ -147,6 +147,11 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 GroveRankPublication.None));
 
+        public Task<(CloudResult result, ChapterStandingPublication published)> ReadChapterStandingsAsync(
+            CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                ChapterStandingPublication.None));
+
         /// <summary>
         /// Refused, and the panel never asks: <see cref="AccountDeletion.Offered"/> reads
         /// <see cref="IsAvailable"/> and draws no control at all without a backend. With none

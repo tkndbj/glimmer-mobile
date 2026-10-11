@@ -11080,5 +11080,454 @@
       ],
       "drawn": 1
     }
+  ],
+  "_standingComment": [
+    "Where a finished chapter stands, derived twice and pinned here (invariant 62).",
+    "",
+    "`standingCases` is the score a finished chapter is ranked on: every level cleared, stars",
+    "summed and weighted so one star outweighs any number of moves, best moves subtracted,",
+    "each level's moves clamped to `movesCap` (a cleared level with no count is the cap). It",
+    "runs in C# (`ChapterStanding.ScoreOf`) to fold the player's own save on the handset, and",
+    "in functions/src/standings.ts (`chapterScore`) to fold everybody else's into the cut points",
+    "the handset compares against - and when the two disagree nothing crashes and nothing is",
+    "refused; a player is told a number that is quietly about a different population.",
+    "",
+    "Each case is a `levels` map as the save carries it, the chapter's level ids, and the score",
+    "both sides must produce - `null` when the chapter is not finished, which the sampler reads",
+    "as 'not in this population' and the map reads as 'clear every level first'.",
+    "",
+    "Written by Tools/make_standing_vectors.py - a third implementation, so a passing case has",
+    "been agreed by three copies that never read each other. Do not hand-edit."
+  ],
+  "standingConstants": {
+    "starWeight": 10000000,
+    "movesCap": 9999,
+    "maxStars": 3
+  },
+  "standingCases": [
+    {
+      "name": "an empty save has not finished anything",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {},
+      "score": null
+    },
+    {
+      "name": "one level short is not finished",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": null
+    },
+    {
+      "name": "a level played but never cleared is not finished",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 0,
+          "bestMoves": 4
+        }
+      },
+      "score": null
+    },
+    {
+      "name": "a chapter with no levels has no standing",
+      "chapter": [],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": null
+    },
+    {
+      "name": "a level of another chapter does not count towards this one",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s02_x": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": null
+    },
+    {
+      "name": "three levels three-starred",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": 89999970
+    },
+    {
+      "name": "stars are summed and moves subtracted",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 12
+        },
+        "s01_b": {
+          "stars": 2,
+          "bestMoves": 20
+        },
+        "s01_c": {
+          "stars": 1,
+          "bestMoves": 7
+        }
+      },
+      "score": 59999961
+    },
+    {
+      "name": "one star fewer outweighs any saving in moves",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 2,
+          "bestMoves": 1
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 1
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 1
+        }
+      },
+      "score": 79999997
+    },
+    {
+      "name": "fewer moves on equal stars is the better score",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 9
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": 89999971
+    },
+    {
+      "name": "the worst finished score is still positive",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 1,
+          "bestMoves": 9999
+        },
+        "s01_b": {
+          "stars": 1,
+          "bestMoves": 9999
+        },
+        "s01_c": {
+          "stars": 1,
+          "bestMoves": 9999
+        }
+      },
+      "score": 29970003
+    },
+    {
+      "name": "a fourth star counts as three",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 9,
+          "bestMoves": 10
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": 89999970
+    },
+    {
+      "name": "a cleared level with no move count counts as the cap",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 0
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": 89989981
+    },
+    {
+      "name": "a negative move count counts as the cap",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": -5
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": 89989981
+    },
+    {
+      "name": "an absurd move count is capped, not refused",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 1000000000
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 10
+        }
+      },
+      "score": 89989981
+    },
+    {
+      "name": "the caps apply per level, before the sum",
+      "chapter": [
+        "s01_a",
+        "s01_b",
+        "s01_c"
+      ],
+      "levels": {
+        "s01_a": {
+          "stars": 3,
+          "bestMoves": 1000000000
+        },
+        "s01_b": {
+          "stars": 3,
+          "bestMoves": 1000000000
+        },
+        "s01_c": {
+          "stars": 3,
+          "bestMoves": 1000000000
+        }
+      },
+      "score": 89970003
+    },
+    {
+      "name": "twenty levels, mixed",
+      "chapter": [
+        "s12_00",
+        "s12_01",
+        "s12_02",
+        "s12_03",
+        "s12_04",
+        "s12_05",
+        "s12_06",
+        "s12_07",
+        "s12_08",
+        "s12_09",
+        "s12_10",
+        "s12_11",
+        "s12_12",
+        "s12_13",
+        "s12_14",
+        "s12_15",
+        "s12_16",
+        "s12_17",
+        "s12_18",
+        "s12_19"
+      ],
+      "levels": {
+        "s12_00": {
+          "stars": 1,
+          "bestMoves": 5
+        },
+        "s12_01": {
+          "stars": 2,
+          "bestMoves": 6
+        },
+        "s12_02": {
+          "stars": 3,
+          "bestMoves": 7
+        },
+        "s12_03": {
+          "stars": 1,
+          "bestMoves": 8
+        },
+        "s12_04": {
+          "stars": 2,
+          "bestMoves": 9
+        },
+        "s12_05": {
+          "stars": 3,
+          "bestMoves": 10
+        },
+        "s12_06": {
+          "stars": 1,
+          "bestMoves": 11
+        },
+        "s12_07": {
+          "stars": 2,
+          "bestMoves": 12
+        },
+        "s12_08": {
+          "stars": 3,
+          "bestMoves": 13
+        },
+        "s12_09": {
+          "stars": 1,
+          "bestMoves": 14
+        },
+        "s12_10": {
+          "stars": 2,
+          "bestMoves": 15
+        },
+        "s12_11": {
+          "stars": 3,
+          "bestMoves": 16
+        },
+        "s12_12": {
+          "stars": 1,
+          "bestMoves": 17
+        },
+        "s12_13": {
+          "stars": 2,
+          "bestMoves": 18
+        },
+        "s12_14": {
+          "stars": 3,
+          "bestMoves": 19
+        },
+        "s12_15": {
+          "stars": 1,
+          "bestMoves": 20
+        },
+        "s12_16": {
+          "stars": 2,
+          "bestMoves": 21
+        },
+        "s12_17": {
+          "stars": 3,
+          "bestMoves": 22
+        },
+        "s12_18": {
+          "stars": 1,
+          "bestMoves": 23
+        },
+        "s12_19": {
+          "stars": 2,
+          "bestMoves": 24
+        }
+      },
+      "score": 389999710
+    }
   ]
 }

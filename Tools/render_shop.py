@@ -148,14 +148,17 @@ def deal_band(sheet):
 
 
 def shop_nav(sheet):
-    """The bottom bar with the shop tab live, and the deal alert on it when a deal is drawn."""
+    """The bottom bar with the shop tab live, and its one badge (`ShopTabBadge.Of`): the gift
+    burst while a pass reward is ready (`--pass claim`), else the deal alert when a deal is drawn."""
     K.navbar(sheet, "shop")
-    if DEAL:
+    if PASS_STATE == "claim":
+        deal_alert(sheet, gift=True)
+    elif DEAL:
         deal_alert(sheet)
 
 
-def deal_alert(sheet):
-    """`DealAlert.Attach` - the purple burst with a white `!!!` over a black outline on the shop
+def deal_alert(sheet, gift=False):
+    """`ShopTabAlert.Attach` (its deal mark) - the purple burst with a white `!!!` over a black outline on the shop
     tab's top-right corner (`WaitingBadge.Alert`, `WaitingBadge.DealPurple`, scale 1)."""
     base = H - K.NAV_HEIGHT / 2 - 4
     slot = W / float(len(K.NAV_TABS))
@@ -164,12 +167,15 @@ def deal_alert(sheet):
     x = W / 2 + (i - (len(K.NAV_TABS) - 1) * .5) * slot
     grow = 1.06                                      # the shop tab is the live one here
     bx, by = x + btn_w * grow / 2 - 16, base - btn_h * grow / 2 + 12
-    purple = (143, 64, 255)
+    ink = K.GOLD if gift else (143, 64, 255)       # `WaitingBadge.Gift` in Pal.Gold, or DealPurple
     sc = 1.0
-    K.paste(sheet, K.glow(round(190 * sc), 2.0, purple, .40), bx, by)
-    K.paste(sheet, K.tint(K.skin("Hud/burst", round(104 * sc), round(104 * sc)), purple)
+    K.paste(sheet, K.glow(round(190 * sc), 2.0, ink, .40), bx, by)
+    K.paste(sheet, K.tint(K.skin("Hud/burst", round(104 * sc), round(104 * sc)), ink)
             .rotate(8, Image.BICUBIC), bx, by)
-    K.text(sheet, "!!!", bx, by + 2, round(30 * sc), fill=(255, 255, 255), outline=3)
+    if gift:
+        K.paste(sheet, K.fit(Image.open(UI / "ic_gift.png").convert("RGBA"), (66 * sc, 66 * sc)), bx, by)
+    else:
+        K.text(sheet, "!!!", bx, by + 2, round(30 * sc), fill=(255, 255, 255), outline=3)
 
 # ProductCard / ProductCardBadges
 #: `ProductCardBadges.Face`, `.FaceShift`, `.FaceRise`, `.FaceTextWidth`, `.FaceTextHeight`,
@@ -204,6 +210,21 @@ FACEW, FACEH = CELLW - 110.0, 96.0
 # invariant 37aj names, where a mirror re-derives a sign in an axis that runs the other way.
 SEAL, SEAL_DISC, SEAL_TILT = 164.0, 1.04, -9.0
 RIBBONW, RIBBONH, RIBBON_INSET, RIBBON_DROP = 268.0, 76.0, 96.0, 34.0
+RIBBON_WRITABLE, RIBBON_FLOOR = .72, 12      # ProductCardBadges.RibbonWritable, ProductCard.RibbonFloor
+
+
+def ribbon_fit(s, size=25):
+    """`UIKit.Arc` with a width: one line, never wrapped; wider than the cloth's writable band and
+    it is laid out once more at the size that fits, never below the floor."""
+    room = RIBBONW * RIBBON_WRITABLE
+    wide = K.font(size).getlength(s)
+    return size if wide <= room else max(RIBBON_FLOOR, int(size * room / wide))
+
+
+def ribbon_text(sheet, s, cx, cy):
+    px = ribbon_fit(s)
+    K.text(sheet, s, cx, cy, px, fill=(255, 255, 255), outline=3)
+    return px
 RIBBON_TILT = 6.0
 CLEARANCE, MARGIN = 10.0, 6.0
 
@@ -297,8 +318,13 @@ def pile(total, token):
 
 # --------------------------------------------------------------------------- the card
 def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, live=True, bundle=False,
-         face_skin="btn_orange", amount_fill=None):
-    """One product card, laid out the way `ProductCard`'s constructor lays one out."""
+         face_skin="btn_orange", amount_fill=None, sub_fill=(255, 245, 225), ribbon=None, suffix=None):
+    """One product card, laid out the way `ProductCard`'s constructor lays one out.
+
+    **The two marks trade places** (the owner, 2026-10-11): `badge` (MOST POPULAR, BEST VALUE,
+    ONE TIME ONLY) hangs on the ribbon, fitted to its writable band as `UIKit.Arc` fits it, and
+    `bonus` (+40% EXTRA, or a pass's VALUE) is stamped on the seal. `ribbon` is a caption that is
+    not a badge (the free video's FREE)."""
     plate_cx, plate_cy = x, top + CELLH / 2
     K.paste(sheet, K.skin("Hud/card", PLATEW, PLATEH), plate_cx, plate_cy)
 
@@ -312,7 +338,15 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
     art = Image.open(UI / "Shop" / f"{picture}.png").convert("RGBA")
     K.paste(sheet, K.fit(art, (ART, ART)), plate_cx, ptop + ART_DROP)
 
-    if amount_fill:
+    if suffix:
+        # `ProductCard.DrawPass`: one day's amount, then the multiplier in Pal.Mint, one label.
+        word, ink = suffix
+        f = K.font(46)
+        wa, ws = f.getlength(amount), f.getlength(word)
+        left = plate_cx - (wa + ws) / 2
+        K.text(sheet, amount, left, pbot - AMOUNT_RISE, 46, fill=amount_fill or K.CREAM, outline=4, anchor="l")
+        K.text(sheet, word, left + wa, pbot - AMOUNT_RISE, 46, fill=ink, outline=4, anchor="l")
+    elif amount_fill:
         K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, fill=amount_fill, outline=4)
     else:
         K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, outline=4)
@@ -322,7 +356,7 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
                        BUNDLE_SUB_SIZE, 16, fill=K.GOLD, outline=2)
         SETTLED.append(("bundle coins", sub, got, 16))
     else:
-        K.text(sheet, sub, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
+        K.text(sheet, sub, plate_cx, pbot - SUB_RISE, 26, fill=sub_fill, outline=2)
 
     face = K.skin(face_skin, FACEW, FACEH)                  # Skins.Buy, or Skins.Affirm for CLAIM
     if not live:
@@ -330,15 +364,19 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
     K.paste(sheet, face, plate_cx, pbot - FACE_RISE)
     K.text(sheet, price, plate_cx, pbot - FACE_RISE, 34, outline=3)
 
-    if bonus:
+    said = ribbon or badge
+    if said:
         # `Skins.Title` is a real cloth ribbon under this kit, so it hangs again — the tilt
         # went to nought only while the mark was a machined plate. Drawn rather than sliced,
         # for the reason `Skins.Title` gives: the tails are the silhouette.
         rib = K.fit(K.load("Hud/title")[0], (RIBBONW, RIBBONH))
         rib = rib.rotate(RIBBON_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, rib, plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP)
-        K.text(sheet, bonus, plate_cx - PLATEW / 2 + RIBBON_INSET,
-               ptop + RIBBON_DROP - 4, 25, fill=(255, 255, 255), outline=3)
+        # `ProductCardBadges.RibbonWritable` of the cloth, floored at `ProductCard.RibbonFloor`.
+        px = ribbon_text(sheet, said, plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP - 4)
+        SETTLED.append(("ribbon", said, px, RIBBON_FLOOR))
+
+    badge = bonus
 
 
     if badge:
@@ -351,6 +389,18 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
         seal.alpha_composite(face)
         seal = seal.rotate(SEAL_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
+
+
+def pass_value(p):
+    """`DealValue.PassPercent`, exactly: floored to ten, nought at or under 100, capped at 9990."""
+    packs = [q for q in rules()["store"]["products"] if not q.get("passDays")]
+    g = min((q for q in packs if q.get("shelf") == "gems" and q.get("gems")), key=lambda q: q["referenceUsdCents"])
+    c = min((q for q in packs if q.get("shelf") == "coins" and q.get("credits")), key=lambda q: q["referenceUsdCents"])
+    days = int(p["passDays"])
+    worth = (p.get("credits", 0) * days * c["referenceUsdCents"] * g["gems"]
+             + p.get("gems", 0) * days * g["referenceUsdCents"] * c["credits"])
+    pct = worth * 100 // (p["referenceUsdCents"] * c["credits"] * g["gems"])
+    return 0 if pct <= 100 else min(9990, pct - pct % 10)
 
 
 # How a seven-day pass card faces (`ProductCard.DrawPass`): for sale, CLAIM, or TOMORROW.
@@ -375,9 +425,12 @@ def pass_card(sheet, x, top, shelf, p):
         else:
             price, face, live = txt("ui.shop.pass_tomorrow").upper(), "btn_orange", False
 
+    # `DealValue.PassPercent`: everything the pass pays, at the base packs' prices, over its price.
+    pct = pass_value(p)
     card(sheet, x, top, shelf, "pass_gems" if gems else "pass_coins", compact(amount), sub, price, None,
-         bonus=txt("ui.shop.pass_ribbon").replace("{0}", str(days)), live=live, face_skin=face,
-         amount_fill=K.BLOOM if gems else K.GOLD)
+         bonus=txt("ui.deal.value").replace("{0}", str(pct)).upper() if pct else None, live=live,
+         face_skin=face, amount_fill=K.BLOOM if gems else K.GOLD, sub_fill=(255, 255, 255),
+         suffix=("x%d" % days, (0x7B, 0xD8, 0x6A)))           # Pal.Mint
     print("  pass card: %s, %s a day for %d days, face %r" % (p["id"], f"{amount:,}", days, price))
 
 
@@ -570,13 +623,13 @@ def container_card(sheet, x, top, rung_at, cap, price, badge):
     K.paste(sheet, K.skin("btn_orange", FACEW, FACEH), plate_cx, pbot - FACE_RISE)
     K.text(sheet, price, plate_cx, pbot - FACE_RISE, 34, outline=3)
 
+    # A vessel's badge hangs on the ribbon like every product's (it carries no bonus to seal).
     if badge:
-        seal = K.tint(K.fit(K.load("Hud/burst")[0], (SEAL, SEAL)), K.ROSE)
-        face = Image.new("RGBA", (int(SEAL), int(SEAL)), (0, 0, 0, 0))
-        seal_caption(face, badge)
-        seal.alpha_composite(face)
-        seal = seal.rotate(SEAL_TILT, Image.BICUBIC, expand=True)
-        K.paste(sheet, seal, plate_cx + PLATEW / 2 - SEAL_INSET, ptop + SEAL_DROP)
+        rib = K.fit(K.load("Hud/title")[0], (RIBBONW, RIBBONH))
+        rib = rib.rotate(RIBBON_TILT, Image.BICUBIC, expand=True)
+        K.paste(sheet, rib, plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP)
+        px = ribbon_text(sheet, badge, plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP - 4)
+        SETTLED.append(("ribbon", badge, px, RIBBON_FLOOR))
 
 
 # --------------------------------------------------------------------------- the screen
@@ -988,7 +1041,7 @@ def screen(shelf, offline=False):
 
         # `ProductCard.PaintRibbon` shows one at 5% or better; the figure is arithmetic over
         # the ladder, so the widest string on a shelf is what has to fit.
-        bonus = f"+{12 + n * 14}% EXTRA" if n else None
+        bonus = f"+{12 + n * 14}% EXTRA" if n else None     # now on the seal; the badge on the ribbon
 
         card(sheet, x, y, shelf, picture, f"{grant:,}", unit,
              f"${p['referenceUsdCents'] / 100:.2f}", badge, bonus, bundle=bundle)

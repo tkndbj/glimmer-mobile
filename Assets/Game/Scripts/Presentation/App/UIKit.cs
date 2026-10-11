@@ -180,9 +180,15 @@ namespace GlimmerGrove
         /// is expected not to call it with a caption that has not changed.
         /// </para>
         /// </summary>
+        /// <para>
+        /// <b><paramref name="maxWidth"/> fits it.</b> An arc is one label per character, so
+        /// best fit cannot shrink it; given a width, a caption that measures wider is laid out
+        /// again at the size that fits, never below <paramref name="floor"/>. A translated badge
+        /// on a ribbon ("Melhor custo-benefício") is what needs it.
+        /// </para>
         public static void Arc(RectTransform host, string text, int size, Color colour,
                                float radius, float outline = 3f, float shadow = 3f,
-                               float tracking = 0f)
+                               float tracking = 0f, float maxWidth = 0f, int floor = 0)
         {
             if (host == null) return;
 
@@ -227,6 +233,19 @@ namespace GlimmerGrove
                 glyphs[i] = t;
                 widths[i] = t.preferredWidth + tracking;
                 total += widths[i];
+            }
+
+            // Too wide for the room it was given: laid out again, smaller, once. The width of a
+            // run of glyphs scales with the size, so one proportional step lands inside the room;
+            // the floor keeps a long word readable rather than tiny.
+            if (maxWidth > 0f && total > maxWidth && size > floor)
+            {
+                int fitted = Mathf.Max(floor, Mathf.FloorToInt(size * maxWidth / total));
+                if (fitted < size)
+                {
+                    Arc(host, text, fitted, colour, radius, outline, shadow, tracking, 0f, 0);
+                    return;
+                }
             }
 
             float walked = -total * .5f;

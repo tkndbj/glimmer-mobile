@@ -4206,6 +4206,14 @@
       "text": "ESCOLHA UM NÍVEL"
     },
     {
+      "key": "ui.levels.standing_locked",
+      "text": "Conclua todos os níveis para ver sua posição"
+    },
+    {
+      "key": "ui.levels.standing_top",
+      "text": "Você está entre os {0}% melhores"
+    },
+    {
       "key": "ui.loadout.chest_only",
       "text": "Dos baús"
     },
@@ -5187,7 +5195,7 @@
     },
     {
       "key": "ui.shop.badge_best",
-      "text": "Melhor custo-benefício"
+      "text": "Melhor oferta"
     },
     {
       "key": "ui.shop.badge_popular",
@@ -6712,10 +6720,6 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Enquanto estiver ativo, cada nível, vigília e onda paga {0}% mais XP. Soma com todos os outros bônus de XP."
-    },
-    {
-      "key": "ui.shop.pass_ribbon",
-      "text": "PASSE DE {0} DIAS"
     },
     {
       "key": "ui.shop.pass_gems_daily",

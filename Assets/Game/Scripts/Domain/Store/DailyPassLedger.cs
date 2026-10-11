@@ -56,6 +56,33 @@ namespace GlimmerGrove.Store
         public bool Equals(DailyPassStanding other) => Remaining == other.Remaining && PaidDay == other.PaidDay;
     }
 
+    /// <summary>Which single mark the shop tab on the bottom bar wears.</summary>
+    public enum ShopTabMark
+    {
+        /// <summary>Nothing waiting and nothing on sale: a bare tab.</summary>
+        None = 0,
+
+        /// <summary>A seven-day pass has today's reward ready: the gold gift burst.</summary>
+        Gift,
+
+        /// <summary>A limited-time deal is on sale that this account has not bought: the purple <c>!!!</c>.</summary>
+        Deal,
+    }
+
+    /// <summary>
+    /// The shop tab's one badge (the owner, 2026-10-11): a reward waiting on a pass outranks a deal
+    /// on sale, because it is the player's own and costs nothing to take; the deal's alert comes
+    /// back the moment the reward is claimed, and nothing shows when neither is true. One mark at a
+    /// time - two bursts on one corner read as neither.
+    /// </summary>
+    public static class ShopTabBadge
+    {
+        public static ShopTabMark Of(bool passClaimable, bool dealOffered)
+            => passClaimable ? ShopTabMark.Gift
+             : dealOffered ? ShopTabMark.Deal
+             : ShopTabMark.None;
+    }
+
     /// <summary>The one pass call, beside <see cref="ICloudSaveBackend"/> for <c>IReferralBackend</c>'s reason.</summary>
     public interface IDailyPassBackend
     {
@@ -134,6 +161,27 @@ namespace GlimmerGrove.Store
         {
             var standing = StandingOf(productId);
             return standing.Remaining > 0 && standing.PaidDay < Today(nowUnix);
+        }
+
+        /// <summary>
+        /// True when any pass the shop sells has today's piece waiting - what the shop tab's gift
+        /// badge says (<see cref="ShopTabBadge"/>). Asked of the catalog as well as the mirror, so
+        /// the badge never points at a card the shop would not draw: a pass this build's catalog
+        /// does not carry has no card to claim from.
+        /// </summary>
+        public static bool AnyClaimable(long nowUnix)
+        {
+            if (!_known) return false;
+
+            foreach (var pair in _held)
+            {
+                if (_claiming.Contains(pair.Key)) continue;
+                if (pair.Value.Remaining <= 0 || pair.Value.PaidDay >= Today(nowUnix)) continue;
+
+                var product = StoreRules.Find(pair.Key);
+                if (product != null && product.IsDailyPass) return true;
+            }
+            return false;
         }
 
         /// <summary>Seconds until the next UTC day, when a claimed-today pass may claim again.</summary>

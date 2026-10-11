@@ -481,6 +481,60 @@ namespace GlimmerGrove.Social
         }
 
         /// <summary>
+        /// How long a chapter standings table is trusted before the map asks for it again.
+        ///
+        /// An hour, against a job that republishes every six: short enough that a phone left
+        /// open all day sees a table from today, long enough that a player stepping between
+        /// chapters pays one read a session rather than one a chapter. The player's own number
+        /// is computed locally on every repaint, so nothing about <em>their</em> freshness waits
+        /// on this (<see cref="ChapterStanding"/>).
+        /// </summary>
+        public const double StandingsCacheSeconds = 3600d;
+
+        /// <summary>When the standings were last fetched on this process's clock; negative is never.</summary>
+        static double _standingsAskedAt = -1d;
+        static bool _standingsInFlight;
+
+        /// <summary>
+        /// Fetches the published chapter standings (invariant 62) if the held copy is older than
+        /// <see cref="StandingsCacheSeconds"/>, and forgets about it.
+        ///
+        /// Asked only by a laddered map, which is the one screen that prints a standing - so a
+        /// player who never finishes a chapter never pays the read. Idempotent and single-flight:
+        /// a map rebuilt three times in a second asks once.
+        /// </summary>
+        public static void BeginStandingsRefresh(CancellationToken cancellation = default)
+        {
+            if (!IsAvailable || _standingsInFlight) return;
+            if (_standingsAskedAt >= 0d && _now - _standingsAskedAt < StandingsCacheSeconds) return;
+
+            _standingsInFlight = true;
+            _ = RefreshStandingsAsync(cancellation);
+        }
+
+        public static async Task<CloudResult> RefreshStandingsAsync(CancellationToken cancellation = default)
+        {
+            if (!IsAvailable) { _standingsInFlight = false; return CloudResult.Failed(CloudFailure.Offline, "no cloud backend"); }
+
+            try
+            {
+                var (result, published) = await Backend.ReadChapterStandingsAsync(cancellation);
+
+                if (result.Ok)
+                {
+                    _standingsAskedAt = _now;
+                    ChapterStandings.Publish(published);
+                }
+
+                return result;                       // missed: the next map asks again
+            }
+            finally
+            {
+                _standingsInFlight = false;
+            }
+        }
+
+        /// <summary>
         /// One board, from the cache when it is fresh enough.
         ///
         /// An unknown id is refused here rather than at the server, because a path this client

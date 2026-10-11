@@ -4206,6 +4206,14 @@
       "text": "WÄHL EIN LEVEL"
     },
     {
+      "key": "ui.levels.standing_locked",
+      "text": "Schaffe alle Level, um deinen Platz zu sehen"
+    },
+    {
+      "key": "ui.levels.standing_top",
+      "text": "Du gehörst zu den besten {0} %"
+    },
+    {
       "key": "ui.loadout.chest_only",
       "text": "Aus Truhen"
     },
@@ -6712,10 +6720,6 @@
     {
       "key": "ui.shop.xp_surge_explain",
       "text": "Solange das läuft, bringt jedes Level, jede Wacht und jede Welle {0} % mehr EP. Lässt sich mit jedem anderen EP-Boost kombinieren."
-    },
-    {
-      "key": "ui.shop.pass_ribbon",
-      "text": "{0}-TAGE-PASS"
     },
     {
       "key": "ui.shop.pass_gems_daily",
