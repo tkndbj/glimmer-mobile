@@ -978,6 +978,22 @@ def check_shuffle(lid, chapter_id, level, block, grid, layout, shuffle):
                           % (lid, wave, wave - 1))
             return empty
 
+    # **The deep surge and the pace surge** (59c): pinned to the same numbers `ShuffleTests.
+    # TheDeepSurgeAgreesWithTheOfflineMirror` holds the C# to, so a drift on either side is a red
+    # here or there. (wave, (health and blow in tenths, pace in hundredths).)
+    if rules.shuffle_ceiling_wave() != 87:
+        errors.append("%s: the Shuffle lane's health reaches its ceiling on wave %s, pinned at 87"
+                      % (lid, rules.shuffle_ceiling_wave()))
+        return empty
+    for wave, pinned in ((29, (52, 24, 100)), (30, (56, 24, 100)), (50, (352, 57, 100)),
+                         (80, (17144, 370, 100)), (87, (50000, 644, 100)), (88, (50000, 689, 104)),
+                         (100, (50000, 1931, 176)), (120, (50000, 14128, 500)),
+                         (9999, (50000, 100000, 500))):
+        if rules.shuffle_surge(wave) != pinned:
+            errors.append("%s: the Shuffle lane's wave %d surges to %s, pinned at %s"
+                          % (lid, wave, rules.shuffle_surge(wave), pinned))
+            return empty
+
     if len(seen) < 2:
         warnings.append("%s: everything this Shuffle lane sends wears one colour, so which ward "
                         "to feed is not a question" % lid)
@@ -997,6 +1013,13 @@ def check_shuffle(lid, chapter_id, level, block, grid, layout, shuffle):
     print("  %s: Shuffle lane, 3* wave %d, 2* wave %d, waves 1..%d send %d..%d raiders (%s)"
           % (lid, gold, silver, rules.SHUFFLE_WALKED, sizes[0], sizes[-1],
              ", ".join("%d %s" % (n, k) for k, n in sorted(kinds.items()))))
+    print("    deep surge from wave %d, health x plain: %s"
+          % (rules.SHUFFLE_SURGE_FROM,
+             ", ".join("w%d %.1f" % (w, rules.shuffle_surge(w)[0] / ((20 + (w - 1) * rules.SHUFFLE_HEALTH_STEP_TWENTIETHS) // 2))
+                       for w in (30, 40, 50, 60, 70, 80))))
+    print("    health at its ceiling from wave %d; raiders then walk faster: %s"
+          % (rules.shuffle_ceiling_wave(),
+             ", ".join("w%d x%.2f" % (w, rules.shuffle_surge(w)[2] / 100.0) for w in (90, 100, 110, 120))))
 
     return dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=gold, budget=0,
                 gold=gold, silver=silver, lamps=0, sources=0, fragile=0, bound=0,

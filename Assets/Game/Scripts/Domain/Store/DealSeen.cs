@@ -5,12 +5,12 @@ using GlimmerGrove.Persistence;
 namespace GlimmerGrove.Store
 {
     /// <summary>
-    /// Which shop deals this account has already been shown as a popup (invariant 60c): each deal
-    /// is put in front of a player once, ever, and after that lives only in the shop.
+    /// Which shop deals this account has been shown as a popup (invariant 60c). <b>A record only:
+    /// nothing gates on it.</b> The popup is paced once a UTC day by <c>DealMoment</c>; this list
+    /// is still written and joined so the save's shape and wire stay as shipped (11f).
     ///
     /// <para>
-    /// <b>In the save, so the promise holds across phones</b> - the second device of a player who
-    /// dismissed a deal on the first must not raise it again. It rides inside the <c>tasks</c> map
+    /// <b>In the save.</b> It rides inside the <c>tasks</c> map
     /// (<see cref="TaskStateDto.dealsSeen"/>) for <c>lifetime</c>'s reason: a key inside a map
     /// already on <c>hasOnly</c> needs no rules release.
     /// </para>
@@ -40,9 +40,7 @@ namespace GlimmerGrove.Store
         public static int Count => _ids.Count;
 
         /// <summary>
-        /// Records that these deals were put in front of the player. Saved at once and synced soon:
-        /// the showing is the fact, and a process killed while the popup is up must not raise it
-        /// again on the next launch.
+        /// Records that these deals were put in front of the player. Saved at once and synced soon.
         /// </summary>
         public static void Mark(IEnumerable<string> dealIds)
         {

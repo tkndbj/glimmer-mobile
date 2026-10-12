@@ -136,6 +136,32 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// <b>Only the Shuffle lane's deepest waves walk faster</b> (MODES.md 59c). The Infinite
+        /// lane, an authored ladder's toughness and an unsurged raider all march at a stride of
+        /// exactly one - the float the march multiplies by, so the board walks them bit for bit as
+        /// it did before the pace surge existed.
+        /// </summary>
+        [Test]
+        public void NoRampButTheShuffleLanesWalksAnyFaster()
+        {
+            for (int wave = 1; wave <= 2000; wave++)
+            {
+                var surge = SiegeEndless.SurgeAt(wave);
+                Assert.AreEqual(100, surge.PaceHundredths, $"Infinite wave {wave}'s pace");
+                Assert.AreEqual(1f, surge.Stride, $"Infinite wave {wave}'s stride");
+            }
+
+            Assert.AreEqual(1f, SiegeSurge.None.Stride, "the plain wave");
+            Assert.AreEqual(1f, default(SiegeSurge).Stride, "a surge nobody set");
+            Assert.AreEqual(1f, new SiegeSurge(37, 21).Stride, "a ladder's toughness");
+            Assert.IsTrue(new SiegeSurge(10, 10).IsNone);
+            Assert.IsFalse(new SiegeSurge(10, 10, 150).IsNone, "a faster wave read as the plain one");
+
+            var raider = new SiegeRaider(1, 0, SiegeKind.Creeper, 0, 0f);
+            Assert.AreEqual(1f, raider.Surge.Stride, "a raider minted with no surge");
+        }
+
+        /// <summary>
         /// The ramp is written down twice - here and in <c>Tools/verify/siege.py</c> - and the two
         /// copies must be the same two numbers.
         ///

@@ -45,6 +45,17 @@ namespace GlimmerGrove.Shuffle
             new Figure("shareStep", ShuffleRamp.ShareStep, 1, 50),
             new Figure("cursedWave", ShuffleRamp.CursedWave, 1, 999),
             new Figure("voidWave", ShuffleRamp.VoidWave, 1, 999),
+            // The deep surge (ShuffleRamp.SurgeFrom). All four per cents at nought switches it off.
+            new Figure("surgeFromWave", ShuffleRamp.SurgeFrom, 1, 999),
+            new Figure("surgeEveryWaves", ShuffleRamp.SurgeEvery, 1, 100),
+            new Figure("surgeHealthPercent", ShuffleRamp.SurgeHealthPercent, 0, 50),
+            new Figure("surgeHealthPercentStep", ShuffleRamp.SurgeHealthPercentStep, 0, 20),
+            new Figure("surgeBlowPercent", ShuffleRamp.SurgeBlowPercent, 0, 50),
+            new Figure("surgeBlowPercentStep", ShuffleRamp.SurgeBlowPercentStep, 0, 20),
+            // The pace surge, from the wave after health reaches its ceiling. Both per cents at nought switch it off.
+            new Figure("surgePacePercent", ShuffleRamp.SurgePacePercent, 0, 50),
+            new Figure("surgePacePercentStep", ShuffleRamp.SurgePacePercentStep, 0, 20),
+            new Figure("surgePaceMostHundredths", ShuffleRamp.SurgePaceMostHundredths, 100, ShuffleRamp.MostPaceHundredths),
         };
 
         public static IReadOnlyList<Figure> Figures => Table;
@@ -52,7 +63,18 @@ namespace GlimmerGrove.Shuffle
         public static readonly ShuffleRampTuning Shipped = new ShuffleRampTuning(Written(Table));
 
         public readonly int FirstWave, MostRaiders, HealthStepTwentieths, BlowEveryWaves, BrutesFrom,
-                            BulwarksFrom, BruteShareMost, BulwarkShareMost, ShareStep, CursedWave, VoidWave;
+                            BulwarksFrom, BruteShareMost, BulwarkShareMost, ShareStep, CursedWave, VoidWave,
+                            SurgeFrom, SurgeEvery, SurgeHealthPercent, SurgeHealthPercentStep,
+                            SurgeBlowPercent, SurgeBlowPercentStep,
+                            SurgePacePercent, SurgePacePercentStep, SurgePaceMostHundredths;
+
+        /// <summary>
+        /// The first wave whose health stands at <see cref="ShuffleRamp.MostHealthTenths"/> on
+        /// these figures (<see cref="int.MaxValue"/> for never), where the pace surge takes over.
+        /// Derived, never written: worked out once, as the figures are taken, so a wave asks a
+        /// field rather than a search.
+        /// </summary>
+        public readonly int HealthCeilingWave;
 
         readonly int[] _written;
 
@@ -72,6 +94,18 @@ namespace GlimmerGrove.Shuffle
             ShareStep = w[i++];
             CursedWave = w[i++];
             VoidWave = w[i++];
+            SurgeFrom = w[i++];
+            SurgeEvery = w[i++];
+            SurgeHealthPercent = w[i++];
+            SurgeHealthPercentStep = w[i++];
+            SurgeBlowPercent = w[i++];
+            SurgeBlowPercentStep = w[i++];
+            SurgePacePercent = w[i++];
+            SurgePacePercentStep = w[i++];
+            SurgePaceMostHundredths = w[i++];
+
+            // Last: it reads the figures above.
+            HealthCeilingWave = ShuffleRamp.CeilingWaveOf(this);
         }
 
         /// <summary>The ramp a document's figures describe, or null with the first fault. All shipped answers <see cref="Shipped"/>.</summary>

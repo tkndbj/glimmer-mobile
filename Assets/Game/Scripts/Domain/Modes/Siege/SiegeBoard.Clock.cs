@@ -709,8 +709,11 @@ namespace GlimmerGrove.Modes
                 // place would shorten the entrance the roar exists to make frightening, and a
                 // warlord hastened by somebody else's roar could reach its ground before the level
                 // meant it to - so the charge is the hill's, and the hill is what walks.
+                // `Surge.Stride` is one on every lane but the Shuffle lane's deepest waves
+                // (`ShuffleRamp.SurgePacePercent`), where it is how the hill keeps climbing once
+                // health has stopped.
                 raider.March += dt * raider.Pace * (raider.Boss ? 1f : charge) * _boosts.HillPace
-                              / SiegeTuning.MarchOf(raider.Kind);
+                              * raider.Surge.Stride / SiegeTuning.MarchOf(raider.Kind);
 
                 if (raider.March < raider.Hold) continue;
 

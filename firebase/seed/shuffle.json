@@ -16,6 +16,12 @@
     "states in words (a count, a time, 'half') is fixed and refused if moved; a per cent the text",
     "prints follows the figure on every phone. `enabled: false` takes a card out of every hand.",
     "",
+    "The deep surge (ramp.surge*): from surgeFromWave, every wave multiplies raider health and blow",
+    "by a per cent (surgeHealthPercent, surgeBlowPercent) that grows by its ...Step every",
+    "surgeEveryWaves waves. Health stops at 5,000x (a code limit, not a figure); from the wave after,",
+    "raiders walk faster the same way (surgePacePercent, ...Step) up to surgePaceMostHundredths (500 = 5x,",
+    "at most 600). A per cent and its step both at 0 switch that part off. Cards are never touched.",
+    "",
     "Cannot be tuned here: a hand's size and how often one is owed (written into the lane's own",
     "text in nine languages), the star waves (they pay coins), and anything outside Shuffle.",
     "To return every device to its build's own figures: delete config/shuffle."
@@ -35,7 +41,16 @@
     "bulwarkShareMost": 35,
     "shareStep": 5,
     "cursedWave": 10,
-    "voidWave": 16
+    "voidWave": 16,
+    "surgeFromWave": 30,
+    "surgeEveryWaves": 10,
+    "surgeHealthPercent": 6,
+    "surgeHealthPercentStep": 2,
+    "surgeBlowPercent": 2,
+    "surgeBlowPercentStep": 1,
+    "surgePacePercent": 4,
+    "surgePacePercentStep": 2,
+    "surgePaceMostHundredths": 500
   },
 
   "deck": {

@@ -168,6 +168,114 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// The deep surge and the pace surge (59c) on the shipped figures, pinned inline against
+        /// `Tools/verify/siege.py`'s `shuffle_surge` (29e), which `content.py` holds to the same
+        /// numbers. Nothing before the surge moved; from it, every stretch multiplies harder than
+        /// the last; health stops at its ceiling and the pace takes over the wave after.
+        /// </summary>
+        [Test]
+        public void TheDeepSurgeAgreesWithTheOfflineMirror()
+        {
+            // wave, health and blow in tenths, pace in hundredths
+            int[,] pinned =
+            {
+                { 1, 10, 10, 100 }, { 29, 52, 24, 100 }, { 30, 56, 24, 100 }, { 31, 61, 26, 100 },
+                { 40, 131, 36, 100 }, { 50, 352, 57, 100 }, { 60, 1100, 99, 100 }, { 70, 4012, 184, 100 },
+                { 80, 17144, 370, 100 }, { 86, 44707, 590, 100 }, { 87, 50000, 644, 100 },
+                { 88, 50000, 689, 104 }, { 90, 50000, 811, 112 }, { 96, 50000, 1359, 142 },
+                { 100, 50000, 1931, 176 }, { 110, 50000, 5006, 333 }, { 120, 50000, 14128, 500 },
+                { 9999, 50000, 100000, 500 },
+            };
+
+            for (int i = 0; i < pinned.GetLength(0); i++)
+            {
+                var s = ShuffleRamp.SurgeAt(pinned[i, 0]);
+                Assert.AreEqual(pinned[i, 1], s.HealthTenths, $"wave {pinned[i, 0]}'s health");
+                Assert.AreEqual(pinned[i, 2], s.BlowTenths, $"wave {pinned[i, 0]}'s blow");
+                Assert.AreEqual(pinned[i, 3], s.PaceHundredths, $"wave {pinned[i, 0]}'s pace");
+            }
+
+            Assert.AreEqual(87, ShuffleRampTuning.Shipped.HealthCeilingWave, "the wave health stops on moved");
+
+            // Below the surge the ramp is the plain one, figure for figure, at its own pace.
+            for (int wave = 1; wave < ShuffleRamp.SurgeFrom; wave++)
+            {
+                var s = ShuffleRamp.SurgeAt(wave);
+                Assert.AreEqual((20 + (wave - 1) * ShuffleRamp.HealthStepTwentieths) / 2, s.HealthTenths);
+                Assert.AreEqual(10 + (wave - 1) / ShuffleRamp.BlowEveryWaves, s.BlowTenths);
+                Assert.AreEqual(1f, s.Stride);
+            }
+
+            // Each stretch multiplies more than the one before it: the ratio across ten waves climbs.
+            double last = 0;
+            for (int from = ShuffleRamp.SurgeFrom; from + 10 <= 80; from += 10)
+            {
+                double ratio = (double)ShuffleRamp.SurgeAt(from + 10).HealthTenths / ShuffleRamp.SurgeAt(from).HealthTenths;
+                Assert.Greater(ratio, last, $"waves {from}-{from + 10} multiply no harder than the stretch before");
+                last = ratio;
+            }
+
+            // Monotone all the way, every figure, and never past its ceiling; the pace is ordinary
+            // for exactly as long as health is still climbing.
+            int ceiling = ShuffleRampTuning.Shipped.HealthCeilingWave;
+            for (int wave = 2; wave <= 400; wave++)
+            {
+                var here = ShuffleRamp.SurgeAt(wave);
+                var before = ShuffleRamp.SurgeAt(wave - 1);
+
+                Assert.GreaterOrEqual(here.HealthTenths, before.HealthTenths, $"wave {wave}'s health");
+                Assert.GreaterOrEqual(here.BlowTenths, before.BlowTenths, $"wave {wave}'s blow");
+                Assert.GreaterOrEqual(here.PaceHundredths, before.PaceHundredths, $"wave {wave}'s pace");
+                Assert.LessOrEqual(here.HealthTenths, ShuffleRamp.MostHealthTenths);
+                Assert.LessOrEqual(here.PaceHundredths, ShuffleRamp.SurgePaceMostHundredths);
+                Assert.AreEqual(wave <= ceiling, here.PaceHundredths == 100, $"wave {wave}'s pace against the ceiling at {ceiling}");
+            }
+
+            var deepest = ShuffleRamp.SurgeAt(int.MaxValue);
+            Assert.AreEqual(ShuffleRamp.MostHealthTenths, deepest.HealthTenths);
+            Assert.AreEqual(ShuffleRamp.MostBlowTenths, deepest.BlowTenths);
+            Assert.AreEqual(ShuffleRamp.SurgePaceMostHundredths, deepest.PaceHundredths);
+        }
+
+        /// <summary>
+        /// <b>The pace surge is the board's, not a number beside it</b>: a run opened deep in the
+        /// lane walks its raiders at the wave's pace, measured off the march itself, and a run
+        /// opened before the ceiling walks them at their kind's own.
+        /// </summary>
+        [Test]
+        public void ARaiderPastTheCeilingWalksAtItsWavesPace()
+        {
+            Assert.AreEqual(1f, Walked(80), .02f, "a wave before the ceiling walks faster than its kind");
+            Assert.AreEqual(ShuffleRamp.SurgeAt(120).Stride, Walked(120), .02f, "a wave past the ceiling walks at another pace than its own");
+            Assert.AreEqual(5f, ShuffleRamp.SurgeAt(120).Stride, "the shipped pace at wave 120 moved");
+        }
+
+        /// <summary>
+        /// How fast the first raider of wave <paramref name="wave"/> walks, in multiples of its own
+        /// kind's march, read off the board over half a second (no line, so nothing slows it).
+        /// </summary>
+        static float Walked(int wave)
+        {
+            var board = SiegeBoard.Build(Lane(), null, new SiegeStart(wave, 0));
+            const float dt = 1f / 60f;
+
+            for (float t = 0f; t < SiegeTuning.FirstWaveAfter + .25f; t += dt) board.Advance(dt);
+
+            SiegeRaider walker = null;
+            foreach (var r in board.Raiders)
+                if (r.OnTheHill && r.Wait <= 0f && r.March > 0f && r.March < .5f) { walker = r; break; }
+
+            Assert.IsNotNull(walker, $"no raider of wave {wave} was walking");
+
+            float from = walker.March;
+            const float window = .5f;
+            for (float t = 0f; t < window - dt / 2; t += dt) board.Advance(dt);
+
+            Assert.Less(walker.March, walker.Hold, "the raider reached the line inside the window");
+            return (walker.March - from) * SiegeTuning.MarchOf(walker.Kind) / window;
+        }
+
+        /// <summary>
         /// The shipped seed's waves, pinned inline against `Tools/verify/siege.py`'s mirror
         /// (invariant 29e: a vector only the Editor can read is not a guard). Printed by
         /// `Tools/chapters/s13_shufflewatch.py`'s walk; a drift on either side lands here.
@@ -787,6 +895,99 @@ namespace GlimmerGrove.Tests
             int plain = Hold(bare, null, 2.4f, out _, out _);
 
             Assert.Greater(reached, plain, "the whole deck reached no further than none");
+        }
+
+        /// <summary>
+        /// <b>The deepest waves are playable</b> (59c). <see cref="EveryCardAtOnceIsPlayable"/>
+        /// runs out of budget near wave fifty, so the deep surge, the health ceiling and the pace
+        /// surge are never met by a walked run. This opens the whole deck, every turret at its top
+        /// rank, straight onto waves either side of the ceiling and deep past it, and holds every
+        /// frame to the board's own sense: no exception, every raider's health in
+        /// <c>[0, MaxHealth]</c> with <c>MaxHealth</c> positive and never past the ceiling, every
+        /// march inside the hill, every hit worth something, every raider walking at its own wave's
+        /// pace. Whether a run <em>ends</em> is printed, not held: a whole deck at its top ranks is
+        /// a balance reading (cards that take a share of a body's health ignore how much it has),
+        /// and the budget is a game hour.
+        /// </summary>
+        [Test]
+        public void TheDeepestWavesArePlayable()
+        {
+            var run = new ShuffleRun(5u);
+            foreach (var card in ShuffleCards.All) Load(run, card.Id);
+
+            long heaviest = (long)SiegeTuning.BulwarkHealth * ShuffleRamp.MostHealthTenths / 10;
+            int ceiling = ShuffleRampTuning.Shipped.HealthCeilingWave;
+            var table = new System.Text.StringBuilder();
+
+            foreach (int start in new[] { ceiling - 2, ceiling + 3, 100, 120, 200, 9000 })
+            {
+                var board = SiegeBoard.Build(Lane(), Breakers(), new SiegeStart(start, SiegeTuning.MaxRank));
+                board.Boosts = run.Build.Boosts;
+                board.Refit();
+
+                const float Frame = 1f / 60f;
+                float since = 0f;
+                int frames = 0, hits = 0, kills = 0;
+                bool sawStride = false;
+                var killedBy = new Dictionary<SiegeVia, int>();
+
+                for (; frames < 60 * 3600 && !board.IsFinished; frames++)
+                {
+                    var report = board.Advance(Frame);
+
+                    foreach (var bolt in report.Bolts)
+                    {
+                        Assert.Greater(bolt.Damage, 0, $"wave {board.Wave}: a hit worth nothing (via {bolt.Via})");
+                        hits++;
+                        if (!bolt.Killed) continue;
+
+                        kills++;
+                        killedBy.TryGetValue(bolt.Via, out int n);
+                        killedBy[bolt.Via] = n + 1;
+                    }
+
+                    foreach (var r in board.Raiders)
+                    {
+                        Assert.Greater(r.MaxHealth, 0, $"wave {board.Wave}: a {r.Kind} minted with no health");
+                        Assert.LessOrEqual(r.MaxHealth, heaviest, $"wave {board.Wave}: a {r.Kind} past the ceiling");
+                        Assert.That(r.Health, Is.InRange(0, r.MaxHealth), $"wave {board.Wave}: a {r.Kind}'s health left its pool");
+                        Assert.That(r.March, Is.InRange(0f, r.Hold), $"wave {board.Wave}: a {r.Kind} walked off the hill");
+                        if (r.Surge.Stride <= 1f) continue;
+
+                        sawStride = true;
+                        Assert.Greater(board.Wave, ceiling, $"a raider walked fast on wave {board.Wave}, before the ceiling at {ceiling}");
+                    }
+
+                    for (int w = 0; w < board.Wards.Count; w++)
+                        if (board.Wards[w].Armed) board.Overcharge(w, null);
+
+                    since += Frame;
+                    if (since < 1.2f || !Aimed(board, out int a, out int b)) continue;
+
+                    board.Swap(a, b);
+                    since = 0f;
+                }
+
+                Assert.Greater(hits, 0, $"a run opened on wave {start} never landed a hit");
+                if (start > ceiling) Assert.IsTrue(sawStride, $"a run opened on wave {start}, past the ceiling, never walked faster");
+
+                table.Append($"  from wave {start}: {(board.IsFinished ? "fell" : "still standing")} on wave {board.Wave} after {frames / 60}s, "
+                             + $"{hits} hits, {kills} kills, pace x{ShuffleRamp.SurgeAt(start).Stride:0.00}\n"
+                             + $"    killed by: {KillsBy(killedBy)}\n");
+            }
+
+            Console.WriteLine("Every card at its most, opened deep:\n" + table);
+        }
+
+        /// <summary>Kills by what landed them, most first: which cards are carrying a run.</summary>
+        static string KillsBy(Dictionary<SiegeVia, int> killedBy)
+        {
+            var rows = new List<KeyValuePair<SiegeVia, int>>(killedBy);
+            rows.Sort((x, y) => y.Value.CompareTo(x.Value));
+
+            var parts = new List<string>();
+            foreach (var row in rows) parts.Add($"{row.Key} {row.Value}");
+            return string.Join(", ", parts.ToArray());
         }
 
         /// <summary>Takes <paramref name="id"/> to its most.</summary>

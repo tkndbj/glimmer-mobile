@@ -21,13 +21,30 @@ namespace GlimmerGrove.Modes
         /// <summary>What a swing costs a ward, in tenths of what this kind ordinarily takes.</summary>
         public readonly int BlowTenths;
 
-        public SiegeSurge(int healthTenths, int blowTenths)
+        /// <summary>
+        /// How fast it walks, in hundredths of its kind's own march - hundredths rather than
+        /// tenths because a wave's step is a few per cent, which tenths round away. A hundred
+        /// everywhere but the Shuffle lane past its health ceiling
+        /// (<c>ShuffleRamp.SurgePacePercent</c>); a ladder and the Infinite lane never pass
+        /// anything else.
+        /// </summary>
+        public readonly int PaceHundredths;
+
+        public SiegeSurge(int healthTenths, int blowTenths, int paceHundredths = 100)
         {
             HealthTenths = healthTenths < 10 ? 10 : healthTenths;
             BlowTenths = blowTenths < 10 ? 10 : blowTenths;
+            PaceHundredths = paceHundredths < 100 ? 100 : paceHundredths;
         }
 
-        public bool IsNone => HealthTenths == 10 && BlowTenths == 10;
+        public bool IsNone => HealthTenths == 10 && BlowTenths == 10 && PaceHundredths <= 100;
+
+        /// <summary>
+        /// What the march multiplies by. <b>Exactly one at a hundred</b>, and for <c>default</c>
+        /// too, so on every board that never surges pace the march is the same float, bit for
+        /// bit, as before this existed (a product with 1f is exact).
+        /// </summary>
+        public float Stride => PaceHundredths <= 100 ? 1f : PaceHundredths / 100f;
 
         /// <summary>This kind's health, surged.</summary>
         public int Health(int health) => health * HealthTenths / 10;

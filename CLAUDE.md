@@ -560,12 +560,12 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    and fail purchases on contention, so `adminDealHistory` pages twenty by `endUnix` and counts
    `spendLog` by `dealId` with `count()` (the one indexed field of the exempt `spendLog`, collection
    group); a settled count is stored and never recounted. `adminListDeals` backfills a missing record.
-60c. **A deal is raised outside the shop by `DealMoment` alone, once per deal, ever** (rules in
-   `DealPrompt`): 3 levels cleared; one popup a session carrying every unshown deal; triggers in order
-   coin shortfall (turret, star, keeper level - answered on the screen it happened on), back on the
-   hub from a win, last 3 hours; only on a calm screen after the consent questions. Shown is marked
-   in the save at open (`tasks.dealsSeen`, v41, the newest 64 ids - a join, never pruned against the
-   network). Short of gems stacks `GemShopOverlay` over `DealOverlay`, which lists any number of
+60c. **A deal is raised outside the shop by `DealMoment` alone, once a UTC day** (rules in
+   `DealPrompt`): 3 levels cleared; one popup a day carrying every live unbought deal; a coin shortfall
+   (turret, star, keeper level) is answered on the screen it happened on, otherwise the calm hub (the
+   trigger names a win, the last 3 hours, or `daily`); only after the consent questions. The day is
+   device-local (`glimmer.deals.shownDay`), marked at open. `tasks.dealsSeen` (v41) is still written
+   and joined, and gates nothing. Short of gems stacks `GemShopOverlay` over `DealOverlay`, which lists any number of
    deals and pays coins out on close.
 60d. **A deal's value seal is derived, never authored**: its coins over what its gems buy at the
    shop's own rate (`StoreCatalog.CreditsPerGem`), floored to ten, hidden at 100% or under or without

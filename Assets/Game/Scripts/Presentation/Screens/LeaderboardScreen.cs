@@ -483,9 +483,9 @@ namespace GlimmerGrove
                                  3f, 2f), 20);
 
                 _worth = UIKit.Shrinkable(
-                    UIKit.Titled("Worth", _plate.transform, string.Empty, 28, Pal.Gold,
-                                 TextAnchor.MiddleLeft, new Vector2(430f, 40f),
-                                 new Vector2(0f, .5f), new Vector2(515f, -26f), 3f, 0f), 18);
+                    UIKit.Titled("Worth", _plate.transform, string.Empty, 38, Pal.Gold,
+                                 TextAnchor.MiddleLeft, new Vector2(430f, 52f),
+                                 new Vector2(0f, .5f), new Vector2(515f, -30f), 3f, 0f), 18);
             }
 
             public void Bind(int index)

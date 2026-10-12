@@ -165,10 +165,12 @@ namespace GlimmerGrove.Modes
         /// How much tougher this one is than the level authored it.
         ///
         /// <b>Carried rather than looked up</b>, because it is decided when the raider is minted
-        /// and an endless lane's wave forty is not the same wave as its wave four. Nothing but
-        /// health and the blow reads it: the march, the hold and the cast rate are what a kind
-        /// *is*, and scaling those would make a boss on wave forty a different fight rather than
-        /// a tougher one.
+        /// and an endless lane's wave forty is not the same wave as its wave four. Health and the
+        /// blow read it; the hold and the cast rate are what a kind *is*, and scaling those would
+        /// make a boss on wave forty a different fight rather than a tougher one. <b>The march
+        /// reads its <see cref="SiegeSurge.Stride"/>, which is one everywhere but the Shuffle
+        /// lane past its health ceiling</b> - a lane with no bosses, where a faster hill is the
+        /// only climb left (<c>ShuffleRamp.SurgePacePercent</c>).
         /// </summary>
         public readonly SiegeSurge Surge;
 

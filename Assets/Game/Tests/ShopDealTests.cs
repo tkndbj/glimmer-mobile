@@ -328,14 +328,10 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void OnePopupASessionAndOnlyWithSomethingUnseen()
+        public void OnePopupADayAndOnlyWithSomethingLive()
         {
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, true, true, true, true, true, Live(60), Now), "one a session");
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, true, true, true, true, true, Live(60), Now), "one a day");
             Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, true, true, true, true, new List<ShopDeal>(), Now));
-
-            var offered = Live(9999);
-            Assert.AreEqual(0, DealPrompt.Unseen(offered, id => id == Id).Count, "a shown deal is never shown again");
-            Assert.AreEqual(1, DealPrompt.Unseen(offered, id => false).Count);
         }
 
         [Test]
@@ -347,8 +343,10 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, true, false, true, day, Now),
                             "a win waits for the hub");
             Assert.AreEqual(DealTrigger.Win, DealPrompt.Choose(9, false, false, true, true, true, day, Now));
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, true, true, day, Now),
-                            "a calm hub alone is not a moment");
+            Assert.AreEqual(DealTrigger.Daily, DealPrompt.Choose(9, false, false, false, true, true, day, Now),
+                            "a calm hub is the day's showing");
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, false, true, day, Now),
+                            "the day's showing waits for the hub");
             Assert.AreEqual(DealTrigger.LastHours, DealPrompt.Choose(9, false, false, false, true, true,
                                                                      Live(DealPrompt.LastHoursSeconds), Now));
             Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, false, true,
@@ -356,6 +354,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("shortfall", DealPrompt.Id(DealTrigger.Shortfall));
             Assert.AreEqual("win", DealPrompt.Id(DealTrigger.Win));
             Assert.AreEqual("last_hours", DealPrompt.Id(DealTrigger.LastHours));
+            Assert.AreEqual("daily", DealPrompt.Id(DealTrigger.Daily));
         }
 
         // ------------------------------------------------------------ the value seal

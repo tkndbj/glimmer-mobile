@@ -96,6 +96,15 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(ShuffleRamp.ShareStep, r.ShareStep);
             Assert.AreEqual(ShuffleRamp.CursedWave, r.CursedWave);
             Assert.AreEqual(ShuffleRamp.VoidWave, r.VoidWave);
+            Assert.AreEqual(ShuffleRamp.SurgeFrom, r.SurgeFrom);
+            Assert.AreEqual(ShuffleRamp.SurgeEvery, r.SurgeEvery);
+            Assert.AreEqual(ShuffleRamp.SurgeHealthPercent, r.SurgeHealthPercent);
+            Assert.AreEqual(ShuffleRamp.SurgeHealthPercentStep, r.SurgeHealthPercentStep);
+            Assert.AreEqual(ShuffleRamp.SurgeBlowPercent, r.SurgeBlowPercent);
+            Assert.AreEqual(ShuffleRamp.SurgeBlowPercentStep, r.SurgeBlowPercentStep);
+            Assert.AreEqual(ShuffleRamp.SurgePacePercent, r.SurgePacePercent);
+            Assert.AreEqual(ShuffleRamp.SurgePacePercentStep, r.SurgePacePercentStep);
+            Assert.AreEqual(ShuffleRamp.SurgePaceMostHundredths, r.SurgePaceMostHundredths);
 
             var d = s.Deck;
             CollectionAssert.AreEqual(ShuffleDeck.Weights, d.Opening);
@@ -224,6 +233,10 @@ namespace GlimmerGrove.Tests
             StringAssert.Contains("ramp.firstWave", Refused(With(Doc(), "firstWave", "0")));
             StringAssert.Contains("ramp.mostRaiders", Refused(With(Doc(), "mostRaiders", "3")));
             StringAssert.Contains("ramp.healthStepTwentieths", Refused(With(Doc(), "healthStepTwentieths", "0")));
+            StringAssert.Contains("ramp.surgeFromWave", Refused(With(Doc(), "surgeFromWave", "0")));
+            StringAssert.Contains("ramp.surgeEveryWaves", Refused(With(Doc(), "surgeEveryWaves", "0")));
+            StringAssert.Contains("ramp.surgeHealthPercent", Refused(With(Doc(), "surgeHealthPercent", "51")));
+            StringAssert.Contains("ramp.surgeBlowPercentStep", Refused(With(Doc(), "surgeBlowPercentStep", "-1")));
             StringAssert.Contains("deck.opening", Refused(With(Doc(), "opening", "[56, 30, 11, 4]")));
             StringAssert.Contains("deck.heated", Refused(With(Doc(), "heated", "[50, 50, 0]")));
             StringAssert.Contains("deck.wildFromHand", Refused(With(Doc(), "wildFromHand", "6")));
@@ -422,6 +435,136 @@ namespace GlimmerGrove.Tests
                 if (ShuffleRamp.KindAt(2, i, 99u, tuned) == SiegeKind.Brute) brutes++;
 
             Assert.Greater(brutes, 0, "brutes from wave one at fifty a wave sent none on wave two");
+        }
+
+        [Test]
+        public void TheDeepSurgeIsTheDocumentsAndNoughtSwitchesItOff()
+        {
+            // Earlier and steeper: wave 25 surges where the shipped ramp is still plain.
+            var sooner = Read(With(With(Doc(), "surgeFromWave", "20"), "surgeHealthPercent", "10")).Ramp;
+            Assert.AreEqual(ShuffleRamp.SurgeAt(19).HealthTenths, ShuffleRamp.SurgeAt(19, sooner).HealthTenths, "before the surge nothing moved");
+            Assert.Greater(ShuffleRamp.SurgeAt(25, sooner).HealthTenths, ShuffleRamp.SurgeAt(25).HealthTenths);
+            Assert.Greater(ShuffleRamp.SurgeAt(60, sooner).HealthTenths, ShuffleRamp.SurgeAt(60).HealthTenths);
+
+            // A steeper health surge reaches its ceiling sooner, and the pace follows it there
+            // with no figure of its own moved.
+            Assert.Less(sooner.HealthCeilingWave, ShuffleRampTuning.Shipped.HealthCeilingWave);
+            Assert.AreEqual(100, ShuffleRamp.SurgeAt(sooner.HealthCeilingWave, sooner).PaceHundredths, "the pace moved on the ceiling's own wave");
+            Assert.Greater(ShuffleRamp.SurgeAt(sooner.HealthCeilingWave + 1, sooner).PaceHundredths, 100, "the pace never followed the ceiling");
+
+            // Every per cent at nought: the plain ramp at every depth, at its own pace, as before
+            // the surge existed.
+            var off = Read(With(With(With(With(With(With(Doc(), "surgeHealthPercent", "0"), "surgeHealthPercentStep", "0"),
+                                               "surgeBlowPercent", "0"), "surgeBlowPercentStep", "0"),
+                                     "surgePacePercent", "0"), "surgePacePercentStep", "0")).Ramp;
+
+            foreach (int wave in new[] { 1, 30, 52, 90, 400, 9999 })
+            {
+                var s = ShuffleRamp.SurgeAt(wave, off);
+                Assert.AreEqual((20 + (wave - 1) * ShuffleRamp.HealthStepTwentieths) / 2, s.HealthTenths, $"wave {wave}");
+                Assert.AreEqual(10 + (wave - 1) / ShuffleRamp.BlowEveryWaves, s.BlowTenths, $"wave {wave}");
+                Assert.AreEqual(100, s.PaceHundredths, $"wave {wave}");
+            }
+
+            // The pace alone switched off: health and blow surge as shipped, and nothing walks faster.
+            var steady = Read(With(With(Doc(), "surgePacePercent", "0"), "surgePacePercentStep", "0")).Ramp;
+            Assert.AreEqual(ShuffleRamp.SurgeAt(120).HealthTenths, ShuffleRamp.SurgeAt(120, steady).HealthTenths);
+            Assert.AreEqual(100, ShuffleRamp.SurgeAt(9999, steady).PaceHundredths);
+
+            // A lower top speed is the top speed.
+            var gentle = Read(With(Doc(), "surgePaceMostHundredths", "200")).Ramp;
+            Assert.AreEqual(200, ShuffleRamp.SurgeAt(9999, gentle).PaceHundredths);
+
+            // The steepest a document can write still stops at every ceiling and never wraps.
+            var steepest = Read(With(With(With(With(With(With(With(With(Doc(), "surgeFromWave", "1"), "surgeEveryWaves", "1"),
+                                                                "surgeHealthPercent", "50"), "surgeHealthPercentStep", "20"),
+                                                      "surgeBlowPercentStep", "20"), "surgePacePercent", "50"),
+                                           "surgePacePercentStep", "20"), "surgePaceMostHundredths", ShuffleRamp.MostPaceHundredths.ToString())).Ramp;
+
+            for (int wave = 2; wave <= 200; wave++)
+            {
+                Assert.GreaterOrEqual(ShuffleRamp.SurgeAt(wave, steepest).HealthTenths, ShuffleRamp.SurgeAt(wave - 1, steepest).HealthTenths, $"wave {wave}");
+                Assert.GreaterOrEqual(ShuffleRamp.SurgeAt(wave, steepest).PaceHundredths, ShuffleRamp.SurgeAt(wave - 1, steepest).PaceHundredths, $"wave {wave}");
+            }
+
+            var deepest = ShuffleRamp.SurgeAt(int.MaxValue, steepest);
+            Assert.AreEqual(ShuffleRamp.MostHealthTenths, deepest.HealthTenths);
+            Assert.AreEqual(ShuffleRamp.MostBlowTenths, deepest.BlowTenths);
+            Assert.AreEqual(ShuffleRamp.MostPaceHundredths, deepest.PaceHundredths);
+
+            // And no document can walk a raider faster than the board's own ceiling.
+            StringAssert.Contains("ramp.surgePaceMostHundredths", Refused(With(Doc(), "surgePaceMostHundredths", (ShuffleRamp.MostPaceHundredths + 1).ToString())));
+            StringAssert.Contains("ramp.surgePaceMostHundredths", Refused(With(Doc(), "surgePaceMostHundredths", "99")));
+        }
+
+        /// <summary>
+        /// <b>The health ceiling against the board's integer arithmetic</b>, walked rather than
+        /// asserted (<see cref="ShuffleRamp.MostHealthTenths"/>). The heaviest raider this lane
+        /// sends at the ceiling must survive every read of a whole body - the execute test
+        /// (health x 100) and the hill's demand (four of the largest waves at full weight) - and
+        /// every death derived from a body's full health: each blast, shatter and nuke card at the
+        /// widest figures the strict reader accepts, folded by the build itself, landing on a
+        /// hexed body (x <see cref="SiegeTuning.HexPercent"/>). A new card of one of those
+        /// effects, or a wider range, that breaks this is a red here rather than a number that
+        /// wraps on a phone.
+        /// </summary>
+        [Test]
+        public void TheDeepestSurgeFitsTheBoardsArithmetic()
+        {
+            var deepest = new SiegeSurge(ShuffleRamp.MostHealthTenths, ShuffleRamp.MostBlowTenths, ShuffleRamp.MostPaceHundredths);
+            long heaviest = 0;
+
+            foreach (var kind in new[] { SiegeKind.Creeper, SiegeKind.Brute, SiegeKind.Bulwark })
+            {
+                heaviest = Math.Max(heaviest, (long)SiegeTuning.HealthOf(kind) * ShuffleRamp.MostHealthTenths / 10);
+                Assert.Less((long)SiegeTuning.BlowOf(kind) * ShuffleRamp.MostBlowTenths, int.MaxValue, $"a {kind}'s blow");
+            }
+
+            Assert.AreEqual(heaviest, deepest.Health(SiegeTuning.BulwarkHealth), "the surge's own multiply");
+            Assert.Less(heaviest * 100, int.MaxValue, "the execute test");
+            Assert.Less(heaviest * 4 * SiegeLayout.MaxRaiders, int.MaxValue, "the hill's demand");
+
+            int chains = 0;
+            foreach (var shipped in ShuffleCards.All)
+            {
+                if (shipped.Effect != ShuffleEffect.Blast && shipped.Effect != ShuffleEffect.Shatter &&
+                    shipped.Effect != ShuffleEffect.Nuke)
+                    continue;
+
+                // Each figure at its widest on its own: a superset of what one document can reach,
+                // which is the safe direction for a bound.
+                int magnitude = Widest(shipped, "magnitude", shipped.Magnitude * 4);
+                int most = Widest(shipped, "most", shipped.Most * 2);
+                var card = new ShuffleCard(shipped.Id, shipped.Tier, shipped.Effect, magnitude, shipped.Extent, most, shipped.Picture);
+
+                var build = new ShuffleBuild(1u);
+                for (int n = 0; n < most; n++) Assert.IsTrue(build.Take(card), $"{card.Id} refused copy {n + 1}");
+
+                // In hundredths of the body's full health, whichever unit the effect keeps.
+                var b = build.Boosts;
+                long share = shipped.Effect == ShuffleEffect.Blast ? b.BlastTenths * 10L
+                           : shipped.Effect == ShuffleEffect.Shatter ? b.ShatterTenths * 10L
+                           : b.NukePercent;
+                Assert.Greater(share, 0, $"{card.Id} folded to nothing");
+
+                long derived = heaviest * share / 100;
+                Assert.Less(heaviest * share, int.MaxValue, $"{card.Id}: full health x its share");
+                Assert.Less(derived * SiegeTuning.HexPercent + 50, int.MaxValue, $"{card.Id}: its share landing on a hexed body");
+                chains++;
+            }
+
+            Assert.Greater(chains, 0, "no card derives a hit from a body's health, so this walked nothing");
+        }
+
+        /// <summary>The widest value of one card field the strict reader accepts, searched down from <paramref name="from"/>.</summary>
+        static int Widest(ShuffleCard card, string field, int from)
+        {
+            for (int value = from; value >= 1; value--)
+                if (ShuffleTuning.TryRead(Card(Doc(), card.Id, field, value.ToString()), true, out _, out _))
+                    return value;
+
+            Assert.Fail($"no {field} for {card.Id} is accepted");
+            return 0;
         }
 
         // ------------------------------------------------------------------ the text follows

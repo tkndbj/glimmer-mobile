@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Async;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Privacy;
 using GlimmerGrove.Release;
@@ -27,10 +28,12 @@ namespace GlimmerGrove
     /// landed before anything is laid over it.
     /// </para>
     /// <para>
-    /// <b>One popup a session</b>, and the deals it carries are marked shown in the save at the
-    /// moment it opens, not when it closes: a process killed with the panel up must not raise it
-    /// again, and the promise is "once", not "until dismissed". A session is a launch, or a return
-    /// after <see cref="NewSessionSeconds"/> in the background.
+    /// <b>One popup a UTC day</b>, carrying every live deal, and the day is marked at the moment it
+    /// opens, not when it closes: a process killed with the panel up must not raise it again, and
+    /// the promise is "once a day", not "until dismissed". The day is device-local
+    /// (<see cref="ShownDayKey"/>), never in the save: it is a pacing hint, not a fact a merge has
+    /// to agree, so a player on two phones may see it once on each. The deals are still recorded
+    /// in the save's <see cref="DealSeen"/> list, which nothing now gates on.
     /// </para>
     /// </summary>
     public static class DealMoment
@@ -44,7 +47,11 @@ namespace GlimmerGrove
         /// <summary>Back after this long in the background is a new session, with a popup of its own.</summary>
         const float NewSessionSeconds = 30f * 60f;
 
-        static bool _hooked, _shownThisSession, _winPending, _shortfallPending;
+        /// <summary>The preferences key holding the UTC day key of the last popup. Device-local.</summary>
+        const string ShownDayKey = "glimmer.deals.shownDay";
+
+        static bool _hooked, _winPending, _shortfallPending;
+        static int _shownDay = -1;
         static float _calmSince = -1f, _nextAsk;
         static float _pausedAt = -1f;
 
@@ -70,12 +77,11 @@ namespace GlimmerGrove
         /// <summary>The app went to the background.</summary>
         public static void Paused() => _pausedAt = Time.realtimeSinceStartup;
 
-        /// <summary>The app came back. Long enough away is a new session, and a new session may be offered again.</summary>
+        /// <summary>The app came back. Long enough away forgets a win or shortfall from before it.</summary>
         public static void Resumed()
         {
             if (_pausedAt >= 0f && Time.realtimeSinceStartup - _pausedAt >= NewSessionSeconds)
             {
-                _shownThisSession = false;
                 _winPending = false;
                 _shortfallPending = false;
             }
@@ -85,8 +91,6 @@ namespace GlimmerGrove
         /// <summary>One frame.</summary>
         public static void Tick()
         {
-            if (_shownThisSession) return;
-
             bool onHub = Flow.Current is HomeScreen;
             bool onStage = onHub || Flow.Current is LoadoutScreen || Flow.Current is KeeperScreen;
 
@@ -106,19 +110,28 @@ namespace GlimmerGrove
             DealLedger.Refresh();
 
             long unix = GameClock.NowUnix();
-            var unseen = DealPrompt.Unseen(DealLedger.OfferedAllAt(unix), DealSeen.Has);
-            var trigger = DealPrompt.Choose(PlayerProgress.ClearedCount, _shownThisSession, _shortfallPending,
-                                            _winPending, onHub, onStage, unseen, unix);
+            int today = DailyRules.DayKeyFor(unix);
+            bool shownToday = ShownDay() == today;
+            var offered = DealLedger.OfferedAllAt(unix);
+            var trigger = DealPrompt.Choose(PlayerProgress.ClearedCount, shownToday, _shortfallPending,
+                                            _winPending, onHub, onStage, offered, unix);
 
-            // A pending win or shortfall that found nothing to offer is spent: the next deal is
-            // offered at its own moment, not at one that happened before it existed.
+            // A pending win or shortfall that found nothing to offer, or arrived after today's
+            // popup, is spent: tomorrow's showing is not labelled with a moment from today.
             if (trigger == DealTrigger.None)
             {
-                if (unseen.Count == 0) { _winPending = false; _shortfallPending = false; }
+                if (offered.Count == 0 || shownToday) { _winPending = false; _shortfallPending = false; }
                 return;
             }
 
-            Show(trigger, unseen);
+            Show(trigger, offered, today);
+        }
+
+        /// <summary>The UTC day key of the last popup on this device, read once and then cached.</summary>
+        static int ShownDay()
+        {
+            if (_shownDay < 0) _shownDay = Mathf.Max(0, PlayerPrefs.GetInt(ShownDayKey, 0));
+            return _shownDay;
         }
 
         /// <summary>Nothing over the screen, nothing about to be, and nothing else asking.</summary>
@@ -131,11 +144,13 @@ namespace GlimmerGrove
             && !AdPrivacy.Owed
             && !AdPrivacy.IsAsking;
 
-        static void Show(DealTrigger trigger, List<ShopDeal> deals)
+        static void Show(DealTrigger trigger, List<ShopDeal> deals, int today)
         {
             // Spent before anything is raised, so no later frame - or a panel that fails to build -
-            // can raise a second one this session.
-            _shownThisSession = true;
+            // can raise a second one today.
+            _shownDay = today;
+            PlayerPrefs.SetInt(ShownDayKey, today);
+            PlayerPrefs.Save();
             _winPending = false;
             _shortfallPending = false;
             _calmSince = -1f;

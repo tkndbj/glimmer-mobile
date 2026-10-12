@@ -19,6 +19,8 @@ for.
 Read `SiegeBoard.cs` first; the names match deliberately.
 """
 
+import functools
+
 LETTERS = "rgby"
 
 #: `SiegeLayout.Cells` - everything a cell may hold, which is the four gems and nothing else.
@@ -1229,13 +1231,73 @@ SHUFFLE_BLOW_EVERY_WAVES = 2
 SHUFFLE_BRUTES_FROM, SHUFFLE_BULWARKS_FROM = 2, 4          # no bombers: nothing drops on the hill
 SHUFFLE_CURSED_FROM, SHUFFLE_VOID_FROM = 10, 16
 SHUFFLE_WALKED = 40
+#: The deep surge (`ShuffleRamp.SurgeFrom`): from wave 30 every wave multiplies, by a per cent
+#: that climbs every ten waves; health capped at `MostHealthTenths`, blow at `MostBlowTenths`.
+SHUFFLE_SURGE_FROM, SHUFFLE_SURGE_EVERY = 30, 10
+SHUFFLE_SURGE_HEALTH_PERCENT, SHUFFLE_SURGE_HEALTH_PERCENT_STEP = 6, 2
+SHUFFLE_SURGE_BLOW_PERCENT, SHUFFLE_SURGE_BLOW_PERCENT_STEP = 2, 1
+#: The pace surge: from the wave after health reaches its ceiling, raiders walk faster.
+SHUFFLE_SURGE_PACE_PERCENT, SHUFFLE_SURGE_PACE_PERCENT_STEP = 4, 2
+SHUFFLE_SURGE_PACE_MOST_HUNDREDTHS = 500
+SHUFFLE_MOST_HEALTH_TENTHS, SHUFFLE_MOST_BLOW_TENTHS = 50000, 100000
+SHUFFLE_CEILING_SEARCH = 1000000
+_SHUFFLE_SURGE_FINE = 10000
 
 
 def shuffle_surge(wave):
-    """`ShuffleRamp.SurgeAt` - (health tenths, blow tenths)."""
+    """`ShuffleRamp.SurgeAt` - (health tenths, blow tenths, pace hundredths)."""
     wave = max(1, wave)
-    return ((20 + (wave - 1) * SHUFFLE_HEALTH_STEP_TWENTIETHS) // 2,
-            10 + (wave - 1) // SHUFFLE_BLOW_EVERY_WAVES)
+    blow = _shuffle_compound(10 + (wave - 1) // SHUFFLE_BLOW_EVERY_WAVES, SHUFFLE_SURGE_FROM, wave,
+                             SHUFFLE_SURGE_BLOW_PERCENT, SHUFFLE_SURGE_BLOW_PERCENT_STEP,
+                             SHUFFLE_MOST_BLOW_TENTHS)
+    return (_shuffle_health(wave), blow, _shuffle_pace(wave))
+
+
+def _shuffle_health(wave):
+    """`ShuffleRamp.HealthAt`."""
+    wave = max(1, wave)
+    plain = min((20 + (wave - 1) * SHUFFLE_HEALTH_STEP_TWENTIETHS) // 2, SHUFFLE_MOST_HEALTH_TENTHS)
+    return _shuffle_compound(plain, SHUFFLE_SURGE_FROM, wave, SHUFFLE_SURGE_HEALTH_PERCENT,
+                             SHUFFLE_SURGE_HEALTH_PERCENT_STEP, SHUFFLE_MOST_HEALTH_TENTHS)
+
+
+@functools.lru_cache(maxsize=None)
+def shuffle_ceiling_wave():
+    """`ShuffleRamp.CeilingWaveOf` - the first wave whose health is at its ceiling."""
+    if _shuffle_health(SHUFFLE_CEILING_SEARCH) < SHUFFLE_MOST_HEALTH_TENTHS:
+        return None
+    lo, hi = 1, SHUFFLE_CEILING_SEARCH
+    while lo < hi:
+        mid = lo + (hi - lo) // 2
+        if _shuffle_health(mid) >= SHUFFLE_MOST_HEALTH_TENTHS:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
+
+
+def _shuffle_pace(wave):
+    """`ShuffleRamp.PaceAt`."""
+    ceiling = shuffle_ceiling_wave()
+    if ceiling is None or wave <= ceiling:
+        return 100
+    return _shuffle_compound(100, ceiling + 1, wave, SHUFFLE_SURGE_PACE_PERCENT,
+                             SHUFFLE_SURGE_PACE_PERCENT_STEP, SHUFFLE_SURGE_PACE_MOST_HUNDREDTHS)
+
+
+def _shuffle_compound(tenths, frm, wave, percent, step, most):
+    """`ShuffleRamp.Compound` - every operand positive, so `//` is C#'s truncating division."""
+    if tenths >= most:
+        return most
+    if wave < frm or (percent <= 0 and step <= 0):
+        return tenths
+    fine = tenths * _SHUFFLE_SURGE_FINE
+    ceiling = most * _SHUFFLE_SURGE_FINE
+    k = frm
+    while k <= wave and fine < ceiling:
+        fine = fine * (100 + percent + step * ((k - frm) // SHUFFLE_SURGE_EVERY)) // 100
+        k += 1
+    return min(fine // _SHUFFLE_SURGE_FINE, most)
 
 
 def shuffle_size(wave):

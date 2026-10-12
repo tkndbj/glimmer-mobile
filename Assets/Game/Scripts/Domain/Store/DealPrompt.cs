@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Store
@@ -14,8 +13,11 @@ namespace GlimmerGrove.Store
         /// <summary>The player came back to the hub from a win.</summary>
         Win,
 
-        /// <summary>A deal nobody has shown this player is in its last hours.</summary>
+        /// <summary>A live deal is in its last hours.</summary>
         LastHours,
+
+        /// <summary>The player is on the hub and has not been shown the deals today.</summary>
+        Daily,
     }
 
     /// <summary>
@@ -24,16 +26,17 @@ namespace GlimmerGrove.Store
     ///
     /// <para>
     /// <b>Who:</b> a player who has cleared <see cref="MinClearedLevels"/> levels - a new player's
-    /// first sessions are for the game, not the shop. <b>What:</b> only deals this account has
-    /// never been shown (<see cref="DealSeen"/>); a deal shown once, bought or dismissed, lives
-    /// only in the shop afterwards. <b>How often:</b> one popup a session, carrying every unshown
-    /// deal at once. <b>When</b>, in this order: a coin shortfall (the strongest moment - the
-    /// offer answers the problem in front of them), coming back to the hub from a win, and a deal
-    /// in its last <see cref="LastHoursSeconds"/> on the hub.
+    /// first sessions are for the game, not the shop. <b>What:</b> every live deal this account
+    /// has not bought. <b>How often:</b> once a UTC day, carrying every live deal at once.
+    /// <b>Where</b>, in this order: a coin shortfall (the strongest moment - the offer answers
+    /// the problem in front of them), else the hub. The hub's trigger names why it is a good
+    /// moment (a win just recorded, a deal in its last <see cref="LastHoursSeconds"/>) or is
+    /// simply the day's showing; the name is the analytics value, the decision is the same.
     /// </para>
     /// <para>
-    /// Where the player is standing, and whether it is calm there, is the caller's to say
-    /// (<c>DealMoment</c>): these rules decide only whether that moment is one.
+    /// Where the player is standing, whether it is calm there, and whether today's popup has been
+    /// shown are the caller's to say (<c>DealMoment</c>): these rules decide only whether that
+    /// moment is one.
     /// </para>
     /// </summary>
     public static class DealPrompt
@@ -52,46 +55,37 @@ namespace GlimmerGrove.Store
                 case DealTrigger.Shortfall: return "shortfall";
                 case DealTrigger.Win: return "win";
                 case DealTrigger.LastHours: return "last_hours";
+                case DealTrigger.Daily: return "daily";
                 default: return "none";
             }
-        }
-
-        /// <summary>The deals in <paramref name="offered"/> this account has never been shown, in its order.</summary>
-        public static List<ShopDeal> Unseen(IReadOnlyList<ShopDeal> offered, Func<string, bool> seen)
-        {
-            var unseen = new List<ShopDeal>();
-            if (offered == null) return unseen;
-            foreach (var deal in offered)
-                if (deal != null && (seen == null || !seen(deal.Id))) unseen.Add(deal);
-            return unseen;
         }
 
         /// <summary>
         /// Which trigger this moment answers, or <see cref="DealTrigger.None"/>.
         /// </summary>
         /// <param name="clearedLevels">Levels the player has cleared.</param>
-        /// <param name="shownThisSession">A deals popup has already been raised this session.</param>
+        /// <param name="shownToday">A deals popup has already been raised today.</param>
         /// <param name="shortfallPending">A coin price the player could not pay was shown and not yet answered.</param>
         /// <param name="winPending">A win was recorded and the hub has not yet answered it.</param>
         /// <param name="onHub">The player is on the hub, calm.</param>
         /// <param name="onShortfallStage">The player is on a screen a shortfall may be answered on, calm.</param>
-        /// <param name="unseen">The deals on offer this account has never been shown.</param>
+        /// <param name="offered">The live deals this account has not bought.</param>
         /// <param name="nowUnix">Now.</param>
-        public static DealTrigger Choose(int clearedLevels, bool shownThisSession, bool shortfallPending,
+        public static DealTrigger Choose(int clearedLevels, bool shownToday, bool shortfallPending,
                                          bool winPending, bool onHub, bool onShortfallStage,
-                                         IReadOnlyList<ShopDeal> unseen, long nowUnix)
+                                         IReadOnlyList<ShopDeal> offered, long nowUnix)
         {
-            if (clearedLevels < MinClearedLevels || shownThisSession) return DealTrigger.None;
-            if (unseen == null || unseen.Count == 0) return DealTrigger.None;
+            if (clearedLevels < MinClearedLevels || shownToday) return DealTrigger.None;
+            if (offered == null || offered.Count == 0) return DealTrigger.None;
 
             if (shortfallPending && onShortfallStage) return DealTrigger.Shortfall;
             if (!onHub) return DealTrigger.None;
             if (winPending) return DealTrigger.Win;
 
-            foreach (var deal in unseen)
+            foreach (var deal in offered)
                 if (deal.IsLive(nowUnix) && deal.SecondsLeft(nowUnix) <= LastHoursSeconds) return DealTrigger.LastHours;
 
-            return DealTrigger.None;
+            return DealTrigger.Daily;
         }
     }
 }

@@ -1164,7 +1164,16 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    whole ladder and no card is about the ground), the curse from ten and the void from sixteen - its own coordinates under the hash every ramp shares
    (`SiegeRamp.Roll`), so it is never the Infinite lane's hill in a different order. Steeper than
    the Infinite lane on purpose: a build of forty cards compounds and a ramp that did not would be a
-   run that never ended. **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
+   run that never ended. **So from wave 30 the ramp compounds too** (the deep surge, 2026-10-12):
+   health and blow multiply every wave by a per cent that climbs every ten waves (health 6/8/10%...,
+   blow 2/3/4%...). Health stops at five thousand times plain - a ceiling set by the board's int
+   arithmetic, walked over every health-derived card chain at its widest tuning
+   (`ShuffleTuningTests.TheDeepestSurgeFitsTheBoardsArithmetic`), not a tuning - and **from the wave
+   after, the hill walks faster** the same way (`SiegeSurge.Stride`, 4/6/8%... to 5x, at most 6x),
+   so no capped wave is the last that ever matters. The pace reads the ceiling off the tuning
+   (`HealthCeilingWave`) and is exactly one on every other lane. Cards are never the lever. Every
+   figure is in `config/shuffle`; pinned both sides (`TheDeepSurgeAgreesWithTheOfflineMirror`,
+   `content.py`). **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
    kept as a typed read for the readers that only ever meant the Infinite lane, and `Tune` and the
    validator read the ramp.
 59d. **A card is a row of code and never content** (20): fifty-two of them in four tiers, told
