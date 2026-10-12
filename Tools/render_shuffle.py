@@ -35,6 +35,8 @@ ART = REPO / "Assets" / "Game" / "Art"
 LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc"
 LAYOUT = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Layout" / "ShuffleHandLayout.cs"
 CATALOG = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Modes" / "Shuffle" / "ShuffleCard.cs"
+NOTES = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Modes" / "Shuffle" / "ShuffleNotes.cs"
+TUNING = REPO / "firebase" / "seed" / "shuffle.json"
 
 W, H = K.W, K.H
 
@@ -73,6 +75,32 @@ def layout():
 def catalog():
     rows = re.findall(r'new ShuffleCard\("([a-z_]+)",\s*ShuffleTier\.(\w+)', CATALOG.read_text(encoding="utf-8"))
     return {cid: tier for cid, tier in rows}
+
+
+def figures():
+    """
+    Each card's figures as players are dealt them: the published tuning
+    (`firebase/seed/shuffle.json`, MODES.md 59l) over the catalog's own, so a retuned per cent is
+    measured at the width it prints.
+    """
+    found = {cid: (int(m), int(e)) for cid, m, e in re.findall(
+        r'new ShuffleCard\("([a-z_]+)",\s*ShuffleTier\.\w+,\s*ShuffleEffect\.\w+,\s*(\d+),\s*(\d+)',
+        CATALOG.read_text(encoding="utf-8"))}
+    if TUNING.exists():
+        for row in json.loads(TUNING.read_text(encoding="utf-8")).get("cards", []):
+            found[row["id"]] = (int(row["magnitude"]), int(row["extent"]))
+    return found
+
+
+def note_args(cid, figures):
+    """`ShuffleNotes.Args`, read off its table: what fills the card's note slots."""
+    text = NOTES.read_text(encoding="utf-8")
+    row = re.search(r'\{ "%s", new Note\(([^)]*)\) \}' % re.escape(cid), text)
+    if not row or cid not in figures:
+        return []
+    m, e = figures[cid]
+    of = {"M": m, "M10": m * 10, "E": e, "ME": m * e}
+    return [of[part.strip()] for part in row.group(1).split(",")[1:]]
 
 
 def table(lang):
@@ -123,7 +151,7 @@ def card(sheet, L, cid, tier, cx, top, strings, held):
                           K.GOLD, 3, False)
     print("  %-16s name %-34r %2d lines at %dpx (floor %d)" % (cid, name, lines, size, L["NameFloor"]))
 
-    note = strings.get("shuffle.%s.note" % cid, "")
+    note = strings.get("shuffle.%s.note" % cid, "").format(*note_args(cid, figures()))
     size, lines = wrapped(sheet, note, cx, top + L["NoteDown"] - L["NoteHeight"] / 2,
                           cw - L["Inset"] * 2, L["NoteHeight"], int(L["NoteSize"]), int(L["NoteFloor"]),
                           (255, 255, 255), 2, True)

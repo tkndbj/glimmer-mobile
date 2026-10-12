@@ -38,7 +38,7 @@ namespace GlimmerGrove.Cloud
     /// </summary>
     public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
                                                    Referral.IReferralBackend, IWalletFeed, Store.IDealBackend,
-                                                   Store.IDailyPassBackend
+                                                   Store.IDailyPassBackend, Shuffle.IShuffleTuningBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -608,6 +608,41 @@ namespace GlimmerGrove.Cloud
             catch (Exception e)
             {
                 return (Classify(e, "read deals"), none);
+            }
+        }
+
+        // ------------------------------------------------------------ shuffle tuning
+        /// <summary>
+        /// The published Shuffle tuning (MODES.md 59l): one get of <c>config/shuffle</c>, never a
+        /// listener, answering the body published for <paramref name="schema"/> (the field
+        /// <c>schema1</c>, ...). An absent document or field is "nothing published", which sends a
+        /// device back to its build's own figures; only a failure to reach the database fails.
+        /// The body is handed back as written - reading it is <c>ShuffleTuning.TryRead</c>'s, so
+        /// nothing here can half-understand it.
+        /// </summary>
+        public async Task<(CloudResult result, string body)> ReadShuffleTuningAsync(
+            int schema, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), null);
+
+            try
+            {
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("shuffle").GetSnapshotAsync(), ReadSeconds, cancellation);
+
+                if (!snapshot.Exists) return (CloudResult.Success, null);
+
+                var document = snapshot.ToDictionary();
+                string field = "schema" + schema.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                return document.TryGetValue(field, out object raw) && raw is string body
+                     ? (CloudResult.Success, body)
+                     : (CloudResult.Success, (string)null);
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read shuffle tuning"), null);
             }
         }
 

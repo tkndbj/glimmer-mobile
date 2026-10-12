@@ -376,6 +376,11 @@ namespace GlimmerGrove
             // ways and nothing here would notice if it were ever built for the ladder.
             Scenery.Plain(art, HubLane.Of(lane).Wall);
 
+            // **The Shuffle hub asks for the latest tuning** (MODES.md 59l) while the player reads
+            // it, at most once a quarter hour. Nothing here waits on the answer: BATTLE opens on
+            // whatever the device holds when it is tapped.
+            if (lane.Dealt) GlimmerGrove.Shuffle.ShuffleConfig.Refresh();
+
             return Column(safe, owner, lane, level, headerFoot, unlocked, wall, open);
         }
 

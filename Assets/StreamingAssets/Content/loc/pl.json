@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Strzały zadają o 15% więcej obrażeń."
+      "text": "Strzały zadają o {0}% więcej obrażeń."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Wieże strzelają o 12% szybciej."
+      "text": "Wieże strzelają o {0}% szybciej."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Strzały zużywają o 12% mniej paliwa."
+      "text": "Strzały zużywają o {0}% mniej paliwa."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Klejnoty dają o 20% więcej paliwa."
+      "text": "Klejnoty dają o {0}% więcej paliwa."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Wieże mają o 30% więcej życia."
+      "text": "Wieże mają o {0}% więcej życia."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Wieże mieszczą o 25% więcej paliwa."
+      "text": "Wieże mieszczą o {0}% więcej paliwa."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10% strzałów zadaje podwójne obrażenia."
+      "text": "{0}% strzałów zadaje podwójne obrażenia."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Przerwy między falami trwają o 20% dłużej."
+      "text": "Przerwy między falami trwają o {0}% dłużej."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Strzały trafiają też pobliskich najeźdźców za 40% obrażeń."
+      "text": "Strzały trafiają też pobliskich najeźdźców za {0}% obrażeń."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Strzały przeskakują na 1 kolejnego najeźdźcę za 50% obrażeń."
+      "text": "Strzały przeskakują na 1 kolejnego najeźdźcę za {0}% obrażeń."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Strzały spowalniają najeźdźców o 30%."
+      "text": "Strzały spowalniają najeźdźców o {0}%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12% strzałów ogłusza najeźdźcę na pół sekundy."
+      "text": "{0}% strzałów ogłusza najeźdźcę na pół sekundy."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Naładowane strzały zadają o 50% więcej obrażeń, a wieże mieszczą o 1 więcej."
+      "text": "Naładowane strzały zadają o {0}% więcej obrażeń, a wieże mieszczą o 1 więcej."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Każda nowa fala daje wszystkim wieżom 30% paliwa."
+      "text": "Każda nowa fala daje wszystkim wieżom {0}% paliwa."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Najeźdźcy idą o 15% wolniej."
+      "text": "Najeźdźcy idą o {0}% wolniej."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Strzały zadają o 50% więcej obrażeń osiłkom i opancerzonym najeźdźcom."
+      "text": "Strzały zadają o {0}% więcej obrażeń osiłkom i opancerzonym najeźdźcom."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35% najeźdźców, którzy dotrą do twoich wież, zostaje odepchniętych."
+      "text": "{0}% najeźdźców, którzy dotrą do twoich wież, zostaje odepchniętych."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Strzały od razu zabijają najeźdźców poniżej 15% życia."
+      "text": "Strzały od razu zabijają najeźdźców poniżej {0}% życia."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25% strzałów trafia drugi raz za połowę obrażeń."
+      "text": "{0}% strzałów trafia drugi raz za połowę obrażeń."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6% strzałów przeklina najeźdźcę: przez 3 sekundy dostaje o 20% więcej obrażeń."
+      "text": "{0}% strzałów przeklina najeźdźcę: przez 3 sekundy dostaje o 20% więcej obrażeń."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Strzały zadają o 40% więcej obrażeń, a wieże strzelają o 25% szybciej."
+      "text": "Strzały zadają o {0}% więcej obrażeń, a wieże strzelają o {1}% szybciej."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Wieże poniżej 30% życia zadają o 60% więcej obrażeń i strzelają o 60% szybciej."
+      "text": "Wieże poniżej {0}% życia zadają o {1}% więcej obrażeń i strzelają o {1}% szybciej."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Im dłużej wieże strzelają, tym szybciej strzelają, do 150%."
+      "text": "Im dłużej wieże strzelają, tym szybciej strzelają, do {0}%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Co 15 zabójstw bomba atomowa zabiera wszystkim najeźdźcom 30% życia."
+      "text": "Co 15 zabójstw bomba atomowa zabiera wszystkim najeźdźcom {0}% życia."
     },
     {
       "key": "shuffle.death_ray.name",

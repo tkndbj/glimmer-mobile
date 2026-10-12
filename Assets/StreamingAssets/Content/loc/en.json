@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Shots deal 15% more damage."
+      "text": "Shots deal {0}% more damage."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Turrets shoot 12% faster."
+      "text": "Turrets shoot {0}% faster."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Shots use 12% less fuel."
+      "text": "Shots use {0}% less fuel."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Gems give 20% more fuel."
+      "text": "Gems give {0}% more fuel."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Turrets get 30% more health."
+      "text": "Turrets get {0}% more health."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Turrets hold 25% more fuel."
+      "text": "Turrets hold {0}% more fuel."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10% of shots deal double damage."
+      "text": "{0}% of shots deal double damage."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Breaks between waves last 20% longer."
+      "text": "Breaks between waves last {0}% longer."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Shots also hit nearby raiders for 40% damage."
+      "text": "Shots also hit nearby raiders for {0}% damage."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Shots jump to 1 more raider for 50% damage."
+      "text": "Shots jump to 1 more raider for {0}% damage."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Shots slow raiders by 30%."
+      "text": "Shots slow raiders by {0}%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12% of shots stun a raider for half a second."
+      "text": "{0}% of shots stun a raider for half a second."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Charged shots deal 50% more damage, and turrets store 1 more."
+      "text": "Charged shots deal {0}% more damage, and turrets store 1 more."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Each new wave gives every turret 30% fuel."
+      "text": "Each new wave gives every turret {0}% fuel."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Raiders walk 15% slower."
+      "text": "Raiders walk {0}% slower."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Shots deal 50% more damage to brutes and armoured raiders."
+      "text": "Shots deal {0}% more damage to brutes and armoured raiders."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35% of raiders that reach your turrets are pushed back."
+      "text": "{0}% of raiders that reach your turrets are pushed back."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Shots instantly kill raiders under 15% health."
+      "text": "Shots instantly kill raiders under {0}% health."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25% of shots hit a second time for half damage."
+      "text": "{0}% of shots hit a second time for half damage."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6% of shots curse a raider: it takes 20% more damage for 3 seconds."
+      "text": "{0}% of shots curse a raider: it takes 20% more damage for 3 seconds."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Shots deal 40% more damage and turrets shoot 25% faster."
+      "text": "Shots deal {0}% more damage and turrets shoot {1}% faster."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Turrets under 30% health deal 60% more damage and shoot 60% faster."
+      "text": "Turrets under {0}% health deal {1}% more damage and shoot {1}% faster."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Turrets shoot faster the longer they keep shooting, up to 150%."
+      "text": "Turrets shoot faster the longer they keep shooting, up to {0}%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Every 15 kills, a nuke takes 30% health from every raider."
+      "text": "Every 15 kills, a nuke takes {0}% health from every raider."
     },
     {
       "key": "shuffle.death_ray.name",

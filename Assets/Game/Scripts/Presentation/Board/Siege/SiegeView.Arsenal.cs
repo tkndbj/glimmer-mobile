@@ -670,7 +670,7 @@ namespace GlimmerGrove
             }
 
             float left = _board.VortexLeft;
-            float open = Mathf.Clamp01((SiegeArsenal.VortexFor - left) / .25f) * Mathf.Clamp01(left / .3f);
+            float open = Mathf.Clamp01((_board.Boosts.Arsenal.VortexFor - left) / .25f) * Mathf.Clamp01(left / .3f);
 
             _vortex.anchoredPosition = new Vector2(LaneX(_board.VortexLane), MarchY(_board.VortexMarch));
             _vortex.localScale = new Vector3(1f, .55f, 1f) * Mathf.Lerp(.2f, 1f, Ease.OutBack(open));

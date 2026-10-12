@@ -34,10 +34,21 @@ namespace GlimmerGrove.Shuffle
 
         public uint Seed { get; }
 
-        public ShuffleRun(uint seed)
+        /// <summary>
+        /// The figures this run deals and plays on: the snapshot taken when it opened (MODES.md
+        /// 59l), never re-read, so a tuning that arrives mid-run changes nothing until the next.
+        /// </summary>
+        public ShuffleTuning Tuning { get; }
+
+        /// <summary>A run on the shipped figures. What a fixture deals.</summary>
+        public ShuffleRun(uint seed) : this(seed, ShuffleTuning.Shipped) { }
+
+        /// <summary>A run on <paramref name="tuning"/> (the shipped figures for null).</summary>
+        public ShuffleRun(uint seed, ShuffleTuning tuning)
         {
             Seed = seed;
-            Build = new ShuffleBuild(seed);
+            Tuning = tuning ?? ShuffleTuning.Shipped;
+            Build = new ShuffleBuild(seed, Tuning.Arsenal);
         }
 
         /// <summary>Hands dealt so far.</summary>
@@ -79,7 +90,7 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public IReadOnlyList<ShuffleCard> Deal()
         {
-            var hand = ShuffleDeck.Deal(Build, _hands.Count + 1, Build.Boosts.Roll100);
+            var hand = ShuffleDeck.Deal(Build, _hands.Count + 1, Build.Boosts.Roll100, Tuning);
             _hands.Add(hand);
 
             Open = hand.Count > 0 ? hand : null;

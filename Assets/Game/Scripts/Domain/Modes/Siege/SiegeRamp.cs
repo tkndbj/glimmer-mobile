@@ -63,6 +63,14 @@ namespace GlimmerGrove.Modes
         public abstract bool SendsBosses { get; }
 
         /// <summary>
+        /// Which set of figures the ramp is answering with, for a memo of what it dealt
+        /// (<c>SiegeLayout.Generated</c>). A ramp whose figures never change answers nought for
+        /// the life of the process; the Shuffle lane's moves it each time a run is opened on a
+        /// different tuning (MODES.md 59l).
+        /// </summary>
+        public virtual int Edition => 0;
+
+        /// <summary>
         /// One number out of a seed and a coordinate: FNV-1a with two avalanche steps.
         ///
         /// <b>A hash rather than a stream</b>, deliberately: a stream would make wave forty depend

@@ -64,11 +64,23 @@ namespace GlimmerGrove.Shuffle
         /// none at all once everything is held to its most - the caller then deals nothing.
         /// </summary>
         public static List<ShuffleCard> Deal(ShuffleBuild build, int hand, Func<int> roll)
+            => Deal(build, hand, roll, ShuffleTuning.Shipped);
+
+        /// <summary>
+        /// Deals hand number <paramref name="hand"/> as <see cref="Deal(ShuffleBuild, int, Func{int})"/>
+        /// does, off <paramref name="tuning"/>'s tier tables, promises and cards (MODES.md 59l):
+        /// a run's snapshot, so a hand is dealt off the figures the run opened on.
+        /// <see cref="ShuffleTuning.Shipped"/> deals exactly what the shipped deck deals - the same
+        /// tables, the same card objects in the same order.
+        /// </summary>
+        public static List<ShuffleCard> Deal(ShuffleBuild build, int hand, Func<int> roll, ShuffleTuning tuning)
         {
             var dealt = new List<ShuffleCard>(HandSize);
             if (build == null || roll == null) return dealt;
 
-            var weights = WeightsFor(hand);
+            tuning = tuning ?? ShuffleTuning.Shipped;
+            var deck = tuning.Deck;
+            var weights = deck.TableFor(hand);
 
             for (int slot = 0; slot < HandSize; slot++)
             {
@@ -76,11 +88,11 @@ namespace GlimmerGrove.Shuffle
 
                 if (slot == 0 && hand > 0)
                 {
-                    if (hand % EpicPity == 0 && tier < ShuffleTier.Epic) tier = ShuffleTier.Epic;
-                    else if (hand % RarePity == 0 && tier < ShuffleTier.Rare) tier = ShuffleTier.Rare;
+                    if (hand % deck.EpicPity == 0 && tier < ShuffleTier.Epic) tier = ShuffleTier.Epic;
+                    else if (hand % deck.RarePity == 0 && tier < ShuffleTier.Rare) tier = ShuffleTier.Rare;
                 }
 
-                var card = Pick(build, dealt, tier, roll);
+                var card = Pick(tuning.Cards, build, dealt, tier, roll);
                 if (card == null) break;
 
                 dealt.Add(card);
@@ -112,32 +124,33 @@ namespace GlimmerGrove.Shuffle
         /// A card of <paramref name="tier"/> the build can take and the hand does not already hold,
         /// falling down a tier and then up one when that tier has nothing left.
         /// </summary>
-        static ShuffleCard Pick(ShuffleBuild build, List<ShuffleCard> hand, ShuffleTier tier, Func<int> roll)
+        static ShuffleCard Pick(IReadOnlyList<ShuffleCard> all, ShuffleBuild build, List<ShuffleCard> hand,
+                                ShuffleTier tier, Func<int> roll)
         {
             // Down first, because a lower tier always has more cards left; then up, because a
             // build that has taken every common and rare is a build late enough to be offered
             // the rest of the deck.
             for (int t = (int)tier; t >= 0; t--)
             {
-                var card = From(build, hand, (ShuffleTier)t, roll);
+                var card = From(all, build, hand, (ShuffleTier)t, roll);
                 if (card != null) return card;
             }
 
             for (int t = (int)tier + 1; t <= (int)ShuffleTier.Legendary; t++)
             {
-                var card = From(build, hand, (ShuffleTier)t, roll);
+                var card = From(all, build, hand, (ShuffleTier)t, roll);
                 if (card != null) return card;
             }
 
             return null;
         }
 
-        static ShuffleCard From(ShuffleBuild build, List<ShuffleCard> hand, ShuffleTier tier, Func<int> roll)
+        static ShuffleCard From(IReadOnlyList<ShuffleCard> all, ShuffleBuild build, List<ShuffleCard> hand,
+                                ShuffleTier tier, Func<int> roll)
         {
             var pool = new List<ShuffleCard>(16);
-            var all = ShuffleCards.All;
 
-            for (int i = 0; i < all.Length; i++)
+            for (int i = 0; i < all.Count; i++)
             {
                 var card = all[i];
                 if (card.Tier != tier || !build.Takeable(card)) continue;

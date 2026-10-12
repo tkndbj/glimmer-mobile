@@ -230,7 +230,7 @@ wire or rules mistake reaches live accounts.
 
 ### Modes — in `Assets/Game/MODES.md`
 
-**Invariants 20–26h, 28–36i, 37–43f and 59–59j live in `Assets/Game/MODES.md`** — entry tests, grading, fail
+**Invariants 20–26h, 28–36i, 37–43f and 59–59l live in `Assets/Game/MODES.md`** — entry tests, grading, fail
 states, the withdrawn and hidden modes, and all of Thornwatch (charms, bosses, turrets, utilities, the
 Infinite lane). **Read it before touching a mode, a board, difficulty or the siege.**
 
@@ -755,7 +755,7 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 and the turret discount where they are sold; `--contact`, `--lang`, `--measure` the same gate). Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
 **`--check` proves reproducibility, not quality.** Art tools pass with licensed packs absent (PNGs committed).
 
-**Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;
+**Server**: `node firebase/seed/seed-release.mjs --check`; `node firebase/seed/seed-shuffle.mjs --check` (MODES.md 59l); `npm --prefix firebase/functions run seed -- --check`;
 `Tools/make_name_blocklist.py --check`. Live e2e (differential on purpose — a stale function answers 200 with
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
 `ward-seats.mjs`, `keeper-spend.mjs`, `daily-pass.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and

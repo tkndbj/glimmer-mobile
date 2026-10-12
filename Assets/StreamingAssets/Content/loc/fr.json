@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Les tirs font 15 % de dégâts en plus."
+      "text": "Les tirs font {0} % de dégâts en plus."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Les tourelles tirent 12 % plus vite."
+      "text": "Les tourelles tirent {0} % plus vite."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Les tirs coûtent 12 % de carburant en moins."
+      "text": "Les tirs coûtent {0} % de carburant en moins."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Les gemmes donnent 20 % de carburant en plus."
+      "text": "Les gemmes donnent {0} % de carburant en plus."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Les tourelles ont 30 % de vie en plus."
+      "text": "Les tourelles ont {0} % de vie en plus."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Les tourelles stockent 25 % de carburant en plus."
+      "text": "Les tourelles stockent {0} % de carburant en plus."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10 % des tirs font double dégâts."
+      "text": "{0} % des tirs font double dégâts."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Les pauses entre les vagues durent 20 % plus longtemps."
+      "text": "Les pauses entre les vagues durent {0} % plus longtemps."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Les tirs touchent aussi les pillards proches pour 40 % des dégâts."
+      "text": "Les tirs touchent aussi les pillards proches pour {0} % des dégâts."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Les tirs rebondissent sur 1 pillard de plus pour 50 % des dégâts."
+      "text": "Les tirs rebondissent sur 1 pillard de plus pour {0} % des dégâts."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Les tirs ralentissent les pillards de 30 %."
+      "text": "Les tirs ralentissent les pillards de {0} %."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12 % des tirs étourdissent un pillard une demi-seconde."
+      "text": "{0} % des tirs étourdissent un pillard une demi-seconde."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Les tirs chargés font 50 % de dégâts en plus, et les tourelles en stockent 1 de plus."
+      "text": "Les tirs chargés font {0} % de dégâts en plus, et les tourelles en stockent 1 de plus."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Chaque nouvelle vague donne 30 % de carburant à toutes les tourelles."
+      "text": "Chaque nouvelle vague donne {0} % de carburant à toutes les tourelles."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Les pillards marchent 15 % moins vite."
+      "text": "Les pillards marchent {0} % moins vite."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Les tirs font 50 % de dégâts en plus aux brutes et aux pillards en armure."
+      "text": "Les tirs font {0} % de dégâts en plus aux brutes et aux pillards en armure."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35 % des pillards qui atteignent tes tourelles sont repoussés."
+      "text": "{0} % des pillards qui atteignent tes tourelles sont repoussés."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Les tirs achèvent net les pillards sous 15 % de vie."
+      "text": "Les tirs achèvent net les pillards sous {0} % de vie."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25 % des tirs frappent une 2e fois pour moitié moins de dégâts."
+      "text": "{0} % des tirs frappent une 2e fois pour moitié moins de dégâts."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6 % des tirs maudissent un pillard : il subit 20 % de dégâts en plus pendant 3 secondes."
+      "text": "{0} % des tirs maudissent un pillard : il subit 20 % de dégâts en plus pendant 3 secondes."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Les tirs font 40 % de dégâts en plus et les tourelles tirent 25 % plus vite."
+      "text": "Les tirs font {0} % de dégâts en plus et les tourelles tirent {1} % plus vite."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Sous 30 % de vie, les tourelles font 60 % de dégâts en plus et tirent 60 % plus vite."
+      "text": "Sous {0} % de vie, les tourelles font {1} % de dégâts en plus et tirent {1} % plus vite."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Plus les tourelles tirent longtemps, plus elles tirent vite, jusqu'à 150 %."
+      "text": "Plus les tourelles tirent longtemps, plus elles tirent vite, jusqu'à {0} %."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Tous les 15 pillards abattus, une bombe nucléaire retire 30 % de vie à tous les pillards."
+      "text": "Tous les 15 pillards abattus, une bombe nucléaire retire {0} % de vie à tous les pillards."
     },
     {
       "key": "shuffle.death_ray.name",

@@ -53,20 +53,63 @@ namespace GlimmerGrove
 
         protected override void Play()
         {
+            Arm();
             base.Play();
             Reseat();
         }
 
         protected override void Rewind()
         {
+            Arm();
             base.Rewind();
             Reseat();
         }
 
         public override void RetryAfterDefeat()
         {
+            Arm();
             base.RetryAfterDefeat();
             Reseat();
+        }
+
+        /// <summary>The figures the run being dealt plays on. See <see cref="Arm"/>.</summary>
+        ShuffleTuning _tuning;
+
+        /// <summary>
+        /// Takes the tuning this run will play on (MODES.md 59l) and hands the ramp its figures,
+        /// <b>before</b> the base deals the board - the board musters its first wave as it is
+        /// built, and a wave dealt off the last run's figures would be the wrong first wave.
+        ///
+        /// <para>
+        /// <b>A snapshot, read from memory and never waited for</b> (<see cref="ShuffleConfig.Current"/>):
+        /// the last good published tuning this device holds, else the build's own. Taken for
+        /// every deal - the first, a restart and a retry - because each is a new run, and never
+        /// again until the next, so a document that lands mid-run changes nothing in it.
+        /// Anything going wrong here plays the build's own figures rather than no run at all.
+        /// </para>
+        /// </summary>
+        void Arm()
+        {
+            try
+            {
+                _tuning = ShuffleConfig.Current;
+                RampOf()?.Use(_tuning.Ramp);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                _tuning = ShuffleTuning.Shipped;
+                RampOf()?.Use(ShuffleTuning.Shipped.Ramp);
+            }
+        }
+
+        /// <summary>This level's ramp, or null on a layout that has none.</summary>
+        ShuffleRamp RampOf()
+        {
+            if (!(Rules is SiegeRules siege)) return null;
+
+            var plan = siege.Layout;
+            return plan != null ? plan.Ramp as ShuffleRamp : null;
         }
 
         /// <summary>
@@ -82,7 +125,7 @@ namespace GlimmerGrove
             uint seed = Seed != 0u ? Seed : ShuffleRun.SeedNow();
             Seed = 0u;
 
-            _run = new ShuffleRun(seed);
+            _run = new ShuffleRun(seed, _tuning ?? ShuffleTuning.Shipped);
             board.Boosts = _run.Build.Boosts;
             board.Refit();
         }

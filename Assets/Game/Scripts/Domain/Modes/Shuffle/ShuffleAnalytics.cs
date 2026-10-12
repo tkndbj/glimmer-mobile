@@ -11,7 +11,9 @@ namespace GlimmerGrove.Shuffle
     /// fires, with the lane's own level id), because the question this lane raises is which
     /// cards carry a run and which never get taken - and that is a question about the build,
     /// which no other event knows. Card ids are permanent (<c>ShuffleCard.Id</c>), so a
-    /// dashboard reads the same card for the life of the lane.
+    /// dashboard reads the same card for the life of the lane. <b>The tuning's revision rides
+    /// along</b> (MODES.md 59l; nought is the build's own figures), so a dashboard can tell a run
+    /// played before a retune from one played after it.
     /// </summary>
     public static class ShuffleAnalytics
     {
@@ -36,7 +38,8 @@ namespace GlimmerGrove.Shuffle
                 "hands", run.Hands,
                 "cards", taken.Count,
                 "build", held.ToString(),
-                "seed", (long)run.Seed);
+                "seed", (long)run.Seed,
+                "tuning", run.Tuning.Revision);
         }
     }
 }

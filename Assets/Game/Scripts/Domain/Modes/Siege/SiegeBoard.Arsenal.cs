@@ -300,7 +300,7 @@ namespace GlimmerGrove.Modes
             int row = SiegeTuning.RowOf(target.March);
             _report.Volleys.Add(new SiegeVolley(SiegeVia.Quake, target.March, target.Column, 0, index));
 
-            if (target.Alive) target.Shove(SiegeArsenal.QuakeShove);
+            if (target.Alive) target.Shove(_boosts.Arsenal.QuakeShove);
 
             for (int i = 0; i < _raiders.Count; i++)
             {
@@ -308,7 +308,7 @@ namespace GlimmerGrove.Modes
                 if (r == target || !Touchable(r) || SiegeTuning.RowOf(r.March) != row) continue;
 
                 Splinter(ward, index, r, damage, SiegeVia.Quake, target.Id);
-                if (r.Alive) r.Shove(SiegeArsenal.QuakeShove);
+                if (r.Alive) r.Shove(_boosts.Arsenal.QuakeShove);
             }
         }
 
@@ -335,7 +335,7 @@ namespace GlimmerGrove.Modes
             _pools.Add(new Pool
             {
                 Lane = lane, Row = row, Ward = ward, Tenths = tenths,
-                Left = seconds, For = seconds, Tick = SiegeArsenal.ToxicTick,
+                Left = seconds, For = seconds, Tick = _boosts.Arsenal.ToxicTick,
             });
         }
 
@@ -370,22 +370,22 @@ namespace GlimmerGrove.Modes
             {
                 case 0:
                     if (target.Alive)
-                        target.Kindle(Share(damage, SiegeArsenal.WildBurnTenths),
-                                      SiegeArsenal.WildBurnFor, index);
+                        target.Kindle(Share(damage, _boosts.Arsenal.WildBurnTenths),
+                                      _boosts.Arsenal.WildBurnFor, index);
                     break;
 
                 case 1:
-                    Lay(target, index, SiegeArsenal.WildVenomTenths, SiegeArsenal.WildVenomFor);
+                    Lay(target, index, _boosts.Arsenal.WildVenomTenths, _boosts.Arsenal.WildVenomFor);
                     break;
 
                 case 2:
                     if (target.Alive)
-                        target.Freeze(SiegeArsenal.WildChillTenths, SiegeArsenal.WildChillFor);
+                        target.Freeze(_boosts.Arsenal.WildChillTenths, _boosts.Arsenal.WildChillFor);
                     break;
 
                 default:
-                    Arc(ward, index, target, Share(damage, SiegeArsenal.WildArcTenths),
-                        SiegeArsenal.WildArcHops, SiegeVia.Arc);
+                    Arc(ward, index, target, Share(damage, _boosts.Arsenal.WildArcTenths),
+                        _boosts.Arsenal.WildArcHops, SiegeVia.Arc);
                     break;
             }
         }
@@ -406,9 +406,9 @@ namespace GlimmerGrove.Modes
             {
                 _kills = 0;
                 _nukeFalling = true;
-                _nukeIn = SiegeArsenal.NukeFall;
+                _nukeIn = _boosts.Arsenal.NukeFall;
                 _report.Volleys.Add(new SiegeVolley(SiegeVia.Nuke, .5f, (SiegeTuning.Lanes - 1) * .5f,
-                                                    SiegeTuning.BlastRows, -1, SiegeArsenal.NukeFall));
+                                                    SiegeTuning.BlastRows, -1, _boosts.Arsenal.NukeFall));
             }
 
             if (fallen.Boss) return;
@@ -439,7 +439,7 @@ namespace GlimmerGrove.Modes
                 if (r == fallen || !Touchable(r) || !Within(r, lane, row, reach)) continue;
 
                 Hit(ward, r, damage, SiegeVia.Shatter, fallen.Id);
-                if (r.Alive) r.Freeze(SiegeArsenal.ShatterChillTenths, SiegeArsenal.ShatterChillFor);
+                if (r.Alive) r.Freeze(_boosts.Arsenal.ShatterChillTenths, _boosts.Arsenal.ShatterChillFor);
             }
         }
 
@@ -458,7 +458,7 @@ namespace GlimmerGrove.Modes
                 var r = _raiders[i];
                 if (r == fallen || !Touchable(r) || !Within(r, lane, row, reach)) continue;
 
-                r.Kindle(rate, SiegeArsenal.WildfireFor, from);
+                r.Kindle(rate, _boosts.Arsenal.WildfireFor, from);
                 caught = true;
             }
 
@@ -489,8 +489,8 @@ namespace GlimmerGrove.Modes
             if (_boosts.TeslaTenths <= 0 || _boosts.TeslaArcs <= 0) { _tesla = 0f; return; }
 
             _tesla += dt;
-            if (_tesla < SiegeArsenal.TeslaEvery) return;
-            _tesla -= SiegeArsenal.TeslaEvery;
+            if (_tesla < _boosts.Arsenal.TeslaEvery) return;
+            _tesla -= _boosts.Arsenal.TeslaEvery;
 
             for (int w = 0; w < _wards.Length; w++)
             {
@@ -508,8 +508,8 @@ namespace GlimmerGrove.Modes
                     {
                         var r = _raiders[i];
                         if (!Touchable(r) || _struck.Contains(r.Id)) continue;
-                        if (r.March < SiegeArsenal.TeslaFloor) continue;
-                        if (Math.Abs(r.Lane + r.Drift - post) > SiegeArsenal.TeslaSpan) continue;
+                        if (r.March < _boosts.Arsenal.TeslaFloor) continue;
+                        if (Math.Abs(r.Lane + r.Drift - post) > _boosts.Arsenal.TeslaSpan) continue;
                         if (best == null || r.March > best.March) best = r;
                     }
 
@@ -532,7 +532,7 @@ namespace GlimmerGrove.Modes
 
                 if (pool.Tick <= 0f)
                 {
-                    pool.Tick += SiegeArsenal.ToxicTick;
+                    pool.Tick += _boosts.Arsenal.ToxicTick;
 
                     for (int i = 0; i < _raiders.Count; i++)
                     {
@@ -571,8 +571,8 @@ namespace GlimmerGrove.Modes
 
                     Hit(-1, r, _boosts.PlainShot(_boosts.MeteorTenths, r.Kind), SiegeVia.Meteor, -1);
                     if (r.Alive)
-                        r.Kindle(_boosts.PlainShot(SiegeArsenal.MeteorBurnTenths, r.Kind),
-                                 SiegeArsenal.MeteorBurnFor, -1);
+                        r.Kindle(_boosts.PlainShot(_boosts.Arsenal.MeteorBurnTenths, r.Kind),
+                                 _boosts.Arsenal.MeteorBurnFor, -1);
                 }
 
                 return;
@@ -588,9 +588,9 @@ namespace GlimmerGrove.Modes
 
             _meteorClock = 0f;
             _meteorFalling = true;
-            _meteorIn = SiegeArsenal.MeteorFall;
+            _meteorIn = _boosts.Arsenal.MeteorFall;
             _report.Volleys.Add(new SiegeVolley(SiegeVia.Meteor, (_meteorRow + .5f) / SiegeTuning.BlastRows,
-                                                _meteorLane, 1, -1, SiegeArsenal.MeteorFall));
+                                                _meteorLane, 1, -1, _boosts.Arsenal.MeteorFall));
         }
 
         /// <summary>
@@ -606,7 +606,7 @@ namespace GlimmerGrove.Modes
                 _vortexTick -= dt;
 
                 bool bite = _vortexTick <= 0f;
-                if (bite) _vortexTick += SiegeArsenal.VortexTick;
+                if (bite) _vortexTick += _boosts.Arsenal.VortexTick;
 
                 int row = SiegeTuning.RowOf(_vortexMarch);
                 int lane = (int)Math.Floor(_vortexLane + .5f);
@@ -616,10 +616,10 @@ namespace GlimmerGrove.Modes
                     var r = _raiders[i];
                     if (!Touchable(r) || r.Boss || !Within(r, lane, row, 1)) continue;
 
-                    float gather = Math.Min(1f, dt * SiegeArsenal.VortexGather);
+                    float gather = Math.Min(1f, dt * _boosts.Arsenal.VortexGather);
                     r.Drift += (_vortexLane - r.Lane - r.Drift) * gather;
                     if (r.March > _vortexMarch)
-                        r.March = Math.Max(_vortexMarch, r.March - dt * SiegeArsenal.VortexDrag);
+                        r.March = Math.Max(_vortexMarch, r.March - dt * _boosts.Arsenal.VortexDrag);
                     r.Freeze(9, .2f);
 
                     if (bite) Hit(-1, r, _boosts.PlainShot(_boosts.VortexTenths, r.Kind), SiegeVia.Vortex, -1);
@@ -638,8 +638,8 @@ namespace GlimmerGrove.Modes
             if (!Thickest(out int at, out int band)) return;
 
             _vortexClock = 0f;
-            _vortexLeft = SiegeArsenal.VortexFor;
-            _vortexTick = SiegeArsenal.VortexTick;
+            _vortexLeft = _boosts.Arsenal.VortexFor;
+            _vortexTick = _boosts.Arsenal.VortexTick;
             _vortexLane = at;
             _vortexMarch = (band + .5f) / SiegeTuning.BlastRows;
             _report.Volleys.Add(new SiegeVolley(SiegeVia.Vortex, _vortexMarch, _vortexLane, 1, -1));
@@ -656,17 +656,17 @@ namespace GlimmerGrove.Modes
                 _rayLeft -= dt;
                 _rayTick -= dt;
 
-                float swept = 1f - Math.Max(0f, _rayLeft) / SiegeArsenal.RayFor;
+                float swept = 1f - Math.Max(0f, _rayLeft) / _boosts.Arsenal.RayFor;
                 _rayLane = -.5f + swept * SiegeTuning.Lanes;
 
                 if (_rayTick > 0f) return;
-                _rayTick += SiegeArsenal.RayTick;
+                _rayTick += _boosts.Arsenal.RayTick;
 
                 for (int i = 0; i < _raiders.Count; i++)
                 {
                     var r = _raiders[i];
                     if (!Touchable(r)) continue;
-                    if (Math.Abs(r.Lane + r.Drift - _rayLane) > SiegeArsenal.RayWidth * .5f) continue;
+                    if (Math.Abs(r.Lane + r.Drift - _rayLane) > _boosts.Arsenal.RayWidth * .5f) continue;
 
                     Hit(-1, r, _boosts.PlainShot(_boosts.RayTenths, r.Kind), SiegeVia.Ray, -1);
                 }
@@ -684,7 +684,7 @@ namespace GlimmerGrove.Modes
             if (Any(null) == null) return;
 
             _rayClock = 0f;
-            _rayLeft = SiegeArsenal.RayFor;
+            _rayLeft = _boosts.Arsenal.RayFor;
             _rayTick = 0f;
             _rayLane = -.5f;
             _report.Volleys.Add(new SiegeVolley(SiegeVia.Ray, .5f, _rayLane, 0, -1));

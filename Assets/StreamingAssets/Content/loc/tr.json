@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Kurşunlar %15 daha fazla hasar verir."
+      "text": "Kurşunlar %{0} daha fazla hasar verir."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Kuleler %12 daha hızlı ateş eder."
+      "text": "Kuleler %{0} daha hızlı ateş eder."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Kurşunlar %12 daha az yakıt harcar."
+      "text": "Kurşunlar %{0} daha az yakıt harcar."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Mücevherler %20 daha fazla yakıt verir."
+      "text": "Mücevherler %{0} daha fazla yakıt verir."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Kulelerin canı %30 artar."
+      "text": "Kulelerin canı %{0} artar."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Kuleler %25 daha fazla yakıt alır."
+      "text": "Kuleler %{0} daha fazla yakıt alır."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "Kurşunların %10'u iki kat hasar verir."
+      "text": "Kurşunların %{0}'u iki kat hasar verir."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Aşamalar arasındaki mola %20 daha uzun sürer."
+      "text": "Aşamalar arasındaki mola %{0} daha uzun sürer."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Kurşunlar yakındaki akıncılara da %40 hasar verir."
+      "text": "Kurşunlar yakındaki akıncılara da %{0} hasar verir."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Kurşunlar 1 akıncıya daha sıçrar ve %50 hasar verir."
+      "text": "Kurşunlar 1 akıncıya daha sıçrar ve %{0} hasar verir."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Kurşunlar akıncıları %30 yavaşlatır."
+      "text": "Kurşunlar akıncıları %{0} yavaşlatır."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "Kurşunların %12'si akıncıyı yarım saniye sersemletir."
+      "text": "Kurşunların %{0}'si akıncıyı yarım saniye sersemletir."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Şarjlı kurşunlar %50 daha fazla hasar verir ve kuleler 1 şarj fazla biriktirir."
+      "text": "Şarjlı kurşunlar %{0} daha fazla hasar verir ve kuleler 1 şarj fazla biriktirir."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Her yeni aşamada tüm kulelere %30 yakıt gelir."
+      "text": "Her yeni aşamada tüm kulelere %{0} yakıt gelir."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Akıncılar %15 daha yavaş yürür."
+      "text": "Akıncılar %{0} daha yavaş yürür."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Kurşunlar devlere ve zırhlı akıncılara %50 daha fazla hasar verir."
+      "text": "Kurşunlar devlere ve zırhlı akıncılara %{0} daha fazla hasar verir."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "Kulelerine ulaşan akıncıların %35'i geri itilir."
+      "text": "Kulelerine ulaşan akıncıların %{0}'i geri itilir."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Kurşunlar canı %15'in altındaki akıncıları anında öldürür."
+      "text": "Kurşunlar canı %{0}'in altındaki akıncıları anında öldürür."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "Kurşunların %25'i ikinci kez yarım hasarla vurur."
+      "text": "Kurşunların %{0}'i ikinci kez yarım hasarla vurur."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "Kurşunların %6'sı akıncıyı lanetler: 3 saniye %20 daha fazla hasar alır."
+      "text": "Kurşunların %{0}'sı akıncıyı lanetler: 3 saniye %20 daha fazla hasar alır."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Kurşunlar %40 daha fazla hasar verir, kuleler %25 daha hızlı ateş eder."
+      "text": "Kurşunlar %{0} daha fazla hasar verir, kuleler %{1} daha hızlı ateş eder."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Canı %30'un altındaki kuleler %60 daha sert ve %60 daha hızlı ateş eder."
+      "text": "Canı %{0}'un altındaki kuleler %{1} daha sert ve %{1} daha hızlı ateş eder."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Kuleler ateş ettikçe hızlanır, en fazla %150'ye kadar."
+      "text": "Kuleler ateş ettikçe hızlanır, en fazla %{0}'ye kadar."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Her 15 öldürmede bir nükleer bomba tüm akıncıların canının %30'unu alır."
+      "text": "Her 15 öldürmede bir nükleer bomba tüm akıncıların canının %{0}'unu alır."
     },
     {
       "key": "shuffle.death_ray.name",

@@ -163,6 +163,11 @@ namespace GlimmerGrove
             Social.GroveBoard.Attach();
             Referral.ReferralLedger.Attach();
 
+            // The Shuffle tuning's launch read (MODES.md 59l): once, after the first settled
+            // sync, so the hub's first visit already holds the latest figures. Beside play,
+            // never in its way: a run opens on whatever the device holds at that moment.
+            GlimmerGrove.Shuffle.ShuffleConfig.Attach();
+
             // Hears wins from the start, so the first one of the session can answer a deal
             // (invariant 60c).
             DealMoment.Hook();

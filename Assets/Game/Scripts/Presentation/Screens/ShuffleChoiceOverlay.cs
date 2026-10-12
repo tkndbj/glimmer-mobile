@@ -158,7 +158,9 @@ namespace GlimmerGrove
             UIKit.Shrinkable(name, L.NameFloor);
             name.raycastTarget = false;
 
-            var note = UIKit.Titled("Note", t, Loc.Get(card.NoteKey), L.NoteSize,
+            // Filled from the card on the table, which is the run's tuned card (MODES.md 59l), so
+            // a retuned figure is the figure printed. A note with no slot formats to itself.
+            var note = UIKit.Titled("Note", t, Loc.Format(card.NoteKey, ShuffleNotes.Args(card)), L.NoteSize,
                                     Color.white, TextAnchor.UpperCenter,
                                     new Vector2(L.CardWidth - L.Inset * 2f, L.NoteHeight),
                                     new Vector2(.5f, .5f), new Vector2(0f, top - L.NoteDown), 2f, 0f,

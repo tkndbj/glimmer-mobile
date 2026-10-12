@@ -46,6 +46,15 @@ namespace GlimmerGrove.Modes
         /// <summary>A live build, rolling its chances off <paramref name="seed"/>.</summary>
         public SiegeBoosts(uint seed) : this(seed, false) { }
 
+        /// <summary>
+        /// A live build whose arsenal runs on <paramref name="arsenal"/> (the Shuffle tuning's
+        /// snapshot for this run, MODES.md 59l), or on the shipped figures for null.
+        /// </summary>
+        public SiegeBoosts(uint seed, SiegeArsenalTuning arsenal) : this(seed, false)
+        {
+            Arsenal = arsenal ?? SiegeArsenalTuning.Shipped;
+        }
+
         SiegeBoosts(uint seed, bool frozen)
         {
             _frozen = frozen;
@@ -54,6 +63,13 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Whether this is the plain line - the one every chapter plays.</summary>
         public bool IsIdentity => _frozen;
+
+        /// <summary>
+        /// The clocks and distances the arsenal runs on for this build. Fixed for the life of the
+        /// object - a run's tuning is a snapshot (59l) - and never reached on the plain line, which
+        /// carries the shipped figures only so the question always has an answer.
+        /// </summary>
+        public SiegeArsenalTuning Arsenal { get; } = SiegeArsenalTuning.Shipped;
 
         // ------------------------------------------------------------------ the bolt
         /// <summary>What a bolt is worth, per cent of the plain one. A hundred is the plain bolt.</summary>

@@ -1242,12 +1242,43 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `endlessBest`, which every shipped client reads as the Infinite lane's and `endlessXp` pays for.
    It pays nothing (19l), bounded by the one `MAX_WAVE`; held by `ShuffleBoardTests` and the
    `shuffle best` cases in `functions/test/grove.mjs`.
+59l. **The lane's figures are tunable without a build, and a run plays the figures it opened on**
+   (2026-10-11, the owner: "fully config driven ... a bad config cannot affect shuffle"). What
+   moves: the ramp (`ShuffleRampTuning`), the deck's tables, heat and promises
+   (`ShuffleDeckTuning`), every card's magnitude, extent, most and whether it is dealt, and the
+   arsenal's clocks (`SiegeArsenalTuning`, carried on `SiegeBoosts.Arsenal`, behind the arsenal's
+   identity return, so no chapter or Infinite board can reach it). **`ShuffleTuning.Shipped` is the
+   constants themselves** (same card objects, arrays and floats), and revision 1 of the published
+   file must equal it (`ShuffleTuningTests`). **A document is read whole or refused whole**
+   (`ShuffleTuning.TryRead` over `StrictJson`, never `JsonUtility`, which reads an absent figure as
+   nought): every figure stated and inside its range, strict for the publisher (unknown key, unknown,
+   retired or missing card refused), lenient on the device (a newer build's keys and cards ignored).
+   **A figure a card's note says in words is fixed** (`ShuffleNotes`: a per cent is a `{n}` slot
+   filled from the run's card in all nine languages; a count, a time, an ordinal or "half" is not
+   tunable, because the sentence around it changes with the number in Polish or Arabic). For the
+   same reason a hand's size and how often one is owed (`track.shuffle.point2`) are not in the
+   document, nor the star waves (they pay). **Read, never waited for** (`ShuffleConfig`): one get of
+   `config/shuffle` (field `schema1`, the file verbatim) after the first settled sync and on drawing
+   the Shuffle hub, at most every fifteen minutes, never a listener; the last good body is cached on
+   the device (`glimmer.shuffle.tuning`, re-checked on load) so offline plays the last tuning read,
+   and a first launch offline plays `Shipped`. A refused document changes nothing
+   (`shuffle_tuning_refused`); **deleting the document is the stop** (devices drop their cache).
+   **The snapshot is taken as BATTLE deals the board** (`ShuffleScreen.Arm`, before the base builds
+   it, because the board musters wave one as it is built): `ShuffleRamp.Use` moves its `Edition`, and
+   `SiegeLayout` re-deals a memoised wave of another edition. Analytics: `shuffle_ended.tuning`.
+   **Publishing**: edit `firebase/seed/shuffle.json`, raise `revision`, `node
+   firebase/seed/seed-shuffle.mjs --check`, then without; the tool runs the game's own strict reader
+   (`ShuffleTuningTests.ThePublishedFileIsAccepted...`) before it writes, refuses a revision not
+   above the live one, and reads the document back. A new meaning is `schema2` beside `schema1`.
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the
 site that reads it (an attack card: `SiegeBoard.Arsenal`, a `SiegeVia`, its drawing in
 `SiegeView.Arsenal`, and a row in `EveryAttackCardIsSeenOnTheBoard`), `shuffle.<id>.name` and `.note` in all nine tables, and
-`python Tools/make_shuffle_art.py` (then the Editor's sync). **Retuning the ramp**: the constants on
+`python Tools/make_shuffle_art.py` (then the Editor's sync); the new card reaches a device's tuning at its
+shipped figures (a device keeps a card the document leaves out), and the strict reader then wants
+its row in `firebase/seed/shuffle.json`. **Retuning live** is 59l (the file and `seed-shuffle.mjs`, no
+build). **Retuning what a build ships**: the constants on
 `ShuffleRamp` and their mirror in `Tools/verify/siege.py` (`shuffle_*`), and the inline pin in
 `ShuffleTests.TheRampAgreesWithTheOfflineMirror` re-read off `Tools/chapters/s13_shufflewatch.py`.
 

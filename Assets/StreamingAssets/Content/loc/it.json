@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "I colpi fanno il 15% di danni in più."
+      "text": "I colpi fanno il {0}% di danni in più."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Le torrette sparano il 12% più veloce."
+      "text": "Le torrette sparano il {0}% più veloce."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "I colpi consumano il 12% di carburante in meno."
+      "text": "I colpi consumano il {0}% di carburante in meno."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Le gemme danno il 20% di carburante in più."
+      "text": "Le gemme danno il {0}% di carburante in più."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Le torrette hanno il 30% di vita in più."
+      "text": "Le torrette hanno il {0}% di vita in più."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Le torrette contengono il 25% di carburante in più."
+      "text": "Le torrette contengono il {0}% di carburante in più."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "Il 10% dei colpi fa danni doppi."
+      "text": "Il {0}% dei colpi fa danni doppi."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Le pause tra le ondate durano il 20% in più."
+      "text": "Le pause tra le ondate durano il {0}% in più."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "I colpi colpiscono anche i predoni vicini con il 40% dei danni."
+      "text": "I colpi colpiscono anche i predoni vicini con il {0}% dei danni."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "I colpi saltano su 1 predone in più con il 50% dei danni."
+      "text": "I colpi saltano su 1 predone in più con il {0}% dei danni."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "I colpi rallentano i predoni del 30%."
+      "text": "I colpi rallentano i predoni del {0}%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "Il 12% dei colpi stordisce un predone per mezzo secondo."
+      "text": "Il {0}% dei colpi stordisce un predone per mezzo secondo."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "I colpi carichi fanno il 50% di danni in più e le torrette ne tengono 1 in più."
+      "text": "I colpi carichi fanno il {0}% di danni in più e le torrette ne tengono 1 in più."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Ogni nuova ondata dà il 30% di carburante a tutte le torrette."
+      "text": "Ogni nuova ondata dà il {0}% di carburante a tutte le torrette."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "I predoni camminano il 15% più lenti."
+      "text": "I predoni camminano il {0}% più lenti."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "I colpi fanno il 50% di danni in più a bruti e predoni corazzati."
+      "text": "I colpi fanno il {0}% di danni in più a bruti e predoni corazzati."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "Il 35% dei predoni che raggiungono le tue torrette viene respinto."
+      "text": "Il {0}% dei predoni che raggiungono le tue torrette viene respinto."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "I colpi uccidono subito i predoni sotto il 15% di vita."
+      "text": "I colpi uccidono subito i predoni sotto il {0}% di vita."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "Il 25% dei colpi colpisce una seconda volta con metà danni."
+      "text": "Il {0}% dei colpi colpisce una seconda volta con metà danni."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "Il 6% dei colpi maledice un predone: subisce il 20% di danni in più per 3 secondi."
+      "text": "Il {0}% dei colpi maledice un predone: subisce il 20% di danni in più per 3 secondi."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "I colpi fanno il 40% di danni in più e le torrette sparano il 25% più veloce."
+      "text": "I colpi fanno il {0}% di danni in più e le torrette sparano il {1}% più veloce."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Le torrette sotto il 30% di vita fanno il 60% di danni in più e sparano il 60% più veloce."
+      "text": "Le torrette sotto il {0}% di vita fanno il {1}% di danni in più e sparano il {1}% più veloce."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Più a lungo sparano, più le torrette accelerano, fino al 150%."
+      "text": "Più a lungo sparano, più le torrette accelerano, fino al {0}%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Ogni 15 uccisioni, una bomba nucleare toglie il 30% di vita a tutti i predoni."
+      "text": "Ogni 15 uccisioni, una bomba nucleare toglie il {0}% di vita a tutti i predoni."
     },
     {
       "key": "shuffle.death_ray.name",

@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Schüsse machen 15% mehr Schaden."
+      "text": "Schüsse machen {0}% mehr Schaden."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "Türme schießen 12% schneller."
+      "text": "Türme schießen {0}% schneller."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Schüsse verbrauchen 12% weniger Treibstoff."
+      "text": "Schüsse verbrauchen {0}% weniger Treibstoff."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "Juwelen geben 20% mehr Treibstoff."
+      "text": "Juwelen geben {0}% mehr Treibstoff."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "Türme haben 30% mehr Leben."
+      "text": "Türme haben {0}% mehr Leben."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "Türme fassen 25% mehr Treibstoff."
+      "text": "Türme fassen {0}% mehr Treibstoff."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10% der Schüsse machen doppelten Schaden."
+      "text": "{0}% der Schüsse machen doppelten Schaden."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "Pausen zwischen Wellen dauern 20% länger."
+      "text": "Pausen zwischen Wellen dauern {0}% länger."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Schüsse treffen auch Plünderer in der Nähe mit 40% Schaden."
+      "text": "Schüsse treffen auch Plünderer in der Nähe mit {0}% Schaden."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Schüsse springen auf 1 weiteren Plünderer über, mit 50% Schaden."
+      "text": "Schüsse springen auf 1 weiteren Plünderer über, mit {0}% Schaden."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Schüsse bremsen Plünderer um 30%."
+      "text": "Schüsse bremsen Plünderer um {0}%."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12% der Schüsse betäuben einen Plünderer eine halbe Sekunde."
+      "text": "{0}% der Schüsse betäuben einen Plünderer eine halbe Sekunde."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Geladene Schüsse machen 50% mehr Schaden, und Türme speichern 1 mehr."
+      "text": "Geladene Schüsse machen {0}% mehr Schaden, und Türme speichern 1 mehr."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Jede neue Welle gibt allen Türmen 30% Treibstoff."
+      "text": "Jede neue Welle gibt allen Türmen {0}% Treibstoff."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Plünderer laufen 15% langsamer."
+      "text": "Plünderer laufen {0}% langsamer."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Schüsse machen 50% mehr Schaden an Schlägern und gepanzerten Plünderern."
+      "text": "Schüsse machen {0}% mehr Schaden an Schlägern und gepanzerten Plünderern."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35% der Plünderer, die deine Türme erreichen, werden zurückgestoßen."
+      "text": "{0}% der Plünderer, die deine Türme erreichen, werden zurückgestoßen."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Schüsse töten Plünderer unter 15% Leben sofort."
+      "text": "Schüsse töten Plünderer unter {0}% Leben sofort."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25% der Schüsse treffen ein zweites Mal mit halbem Schaden."
+      "text": "{0}% der Schüsse treffen ein zweites Mal mit halbem Schaden."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6% der Schüsse verfluchen einen Plünderer: Er nimmt 3 Sekunden lang 20% mehr Schaden."
+      "text": "{0}% der Schüsse verfluchen einen Plünderer: Er nimmt 3 Sekunden lang 20% mehr Schaden."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Schüsse machen 40% mehr Schaden und Türme schießen 25% schneller."
+      "text": "Schüsse machen {0}% mehr Schaden und Türme schießen {1}% schneller."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Türme unter 30% Leben machen 60% mehr Schaden und schießen 60% schneller."
+      "text": "Türme unter {0}% Leben machen {1}% mehr Schaden und schießen {1}% schneller."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Türme schießen schneller, je länger sie feuern, bis zu 150%."
+      "text": "Türme schießen schneller, je länger sie feuern, bis zu {0}%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "Alle 15 Abschüsse nimmt eine Atombombe allen Plünderern 30% Leben."
+      "text": "Alle 15 Abschüsse nimmt eine Atombombe allen Plünderern {0}% Leben."
     },
     {
       "key": "shuffle.death_ray.name",

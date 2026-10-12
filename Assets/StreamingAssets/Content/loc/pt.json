@@ -8051,7 +8051,7 @@
     },
     {
       "key": "shuffle.heavy_bolts.note",
-      "text": "Os tiros causam 15% mais dano."
+      "text": "Os tiros causam {0}% mais dano."
     },
     {
       "key": "shuffle.quick_barrels.name",
@@ -8059,7 +8059,7 @@
     },
     {
       "key": "shuffle.quick_barrels.note",
-      "text": "As torres atiram 12% mais rápido."
+      "text": "As torres atiram {0}% mais rápido."
     },
     {
       "key": "shuffle.lean_burn.name",
@@ -8067,7 +8067,7 @@
     },
     {
       "key": "shuffle.lean_burn.note",
-      "text": "Os tiros gastam 12% menos combustível."
+      "text": "Os tiros gastam {0}% menos combustível."
     },
     {
       "key": "shuffle.rich_gems.name",
@@ -8075,7 +8075,7 @@
     },
     {
       "key": "shuffle.rich_gems.note",
-      "text": "As gemas dão 20% mais combustível."
+      "text": "As gemas dão {0}% mais combustível."
     },
     {
       "key": "shuffle.iron_posts.name",
@@ -8083,7 +8083,7 @@
     },
     {
       "key": "shuffle.iron_posts.note",
-      "text": "As torres têm 30% mais vida."
+      "text": "As torres têm {0}% mais vida."
     },
     {
       "key": "shuffle.wide_tubes.name",
@@ -8091,7 +8091,7 @@
     },
     {
       "key": "shuffle.wide_tubes.note",
-      "text": "As torres guardam 25% mais combustível."
+      "text": "As torres guardam {0}% mais combustível."
     },
     {
       "key": "shuffle.brace.name",
@@ -8115,7 +8115,7 @@
     },
     {
       "key": "shuffle.keen_eyes.note",
-      "text": "10% dos tiros causam o dobro de dano."
+      "text": "{0}% dos tiros causam o dobro de dano."
     },
     {
       "key": "shuffle.long_rest.name",
@@ -8123,7 +8123,7 @@
     },
     {
       "key": "shuffle.long_rest.note",
-      "text": "As pausas entre ondas duram 20% mais."
+      "text": "As pausas entre ondas duram {0}% mais."
     },
     {
       "key": "shuffle.splash_shot.name",
@@ -8131,7 +8131,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Os tiros também atingem invasores próximos com 40% de dano."
+      "text": "Os tiros também atingem invasores próximos com {0}% de dano."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8139,7 +8139,7 @@
     },
     {
       "key": "shuffle.chain_arc.note",
-      "text": "Os tiros saltam para mais 1 invasor com 50% de dano."
+      "text": "Os tiros saltam para mais 1 invasor com {0}% de dano."
     },
     {
       "key": "shuffle.pierce_rounds.name",
@@ -8155,7 +8155,7 @@
     },
     {
       "key": "shuffle.frostbite.note",
-      "text": "Os tiros deixam os invasores 30% mais lentos."
+      "text": "Os tiros deixam os invasores {0}% mais lentos."
     },
     {
       "key": "shuffle.kindling.name",
@@ -8171,7 +8171,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "12% dos tiros atordoam um invasor por meio segundo."
+      "text": "{0}% dos tiros atordoam um invasor por meio segundo."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8187,7 +8187,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Os tiros carregados causam 50% mais dano e as torres guardam mais 1."
+      "text": "Os tiros carregados causam {0}% mais dano e as torres guardam mais 1."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8203,7 +8203,7 @@
     },
     {
       "key": "shuffle.rally_cry.note",
-      "text": "Cada nova onda dá 30% de combustível a todas as torres."
+      "text": "Cada nova onda dá {0}% de combustível a todas as torres."
     },
     {
       "key": "shuffle.vampire_posts.name",
@@ -8219,7 +8219,7 @@
     },
     {
       "key": "shuffle.slow_march.note",
-      "text": "Os invasores andam 15% mais devagar."
+      "text": "Os invasores andam {0}% mais devagar."
     },
     {
       "key": "shuffle.giant_slayer.name",
@@ -8227,7 +8227,7 @@
     },
     {
       "key": "shuffle.giant_slayer.note",
-      "text": "Os tiros causam 50% mais dano a brutos e invasores com armadura."
+      "text": "Os tiros causam {0}% mais dano a brutos e invasores com armadura."
     },
     {
       "key": "shuffle.second_wind.name",
@@ -8251,7 +8251,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "35% dos invasores que chegam às suas torres são empurrados para trás."
+      "text": "{0}% dos invasores que chegam às suas torres são empurrados para trás."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8259,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Os tiros matam na hora invasores com menos de 15% de vida."
+      "text": "Os tiros matam na hora invasores com menos de {0}% de vida."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8267,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "25% dos tiros acertam de novo com metade do dano."
+      "text": "{0}% dos tiros acertam de novo com metade do dano."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8291,7 +8291,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "6% dos tiros amaldiçoam um invasor: ele sofre 20% mais dano por 3 segundos."
+      "text": "{0}% dos tiros amaldiçoam um invasor: ele sofre 20% mais dano por 3 segundos."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8315,7 +8315,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Os tiros causam 40% mais dano e as torres atiram 25% mais rápido."
+      "text": "Os tiros causam {0}% mais dano e as torres atiram {1}% mais rápido."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8331,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Torres com menos de 30% de vida causam 60% mais dano e atiram 60% mais rápido."
+      "text": "Torres com menos de {0}% de vida causam {1}% mais dano e atiram {1}% mais rápido."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8387,7 +8387,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "As torres atiram mais rápido quanto mais tempo atiram, até 150%."
+      "text": "As torres atiram mais rápido quanto mais tempo atiram, até {0}%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8427,7 +8427,7 @@
     },
     {
       "key": "shuffle.doomsday.note",
-      "text": "A cada 15 abates, uma bomba nuclear tira 30% da vida de todos os invasores."
+      "text": "A cada 15 abates, uma bomba nuclear tira {0}% da vida de todos os invasores."
     },
     {
       "key": "shuffle.death_ray.name",

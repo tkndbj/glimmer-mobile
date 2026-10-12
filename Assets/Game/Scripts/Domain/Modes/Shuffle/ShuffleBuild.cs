@@ -28,9 +28,15 @@ namespace GlimmerGrove.Shuffle
         /// <summary>What the board reads. One object for the life of the run.</summary>
         public SiegeBoosts Boosts { get; }
 
-        public ShuffleBuild(uint seed)
+        public ShuffleBuild(uint seed) : this(seed, null) { }
+
+        /// <summary>
+        /// A build whose arsenal runs on <paramref name="arsenal"/> - the run's tuning snapshot
+        /// (MODES.md 59l) - or on the shipped figures for null.
+        /// </summary>
+        public ShuffleBuild(uint seed, SiegeArsenalTuning arsenal)
         {
-            Boosts = new SiegeBoosts(seed);
+            Boosts = new SiegeBoosts(seed, arsenal);
         }
 
         /// <summary>Every card taken, in the order it was taken, copies repeated.</summary>

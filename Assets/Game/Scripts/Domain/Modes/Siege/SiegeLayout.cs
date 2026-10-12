@@ -581,13 +581,19 @@ namespace GlimmerGrove.Modes
         /// holds is a pure function of the wave number and the layout's own seed, so a race can
         /// only ever recompute the same answer. It exists because a muster asks four questions
         /// about the same wave in the same frame, not because dealing one is expensive.
+        /// <b>Keyed on the ramp's <see cref="SiegeRamp.Edition"/> as well</b>, because the Shuffle
+        /// lane's ramp is retuned between runs (MODES.md 59l) and a wave memoised under the last
+        /// run's figures is not this run's wave. Every other ramp's edition is a constant nought.
         /// </summary>
         SiegeSpec[] Generated(int wave)
         {
-            if (_dealt == null || _dealtWave != wave)
+            int edition = Ramp.Edition;
+
+            if (_dealt == null || _dealtWave != wave || _dealtEdition != edition)
             {
                 _dealt = Ramp.WaveAt(wave + 1, Seed);
                 _dealtWave = wave;
+                _dealtEdition = edition;
             }
 
             return _dealt;
@@ -596,6 +602,8 @@ namespace GlimmerGrove.Modes
         SiegeSpec[] _dealt;
 
         int _dealtWave = -1;
+
+        int _dealtEdition;
 
         /// <summary>Parses one authored wave into the raiders it names.</summary>
         static SiegeSpec[] Read(string wave, SiegeKind[] bosses)
