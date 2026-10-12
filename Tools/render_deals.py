@@ -106,14 +106,14 @@ def welcome_row(sheet, cx, cy, product, store, state):
     col = lx + ROW_W - COLUMN_W / 2
     # `DealCard.SetAmountGlyph`: the `Shop/gems_1` gem then the figure, centred as one block
     # (`UIKit.CentreGlyph`, gap `UIKit.GlyphGap`).
-    said = compact(product["gems"])
+    said = f"{product['gems']:,}"
     gem, art, gap = 84.0, 162.0, GLYPH_GAP           # DealCard.OpenGemSize / OpenGemArt
     wide = K.font(AMOUNT_SIZE).getlength(said)
     left = col - (gem + gap + wide) / 2
     ay = cy - AMOUNT_Y - round(AMOUNT_SIZE * .044)
     K.paste(sheet, K.fit(Image.open(UI / "Shop" / "gems_1.png").convert("RGBA"), (art, art)), left + gem / 2, cy - AMOUNT_Y)
     K.text(sheet, said, left + gem + gap + wide / 2, ay, AMOUNT_SIZE, fill=K.BLOOM, outline=5)
-    K.text(sheet, txt("ui.shop.plus_coins").replace("{0}", compact(product["credits"])).upper(),
+    K.text(sheet, txt("ui.shop.plus_coins").replace("{0}", f"{product['credits']:,}").upper(),
            col, cy - UNIT_Y, 34, fill=K.GOLD, outline=3)
 
     K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), col, cy - TIMER_Y)

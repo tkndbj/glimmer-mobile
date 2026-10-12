@@ -435,7 +435,7 @@ def pass_card(sheet, x, top, shelf, p):
 
     # `DealValue.PassPercent`: everything the pass pays, at the base packs' prices, over its price.
     pct = pass_value(p)
-    card(sheet, x, top, shelf, "pass_gems" if gems else "pass_coins", compact(amount), sub, price, None,
+    card(sheet, x, top, shelf, "pass_gems" if gems else "pass_coins", f"{amount:,}", sub, price, None,
          bonus=txt("ui.deal.value").replace("{0}", str(pct)).upper() if pct else None, live=live,
          face_skin=face, amount_fill=K.BLOOM if gems else K.GOLD, sub_fill=(255, 255, 255),
          suffix=("x%d" % days, (0x7B, 0xD8, 0x6A)))           # Pal.Mint
@@ -1044,7 +1044,7 @@ def screen(shelf, offline=False):
         # A bundle's line is its coins, not a unit: `ui.shop.plus_coins` over `Compact.Number`.
         bundle = bool(p.get("gems")) and bool(p.get("credits"))
         if bundle:
-            unit = "+ %s coins" % compact(p["credits"])
+            unit = "+ %s coins" % f"{p['credits']:,}"
         badge = seal_words(p.get("badge"))
 
         # `ProductCard.PaintRibbon` shows one at 5% or better; the figure is arithmetic over

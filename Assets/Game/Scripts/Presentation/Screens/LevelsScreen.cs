@@ -1146,10 +1146,10 @@ namespace GlimmerGrove
                 _banner = Scenery.TitleRibbon(Safe, title.Upper(),
                                               new Vector2(BannerWidth, BannerHeight),
                                               new Vector2(.5f, 1f), new Vector2(0f, BannerY), 40,
-                                              26f, chevrons ? NameWidth : OpenNameWidth);
+                                              chevrons ? NameFloor : OpenNameFloor, chevrons ? NameWidth : OpenNameWidth);
 
                 // Narrowed to `NameWidth` rather than to the ribbon's own width, because the two
-                // chapter chevrons sit inside it. The hand-rolled shrink loop that used to be here
+                // chapter chevrons sit inside it (see `NameFloor`). The hand-rolled shrink loop that used to be here
                 // went with the ribbon: `Scenery.TitleRibbon` makes the caption `Shrinkable`, which
                 // is uGUI's own best fit, and setting `fontSize` under best fit does nothing.
                 _name = _banner.transform.Find("Title").GetComponent<Text>();
@@ -1314,7 +1314,18 @@ namespace GlimmerGrove
         /// ink everything carved into it is written in, and how much of it the name may use.
         /// </summary>
         const float BannerWidth = 476f, BannerHeight = 138f, BannerY = -142f;
-        const float ChevronX = 180f, NameWidth = 246f, OpenNameWidth = 340f;
+        const float ChevronX = 180f, NameWidth = 300f, OpenNameWidth = 340f;
+
+        /// <summary>
+        /// The smallest the name may be set, and the room it gets between the chevrons. The
+        /// room is the gap between the chevrons' inner ink (a 64pt "&lt;" is 23 units wide,
+        /// centred on <see cref="ChevronX"/>, so its ink starts ~168 out) less a few units of air
+        /// each side; it was the box edge (246), which left the longest translations - "COURONNE
+        /// DE POUSSIÈRE", "TORRE DAS ENGRENAGENS" - needing about 18pt against a floor of 26, so
+        /// they overflowed onto the chevrons. At 300 every shipped name fits at 22 or above; the
+        /// floor of 20 is the margin, not a size anything is expected to reach.
+        /// </summary>
+        const int NameFloor = 20, OpenNameFloor = 26;
 
         /// <summary>
         /// The two corner keys - back on the left, "i" on the right - as one set of numbers,

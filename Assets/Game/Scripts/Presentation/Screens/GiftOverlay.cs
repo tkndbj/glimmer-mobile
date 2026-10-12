@@ -42,15 +42,24 @@ namespace GlimmerGrove
         /// <summary>The window: the victory panel's width, on <see cref="VictoryFrame"/>.</summary>
         const float PanelW = VictoryFrame.PanelWidth;
 
-        /// <summary>Down from the panel's top edge: the present, the sentence under it, the cards.</summary>
+        /// <summary>
+        /// Down from the panel's top edge: the present's centre, the sentence's centre, and the
+        /// cards' <em>top edge</em>. The present spans 60-280 and the sentence 285-395, so the cards
+        /// start below 395. <c>UIKit.Img</c> pivots at centre (44d), so a card is placed by its
+        /// centre, <c>CardsTop + CardH / 2</c>: it was placed at <c>CardsTop</c> itself, which put
+        /// its top 150 units higher than this said, over the sentence.
+        /// </summary>
         const float ArtY = 170f, ArtSize = 220f;
         const float BodyY = 340f, BodyW = 740f, BodyH = 110f;
-        const float CardsTop = 410f, CardSize = 300f, CardGap = 40f;
+        const float CardsTop = 430f, CardW = 300f, CardH = 250f, CardGap = 40f;
+
+        /// <summary>Down from a card's top edge: the mark, the amount and its name (centres).</summary>
+        const float IconY = 62f, AmountY = 160f, KindY = 214f, LineW = 280f;
 
         /// <summary>Up from the panel's foot: the key, in the deals sheet's band.</summary>
-        const float KeyW = 440f, KeyH = 120f, KeyY = 85f, FootH = 170f, Tail = 40f;
+        const float KeyW = 440f, KeyH = 120f, KeyY = 85f, FootH = 170f, Tail = 30f;
 
-        const float PanelH = CardsTop + CardSize + Tail + FootH;
+        const float PanelH = CardsTop + CardH + Tail + FootH;
 
         readonly List<AdminGift> _gifts = new List<AdminGift>();
 
@@ -107,8 +116,10 @@ namespace GlimmerGrove
                                 new Vector2(.5f, 1f), new Vector2(0f, -ArtY));
             art.preserveAspect = true;
             art.raycastTarget = false;
+            // Breathing starts once the pop lands (below), never here: `Breathe` breathes around
+            // the scale it finds, and here that is nought - it wrote nought every frame against
+            // the pop, and whichever tween ran last that frame won, so the present came and went.
             art.transform.localScale = Vector3.zero;
-            Tween.Breathe(art.transform, .04f, 2.4f);
             _chromeGroups.Add((RectTransform)art.transform);
 
             var body = UIKit.Titled("Body", Panel, Loc.Get("ui.gift.body"), 34, Pal.Cream, TextAnchor.MiddleCenter,
@@ -119,15 +130,15 @@ namespace GlimmerGrove
 
             // ------------------------------------------------------------ the cards
             int cards = (credits > 0 ? 1 : 0) + (gems > 0 ? 1 : 0);
-            float step = CardSize + CardGap;
+            float step = CardW + CardGap;
             float x = cards == 2 ? -step * .5f : 0f;
 
             if (credits > 0)
             {
-                _creditCard = BuildCard(ChestDropKind.Credits, credits, new Vector2(x, -CardsTop));
+                _creditCard = BuildCard(ChestDropKind.Credits, credits, new Vector2(x, -CardsTop - CardH * .5f));
                 x += step;
             }
-            if (gems > 0) _gemCard = BuildCard(ChestDropKind.Gems, gems, new Vector2(x, -CardsTop));
+            if (gems > 0) _gemCard = BuildCard(ChestDropKind.Gems, gems, new Vector2(x, -CardsTop - CardH * .5f));
 
             // ------------------------------------------------------------ the key
             // The money face rather than the kit's green: the window is green, and a green key on
@@ -148,7 +159,8 @@ namespace GlimmerGrove
             cue.Then(.10f, () =>
             {
                 if (!art) return;
-                Tween.Pop(art.transform, 0f, .6f);
+                Tween.Pop(art.transform, 0f, .6f)
+                     .OnDone(() => { if (art) Tween.Breathe(art.transform, .04f, 2.4f); });
                 Audio.Sfx("chime2", .45f, 1.06f);
             });
             cue.Then(.26f, () =>
@@ -173,37 +185,37 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ one card
         /// <summary>
-        /// One prize, the ad offer's card (<c>AdOfferOverlay.BuildRewardCard</c>): a dark rounded
-        /// plate edged in the prize's colour, its mark, the amount and its name. Mirrored by
-        /// <c>Tools/render_gift.py</c>.
+        /// One prize standing on the window itself (the owner, 2026-10-11: no dark plate, no edge):
+        /// a soft glow in the prize's colour, its mark, the amount and its name, each line held to
+        /// one line inside the card. The card is a bare box, kept as the flight's source. Mirrored
+        /// by <c>Tools/render_gift.py</c>.
         /// </summary>
         RectTransform BuildCard(ChestDropKind kind, long amount, Vector2 pos)
         {
             var tint = RewardArt.Tint(kind, null);
 
-            var card = UIKit.Img("Card", Panel, Art.Round(26), new Color(.04f, .09f, .12f, .82f),
-                                 Vector2.one * CardSize, new Vector2(.5f, 1f), pos);
-            var rt = (RectTransform)card.transform;
+            var rt = UIKit.Box("Card", Panel, new Vector2(CardW, CardH), new Vector2(.5f, 1f), pos);
 
-            var edge = UIKit.Img("Edge", card.transform, Art.RoundOutline(26, 3f), Pal.A(tint, .55f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+            UIKit.Halo(rt, tint, CardW, .30f);
 
-            UIKit.Halo(card.transform, tint, CardSize * 1.1f, .30f);
-
-            var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(kind, null), Color.white,
-                                 new Vector2(176f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -68f));
+            var icon = UIKit.Img("Icon", rt, RewardArt.Icon(kind, null), Color.white,
+                                 new Vector2(176f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -IconY));
             icon.preserveAspect = true;
+            icon.raycastTarget = false;
             RewardArt.Glyph(icon, kind, 11f);
             Tween.Breathe(icon.transform, .05f, 2.2f);
 
-            var drop = new ChestDrop(kind, (int)Math.Min(amount, int.MaxValue));
-            UIKit.Titled("Amount", card.transform, RewardArt.Amount(drop), 52, Pal.Cream,
-                         TextAnchor.MiddleCenter, new Vector2(260f, 62f),
-                         new Vector2(.5f, 1f), new Vector2(0f, -166f), outline: 3f, shadow: 3f);
+            UIKit.OneLineLabel(
+                UIKit.Titled("Amount", rt, "+" + amount.ToString("N0"), 52, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(LineW, 62f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -AmountY), outline: 3f, shadow: 3f),
+                LineW, 52, 30);
 
-            UIKit.Titled("Kind", card.transform, RewardArt.Name(kind, null), 28, Pal.A(tint, .95f),
-                         TextAnchor.MiddleCenter, new Vector2(260f, 44f),
-                         new Vector2(.5f, 1f), new Vector2(0f, -218f), outline: 2f, shadow: 2f);
+            UIKit.OneLineLabel(
+                UIKit.Titled("Kind", rt, RewardArt.Name(kind, null), 28, Pal.A(tint, .95f),
+                             TextAnchor.MiddleCenter, new Vector2(LineW, 44f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -KindY), outline: 2f, shadow: 2f),
+                LineW, 28, 20);
 
             return rt;
         }

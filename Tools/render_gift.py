@@ -6,8 +6,8 @@
     python Tools/render_gift.py --lang tr               # another table's words
 
 A mirror, not a gate: every number here is `GiftOverlay`'s, and the two are kept in step by hand
-(44d). The frame is `VictoryFrame`'s (the constants `render_deals.py` mirrors); the cards are the
-ad offer's reward card (`AdOfferOverlay.BuildRewardCard`).
+(44d). The frame is `VictoryFrame`'s (the constants `render_deals.py` mirrors); the cards are
+`GiftOverlay.BuildCard`: no plate, a glow behind the mark, two one-line captions.
 """
 
 import argparse
@@ -27,9 +27,9 @@ UI = K.UI
 PANEL_W = 900.0                                   # VictoryFrame.PanelWidth
 ART_Y, ART = 170.0, 220.0
 BODY_Y, BODY_W, BODY_H = 340.0, 740.0, 110.0
-CARDS_TOP, CARD, CARD_GAP = 410.0, 300.0, 40.0
-KEY_W, KEY_H, KEY_Y, FOOT_H, TAIL = 440.0, 120.0, 85.0, 170.0, 40.0
-PANEL_H = CARDS_TOP + CARD + TAIL + FOOT_H
+CARDS_TOP, CARD_W, CARD_H, CARD_GAP = 430.0, 300.0, 250.0, 40.0   # CARDS_TOP is the card's top edge
+KEY_W, KEY_H, KEY_Y, FOOT_H, TAIL = 440.0, 120.0, 85.0, 170.0, 30.0
+PANEL_H = CARDS_TOP + CARD_H + TAIL + FOOT_H
 
 # VictoryFrame - the same constants `render_deals.py` mirrors.
 CREST_REACH = 202.0
@@ -37,10 +37,9 @@ PANEL_INK = (150, 184, 176)
 CROWN_Y, BANNER_Y, BANNER_W, BANNER_H = 114.0, -30.0, 566.0, 157.0
 WORD_LIFT, WORD_W, WORD_H = 34.0, 356.0, 74.0
 
-# AdOfferOverlay.BuildRewardCard: the plate, the mark, the amount, the name.
-CARD_INK, CARD_ALPHA = (10, 23, 31), .82
-ICON_W, ICON_H, ICON_Y = 176.0, 114.0, 68.0
-AMOUNT_Y, AMOUNT_SIZE, KIND_Y, KIND_SIZE = 166.0, 52, 218.0, 28
+# GiftOverlay.BuildCard: no plate, a glow, the mark, the amount, the name (centres from the card's top).
+ICON_W, ICON_H, ICON_Y = 176.0, 114.0, 62.0
+AMOUNT_Y, AMOUNT_SIZE, KIND_Y, KIND_SIZE, LINE_W = 160.0, 52, 214.0, 28, 280.0
 
 
 def locs(lang):
@@ -59,17 +58,15 @@ def compact(n):
 
 
 def card(sheet, cx, top, kind, amount, txt):
-    """One reward card centred on `cx` with its top edge at `top`."""
+    """One prize centred on `cx` with its top edge at `top` (the C# places it by its centre,
+    `CardsTop + CardH / 2`, because `UIKit.Img` pivots there)."""
     tint = K.GOLD if kind == "credits" else K.BLOOM
-    cy = top + CARD / 2
-    K.paste(sheet, K.glow(int(CARD * 1.1), 2.1, tint, .30), cx, cy)
-    K.paste(sheet, K.round_rect(CARD, CARD, 26, CARD_INK, CARD_ALPHA), cx, cy)
-    K.paste(sheet, K.round_rect(CARD, CARD, 26, tint, .55, width=3), cx, cy)
+    K.paste(sheet, K.glow(int(CARD_W), 2.1, tint, .30), cx, top + CARD_H / 2)
 
     icon = Image.open(UI / "Coin" / "f0.png" if kind == "credits" else UI / "ic_gem.png").convert("RGBA")
-    K.paste(sheet, K.fit(icon, (ICON_W, ICON_H)), cx, top + ICON_Y + ICON_H / 2)
-    K.text(sheet, "+" + compact(amount), cx, top + AMOUNT_Y + 31, AMOUNT_SIZE, outline=3)
-    K.text(sheet, txt("ui.reward." + kind), cx, top + KIND_Y + 22, KIND_SIZE, fill=tint, outline=2)
+    K.paste(sheet, K.fit(icon, (ICON_W, ICON_H)), cx, top + ICON_Y)
+    K.one_line(sheet, f"+{amount:,}", cx, top + AMOUNT_Y, LINE_W, AMOUNT_SIZE, 30, what="amount", outline=3)
+    K.one_line(sheet, txt("ui.reward." + kind), cx, top + KIND_Y, LINE_W, KIND_SIZE, 20, fill=tint, what="name", outline=2)
 
 
 def panel(credits, gems, txt):
@@ -109,7 +106,7 @@ def panel(credits, gems, txt):
     K.shrunk(block, txt("ui.gift.body"), bcx, top + BODY_Y, BODY_W, BODY_H, 34, 24, outline=3)
 
     kinds = [k for k, v in (("credits", credits), ("gems", gems)) if v > 0]
-    step = CARD + CARD_GAP
+    step = CARD_W + CARD_GAP
     x = bcx - step / 2 if len(kinds) == 2 else bcx
     for kind in kinds:
         card(block, x, top + CARDS_TOP, kind, credits if kind == "credits" else gems, txt)
