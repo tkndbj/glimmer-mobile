@@ -275,17 +275,20 @@ namespace GlimmerGrove
             // where lettering chosen to read on gold was being drawn on the darkest thing on
             // the card. The two faults were one fault: the box was sized against the sprite
             // rather than against the maroon field inside it.
+            // The limited deal's caption (`DealCard.BuildSeal`), at the owner's instruction on
+            // 2026-10-11: white over a dark outline, type at 30 in a box .70 by .62 of the seal, so
+            // "+26% EXTRA" and "1740% VALUE" read at a glance. See ProductCardBadges.CaptionSize.
             _sealText = UIKit.Shrinkable(
                 UIKit.Titled("ST", _seal.transform, string.Empty,
-                             Font(ProductCardBadges.TextSize, kh), Pal.Cream,
+                             Font(ProductCardBadges.CaptionSize, kh), Color.white,
                              TextAnchor.MiddleCenter,
-                             new Vector2(ProductCardBadges.TextWidth * kh,
-                                         ProductCardBadges.TextHeight * kv),
+                             new Vector2(ProductCardBadges.CaptionWidth * kh,
+                                         ProductCardBadges.CaptionHeight * kv),
                              new Vector2(.5f, .5f),
                              new Vector2(ProductCardBadges.TextShift * kh,
                                          ProductCardBadges.TextRise * kv),
-                             0f, 0f, wrap: true),
-                Font(ProductCardBadges.TextFloor, kh));
+                             3f, 2f, wrap: true),
+                Font(ProductCardBadges.CaptionFloor, kh));
         }
 
         /// <summary>
@@ -392,11 +395,11 @@ namespace GlimmerGrove
                 bool gemLed = product.Gems > 0;
                 bool bundle = product.Gems > 0 && product.Credits > 0;
 
-                _amount.text = Compact.Number(gemLed ? product.Gems : product.Credits);
+                _amount.text = (gemLed ? product.Gems : product.Credits).ToString("N0");
                 _amount.color = gemLed ? Pal.A(Pal.Bloom, 1f) : Pal.A(Pal.Gold, 1f);
 
                 _sub.text = bundle
-                    ? Loc.Format("ui.shop.plus_coins", Compact.Number(product.Credits))
+                    ? Loc.Format("ui.shop.plus_coins", product.Credits.ToString("N0"))
                     : Loc.Get(gemLed ? "ui.shop.gems" : "ui.shop.coins");
 
                 // A currency is always drawn in its own colour, and on a bundle this line is a
@@ -435,6 +438,13 @@ namespace GlimmerGrove
         /// deal's seal prints. The line under the amount is solid white, every state.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// A few units of air either side of the pass's "x" (the owner, 2026-10-11): a space set
+        /// small rather than a full one, so "500 x 7" reads as one figure. A rich-text size on a
+        /// plain space, because the face carries no thin-space glyph and a missing one draws as a box.
+        /// </summary>
+        const string Gap = "<size=14> </size>";
+
         void DrawPass(StoreProduct product, StoreOffer offer)
         {
             // One day's amount, then "x7" in green (the owner, 2026-10-11): the headline says the
@@ -443,8 +453,9 @@ namespace GlimmerGrove
             // switched off again by every other draw (44mc), so no other headline parses a tag.
             bool gems = product.Gems > 0;
             _amount.supportRichText = true;
-            _amount.text = Compact.Number(gems ? product.Gems : product.Credits) +
-                           "<color=#" + ColorUtility.ToHtmlStringRGB(Pal.Mint) + ">x" + product.PassDays + "</color>";
+            _amount.text = (gems ? product.Gems : product.Credits).ToString("N0") +
+                           "<color=#" + ColorUtility.ToHtmlStringRGB(Pal.Mint) + ">" +
+                           Gap + "x" + Gap + product.PassDays + "</color>";
             _amount.color = gems ? Pal.A(Pal.Bloom, 1f) : Pal.A(Pal.Gold, 1f);
             _sub.color = Color.white;
 
@@ -528,7 +539,7 @@ namespace GlimmerGrove
             _amount.text = StoreGoodKinds.IsXp(good.Kind)
                 ? Loc.Format("ui.shop.xp_boost_card", XpPercentOf(good.Kind), good.Amount)
                 : hours ? Loc.Format("ui.shop.boost_hours", good.Amount)
-                        : Compact.Number(good.Amount);
+                        : good.Amount.ToString("N0");
 
             switch (good.Kind)
             {
@@ -650,7 +661,7 @@ namespace GlimmerGrove
             _amount.text = offer.Kind == ChestDropKind.XpBoost
                 ? Loc.Format("ui.shop.xp_boost_card",
                              ProgressionRules.Table.XpBoost.WatchedPercent, offer.Amount)
-                : Compact.Number(offer.Amount);
+                : offer.Amount.ToString("N0");
             _amount.color = Pal.A(RewardArt.Tint(offer.Kind, null), 1f);
 
             // Blank for the XP boost, for the reason the gem-priced one above is: its headline

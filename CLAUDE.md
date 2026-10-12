@@ -593,10 +593,28 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    and `chapterScore`, held by `standingCases`); the handset folds its own save on every repaint, so
    the player's number moves the moment a run ends and the table only decides the shape of everybody
    else. Below `minimumSamples` finishers, or with no table at all, the map says **top 1%** (the owner's
-   rule). Drawn by `StandingReadout` under the back key on a laddered lane only, the star pill's own
-   furniture; a sync that finishes the chapter repaints it (`OnLearned`). The read is one document, on
+   rule). Drawn by `StandingReadout` under the back key on a laddered lane only: the shop deal card's
+   emerald plate, a gold trophy over the sentence (`ic_trophy_gold`, cut from the Layer Lab pack by
+   `make_standing_art.py --check`); a sync that finishes the chapter repaints it (`OnLearned`). The read is one document, on
    the map, at most once an hour (`GroveBoard.BeginStandingsRefresh`); nothing in the save, no rules
    release (`config/*` is already readable). `render_standing.py --measure` holds the sentences.
+
+### Admin gifts
+
+63. **A gift is currency the owner sends one account from the admin page, held on the wallet until
+   claimed, paid by `claimAwards` under `gift:{giftId}:{currency}` at the amount the wallet holds**
+   (10a; never the client's figure). `adminGiftPlayer` (`tekoworld.com/admin/users`, the deal admins'
+   gate) writes `wallet.gifts[giftId] = {credits, gems, atUnix}` - what is *still unpaid* - plus the
+   permanent record `players/{uid}/gifts/{giftId}` and `giftLog`, in one transaction; at most 20
+   waiting per account; immutable once sent (a client may already have claimed it locally). Every
+   wallet reply carries `gifts` (presence is the wheel's trick); nothing is in the save. The client
+   (`GiftLedger`) queues each currency through the ordinary award queue on Claim - spendable at once,
+   resubmitted until confirmed - and "claimed" is derived (a gift waits while a currency it carries has
+   no award queued); paying one currency zeroes it on the row, the row goes when both are paid, so the
+   queue and the list empty on the same reply. `GiftMoment` raises `GiftOverlay` on an idle hub after
+   the consent questions and before the deals popup, every waiting gift whenever one is new, once a
+   session; the back key defers and never loses. Held by `test/gifts.mjs`, `GiftTests` and the live
+   `admin-gift.mjs`; `render_gift.py` is the mirror.
 
 ### Art credits
 
@@ -741,7 +759,8 @@ and the turret discount where they are sold; `--contact`, `--lang`, `--measure` 
 `Tools/make_name_blocklist.py --check`. Live e2e (differential on purpose — a stale function answers 200 with
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
 `ward-seats.mjs`, `keeper-spend.mjs`, `daily-pass.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
-removes only those, preconditioned; players on a deals build can see them for the minute it runs).
+removes only those, preconditioned; players on a deals build can see them for the minute it runs),
+`admin-gift.mjs` (writes a gift onto its own new account's wallet with the owner token and claims it).
 
 **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, Test Runner (EditMode). Reload the
 domain before believing a failure after a play-mode session.

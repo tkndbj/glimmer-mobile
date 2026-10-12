@@ -36,7 +36,7 @@ namespace GlimmerGrove.Tests
         {
             float gap = ProductCardBadges.NeighbourRibbon - SealEdge;
 
-            Assert.GreaterOrEqual(gap, ProductCardBadges.Clearance,
+            Assert.GreaterOrEqual(gap, ProductCardBadges.NeighbourClearance,
                                   $"the badge reaches {SealEdge}, the next card's ribbon begins " +
                                   $"at {ProductCardBadges.NeighbourRibbon}");
         }
@@ -98,6 +98,23 @@ namespace GlimmerGrove.Tests
 
             Assert.LessOrEqual(corner, field,
                                $"the caption's corner reaches {corner} of a field {field} across");
+        }
+
+        /// <summary>
+        /// The shop card's caption - the limited deal's, larger than the field - never reaches past
+        /// the burst's points, so no corner of a long caption draws off the badge onto the plate.
+        /// </summary>
+        [Test]
+        public void TheCardCaptionStaysOnTheBurst()
+        {
+            float w = ProductCardBadges.CaptionWidth * .5f;
+            float h = ProductCardBadges.CaptionHeight * .5f;
+            float corner = (float)System.Math.Sqrt(w * w + h * h);
+
+            Assert.LessOrEqual(corner, ProductCardBadges.SealReach,
+                               $"the caption's corner reaches {corner} of a burst {ProductCardBadges.SealReach} across");
+            Assert.Greater(ProductCardBadges.CaptionSize, ProductCardBadges.TextSize,
+                           "the card's caption is drawn larger than the season page's");
         }
 
         /// <summary>

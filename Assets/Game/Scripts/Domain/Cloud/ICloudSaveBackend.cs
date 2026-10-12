@@ -213,6 +213,15 @@ namespace GlimmerGrove.Cloud
         public int Day;
     }
 
+    /// <summary>One admin gift as the wallet reply lists it: what is still unpaid, and when it was sent.</summary>
+    public sealed class CloudGiftRow
+    {
+        public string Id;
+        public long Credits;
+        public long Gems;
+        public long AtUnix;
+    }
+
     public sealed class CloudWalletState
     {
         public string Currency;
@@ -381,6 +390,20 @@ namespace GlimmerGrove.Cloud
         /// deployment that pays passes sends it, and until one has the shop offers no pass.
         /// </summary>
         public bool CarriesDailyPasses;
+
+        /// <summary>
+        /// The admin gifts waiting on this account (<c>gifts</c>, invariant 63): id, what is still
+        /// unpaid in each currency, and when it was sent. An account fact repeated on every row, for
+        /// <see cref="RevokedContainers"/>' reason. Folded in by <c>GiftLedger.ApplyServerState</c>.
+        /// </summary>
+        public List<CloudGiftRow> Gifts = new List<CloudGiftRow>();
+
+        /// <summary>
+        /// Whether the reply carried the list at all, for <see cref="CarriesDeals"/>' reason: an
+        /// account owed nothing answers an empty list, a deployment that predates gifts answers
+        /// nothing, and only the first may clear what this device was last told.
+        /// </summary>
+        public bool CarriesGifts;
 
         /// <summary>
         /// Whether the reply carried the lane's figure at all.

@@ -329,7 +329,7 @@ namespace GlimmerGrove.Store
 
                 // --- bundles -----------------------------------------------------------
                 new StoreProduct("gg_bundle_starter", StoreProductKind.NonConsumable, StoreShelf.Bundles,
-                                 7500, 500, 299, StoreBadge.Starter),
+                                 7500, 500, 199, StoreBadge.Starter),
                 new StoreProduct("gg_bundle_keeper", StoreProductKind.Consumable, StoreShelf.Bundles,
                                  12000, 700, 999, StoreBadge.None),
                 new StoreProduct("gg_bundle_grove", StoreProductKind.Consumable, StoreShelf.Bundles,

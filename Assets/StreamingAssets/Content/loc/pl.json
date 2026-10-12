@@ -3818,6 +3818,18 @@
       "text": "Koniec za {0}"
     },
     {
+      "key": "ui.gift.title",
+      "text": "Prezent!"
+    },
+    {
+      "key": "ui.gift.body",
+      "text": "Zespół Gemfire wysłał Ci prezent. Miłej zabawy!"
+    },
+    {
+      "key": "ui.gift.claim",
+      "text": "Odbierz"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Pierwsza warta"
     },

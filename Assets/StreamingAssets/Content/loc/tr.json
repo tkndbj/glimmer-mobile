@@ -3818,6 +3818,18 @@
       "text": "Bitişe {0}"
     },
     {
+      "key": "ui.gift.title",
+      "text": "Bir Hediye!"
+    },
+    {
+      "key": "ui.gift.body",
+      "text": "Gemfire ekibi sana bir hediye gönderdi. Keyfini çıkar!"
+    },
+    {
+      "key": "ui.gift.claim",
+      "text": "Al"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Birinci Nöbet"
     },

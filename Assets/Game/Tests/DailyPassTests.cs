@@ -193,8 +193,8 @@ namespace GlimmerGrove.Tests
             Assert.IsNotNull(starter);
 
             // 500 gems at 100 for $0.99 is $4.95; 22,500 coins at 7,500 for $1.99 is $5.97;
-            // $10.92 of packs for $2.99 is 365%, floored to ten.
-            Assert.AreEqual(360, DealValue.BundlePercent(starter, catalog));
+            // $10.92 of packs for $1.99 is 548%, floored to ten.
+            Assert.AreEqual(540, DealValue.BundlePercent(starter, catalog));
         }
 
         [Test]

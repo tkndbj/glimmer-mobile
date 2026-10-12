@@ -2081,6 +2081,26 @@ namespace GlimmerGrove.Cloud
                     }
                 }
 
+                // The admin gifts waiting (invariant 63), presence first for the same reason.
+                if (entry.TryGetValue("gifts", out object gifts) && gifts is IEnumerable<object> giftList)
+                {
+                    state.CarriesGifts = true;
+                    foreach (var giftElement in giftList)
+                    {
+                        if (!(giftElement is IDictionary<string, object> row)) continue;
+                        string id = row.TryGetValue("id", out object rawId) ? rawId as string : null;
+                        if (string.IsNullOrEmpty(id)) continue;
+
+                        state.Gifts.Add(new CloudGiftRow
+                        {
+                            Id = id,
+                            Credits = ReadLong(row, "credits"),
+                            Gems = ReadLong(row, "gems"),
+                            AtUnix = ReadLong(row, "atUnix"),
+                        });
+                    }
+                }
+
                 states.Add(state);
             }
 

@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The chapter standing, on the map under the back key (invariant 62): a trophy and one
-    /// sentence - "you are in the top N%" once every level of the chapter is cleared, and
-    /// "clear every level to see where you stand" until then.
+    /// The chapter standing, on the map under the back key (invariant 62): a gold trophy over one
+    /// sentence - "you are in the top N%" once every level of the chapter is cleared, and "clear
+    /// every level to see where you stand" until then.
     ///
     /// <para>
     /// <b>A readout, which is to say watched rather than drawn</b> - 44j's rule, for
@@ -23,9 +23,10 @@ namespace GlimmerGrove
     /// the moment the player is back on the map, with no server in the loop.
     /// </para>
     /// <para>
-    /// <b>The same furniture as the star count in the other corner</b>, and deliberately so: the
-    /// two are both readings of the chapter, one under each corner key, and a map with two
-    /// different kinds of pill on it would read as two decisions.
+    /// <b>The look</b> (the owner, 2026-10-11): the shop's limited-deal card - one flat emerald
+    /// box, <c>Hud/plate_flat</c> tinted <see cref="DealCard.Face"/> - with the trophy at the top
+    /// and the sentence under it. The trophy is Layer Lab's gold cup (<c>Tools/make_standing_art.py</c>),
+    /// not the HUD's flat glyph.
     /// </para>
     /// </summary>
     public sealed class StandingReadout : MonoBehaviour
@@ -66,33 +67,28 @@ namespace GlimmerGrove
         bool _hooked;
 
         /// <summary>
-        /// The block: the star pill's own plate and rim, a trophy at the left, and one wrapped
-        /// sentence beside it that shrinks to fit (<see cref="UIKit.Shrinkable"/>) - the
-        /// translations of the locked sentence are twice the length of the English one and a
-        /// caption that could grow is measured by <c>Tools/render_standing.py --measure</c>
-        /// (19n).
+        /// The block: the deal card's plate, the trophy centred at the top, and one wrapped
+        /// sentence centred under it that shrinks to fit (<see cref="UIKit.Shrinkable"/>) - the
+        /// translations of the locked sentence are twice the length of the English one, and a
+        /// caption that could grow is measured by <c>Tools/render_standing.py --measure</c> (19n).
         /// </summary>
         void Build(RectTransform parent, Vector2 anchor, Vector2 position)
         {
             _root = UIKit.Box("StandingReadout", parent, new Vector2(Width, Height), anchor, position);
 
-            var plate = UIKit.Img("Pill", _root, Art.Round(28), Plate);
+            var plate = UIKit.Img("Plate", _root, Art.S("Ui/" + Skins.PlateFlat), DealCard.Face);
             UIKit.StretchTo((RectTransform)plate.transform, 0, 0, 0, 0);
             plate.raycastTarget = false;
 
-            var edge = UIKit.Img("Edge", _root, Art.RoundOutline(28, 3f), Rim);
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
-            edge.raycastTarget = false;
+            var trophy = UIKit.Img("Trophy", _root, Art.S("Ui/ic_trophy_gold"), Color.white,
+                                   Vector2.one * TrophySize, new Vector2(.5f, 1f),
+                                   new Vector2(0f, -(PadTop + TrophySize * .5f)));
+            trophy.preserveAspect = true;
+            trophy.raycastTarget = false;
 
-            var icon = UIKit.Img("Icon", _root, Art.S("Ui/ic_trophy"), Pal.Cream,
-                                 Vector2.one * IconSize, new Vector2(0f, .5f),
-                                 new Vector2(Pad + IconSize * .5f, 0f));
-            icon.preserveAspect = true;
-            icon.raycastTarget = false;
-
-            _line = UIKit.Titled("Line", _root, string.Empty, FontSize, Pal.Cream, TextAnchor.MiddleLeft,
-                                 new Vector2(TextWidth, Height - Pad), new Vector2(0f, .5f),
-                                 new Vector2(TextLeft + TextWidth * .5f, 0f),
+            _line = UIKit.Titled("Line", _root, string.Empty, FontSize, Pal.Cream, TextAnchor.MiddleCenter,
+                                 new Vector2(TextWidth, TextHeight), new Vector2(.5f, 1f),
+                                 new Vector2(0f, -(PadTop + TrophySize + TrophyGap + TextHeight * .5f)),
                                  outline: 3f, shadow: 3f, wrap: true);
             UIKit.Shrinkable(_line, FontFloor);
             _line.raycastTarget = false;
@@ -150,17 +146,14 @@ namespace GlimmerGrove
         /// the map has to place against them: <c>UIKit.Box</c> always pivots at centre, so
         /// whoever seats this needs its size, and a typed copy would go on placing it against
         /// the size it used to be. Narrow enough (260) to stay clear of the plaque and the mode
-        /// switcher that share the header with it.
+        /// switcher that share the header with it; the height is the trophy over two lines, and
+        /// the map scrolls under it as it does under the rest of the chrome.
         /// </summary>
-        public const float Width = 260f, Height = 112f;
+        public const float Width = 260f, Height = 206f;
 
-        const float Pad = 14f, IconSize = 54f;
-        const float TextLeft = Pad + IconSize + 10f;
-        const float TextWidth = Width - TextLeft - Pad;
+        const float PadTop = 14f, PadSide = 14f, TrophySize = 96f, TrophyGap = 2f;
+        const float TextWidth = Width - PadSide * 2f;
+        const float TextHeight = Height - PadTop - TrophySize - TrophyGap - 10f;
         const int FontSize = 26, FontFloor = 16;
-
-        /// <summary>The star pill's plate and rim (<c>Scenery.Pill</c>), so the two corners match.</summary>
-        static readonly Color Plate = new Color(.06f, .12f, .17f, .72f);
-        static readonly Color Rim = new Color(1f, 1f, 1f, .13f);
     }
 }

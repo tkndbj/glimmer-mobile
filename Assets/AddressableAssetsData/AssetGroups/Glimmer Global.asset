@@ -8902,6 +8902,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_prism_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 367379badc00be5847a510c4c1506813
+    m_Address: Art/Ui/ic_trophy_gold
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 36753946afa207142828678c6d2e66d0
     m_Address: Art/Fx/Victory/f23
     m_ReadOnly: 0

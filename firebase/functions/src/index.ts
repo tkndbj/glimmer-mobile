@@ -13,6 +13,7 @@
  */
 
 import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldPath, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
@@ -57,7 +58,8 @@ import {
   saveRevision, withdrawCard,
 } from "./grove";
 import {
-  ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, nameKey, publishableName,
+  ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, isDenied, nameKey,
+  publishableName,
 } from "./names";
 import { loadNameConfig } from "./blocklist";
 import {
@@ -111,6 +113,11 @@ import {
   readHistoryCursor, usableDeals,
 } from "./deals";
 import type { DealClaim, ShopDeal } from "./deals";
+import {
+  GIFT_HISTORY_PAGE, GIFT_LOG, GIFT_MAX_CREDITS, GIFT_MAX_GEMS, GIFT_MAX_PENDING, GIFT_PATHS, GIFT_REASON,
+  createGift, giftRows, isGiftGrantId, judgeGiftClaim, parseGiftClaim, payGift, readGiftRequest, settlesGift,
+} from "./gifts";
+import type { GiftClaim, GiftReplyRow } from "./gifts";
 import {
   deriveEarned,
   loadProgressionConfig,
@@ -639,7 +646,8 @@ type CleanAward =
   | (CleanCommon & { kind: "endless"; claim: EndlessClaim })
   | (CleanCommon & { kind: "milestone"; claim: MilestoneClaim })
   | (CleanCommon & { kind: "welcome"; claim: WelcomeClaim })
-  | (CleanCommon & { kind: "deal"; claim: DealClaim });
+  | (CleanCommon & { kind: "deal"; claim: DealClaim })
+  | (CleanCommon & { kind: "gift"; claim: GiftClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -699,6 +707,18 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       if (!CURRENCIES.includes(deal.currency as CurrencyId)) { rejected.push(id); return []; }
 
       return [{ ...common, kind: "deal", claim: deal, currency: deal.currency as CurrencyId }];
+    }
+
+    // An admin gift (invariant 63): paid the amount the wallet holds for it, never the client's
+    // figure. No window - a gift waits until it is claimed - and nothing refused past the parse
+    // here; whether the wallet holds it is judged inside the transaction.
+    if (isGiftGrantId(id)) {
+      const gift = parseGiftClaim(id);
+      if (!gift) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(gift.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      return [{ ...common, kind: "gift", claim: gift, currency: gift.currency as CurrencyId }];
     }
 
     if (isStreakGrantId(id)) {
@@ -942,7 +962,13 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         continue;
       }
 
-      const table = award.kind === "mark" ? tasks
+      let amount = 0;
+      let detail: Record<string, unknown>;
+
+      // A gift needs no published table: what it pays is on the wallet this transaction already
+      // holds (invariant 63). Judged before the table check for exactly that reason.
+      const table = award.kind === "gift" ? {}
+                  : award.kind === "mark" ? tasks
                   : award.kind === "streak" ? ladder
                   : award.kind === "task" ? tasks
                   : award.kind === "challenge" ? challenges
@@ -956,10 +982,33 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         continue;
       }
 
-      let amount = 0;
-      let detail: Record<string, unknown>;
+      if (award.kind === "gift") {
+        // The amount is what the wallet still holds for this gift in this currency - the figure
+        // the admin page wrote, never the client's. Refused only for what will still be true
+        // tomorrow: a gift this wallet has never held, or one carrying none of the currency named.
+        // A gift already paid in this currency never reaches here: its grant record exists, and
+        // a recorded claim was confirmed above.
+        const verdict = judgeGiftClaim(state.gifts ?? {}, award.claim);
 
-      if (award.kind === "streak") {
+        if (verdict.kind === "refuse") {
+          logger.warn("refused an admin gift claim", { uid, id: award.id, why: verdict.why });
+          rejected.push(award.id);
+          continue;
+        }
+
+        // Zeroed on the pending row inside the same transaction that moves the money, so a paid
+        // currency and a waiting one cannot come apart; the row goes once both are paid. The
+        // permanent record under the player notes the moment, so the admin page can say when.
+        const settled = settlesGift(state.gifts ?? {}, award.claim.giftId, award.currency);
+        state.gifts = payGift(state.gifts ?? {}, award.claim.giftId, award.currency);
+        transaction.set(db.doc(GIFT_PATHS.history(uid, award.claim.giftId)), {
+          paid: { [award.currency]: FieldValue.serverTimestamp() },
+          ...(settled ? { claimedAt: FieldValue.serverTimestamp() } : {}),
+        }, { merge: true });
+
+        amount = verdict.amount;
+        detail = { giftId: award.claim.giftId };
+      } else if (award.kind === "streak") {
         // The whole of the security, in one call. A night may only climb as fast as the
         // calendar climbs; see `advances`. Refused rather than left pending, because a
         // claim that fails this will fail it for ever and a pending claim is resubmitted
@@ -2522,16 +2571,22 @@ const adminCallOptions = { region: REGION, cors: ADMIN_ORIGINS, enforceAppCheck:
 /** Audit trail of every deal made or ended, and by whom. Server-only: the rules deny it to every client. */
 const DEAL_LOG = "dealLog";
 
-/** The caller's address, after proving it is one of the owner's (`isDealAdmin`). */
-function requireDealAdmin(request: CallableRequest): string {
+/**
+ * The caller's address, after proving it is one of the owner's (`isDealAdmin`). One gate for
+ * every admin callable - the deals and the players' pages alike - so there is one list of
+ * addresses to keep.
+ */
+function requireAdmin(request: CallableRequest): string {
   if (!request.auth) throw new HttpsError("unauthenticated", "sign in with Google first");
   const token = request.auth.token as unknown as Record<string, unknown>;
   if (!isDealAdmin(token)) {
-    logger.warn("refused a shop deal admin call", { uid: request.auth.uid, email: token.email ?? null });
-    throw new HttpsError("permission-denied", "this account may not manage shop deals");
+    logger.warn("refused an admin call", { uid: request.auth.uid, email: token.email ?? null });
+    throw new HttpsError("permission-denied", "this account may not use the admin pages");
   }
   return String(token.email).toLowerCase();
 }
+
+const requireDealAdmin = requireAdmin;
 
 interface DealsReply {
   nowUnix: number;
@@ -2745,4 +2800,375 @@ export const adminEndDeal = onCall(adminCallOptions, async (request): Promise<De
 
   logger.info("a shop deal was ended", { by: email, deal: ended.deal });
   return { ...dealsReply(ended.deals, nowUnix), deal: ended.deal };
+});
+
+// ------------------------------------------------------------- players (admin)
+/**
+ * The admin pages' view of one account (invariant 63): what the owner needs to find a player and
+ * decide a gift. Read with the server's own credentials from the save, the wallet and the card,
+ * and derived the way every public number is - the keeper level and the balances are recomputed
+ * here, never read off the save's own copy.
+ */
+interface AdminPlayerRow {
+  uid: string;
+  /** The held keeper name, as a card would draw it; null when none is held. */
+  name: string | null;
+  /** The held name was taken off the boards by moderation. */
+  nameDenied: boolean;
+  /** Keeper level, earned plus bought (57); nought with no save. */
+  level: number;
+  earnedLevel: number;
+  levelsCleared: number;
+  stars: number;
+  /** Spendable, per the server's arithmetic: derived earnings plus grants minus spends. */
+  credits: number;
+  gems: number;
+  /** The save's last write, unix seconds; nought with no save. */
+  updatedUnix: number;
+  lastPlayedLevelId: string | null;
+  language: string;
+  hasSave: boolean;
+  hasWallet: boolean;
+  pendingGifts: GiftReplyRow[];
+}
+
+/** Players per page on the admin list. One query of this many saves plus one batched wallet read. */
+const ADMIN_PLAYERS_PAGE = 25;
+
+/** A uid as Firebase Auth mints one, or as a test harness might. Wide, because it only decides which lookups to try. */
+const UID_SHAPE = /^[A-Za-z0-9_-]{6,128}$/;
+
+function levelTally(levels: unknown): { cleared: number; stars: number } {
+  let cleared = 0, stars = 0;
+  if (!levels || typeof levels !== "object" || Array.isArray(levels)) return { cleared, stars };
+  for (const raw of Object.values(levels as Record<string, unknown>)) {
+    const entry = raw as { stars?: unknown } | null;
+    const got = entry && typeof entry === "object" && typeof entry.stars === "number" ? Math.floor(entry.stars) : 0;
+    if (got <= 0) continue;
+    cleared++;
+    stars += Math.min(got, 3);
+  }
+  return { cleared, stars };
+}
+
+/**
+ * One row, from the documents already read. The wallet is read through `readWallet` (the one
+ * door onto that document) and never written here, so an account that has not synced yet reads
+ * as holding the seed it will be given, which is what its first sync will say too.
+ */
+function adminRow(
+  uid: string,
+  save: FirebaseFirestore.DocumentSnapshot,
+  walletSnapshot: FirebaseFirestore.DocumentSnapshot,
+  config: Awaited<ReturnType<typeof loadProgressionConfig>>,
+): AdminPlayerRow {
+  const data = (save.exists ? save.data() : undefined) as Record<string, unknown> | undefined;
+  const walletRaw = (walletSnapshot.exists ? walletSnapshot.data() : undefined) as Record<string, unknown> | undefined;
+  const wallet = readWallet(walletSnapshot, config);
+
+  const levels = data?.levels;
+  const tally = levelTally(levels);
+  const earned = earnedCredits(levels ?? {}, config, uid).credits;
+  const credits = Math.max(0, Math.max(earned, wallet.credits.earnedFloor) + wallet.credits.granted - wallet.credits.spent);
+  const gems = Math.max(0, wallet.gems.earnedFloor + wallet.gems.granted - wallet.gems.spent);
+
+  let earnedLevel = 0;
+  if (data) {
+    const curve = (config as { keeper?: KeeperCurve }).keeper ?? DEFAULT_KEEPER_CURVE;
+    const provable = derivedXp(levels, config) + endlessXp(data, config) + challengeXp(data, config);
+    earnedLevel = keeperLevel(provable + xpBoostXp(data, config, provable), curve);
+  }
+  const bought = keeperBoughtOf(walletRaw);
+
+  const holding = heldName(walletRaw);
+  const settings = (data?.settings ?? {}) as Record<string, unknown>;
+
+  return {
+    uid,
+    name: holding && holding.public.length > 0 ? holding.public : null,
+    nameDenied: isDenied(holding),
+    level: data ? earnedLevel + bought : 0,
+    earnedLevel,
+    levelsCleared: tally.cleared,
+    stars: tally.stars,
+    credits,
+    gems,
+    updatedUnix: typeof data?.updatedUnix === "number" ? Math.floor(data.updatedUnix as number) : 0,
+    lastPlayedLevelId: typeof data?.lastPlayedLevelId === "string" && data.lastPlayedLevelId ? data.lastPlayedLevelId as string : null,
+    language: typeof settings.language === "string" ? settings.language : "",
+    hasSave: save.exists,
+    hasWallet: walletSnapshot.exists,
+    pendingGifts: giftRows(wallet.gifts),
+  };
+}
+
+/** Rows for a list of uids: the saves and the wallets in two batched reads. */
+async function adminRows(uids: string[]): Promise<AdminPlayerRow[]> {
+  if (uids.length === 0) return [];
+  const db = getFirestore();
+  const config = await loadProgressionConfig();
+  const saves = await db.getAll(...uids.map((uid) => db.doc(PATHS.player(uid))));
+  const wallets = await db.getAll(...uids.map((uid) => db.doc(PATHS.wallet(uid))));
+  return uids.map((uid, i) => adminRow(uid, saves[i], wallets[i], config));
+}
+
+function readUid(raw: unknown): string {
+  const uid = typeof raw === "string" ? raw.trim() : "";
+  if (!UID_SHAPE.test(uid)) throw new HttpsError("invalid-argument", "name the player by uid");
+  return uid;
+}
+
+/**
+ * One page of every account with a save, most recently saved first: `{ after?: { updatedUnix, uid } }`
+ * answers up to {@link ADMIN_PLAYERS_PAGE} rows, the cursor of the next page or null, and how
+ * many saves exist in all (one aggregation, a read per thousand). A range on `updatedUnix` with
+ * the document id as the tie-break, on the automatic single-field index.
+ */
+export const adminListPlayers = onCall(adminCallOptions, async (request): Promise<{
+  nowUnix: number; total: number; rows: AdminPlayerRow[]; next: { updatedUnix: number; uid: string } | null;
+}> => {
+  requireAdmin(request);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const db = getFirestore();
+
+  const after = request.data?.after as { updatedUnix?: unknown; uid?: unknown } | undefined;
+  let query = db.collection("players")
+    .orderBy("updatedUnix", "desc")
+    .orderBy(FieldPath.documentId(), "desc")
+    .limit(ADMIN_PLAYERS_PAGE + 1);
+  if (after && typeof after.updatedUnix === "number" && typeof after.uid === "string" && UID_SHAPE.test(after.uid)) {
+    query = query.startAfter(Math.floor(after.updatedUnix), db.doc(PATHS.player(after.uid)));
+  }
+
+  const [snapshot, counted] = await Promise.all([query.get(), db.collection("players").count().get()]);
+  const docs = snapshot.docs.slice(0, ADMIN_PLAYERS_PAGE);
+  const uids = docs.map((doc) => doc.id);
+
+  const config = await loadProgressionConfig();
+  const wallets = uids.length > 0 ? await db.getAll(...uids.map((uid) => db.doc(PATHS.wallet(uid)))) : [];
+  const rows = docs.map((doc, i) => adminRow(doc.id, doc, wallets[i], config));
+
+  const last = docs[docs.length - 1];
+  const next = snapshot.docs.length > ADMIN_PLAYERS_PAGE && last
+    ? { updatedUnix: Number(last.get("updatedUnix") ?? 0), uid: last.id }
+    : null;
+
+  return { nowUnix, total: counted.data().count, rows, next };
+});
+
+/**
+ * Finds accounts by uid, by the email a linked provider gave, or by keeper name: `{ query }`.
+ * Every lookup that could match is tried and the answers joined, each row saying how it was
+ * found. A name is looked up through the same fold the game reserves it under (`nameKey`), so
+ * what the owner types is matched the way two players' names are told apart.
+ */
+export const adminFindPlayers = onCall(adminCallOptions, async (request): Promise<{
+  nowUnix: number; rows: (AdminPlayerRow & { how: "uid" | "email" | "name" })[];
+}> => {
+  requireAdmin(request);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const db = getFirestore();
+
+  const query = typeof request.data?.query === "string" ? request.data.query.trim() : "";
+  if (!query) throw new HttpsError("invalid-argument", "type a uid, an email or a keeper name");
+  if (query.length > 256) throw new HttpsError("invalid-argument", "that is too long to be any of those");
+
+  const found = new Map<string, "uid" | "email" | "name">();
+
+  if (UID_SHAPE.test(query)) {
+    const [save, user] = await Promise.all([
+      db.doc(PATHS.player(query)).get(),
+      getAuth().getUser(query).catch(() => null),
+    ]);
+    if (save.exists || user) found.set(query, "uid");
+  }
+
+  if (query.includes("@")) {
+    const user = await getAuth().getUserByEmail(query).catch(() => null);
+    if (user && !found.has(user.uid)) found.set(user.uid, "email");
+  }
+
+  const key = nameKey(query);
+  if (key) {
+    const reserved = await db.doc(`names/${key}`).get();
+    const uid = reserved.exists ? reserved.get("uid") : null;
+    if (typeof uid === "string" && uid && !found.has(uid)) found.set(uid, "name");
+  }
+
+  const uids = [...found.keys()];
+  const rows = await adminRows(uids);
+  return { nowUnix, rows: rows.map((row) => ({ ...row, how: found.get(row.uid)! })) };
+});
+
+/** What a linked account looks like from Firebase Auth. Null when the uid has no auth user. */
+interface AdminAuthRecord {
+  email: string | null;
+  providers: string[];
+  createdUnix: number;
+  lastSignInUnix: number;
+  disabled: boolean;
+}
+
+/** One gift as the history lists it: what was sent, by whom, and when each half was claimed. */
+interface AdminGiftRecord {
+  id: string;
+  credits: number;
+  gems: number;
+  atUnix: number;
+  by: string | null;
+  paidCreditsUnix: number;
+  paidGemsUnix: number;
+  claimedUnix: number;
+}
+
+function unixOf(value: unknown): number {
+  if (value instanceof Timestamp) return value.seconds;
+  if (typeof value === "number" && Number.isFinite(value)) return Math.floor(value);
+  return 0;
+}
+
+/**
+ * Everything the admin page shows about one account: the row, the auth record, the published
+ * card, the wallet's entitlements, how many debits and awards the logs hold, and the gift history
+ * (newest first, {@link GIFT_HISTORY_PAGE} at most). `{ uid }`.
+ */
+export const adminGetPlayer = onCall(adminCallOptions, async (request): Promise<{
+  nowUnix: number;
+  row: AdminPlayerRow;
+  auth: AdminAuthRecord | null;
+  card: { level: number; score: number; stars: number; rung: string | null; wave: number; shuffle: number; builtUnix: number } | null;
+  wallet: { keeperBought: number; dealsBought: string[]; dailyPasses: { id: string; remaining: number; day: number }[];
+            containersRevoked: string[]; earnedFloor: number; granted: Record<string, number>; spent: Record<string, number> };
+  save: { schemaVersion: number; revision: number } | null;
+  counts: { spends: number; grants: number };
+  gifts: AdminGiftRecord[];
+}> => {
+  requireAdmin(request);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const uid = readUid(request.data?.uid);
+  const db = getFirestore();
+
+  const config = await loadProgressionConfig();
+  const [save, walletSnapshot, cardSnapshot, user, spends, grants, history] = await Promise.all([
+    db.doc(PATHS.player(uid)).get(),
+    db.doc(PATHS.wallet(uid)).get(),
+    db.doc(GROVE_PATHS.card(uid)).get(),
+    getAuth().getUser(uid).catch(() => null),
+    db.collection(`players/${uid}/spendLog`).count().get(),
+    db.collection(`players/${uid}/grantLog`).count().get(),
+    db.collection(GIFT_PATHS.historyCollection(uid)).orderBy("atUnix", "desc").limit(GIFT_HISTORY_PAGE).get(),
+  ]);
+
+  if (!save.exists && !walletSnapshot.exists && !user) {
+    throw new HttpsError("not-found", "no account with that uid");
+  }
+
+  const row = adminRow(uid, save, walletSnapshot, config);
+  const wallet = readWallet(walletSnapshot, config);
+  const card = cardSnapshot.exists ? cardSnapshot.data() as Record<string, unknown> : null;
+  const saveData = save.exists ? save.data() as Record<string, unknown> : null;
+  const cloud = (saveData?.cloud ?? {}) as Record<string, unknown>;
+
+  return {
+    nowUnix,
+    row,
+    auth: user ? {
+      email: user.email ?? null,
+      providers: user.providerData.map((p) => p.providerId),
+      createdUnix: user.metadata.creationTime ? Math.floor(Date.parse(user.metadata.creationTime) / 1000) : 0,
+      lastSignInUnix: user.metadata.lastSignInTime ? Math.floor(Date.parse(user.metadata.lastSignInTime) / 1000) : 0,
+      disabled: user.disabled,
+    } : null,
+    card: card ? {
+      level: Number(card.level ?? 0), score: Number(card.score ?? 0), stars: Number(card.stars ?? 0),
+      rung: typeof card.rung === "string" ? card.rung : null,
+      wave: Number(card.wave ?? 0), shuffle: Number(card.shuffle ?? 0), builtUnix: Number(card.builtUnix ?? 0),
+    } : null,
+    wallet: {
+      keeperBought: wallet.keeperBought ?? 0,
+      dealsBought: Object.keys(wallet.deals ?? {}).sort(),
+      dailyPasses: toReply(wallet, {})[0]?.dailyPasses ?? [],
+      containersRevoked: wallet.containersRevoked ?? [],
+      earnedFloor: wallet.credits.earnedFloor,
+      granted: Object.fromEntries(CURRENCIES.map((c) => [c, wallet[c].granted])),
+      spent: Object.fromEntries(CURRENCIES.map((c) => [c, wallet[c].spent])),
+    },
+    save: saveData ? {
+      schemaVersion: Number(saveData.schemaVersion ?? 0),
+      revision: Number(cloud.revision ?? 0),
+    } : null,
+    counts: { spends: spends.data().count, grants: grants.data().count },
+    gifts: history.docs.map((doc) => {
+      const data = doc.data();
+      const paid = (data.paid ?? {}) as Record<string, unknown>;
+      return {
+        id: doc.id,
+        credits: Number(data.credits ?? 0),
+        gems: Number(data.gems ?? 0),
+        atUnix: Number(data.atUnix ?? 0),
+        by: typeof data.by === "string" ? data.by : null,
+        paidCreditsUnix: unixOf(paid.credits),
+        paidGemsUnix: unixOf(paid.gems),
+        claimedUnix: unixOf(data.claimedAt),
+      };
+    }),
+  };
+});
+
+/**
+ * Sends a gift to one account: `{ uid, credits, gems }`, at least one of them positive. The gift
+ * is written onto the wallet (the entitlement, invariant 63), its permanent record under the
+ * player and the audit log, in one transaction; it reaches the player's panel on their next
+ * wallet reply. Refused for an account Firebase Auth does not know, and once the account already
+ * has {@link GIFT_MAX_PENDING} gifts waiting. Immutable once sent - see `gifts.ts`.
+ */
+export const adminGiftPlayer = onCall(adminCallOptions, async (request): Promise<{
+  nowUnix: number;
+  gift: GiftReplyRow;
+  pending: GiftReplyRow[];
+  limits: { maxCredits: number; maxGems: number; maxPending: number };
+}> => {
+  const email = requireAdmin(request);
+  const uid = readUid(request.data?.uid);
+
+  const parsed = readGiftRequest(request.data);
+  if (!parsed.ok) throw new HttpsError("invalid-argument", parsed.why);
+
+  // The account must exist for the server, not merely as a save somebody could type the id of:
+  // a gift written under a uid nobody can sign in as is money nobody can ever claim.
+  const user = await getAuth().getUser(uid).catch(() => null);
+  if (!user) throw new HttpsError("not-found", "no account with that uid");
+
+  const db = getFirestore();
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const sent = await db.runTransaction(async (transaction) => {
+    const config = await loadProgressionConfig(transaction);
+    const walletRef = db.doc(PATHS.wallet(uid));
+    const state = readWallet(await transaction.get(walletRef), config);
+
+    const result = createGift(state.gifts ?? {}, parsed.request, nowUnix);
+    if (!result.ok) throw new HttpsError("failed-precondition", result.why);
+
+    state.gifts = result.pending;
+    transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+    transaction.set(db.doc(GIFT_PATHS.history(uid, result.id)), {
+      id: result.id, uid, credits: result.gift.credits, gems: result.gift.gems, atUnix: nowUnix,
+      by: email, reason: GIFT_REASON, createdAt: FieldValue.serverTimestamp(),
+    });
+    transaction.set(db.collection(GIFT_LOG).doc(), {
+      action: "gift", by: email, uid: request.auth!.uid, player: uid,
+      gift: { id: result.id, credits: result.gift.credits, gems: result.gift.gems, atUnix: nowUnix },
+      at: FieldValue.serverTimestamp(),
+    });
+    return result;
+  });
+
+  logger.info("an admin gift was sent", { by: email, player: uid, gift: sent.id, credits: sent.gift.credits, gems: sent.gift.gems });
+  return {
+    nowUnix,
+    gift: { id: sent.id, credits: sent.gift.credits, gems: sent.gift.gems, atUnix: nowUnix },
+    pending: giftRows(sent.pending),
+    limits: { maxCredits: GIFT_MAX_CREDITS, maxGems: GIFT_MAX_GEMS, maxPending: GIFT_MAX_PENDING },
+  };
 });

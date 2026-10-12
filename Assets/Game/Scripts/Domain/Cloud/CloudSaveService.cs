@@ -1454,6 +1454,10 @@ namespace GlimmerGrove.Cloud
                 // The seven-day passes: the wallet document is the entitlement, and the shop's
                 // pass cards claim or sell by what it last said.
                 Store.DailyPassLedger.ApplyServerState(state.CarriesDailyPasses, state.DailyPasses);
+
+                // The admin gifts waiting (invariant 63): the wallet document is the entitlement, and
+                // the hub's gift panel is raised from what it last said.
+                Gifts.GiftLedger.ApplyServerState(state.CarriesGifts, state.Gifts);
             }
 
             SaveService.MarkDirty();

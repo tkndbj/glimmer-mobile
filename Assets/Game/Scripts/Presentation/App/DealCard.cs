@@ -65,6 +65,14 @@ namespace GlimmerGrove
             /// <summary>The picture at the left, and the line under the amount - both rewritten on every paint (44mc).</summary>
             public Image Art;
             public Text Unit;
+
+            /// <summary>
+            /// The open shape's gem beside the amount, shown for a bundle's gems and hidden for a
+            /// deal's coins; null on the boxed card, which never wears one. Centred with the figure
+            /// as one block across <see cref="AmountWidth"/> (<c>UIKit.CentreGlyph</c>).
+            /// </summary>
+            public Image AmountGlyph;
+            public float AmountWidth;
             public RectTransform Seal;
             public Text SealWord;
 
@@ -152,11 +160,34 @@ namespace GlimmerGrove
             // The amount, big and centred on the column, with COINS under it.
             parts.ColumnX = size.x - columnW * .5f;
             parts.AmountLeft = parts.ColumnX - columnW * .5f;
+            // The amount and its gem share a row centred on the column, so the two can be centred
+            // together as one block (`UIKit.CentreGlyph` measures from the row's middle).
+            var row = UIKit.Box("AmountRow", parts.Root, new Vector2(columnW, 110f), new Vector2(0f, .5f),
+                                new Vector2(parts.ColumnX, OpenAmountY + DealClock.DigitLift(OpenAmountSize)));
             parts.Amount = UIKit.Shrinkable(
-                UIKit.Titled("Amount", parts.Root, string.Empty, OpenAmountSize, Pal.Sun, TextAnchor.MiddleCenter,
-                             new Vector2(columnW, 110f), new Vector2(0f, .5f),
-                             new Vector2(parts.ColumnX, OpenAmountY + DealClock.DigitLift(OpenAmountSize)),
+                UIKit.Titled("Amount", row, string.Empty, OpenAmountSize, Pal.Sun, TextAnchor.MiddleCenter,
+                             new Vector2(columnW, 110f), new Vector2(.5f, .5f), Vector2.zero,
                              5f, 3f), 48);
+
+            // The gem the shop's smallest pack wears (`Shop/gems_1`, gg_gems_1's picture), beside a
+            // bundle's gems (the owner, 2026-10-11). Hidden until a bundle is painted.
+            //
+            // **A holder the size of the gem, carrying the picture drawn larger.** The ladder's
+            // sprites bake their rung's size in as transparent margin (`make_shop_art.py`), and the
+            // first rung's stone fills only about half its square - so the picture is drawn at
+            // `OpenGemArt` inside a holder `OpenGemSize` across, and `CentreGlyph` measures the gem
+            // rather than its margin. The holder draws nothing itself (disabled, so no white box).
+            parts.AmountGlyph = UIKit.Img("Gem", row, null, Color.white,
+                                          new Vector2(OpenGemSize, OpenGemSize), new Vector2(.5f, .5f),
+                                          new Vector2(0f, -DealClock.DigitLift(OpenAmountSize)));
+            parts.AmountGlyph.enabled = false;
+            parts.AmountGlyph.raycastTarget = false;
+            var stone = UIKit.Img("Stone", parts.AmountGlyph.transform, Art.S(GemArt), Color.white,
+                                  new Vector2(OpenGemArt, OpenGemArt), new Vector2(.5f, .5f), Vector2.zero);
+            stone.preserveAspect = true;
+            stone.raycastTarget = false;
+            parts.AmountGlyph.gameObject.SetActive(false);
+            parts.AmountWidth = columnW;
             parts.Unit = UIKit.Shrinkable(
                 UIKit.Titled("Unit", parts.Root, Loc.Get("ui.endless.coins").Upper(), OpenUnitSize, Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(columnW, 44f), new Vector2(0f, .5f),
@@ -202,6 +233,7 @@ namespace GlimmerGrove
                 parts.Unit.color = Pal.Cream;
             }
 
+            SetAmountGlyph(parts, false);
             PaintSeal(parts, DealValue.Percent(deal, StoreRules.Catalog));
         }
 
@@ -221,22 +253,38 @@ namespace GlimmerGrove
 
             bool gems = product != null && product.Gems > 0;
             parts.Amount.text = product == null ? string.Empty
-                              : Compact.Number(gems ? product.Gems : product.Credits);
+                              : (gems ? product.Gems : product.Credits).ToString("N0");
             parts.Amount.color = gems ? Pal.Bloom : Pal.Sun;
 
             if (parts.Unit)
             {
                 parts.Unit.text = product == null ? string.Empty
-                    : gems && product.Credits > 0 ? Loc.Format("ui.shop.plus_coins", Compact.Number(product.Credits)).Upper()
+                    : gems && product.Credits > 0 ? Loc.Format("ui.shop.plus_coins", product.Credits.ToString("N0")).Upper()
                     : Loc.Get(gems ? "ui.shop.gems" : "ui.endless.coins").Upper();
                 parts.Unit.color = gems && product != null && product.Credits > 0 ? Pal.Gold : Pal.Cream;
             }
 
+            SetAmountGlyph(parts, gems);
             PaintSeal(parts, DealValue.BundlePercent(product, StoreRules.Catalog));
         }
 
-        /// <summary>The pictures a card can wear. Written out so the art scanner sees both.</summary>
-        const string CofferArt = "Ui/Shop/coins_3", BundleArt = "Ui/Shop/bundles_3";
+        /// <summary>The pictures a card can wear. Written out so the art scanner sees them.</summary>
+        const string CofferArt = "Ui/Shop/coins_3", BundleArt = "Ui/Shop/bundles_3", GemArt = "Ui/Shop/gems_1";
+
+        /// <summary>
+        /// The open shape's gem beside a bundle's amount: <see cref="OpenGemSize"/> is the stone as it
+        /// is seen (a little under the figure's height), <see cref="OpenGemArt"/> the square it is
+        /// drawn in - the first rung's stone is about half its picture's width.
+        /// </summary>
+        const float OpenGemSize = 84f, OpenGemArt = 162f;
+
+        /// <summary>Shows or hides the gem beside the amount and re-centres the pair. A no-op on the boxed card.</summary>
+        static void SetAmountGlyph(Parts parts, bool on)
+        {
+            if (!parts.AmountGlyph) return;
+            if (parts.AmountGlyph.gameObject.activeSelf != on) parts.AmountGlyph.gameObject.SetActive(on);
+            UIKit.CentreGlyph(parts.Amount, parts.AmountGlyph, parts.AmountWidth);
+        }
 
         static void SetArt(Parts parts, string address)
         {

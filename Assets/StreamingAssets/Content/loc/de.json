@@ -3818,6 +3818,18 @@
       "text": "Endet in {0}"
     },
     {
+      "key": "ui.gift.title",
+      "text": "Ein Geschenk!"
+    },
+    {
+      "key": "ui.gift.body",
+      "text": "Das Gemfire-Team hat dir ein Geschenk geschickt. Viel Spaß!"
+    },
+    {
+      "key": "ui.gift.claim",
+      "text": "Abholen"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Die erste Wacht"
     },

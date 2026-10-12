@@ -446,6 +446,16 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public static string ShopDealId(string dealId) => "deal:" + dealId + ":" + Currency.Credits;
 
+        /// <summary>
+        /// One currency of an admin gift: <c>gift:{giftId}:{currency}</c> (invariant 63). Queued by
+        /// <c>GiftLedger.Claim</c> and paid by the server at the amount the wallet holds for the gift,
+        /// never this device's figure (<c>gifts.ts</c>). The format is a wire contract.
+        /// </summary>
+        public static string GiftId(string giftId, string currency) => "gift:" + giftId + ":" + currency;
+
+        /// <summary>What every gift grant records as its cause. Mirrors <c>GIFT_REASON</c>.</summary>
+        public const string GiftReason = "admin_gift";
+
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 

@@ -349,6 +349,12 @@ namespace GlimmerGrove
                 // the wall, so a frame that raised it is a frame that asks nothing.
                 ConsentMoment.Tick();
 
+                // And a gift the owner sent, on an idle hub once the consent questions are behind
+                // the player (invariant 63). Before the deals popup, because it is the player's own
+                // money and costs nothing to take; a frame that raised it is covered, so the deal
+                // moment below offers nothing on it.
+                GiftMoment.Tick();
+
                 // And the one limited-time deals popup a session may raise, on a calm screen once
                 // the consent questions are behind the player (invariant 60c). After the consent
                 // step, so a frame that asked a question is a frame that offers nothing.
@@ -371,12 +377,14 @@ namespace GlimmerGrove
                     // anyway. Nothing is lost: `Resumed` asks once on the way back, which is
                     // what covers the gap no callback could have reported.
                     Referral.ReferralLedger.Paused();
+                    GiftMoment.Paused();
                     DealMoment.Paused();
                     ReminderMoment.Paused();
                 }
                 else
                 {
                     Referral.ReferralLedger.Resumed();
+                    GiftMoment.Resumed();
                     DealMoment.Resumed();
 
                     // Returning: pick up another device's work, and drop any backoff the

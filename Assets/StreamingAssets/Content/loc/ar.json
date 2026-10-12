@@ -3818,6 +3818,18 @@
       "text": "ينتهي بعد {0}"
     },
     {
+      "key": "ui.gift.title",
+      "text": "هدية!"
+    },
+    {
+      "key": "ui.gift.body",
+      "text": "أرسل لك فريق Gemfire هدية. استمتع!"
+    },
+    {
+      "key": "ui.gift.claim",
+      "text": "استلام"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "الحراسة الأولى"
     },

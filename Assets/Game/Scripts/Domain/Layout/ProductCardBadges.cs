@@ -183,6 +183,26 @@ namespace GlimmerGrove.Layout
         public static float SealReach => SealSize * SealDisc * .5f;
 
         /// <summary>
+        /// How close the seal may stand to the next column's ribbon (the owner, 2026-10-11: "move
+        /// those badges a little more to right"). It was <see cref="Clearance"/>; two units still
+        /// keeps the two marks apart, and buys the seal eight units towards its own corner.
+        /// </summary>
+        public const float NeighbourClearance = 2f;
+
+        /// <summary>
+        /// The shop card seal's caption, cut to the limited deal's (`DealCard`, the owner,
+        /// 2026-10-11: "the text inside its badge is big and readable, make the others the same"):
+        /// a box .70 by .62 of the seal, type at 30 over a floor of 16. Larger than the round field
+        /// (<see cref="TextWidth"/>, which the season page's seal still uses), so it is held to the
+        /// burst's ink reach instead: a centred caption of a figure and a word leaves the box's
+        /// corners empty, and the points are what it may not cross.
+        /// </summary>
+        public const float CaptionWidthOfSeal = .70f, CaptionHeightOfSeal = .62f;
+        public const int CaptionSize = 30, CaptionFloor = 16;
+        public static float CaptionWidth => SealSize * CaptionWidthOfSeal;
+        public static float CaptionHeight => SealSize * CaptionHeightOfSeal;
+
+        /// <summary>
         /// The badge's centre, in from the plate's right edge.
         ///
         /// <para>
@@ -198,7 +218,7 @@ namespace GlimmerGrove.Layout
             get
             {
                 float onItsOwnPlate = PlateWidth * .5f - Margin - SealReach;
-                float behindTheNeighbour = NeighbourRibbon - Clearance - SealReach;
+                float behindTheNeighbour = NeighbourRibbon - NeighbourClearance - SealReach;
 
                 return PlateWidth * .5f - Min(onItsOwnPlate, behindTheNeighbour);
             }

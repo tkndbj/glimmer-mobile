@@ -3818,6 +3818,18 @@
       "text": "Termina em {0}"
     },
     {
+      "key": "ui.gift.title",
+      "text": "Um presente!"
+    },
+    {
+      "key": "ui.gift.body",
+      "text": "A equipe do Gemfire enviou um presente para você. Aproveite!"
+    },
+    {
+      "key": "ui.gift.claim",
+      "text": "Resgatar"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "A primeira vigília"
     },

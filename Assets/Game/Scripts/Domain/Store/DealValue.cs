@@ -44,8 +44,8 @@ namespace GlimmerGrove.Store
         /// gems and coins would cost bought from the shop's own cheapest packs
         /// (<see cref="StoreCatalog.GemBase"/>, <see cref="StoreCatalog.CoinBase"/>), over what the
         /// bundle costs - all in the reference prices the ladder is proved against, never a figure
-        /// typed for the badge. At the shipped shop, 500 gems and 22,500 coins for $2.99 against
-        /// $4.95 and $5.97 of packs is "360% Value". Floored to ten, hidden at 100% or under, and
+        /// typed for the badge. At the shipped shop, 500 gems and 22,500 coins for $1.99 against
+        /// $4.95 and $5.97 of packs is "540% Value". Floored to ten, hidden at 100% or under, and
         /// capped, exactly as <see cref="Percent(long, long, long)"/> is.
         /// </para>
         /// </summary>

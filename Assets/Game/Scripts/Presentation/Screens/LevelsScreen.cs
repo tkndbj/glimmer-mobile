@@ -125,6 +125,19 @@ namespace GlimmerGrove
         readonly Dictionary<LevelId, RectTransform> _nodes = new Dictionary<LevelId, RectTransform>();
 
         /// <summary>
+        /// What each standing node was last drawn from, so <see cref="OnLearned"/> can leave
+        /// alone every node whose answer did not move. Written beside <see cref="_nodes"/> in
+        /// <see cref="BuildNode"/>, and only there.
+        /// </summary>
+        readonly Dictionary<LevelId, GladeReading> _nodeDrawn = new Dictionary<LevelId, GladeReading>();
+
+        /// <summary>What the chain's cap was last drawn from. See <see cref="BuildChapterEnd"/>.</summary>
+        ChapterEndReading _teaserDrawn;
+
+        /// <summary>Whether the forward chevron was last drawn open. See <see cref="BuildChapterArrows"/>.</summary>
+        bool _nextOpenDrawn;
+
+        /// <summary>
         /// The map is the one screen that cannot finish building inside <c>Build</c>: it needs
         /// its chapter's body read and that chapter's art resident, and on a chapter the player
         /// has not opened before neither is in hand. So it tells the transition to stay shut -
@@ -369,6 +382,19 @@ namespace GlimmerGrove
         /// different from the one it was drawn from. And not before the chapter is drawn: a
         /// merge landing mid-load is read by the build that follows, for free.
         /// </para>
+        /// <para>
+        /// <b>And only the pieces whose answer moved, which is what the hub's column already
+        /// did.</b> "Learned" means the merged file differs from the local one <em>somewhere</em>
+        /// - a lesson seen on the other phone, a heart timer, a daily claim - and a sync runs
+        /// within a minute of any write, so an idle map met one routinely. Every node was taken
+        /// down and built again, and the record badge beside each cleared glade popped in from
+        /// nothing on every rebuild (it never asked whether it was arriving), which is what
+        /// players saw as the "XX moves" boxes reloading. Each piece now compares what it would
+        /// draw (<see cref="GladeReading"/>, <see cref="ChapterEndReading"/>) against what it
+        /// was drawn from and is redrawn exactly when that moved - and a redraw lands whole,
+        /// badge included. The readings ask the same rules the pieces are drawn from, so a new
+        /// XP source feeding the keeper wall is seen without anybody listing it here.
+        /// </para>
         /// </summary>
         void OnLearned(SaveDelta learned)
         {
@@ -381,17 +407,21 @@ namespace GlimmerGrove
             }
 
             var levels = _layout.Levels;
-            _pointed = null;
             for (int i = 0; i < levels.Count; i++)
             {
-                if (!_nodes.TryGetValue(levels[i].Id, out var old) || !old) continue;
+                var id = levels[i].Id;
+                if (!_nodes.TryGetValue(id, out var old) || !old) continue;
+
+                var now = GladeReading.Of(_index, id);
+                if (!MapRedraw.Needed(_nodeDrawn.TryGetValue(id, out var drawn), drawn, now)) continue;
 
                 int at = old.GetSiblingIndex();
+                if (_pointed == old) _pointed = null;
                 Retire(old);
                 BuildNode(levels[i], i, arriving: false).SetSiblingIndex(at);
             }
 
-            if (_teaser)
+            if (_teaser && MapRedraw.Needed(true, _teaserDrawn, ChapterEndReading.Of(_index, _entry.Id)))
             {
                 int at = _teaser.GetSiblingIndex();
                 Retire(_teaser);
@@ -408,7 +438,8 @@ namespace GlimmerGrove
             // chapter, which turns the standing from a sentence into a number.
             if (_standing) _standing.Repaint();
 
-            if (_banner)
+            // The chevrons read one fact off the save: whether the chapter ahead is open.
+            if (_banner && _nextOpenDrawn != NextChapterOpen())
             {
                 Retire(_banner.transform.Find("PrevChapter"));
                 Retire(_banner.transform.Find("NextChapter"));
@@ -726,8 +757,11 @@ namespace GlimmerGrove
         /// </param>
         RectTransform BuildNode(LevelDefinition level, int indexInChapter, bool arriving = true)
         {
-            int stars = PlayerProgress.Stars(level.Id);
-            bool unlocked = LevelUnlock.IsUnlocked(_index, level.Id);
+            // Read once and remembered as drawn, so OnLearned compares against exactly what
+            // this node shows rather than against a second reading taken later.
+            var reading = GladeReading.Of(_index, level.Id);
+            int stars = reading.Stars;
+            bool unlocked = reading.Unlocked;
 
             // Numbering runs across the whole game, so glade 3 of chapter 2 still
             // reads as its true position in the catalog.
@@ -736,6 +770,7 @@ namespace GlimmerGrove
             bool afloat = level.Presentation.Afloat;
             var node = MakeNode(_layout.PositionOf(level.Id), afloat);
             _nodes[level.Id] = node;
+            _nodeDrawn[level.Id] = reading;
 
             string skin = !unlocked ? "node_lock" : (stars > 0 ? "node_s" + stars : "node_open");
             if (unlocked && stars == 0)
@@ -763,7 +798,7 @@ namespace GlimmerGrove
 
             float delay = arriving ? PopDelay(indexInChapter, _layout.Levels.Count) : 0f;
 
-            if (stars > 0) RecordMark(node, level.Id, delay);
+            if (stars > 0 && reading.BestMoves > 0) RecordTag(node, level.Id, reading.BestMoves, delay, arriving);
 
             if (arriving)
             {
@@ -821,6 +856,7 @@ namespace GlimmerGrove
             bool afloat = _body.Definition != null && _body.Definition.TeaserAfloat;
             var node = MakeNode(_layout.TeaserPosition, afloat);
             _teaser = node;
+            _teaserDrawn = ChapterEndReading.Of(_index, _entry.Id);
 
             bool onward = next != null;
             bool reachable = onward && LevelUnlock.IsChapterUnlocked(_index, next.Id);
@@ -966,13 +1002,6 @@ namespace GlimmerGrove
         public const float RecordLeft = 96f, RecordRight = 204f;
         public static readonly Vector2 RecordBadge = new Vector2(RecordRight - RecordLeft, 104f);
 
-        /// <summary>The record on a cleared glade, when it has a count to show.</summary>
-        static void RecordMark(Transform parent, LevelId id, float delay)
-        {
-            int moves = PlayerProgress.BestMoves(id);
-            if (moves > 0) RecordTag(parent, id, moves, delay);
-        }
-
         /// <summary>
         /// The record, beside the node: the count, and its unit under it.
         ///
@@ -983,8 +1012,13 @@ namespace GlimmerGrove
         /// (<see cref="RunWording.RecordUnitKey"/>). Nothing is concatenated and nothing is
         /// parsed back out of a formatted sentence, which is what invariant 6 is really about.
         /// </para>
+        /// <para>
+        /// <b>It arrives with its node and never on its own.</b> A badge on a node redrawn by
+        /// <see cref="OnLearned"/> lands at full size like the disc under it; this popped on
+        /// every rebuild once, and was the whole of what the map "reloading" looked like.
+        /// </para>
         /// </summary>
-        static void RecordTag(Transform parent, LevelId id, int moves, float delay)
+        static void RecordTag(Transform parent, LevelId id, int moves, float delay, bool arriving)
         {
             var host = UIKit.Node("Record", parent);
             host.anchorMin = host.anchorMax = host.pivot = new Vector2(.5f, .5f);
@@ -1007,6 +1041,8 @@ namespace GlimmerGrove
                                     new Vector2(inner, 34f),
                                     new Vector2(.5f, .5f), new Vector2(0f, -20f + face), 3f, 2f);
             UIKit.Shrinkable(unit, 15);
+
+            if (!arriving) return;
 
             host.localScale = Vector3.zero;
             Tween.Pop(host, 0f, .55f, .18f + delay + .16f);
@@ -1259,8 +1295,18 @@ namespace GlimmerGrove
 
             if (previous != null) Chevron("PrevChapter", "<", -1f, previous, true);
 
-            if (next != null)
-                Chevron("NextChapter", ">", 1f, next, LevelUnlock.IsChapterUnlocked(_index, next.Id));
+            _nextOpenDrawn = NextChapterOpen();
+            if (next != null) Chevron("NextChapter", ">", 1f, next, _nextOpenDrawn);
+        }
+
+        /// <summary>
+        /// The one fact off the save the chevrons draw: whether the chapter ahead may be
+        /// entered. False when there is none, which the forward chevron's absence also says.
+        /// </summary>
+        bool NextChapterOpen()
+        {
+            var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
+            return next != null && LevelUnlock.IsChapterUnlocked(_index, next.Id);
         }
 
         /// <summary>

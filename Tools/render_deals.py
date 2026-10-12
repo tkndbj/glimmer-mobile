@@ -46,6 +46,7 @@ COLUMN_W, AMOUNT_SIZE = 520.0, 100
 AMOUNT_Y, UNIT_Y, TIMER_Y, BUY_Y = 108.0, 44.0, -16.0, -108.0   # up from the row's middle
 TIMER_W, TIMER_H, BUY_W, BUY_H = 360.0, 62.0, 400.0, 96.0
 URGENT = (255, 92, 72)
+GLYPH_GAP = 18.0                                # UIKit.GlyphGap
 
 # DealOverlay.DealRow.RuleW / RuleH / Rule - the thin white rule on every row's top edge but the
 # first, which is the middle of the air between two cards.
@@ -103,8 +104,15 @@ def welcome_row(sheet, cx, cy, product, store, state):
     K.value_seal(sheet, lx + SEAL_X, top + SEAL_Y, pct, txt("ui.deal.value"))
 
     col = lx + ROW_W - COLUMN_W / 2
-    K.text(sheet, compact(product["gems"]), col, cy - AMOUNT_Y - round(AMOUNT_SIZE * .044), AMOUNT_SIZE,
-           fill=K.BLOOM, outline=5)
+    # `DealCard.SetAmountGlyph`: the `Shop/gems_1` gem then the figure, centred as one block
+    # (`UIKit.CentreGlyph`, gap `UIKit.GlyphGap`).
+    said = compact(product["gems"])
+    gem, art, gap = 84.0, 162.0, GLYPH_GAP           # DealCard.OpenGemSize / OpenGemArt
+    wide = K.font(AMOUNT_SIZE).getlength(said)
+    left = col - (gem + gap + wide) / 2
+    ay = cy - AMOUNT_Y - round(AMOUNT_SIZE * .044)
+    K.paste(sheet, K.fit(Image.open(UI / "Shop" / "gems_1.png").convert("RGBA"), (art, art)), left + gem / 2, cy - AMOUNT_Y)
+    K.text(sheet, said, left + gem + gap + wide / 2, ay, AMOUNT_SIZE, fill=K.BLOOM, outline=5)
     K.text(sheet, txt("ui.shop.plus_coins").replace("{0}", compact(product["credits"])).upper(),
            col, cy - UNIT_Y, 34, fill=K.GOLD, outline=3)
 

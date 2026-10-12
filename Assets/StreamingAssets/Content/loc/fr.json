@@ -3818,6 +3818,18 @@
       "text": "Se termine dans {0}"
     },
     {
+      "key": "ui.gift.title",
+      "text": "Un cadeau !"
+    },
+    {
+      "key": "ui.gift.body",
+      "text": "L’équipe Gemfire t’a envoyé un cadeau. Profites-en !"
+    },
+    {
+      "key": "ui.gift.claim",
+      "text": "Récupérer"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La première garde"
     },

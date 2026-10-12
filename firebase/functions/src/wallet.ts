@@ -20,6 +20,7 @@ import { keeperBoughtOf } from "./keeper";
 import { ChallengeAdDays, ChallengeTiersHeld, adPlaysOn, readChallengeAds, readChallengeTiers } from "./challenges";
 import { DealsBought, readDealsBought } from "./deals";
 import { DailyPasses, PassReplyRow, passReply, readDailyPasses } from "./daily-pass";
+import { GiftReplyRow, GiftsPending, giftRows, readGiftsPending } from "./gifts";
 
 export interface CurrencyState {
   granted: number;
@@ -164,6 +165,16 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * piece paid) and `claimDailyPass` (a piece paid); a refund removes the run (`revokeReceipt`).
    */
   dailyPasses?: DailyPasses;
+
+  /**
+   * The admin gifts this account has not yet claimed, gift id to what is still unpaid per
+   * currency (`gifts.ts`, invariant 63). Server-owned for the streak floor's reason, and it is
+   * the whole of the entitlement: `claimAwards` pays a gift claim the amount held here and never
+   * the client's figure. Written by `adminGiftPlayer` (a gift added) and `claimAwards` (a
+   * currency paid, the row gone once both are); carried through `readWallet` because every
+   * writer writes this document whole.
+   */
+  gifts?: GiftsPending;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -258,12 +269,20 @@ export interface WalletReply {
    * "this deployment pays passes" and offers none before it does - the wheel's trick.
    */
   dailyPasses: PassReplyRow[];
+
+  /**
+   * The admin gifts waiting to be claimed (invariant 63): id, what is still unpaid in each
+   * currency, and when it was sent. Always present, including empty, so the client reads the
+   * field's presence as "this deployment understands gifts" - the wheel's trick - and a reply
+   * from a function not yet redeployed changes nothing it knows.
+   */
+  gifts: GiftReplyRow[];
 }
 
 /** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
 const MODELLED_WALLET_KEYS = new Set<string>([
   ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
-  "keeperBought", "challengeAds", "deals", "dailyPasses", "streak", "updatedAt",
+  "keeperBought", "challengeAds", "deals", "dailyPasses", "gifts", "streak", "updatedAt",
 ]);
 
 /**
@@ -387,6 +406,11 @@ export function readWallet(
   const passes = readDailyPasses((raw as { dailyPasses?: unknown } | undefined)?.dailyPasses);
   if (Object.keys(passes).length > 0) wallet.dailyPasses = passes;
 
+  // The admin gifts waiting, carried through for exactly the reason every field above it is -
+  // and deleting this one would be a gift the owner sent and the player never saw.
+  const gifts = readGiftsPending((raw as { gifts?: unknown } | undefined)?.gifts);
+  if (Object.keys(gifts).length > 0) wallet.gifts = gifts;
+
   // **Everything else the document holds, carried through untouched - and this is the rule
   // the eight paragraphs above were each one instance of.** Every writer of this document
   // writes it whole, so a field this function does not copy is a field the next write deletes.
@@ -485,6 +509,7 @@ export function toReply(
     challengeAdPlays: adPlaysOn(wallet.challengeAds ?? {}, today),
     dealsBought: Object.keys(wallet.deals ?? {}).sort(),
     dailyPasses: passReply(wallet.dailyPasses),
+    gifts: giftRows(wallet.gifts),
   }));
 }
 

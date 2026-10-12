@@ -537,6 +537,43 @@ binding consumed does not reopen for a second account.
 Run `node firebase/functions/test/referral.mjs` for the pure half and the smoke test for the
 live half (thirty-two cases, two accounts).
 
+## Admin gifts
+
+The owner sends one account coins, gems or both from `tekoworld.com/admin/users` (or the
+dashboard's search, or any row of the list). `adminGiftPlayer` - behind the same Google-verified
+owner gate as the shop deals - writes the gift in one transaction to three places:
+
+| Where | What | Why |
+|---|---|---|
+| `players/{uid}/private/wallet` `gifts[giftId]` | `{ credits, gems, atUnix }`, **what is still unpaid** | The entitlement. The wallet is the document no client can write and every reply already reads, so listing what is owed costs nothing per sync. At most 20 waiting per account. |
+| `players/{uid}/gifts/{giftId}` | who sent what, when; `paid.{currency}` and `claimedAt` as it is claimed | The permanent record the player page lists. Server-only; goes with the save on deletion. |
+| `giftLog/{auto}` | the audit row | Who did what, as `dealLog` is. |
+
+Every wallet reply carries `gifts` (always present, empty included - the wheel's trick, so a
+client reads a missing field as "this deployment predates gifts" and changes nothing). The game
+shows the panel on an idle hub; **Claim** queues `gift:{giftId}:{currency}` through the ordinary
+award queue, so the balance moves at once and the claim is resubmitted until `claimAwards`
+confirms it. `claimAwards` pays **the amount the wallet holds**, never the client's figure,
+writes the grant record, zeroes that currency on the pending row and removes the row once both
+are paid - all in the transaction that moves the money. A second device claiming the same gift
+meets the grant record and is confirmed without being paid again; a half-paid gift stays listed
+with the other half, so a client that lost its queue is offered exactly what is still owed.
+Refused only for what stays true tomorrow (13a): a gift the wallet never held, or a currency it
+does not carry.
+
+**A gift is immutable once sent.** A client may already have claimed it locally, and a
+revocation would take back a balance the player watched arrive; a mistake is a second gift. The
+admin page confirms the account and the amounts before sending.
+
+`adminListPlayers` (saves by `updatedUnix`, twenty-five a page, plus a `count()`),
+`adminFindPlayers` (by uid, by a linked provider's email through Auth, by keeper name through
+the same fold the game reserves names under) and `adminGetPlayer` (the row, the Auth record, the
+card, the wallet's entitlements, the log counts and the gift history) read with the server's own
+credentials and derive every number the way the public ones are derived - the keeper level and
+the balances are recomputed, never read off the save. `test/gifts.mjs` holds the pure rules;
+`e2e/admin-gift.mjs` proves the deployed functions (it writes the gift onto its own new account's
+wallet with the owner token, because the admin callables take only a Google-verified owner).
+
 ## Two invariants, and how they are held
 
 **A debit is charged once, however many times it is submitted.** Each debit carries a

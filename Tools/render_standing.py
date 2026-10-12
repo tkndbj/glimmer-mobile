@@ -8,7 +8,8 @@ and the star count under the "i" - for judging by eye, and measures the standing
     python Tools/render_standing.py --measure            # every Latin table, both sentences; exit 1 on a tight fit
 
 A mirror, not a gate for anything but `--measure`: every number here is `StandingReadout`'s and
-`LevelsScreen`'s and the two are kept in step by hand (44d). The sentence is wrapped and shrunk
+`LevelsScreen`'s and the two are kept in step by hand (44d). The plate is the deal card's
+(`Hud/plate_flat` tinted `DealCard.Face`) and the trophy is `ic_trophy_gold` (`make_standing_art.py`). The sentence is wrapped and shrunk
 the way `UIKit.Shrinkable` shrinks it, and a size at its floor is the tell that a translation has
 outgrown the plate (19n). Arabic is not drawn - the game shapes it through `ArabicText` at runtime
 and this font has no Arabic forms - so `--measure` skips it and `ArabicTextTests` carries that table.
@@ -32,14 +33,13 @@ CORNER_SIZE, CORNER_X, CORNER_Y = 118.0, 96.0, 132.0
 BOOST_GAP = 18.0
 COLUMN_TOP = CORNER_Y + CORNER_SIZE * .5 + BOOST_GAP          # Unity y is up; the sheet counts down
 
-# StandingReadout
-S_W, S_H = 260.0, 112.0
-PAD, ICON = 14.0, 54.0
-TEXT_LEFT = PAD + ICON + 10.0
-TEXT_W = S_W - TEXT_LEFT - PAD
-TEXT_H = S_H - PAD
+# StandingReadout: the deal card's emerald plate, the trophy at the top, the sentence under it.
+S_W, S_H = 260.0, 206.0
+PAD_TOP, PAD_SIDE, TROPHY, TROPHY_GAP = 14.0, 14.0, 96.0, 2.0
+TEXT_W = S_W - PAD_SIDE * 2
+TEXT_H = S_H - PAD_TOP - TROPHY - TROPHY_GAP - 10.0
 FONT, FLOOR = 26, 16
-PLATE = (15, 31, 43)                                          # new Color(.06f, .12f, .17f, .72f)
+PLATE = (15, 31, 43)                                          # the star pill: new Color(.06f, .12f, .17f, .72f)
 PLATE_A = .72
 
 # LevelsScreen: the star pill under the "i".
@@ -69,11 +69,11 @@ def corner_key(sheet, cx, cy, icon):
 
 def standing(sheet, left, top, text):
     """`StandingReadout.Build`, at the seat `LevelsScreen.StandingX/Y` gives it. Returns the settled size."""
-    K.paste(sheet, K.round_rect(S_W, S_H, 28, PLATE, PLATE_A), left + S_W / 2, top + S_H / 2)
-    K.paste(sheet, K.round_rect(S_W, S_H, 28, (255, 255, 255), .13, width=3), left + S_W / 2, top + S_H / 2)
-    trophy, _ = K.load("ic_trophy")
-    K.paste(sheet, K.fit(trophy, (ICON, ICON)), left + PAD + ICON / 2, top + S_H / 2)
-    return K.shrunk_left(sheet, text, left + TEXT_LEFT, top + PAD / 2, TEXT_W, TEXT_H, FONT, FLOOR)
+    K.paste(sheet, K.tint(K.skin("Hud/plate_flat", S_W, S_H), K.DEAL_FACE), left + S_W / 2, top + S_H / 2)
+    trophy, _ = K.load("ic_trophy_gold")
+    K.paste(sheet, K.fit(trophy, (TROPHY, TROPHY)), left + S_W / 2, top + PAD_TOP + TROPHY / 2)
+    cy = top + PAD_TOP + TROPHY + TROPHY_GAP + TEXT_H / 2
+    return K.shrunk(sheet, text, left + S_W / 2, cy, TEXT_W, TEXT_H, FONT, FLOOR)
 
 
 def star_pill(sheet):

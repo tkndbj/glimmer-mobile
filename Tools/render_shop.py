@@ -188,6 +188,10 @@ def deal_alert(sheet, gift=False):
 SEAL_FACE, SEAL_SHIFT, SEAL_RISE = .81, -.004, .008
 SEAL_TEXT_W, SEAL_TEXT_H = .664, .425
 SEAL_TEXT, SEAL_FLOOR = 20, 10
+#: `ProductCardBadges.CaptionWidthOfSeal` / `CaptionHeightOfSeal` / `CaptionSize` / `CaptionFloor` -
+#: the card seal's caption, the limited deal's: white over a dark outline, in a box of the seal.
+CAPTION_W, CAPTION_H, CAPTION, CAPTION_FLOOR = .70, .62, 30, 16
+NEIGHBOUR_CLEARANCE = 2.0                   # ProductCardBadges.NeighbourClearance
 
 PLATE_X, PLATE_Y = 34.0, 40.0
 PLATEW, PLATEH = CELLW - PLATE_X, CELLH - PLATE_Y
@@ -236,7 +240,7 @@ RIBBON_REACH = (RIBBONW * .5 * math.cos(math.radians(RIBBON_TILT))
                 + RIBBONH * .5 * math.sin(math.radians(RIBBON_TILT)))
 NEIGHBOUR_RIBBON = CELLW - PLATEW * .5 + RIBBON_INSET - RIBBON_REACH
 SEAL_INSET = PLATEW * .5 - min(PLATEW * .5 - MARGIN - SEAL_REACH,
-                               NEIGHBOUR_RIBBON - CLEARANCE - SEAL_REACH)
+                               NEIGHBOUR_RIBBON - NEIGHBOUR_CLEARANCE - SEAL_REACH)
 SEAL_DROP = SEAL_REACH - (PLATE_Y - CLEARANCE)
 
 # Skins.Accent — what tells one shelf from another now the plate is one teal on all of them.
@@ -342,10 +346,14 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
         # `ProductCard.DrawPass`: one day's amount, then the multiplier in Pal.Mint, one label.
         word, ink = suffix
         f = K.font(46)
-        wa, ws = f.getlength(amount), f.getlength(word)
-        left = plate_cx - (wa + ws) / 2
+        # `ProductCard.Gap`: a space at 14 either side of the "x", about four units of air.
+        gap = K.font(14).getlength(" ")
+        mult, days = word[0], word[1:]
+        wa, wm, wd = f.getlength(amount), f.getlength(mult), f.getlength(days)
+        left = plate_cx - (wa + gap + wm + gap + wd) / 2
         K.text(sheet, amount, left, pbot - AMOUNT_RISE, 46, fill=amount_fill or K.CREAM, outline=4, anchor="l")
-        K.text(sheet, word, left + wa, pbot - AMOUNT_RISE, 46, fill=ink, outline=4, anchor="l")
+        K.text(sheet, mult, left + wa + gap, pbot - AMOUNT_RISE, 46, fill=ink, outline=4, anchor="l")
+        K.text(sheet, days, left + wa + gap + wm + gap, pbot - AMOUNT_RISE, 46, fill=ink, outline=4, anchor="l")
     elif amount_fill:
         K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, fill=amount_fill, outline=4)
     else:
@@ -673,9 +681,9 @@ def seal_caption(face, badge):
     the sprite - the flat middle is drawn a little high and a little left of its own texture."""
     px = K.shrunk(face, badge,
                   SEAL / 2 + SEAL * SEAL_SHIFT, SEAL / 2 - SEAL * SEAL_RISE,
-                  SEAL * SEAL_FACE * SEAL_TEXT_W, SEAL * SEAL_FACE * SEAL_TEXT_H,
-                  SEAL_TEXT, SEAL_FLOOR, outline=2)
-    SETTLED.append(("badge", badge, px, SEAL_FLOOR))
+                  SEAL * CAPTION_W, SEAL * CAPTION_H,
+                  CAPTION, CAPTION_FLOOR, fill=(255, 255, 255), outline=3)
+    SETTLED.append(("badge", badge, px, CAPTION_FLOOR))
 
 
 def store_news(shelf, offline):
