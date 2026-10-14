@@ -313,18 +313,28 @@ namespace GlimmerGrove
                     land();
                     break;
 
+                // **The three set pieces' hits are pooled embers, never a fresh image** (59i's
+                // "cheap where it repeats"): a vortex bites every body in its box on a cadence, the
+                // ray every body in its lane ten times a second and the nuke the whole hill at once,
+                // which on a late Shuffle hill is dozens of hits on one frame. The spectacle is the
+                // set piece itself (`EddyBite`, `Sweeping`, `NukeLands`); a hit only says where.
                 case SiegeVia.Vortex:
-                    Pop(to, VortexHue, 1.1f, .2f);
+                {
+                    if (!Flourished(SiegeVia.Vortex, -1)) EddyBite();
+                    var eye = _eddy != null ? _eddy.Pit.At : to;
+                    Cinder(to, Pal.Lift(VortexHue, .3f), Cell * .62f, .3f, (eye - to) * .7f);
                     land();
                     break;
+                }
 
                 case SiegeVia.Nuke:
-                    Pop(to, Pal.Radiance, 2.2f, .3f);
+                    Cinder(to, Pal.Radiance, Cell * 1.7f, .34f, new Vector2(0f, Cell * .9f));
+                    Cinder(to, Pal.Sun, Cell * .9f, .5f, new Vector2(Random.Range(-Cell, Cell), Cell * 1.6f));
                     land();
                     break;
 
                 case SiegeVia.Ray:
-                    Pop(to, RayHue, 1.3f, .18f);
+                    Cinder(to, Color.Lerp(RayHue, Color.white, .55f), Cell * .8f, .2f, new Vector2(0f, Cell * .5f));
                     land();
                     break;
 
@@ -488,8 +498,7 @@ namespace GlimmerGrove
                     break;
 
                 case SiegeVia.Vortex:
-                    Ripple(at, VortexHue, Cell * 5f, .45f, 0f);
-                    Audio.SfxVaried("voidblast", .3f);
+                    EddyOpened(at);
                     break;
 
                 case SiegeVia.Nuke:
@@ -498,8 +507,7 @@ namespace GlimmerGrove
                     break;
 
                 case SiegeVia.Ray:
-                    Lightup(RayHue, .14f, .5f);
-                    Audio.Sfx("charge", .4f, .8f);
+                    Fused();
                     break;
             }
         }
@@ -542,33 +550,291 @@ namespace GlimmerGrove
             Audio.Sfx("boom", .55f, .8f);
         }
 
-        /// <summary>A nuke on its way: the hill flashes red and something white-hot falls to its middle.</summary>
+        // ------------------------------------------------------------------ the nuke
+        /// <summary>How wide the lock-on is drawn, in cells, and how far its four ticks close from.</summary>
+        const float NukeLock = 6.4f, NukeTicksFrom = 4.6f, NukeTicksTo = 2.3f;
+
+        /// <summary>When the hill flashes red, as shares of the fall: closer together as it comes.</summary>
+        static readonly float[] NukeAlarms = { 0f, .40f, .63f, .79f, .90f };
+
+        /// <summary>Seconds the fireball, and the column of smoke over it, stand after the blast.</summary>
+        const float FireballFor = 1.35f, PlumeFor = 1.7f;
+
+        /// <summary>Where every nuke lands: the middle of the hill (<c>SiegeBoard.Nukes</c> strikes all of it).</summary>
+        Vector2 GroundZero => new Vector2(0f, MarchY(.5f));
+
+        /// <summary>
+        /// A nuke on its way, for exactly the fall the model books (<c>SiegeArsenal.NukeFall</c>):
+        /// the hill locked on, the board flashing red faster and faster, and the warhead coming
+        /// down out of the sky on a burning contrail, its shadow growing under it.
+        ///
+        /// <para>
+        /// <b>Every piece is a few images for under a second</b>, all hosted on one node handed
+        /// back on its own tween and a timer, so a nuke on a crowded hill costs what a nuke on an
+        /// empty one does. The blast itself is <see cref="NukeLands"/>, drawn off the model's
+        /// second volley, never off this clock (37s): the light lands on the frame the damage does.
+        /// </para>
+        /// </summary>
         void NukeFalls(float over)
         {
-            var centre = new Vector2(0f, MarchY(.5f));
+            var centre = GroundZero;
 
-            for (int i = 0; i < 3; i++)
-                Tween.After(i * over / 3f, () => { if (this) Lightup(Pal.Poppy, .16f, over / 3.5f); }, this);
+            // **The lock-on.** Two rings on the ground turning against each other, four ticks
+            // closing on the middle, all blinking faster as it comes: the one thing a player
+            // reads in under a second as "something is about to hit there".
+            var mark = UIKit.Node("Nuke lock", _fx);
+            var shadow = UIKit.Img("Shadow", mark, Art.Glow(96, 1.6f), new Color(0f, 0f, 0f, 0f),
+                                   new Vector2(Cell * 7f, Cell * 7f * GroundSquash));
+            shadow.raycastTarget = false;
+            shadow.rectTransform.anchoredPosition = centre;
 
-            Fly(new Vector2(0f, _hillTop + Cell * 5f), centre, Pal.Radiance, Cell * 1.1f, over, 0f, Pal.Cream, null);
-            Ripple(centre, Pal.Poppy, Cell * 6f, over, 0f);
-            Audio.Sfx("charge", .5f, .6f);
+            var outer = Lit("Lock", mark, StrikeFx.Ring, Pal.A(Pal.Poppy, 0f),
+                            new Vector2(Cell * NukeLock, Cell * NukeLock * GroundSquash));
+            var inner = Lit("Lock", mark, StrikeFx.Ring, Pal.A(Pal.Poppy, 0f),
+                            new Vector2(Cell * NukeLock * .5f, Cell * NukeLock * .5f * GroundSquash));
+            if (outer != null) outer.rectTransform.anchoredPosition = centre;
+            if (inner != null) inner.rectTransform.anchoredPosition = centre;
+
+            var ticks = new Image[4];
+            for (int i = 0; i < ticks.Length; i++)
+            {
+                ticks[i] = Lit("Tick", mark, Art.Capsule(24, 96), Pal.A(Pal.Poppy, 0f),
+                               new Vector2(Cell * .16f, Cell * .8f));
+                ticks[i].rectTransform.localRotation = Quaternion.Euler(0f, 0f, i * 90f);
+            }
+
+            Tween.Run(over, Ease.Linear, t =>
+            {
+                if (!mark) return;
+
+                // A blink whose rate climbs with the fall: about three a second at first, about
+                // seventeen at the end.
+                float blink = Mathf.Sin(Mathf.PI * 2f * (3f * t + 7f * t * t)) > 0f ? 1f : .35f;
+                float rise = Mathf.Clamp01(t / .15f);
+                float close = Ease.OutCubic(t);
+                var hue = Color.Lerp(Pal.Poppy, Pal.Sun, t * t);
+
+                shadow.color = new Color(0f, 0f, 0f, .5f * t * t);
+                shadow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.25f, 1f, t * t);
+
+                if (outer)
+                {
+                    outer.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.5f, 1f, close);
+                    outer.rectTransform.localRotation = Quaternion.Euler(0f, 0f, t * 120f);
+                    outer.color = Pal.A(hue, .85f * rise * blink);
+                }
+
+                if (inner)
+                {
+                    inner.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.8f, 1f, close);
+                    inner.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -t * 200f);
+                    inner.color = Pal.A(hue, .7f * rise * blink);
+                }
+
+                float reach = Cell * Mathf.Lerp(NukeTicksFrom, NukeTicksTo, close);
+                for (int i = 0; i < ticks.Length; i++)
+                {
+                    if (!ticks[i]) continue;
+                    float a = i * Mathf.PI * .5f;
+                    ticks[i].rectTransform.anchoredPosition =
+                        centre + new Vector2(Mathf.Cos(a) * reach, Mathf.Sin(a) * reach * GroundSquash);
+                    ticks[i].color = Pal.A(hue, rise * blink);
+                }
+            }, mark).OnDone(() => { if (mark) Destroy(mark.gameObject); });
+
+            Tween.After(over + .1f, () => { if (mark) Destroy(mark.gameObject); }, mark);
+
+            for (int i = 0; i < NukeAlarms.Length; i++)
+                Tween.After(NukeAlarms[i] * over, () => { if (this) Lightup(Pal.Poppy, .13f, .2f); }, this);
+
+            Warhead(centre, over);
+
+            Audio.Sfx("charge", .55f, .6f);
+            Tween.After(Mathf.Max(0f, over - .38f), () => { if (this) Audio.Sfx("whoosh", .6f, .5f); }, this);
         }
 
+        /// <summary>
+        /// The warhead: a white-hot head in a gold sheath trailing a long burning tail, falling
+        /// faster the nearer it gets, shedding embers off its contrail.
+        /// </summary>
+        void Warhead(Vector2 centre, float over)
+        {
+            var sky = new Vector2(centre.x - Cell * 1.6f, Span.y * .5f + Cell * 2.5f);
+
+            var node = UIKit.Box("Warhead", _fx, Vector2.zero, new Vector2(.5f, .5f), sky);
+            var tail = Lit("Tail", node, Art.SoftCapsule(40, 120), Pal.A(Pal.Ember, .85f), Vector2.one);
+            var sheath = Lit("Sheath", node, Art.Glow(96, 1.6f), Pal.A(Pal.Sun, .9f), Vector2.one * Cell * 2.2f);
+            Lit("Head", node, Art.Glow(96, 2.4f), Color.white, Vector2.one * Cell * 1.1f);
+            var flare = Lit("Flare", node, StrikeFx.Flare, Pal.A(Pal.Sun, .8f), Vector2.one * Cell * 2.6f);
+
+            var tailRt = tail.rectTransform;
+            var last = sky;
+            float nextEmber = 0f;
+
+            Tween.Run(over, Ease.Linear, t =>
+            {
+                if (!node) return;
+
+                // Accelerating: it is falling, not sliding.
+                var at = Vector2.Lerp(sky, centre, t * t);
+                var dir = at - last;
+                node.anchoredPosition = at;
+
+                if (dir.sqrMagnitude > .01f)
+                {
+                    var back = -dir.normalized;
+                    float len = Cell * Mathf.Lerp(1.6f, 6.5f, t);
+                    tailRt.sizeDelta = new Vector2(Cell * Mathf.Lerp(.55f, .9f, t), len);
+                    tailRt.anchoredPosition = back * len * .45f;
+                    tailRt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f);
+
+                    if (t >= nextEmber)
+                    {
+                        nextEmber = t + .035f;
+                        var side = new Vector2(-back.y, back.x) * Random.Range(-.3f, .3f) * Cell;
+                        Cinder(at + back * Cell * .6f, Random.value < .5f ? Pal.Sun : Pal.Ember,
+                               Cell * Random.Range(.35f, .6f), .42f, back * Cell * 1.4f + side);
+                    }
+                }
+
+                float throb = .85f + .15f * Mathf.Sin(t * 70f);
+                sheath.rectTransform.localScale = Vector3.one * Mathf.Lerp(.7f, 1.25f, t) * throb;
+                if (flare)
+                {
+                    flare.rectTransform.localRotation = Quaternion.Euler(0f, 0f, t * 540f);
+                    flare.rectTransform.localScale = Vector3.one * Mathf.Lerp(.6f, 1.3f, t);
+                }
+
+                last = at;
+            }, node).OnDone(() => { if (node) Destroy(node.gameObject); });
+
+            Tween.After(over + .1f, () => { if (node) Destroy(node.gameObject); }, node);
+
+        }
+
+        /// <summary>
+        /// The blast, on the frame the model struck the hill: a whiteout, a fireball that swells
+        /// and cools, a shock front racing over the ground and one through the air, the ground
+        /// cracked under it, a column of fire and smoke rising, debris thrown up, and an
+        /// aftershock a beat behind.
+        /// </summary>
         void NukeLands()
         {
-            var centre = new Vector2(0f, MarchY(.5f));
+            var centre = GroundZero;
 
-            Lightup(Color.white, .85f, .8f);
-            Boom(centre, Blast("boom_burst"), Cell * 9f, 22f);
+            Lightup(Color.white, .9f, .7f);
+            Lightup(Pal.Sun, .3f, 1.5f);
+            Flash(centre, Pal.Radiance, 9f);
+
+            Fireball(centre);
+            Boom(centre, Blast("boom_burst"), Cell * 9.5f, 22f);
             Boom(centre, Blast("boom_fire"), Cell * 7f);
-            Tween.After(.12f, () => { if (this) Boom(centre, Blast("boom_smoke"), Cell * 8f, 16f); }, this);
-            Ripple(centre, Pal.Radiance, Span.x * 1.8f, .8f, 0f, .6f);
-            Ripple(centre, Pal.Sun, Span.x * 1.3f, .7f, .1f, .6f);
-            Embers(centre, Pal.Sun, 28, Cell * 1.2f, Cell * .34f);
+            Tween.After(.07f, () => { if (this) Boom(centre + new Vector2(-Cell * 2.6f, Cell * .3f), Blast("boom_fire"), Cell * 4.6f); }, this);
+            Tween.After(.13f, () => { if (this) Boom(centre + new Vector2(Cell * 2.8f, -Cell * .2f), Blast("boom_fire"), Cell * 4.6f); }, this);
+
+            // The ground front, the second front behind it, and the air front: round, because it
+            // is not on the floor (37ev), white and quick.
+            Ripple(centre, Pal.Radiance, Span.x * 1.9f, .85f, 0f, .6f);
+            Ripple(centre, Pal.Sun, Span.x * 1.35f, .7f, .1f, .6f);
+            Ripple(centre, Color.white, Span.x * 1.1f, .45f, 0f, 1f);
+
+            Answer(centre, Pal.Sun, 8f, StrikeFx.Crack, 6.5f);
+            Plume(centre);
+            Embers(centre, Pal.Sun, 30, Cell * 1.4f, Cell * .36f);
+            Twinkles(centre, Pal.Radiance, 10, Cell * 3f);
+
             ShakeBoard(Cell * .5f);
-            Audio.Sfx("boom", .9f, .6f);
-            Audio.Sfx("thunder", .5f, .8f, .05f);
+            Tween.After(.32f, () => { if (this) ShakeBoard(Cell * .2f); }, this);
+
+            Audio.Sfx("boom", .95f, .6f);
+            Audio.Sfx("thunder", .55f, .8f, .05f);
+            Tween.After(.28f, () => { if (this) Audio.Sfx("boom", .5f, .42f); }, this);
+        }
+
+        /// <summary>
+        /// The fireball: three glows of the same middle, swelling in a snap and then cooling
+        /// from the inside out - the white core first, the gold next, the ember last - and
+        /// lifting as it goes, because fire rises.
+        /// </summary>
+        void Fireball(Vector2 centre)
+        {
+            var host = UIKit.Box("Fireball", _fx, Vector2.zero, new Vector2(.5f, .5f), centre);
+
+            var outer = Lit("Outer", host, Art.Glow(128, 1.4f), Pal.A(Pal.Ember, 0f), Vector2.one * Cell * 11f);
+            var mid = Lit("Mid", host, Art.Glow(128, 1.8f), Pal.A(Pal.Sun, 0f), Vector2.one * Cell * 7.5f);
+            var core = Lit("Core", host, Art.Glow(128, 2.4f), Pal.A(Color.white, 0f), Vector2.one * Cell * 4.4f);
+
+            Tween.Run(FireballFor, Ease.Linear, t =>
+            {
+                if (!host) return;
+
+                float s = t * FireballFor;
+                float swell = Ease.OutQuint(Mathf.Clamp01(s / .28f));
+
+                host.localScale = new Vector3(1f, .82f, 1f) * Mathf.Lerp(.2f, 1f, swell);
+                host.anchoredPosition = centre + new Vector2(0f, Cell * 1.3f * t);
+
+                // Each layer holds, then lets go: the core at a third of a second, the gold by
+                // nine tenths, the ember over the whole of it.
+                if (core) core.color = Pal.A(Color.white, .95f * (1f - Mathf.Clamp01(s / .38f)));
+                if (mid) mid.color = Pal.A(Color.Lerp(Pal.Sun, Pal.Ember, t), .8f * (1f - Mathf.Clamp01(s / .9f)));
+                if (outer) outer.color = Pal.A(Color.Lerp(Pal.Ember, Pal.Poppy, t), .6f * (1f - t) * (1f - t));
+            }, host).OnDone(() => { if (host) Destroy(host.gameObject); });
+
+            Tween.After(FireballFor + .1f, () => { if (host) Destroy(host.gameObject); }, host);
+        }
+
+        /// <summary>
+        /// The column: a shaft of fire standing up out of ground zero, and smoke billowing off
+        /// its top and climbing - the mushroom, in the board's own reels. The smoke is the one
+        /// thing here drawn with ordinary alpha, because it is the one thing that is dark.
+        /// </summary>
+        void Plume(Vector2 centre)
+        {
+            var host = UIKit.Box("Plume", _fx, Vector2.zero, new Vector2(.5f, .5f), centre);
+
+            // The stem: a shaft whose soft end is turned to the top, so it is brightest at the ground.
+            var stem = Lit("Stem", host, Art.Shaft(64, 64, 1.1f, .3f), Pal.A(Pal.Ember, 0f),
+                           new Vector2(Cell * 1.8f, Cell * 5.5f));
+            var stemRt = stem.rectTransform;
+            stemRt.localRotation = Quaternion.Euler(0f, 0f, 180f);
+
+            var crown = UIKit.Box("Crown", host, Vector2.zero, new Vector2(.5f, .5f), Vector2.zero);
+            var glow = Lit("Glow", crown, Art.Glow(128, 1.5f), Pal.A(Pal.Ember, 0f),
+                           new Vector2(Cell * 6.5f, Cell * 3.6f));
+
+            var smoke = Blast("boom_smoke");
+            if (smoke != null && smoke.Length > 0)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    var puff = UIKit.Img("Smoke", crown, smoke[0], new Color(1f, 1f, 1f, .85f),
+                                         Vector2.one * Cell * (5.4f - i * .8f));
+                    puff.raycastTarget = false;
+                    puff.rectTransform.anchoredPosition = new Vector2((i - 1) * Cell * 1.5f, i == 1 ? Cell * .5f : 0f);
+
+                    var book = Flipbook.Attach(puff, smoke, 13f + i * 2f, false);
+                    if (book != null) book.OnFinished = () => { if (puff) Destroy(puff.gameObject); };
+                }
+            }
+
+            Tween.Run(PlumeFor, Ease.Linear, t =>
+            {
+                if (!host) return;
+
+                float rise = Ease.OutCubic(t);
+                float tall = Cell * 5.5f * Mathf.Lerp(.15f, 1f, Ease.OutQuint(Mathf.Clamp01(t / .45f)));
+
+                stemRt.sizeDelta = new Vector2(Cell * Mathf.Lerp(1.8f, 1.1f, t), tall);
+                stemRt.anchoredPosition = new Vector2(0f, tall * .5f);
+                stem.color = Pal.A(Color.Lerp(Pal.Sun, Pal.Ember, t), .75f * (1f - t * t));
+
+                crown.anchoredPosition = new Vector2(0f, Cell * Mathf.Lerp(.6f, 5.4f, rise));
+                crown.localScale = Vector3.one * Mathf.Lerp(.55f, 1.35f, rise);
+                if (glow) glow.color = Pal.A(Color.Lerp(Pal.Sun, Pal.Poppy, t), .55f * (1f - t));
+            }, host).OnDone(() => { if (host) Destroy(host.gameObject); });
+
+            Tween.After(PlumeFor + .1f, () => { if (host) Destroy(host.gameObject); }, host);
         }
 
         // ------------------------------------------------------------------ what persists
@@ -576,13 +842,6 @@ namespace GlimmerGrove
         readonly Dictionary<int, Image> _poolArt = new Dictionary<int, Image>(8);
         readonly HashSet<int> _poolsSeen = new HashSet<int>();
         float _bubble;
-
-        RectTransform _vortex;
-        Image[] _vortexParts;
-
-        RectTransform _ray;
-        Image[] _rayCore;
-        Image[][] _rayFeeds;
 
         Image[] _heat;
 
@@ -645,89 +904,644 @@ namespace GlimmerGrove
             }
         }
 
+        // ------------------------------------------------------------------ the vortex
+        /// <summary>The vortex's disc and horizon, in cells: a little smaller than a Gravity Hole's, which takes a quarter of the hill.</summary>
+        const float EddyWide = 5f, EddyCore = 1.3f;
+
+        /// <summary>Seconds the vortex takes to fall in on itself once the model lets go.</summary>
+        const float EddyShuts = .34f;
+
+        /// <summary>Seconds between two motes falling in, two rings closing, and two deals of its lightning.</summary>
+        const float EddyMote = .05f, EddyPulse = .34f, EddyCrackle = .06f;
+
+        /// <summary>How fast it turns, as a multiple of a well's: winding up over its life, fastest as it shuts.</summary>
+        const float EddyHasteFrom = 1.5f, EddyHasteTo = 3.4f;
+
+        /// <summary>How far from its eye a body is drawn streaming light into it, in cells (about its box, 59i).</summary>
+        const float EddyReach = 2.6f;
+
+        /// <summary>
+        /// What the well's pieces are washed in: the Gravity Hole's gold-to-indigo pulled toward
+        /// the vortex card's violet, so the two holes on this hill are kin and never the same thing.
+        /// </summary>
+        static readonly Color EddyWash = new Color(.84f, .64f, 1f);
+
+        sealed class Eddy
+        {
+            public Pit Pit;
+
+            /// <summary>The storm caught in it: arcs between the horizon and the rim, re-dealt on a beat.</summary>
+            public RectTransform Sky;
+            public Lightning.Layered Storm;
+
+            /// <summary>Seconds it has been shutting (or -1), the swell a bite gave it, and the lightning's clock.</summary>
+            public float Shut = -1f, Kick, Crackle;
+            public int Seed;
+        }
+
+        Eddy _eddy;
+
+        /// <summary>
+        /// The vortex (<c>SiegeBoard.Vortices</c>), put up, turned and taken down off
+        /// <c>VortexOpen</c> every frame, as the Gravity Hole is off <c>Sinking</c> (48l): a
+        /// maelstrom on the crowd it gathers, built from the well's own stack
+        /// (<see cref="Raise"/>) so the near half of the disc stands in front of the bodies it
+        /// holds and the far half behind them, with a storm caught in it, light falling in off
+        /// every side, rings closing on it, the held bodies streaming light into its eye, a kick
+        /// on every bite (<see cref="EddyBite"/>) and a collapse that throws the light back out.
+        ///
+        /// <para>
+        /// <b>Built once when it opens and moved every frame after</b>; only the motes and the
+        /// rings are made while it stands, a few a second, and the streams are pooled embers.
+        /// </para>
+        /// </summary>
         void Vortex(float dt)
         {
-            if (!_board.VortexOpen)
+            bool open = _board.VortexOpen && !Over;
+
+            // A board dealt again took the layers this was drawn in with it.
+            if (_eddy != null && (!_eddy.Pit.Under || !_eddy.Pit.Over)) ScrapEddy();
+
+            if (open && _eddy != null && _eddy.Shut >= 0f) ScrapEddy();
+            if (open && _eddy == null) _eddy = RaiseEddy();
+            if (_eddy == null) return;
+
+            var eddy = _eddy;
+            var pit = eddy.Pit;
+            pit.Age += dt;
+
+            if (!open && eddy.Shut < 0f) EddyShut(eddy);
+
+            if (eddy.Shut >= 0f)
             {
-                if (_vortex != null) Destroy(_vortex.gameObject);
-                _vortex = null;
-                return;
+                eddy.Shut += dt;
+                if (eddy.Shut >= EddyShuts) { ScrapEddy(); return; }
             }
 
-            if (_vortex == null)
+            float life = Mathf.Max(.1f, _board.Boosts.Arsenal.VortexFor);
+            float grown = Ease.OutBack(Mathf.Clamp01(pit.Age / WellOpens));
+            float gone = eddy.Shut < 0f ? 0f : Ease.InCubic(Mathf.Clamp01(eddy.Shut / EddyShuts));
+            eddy.Kick = Mathf.MoveTowards(eddy.Kick, 0f, dt * 4.5f);
+
+            float size = grown * (1f - gone) * (1f + .04f * Mathf.Sin(pit.Age * 8f) + .16f * eddy.Kick);
+            float light = Mathf.Clamp01(pit.Age / (WellOpens * .6f)) * (1f - gone);
+
+            pit.Under.localScale = pit.Over.localScale = Vector3.one * Mathf.Max(0f, size);
+
+            float haste = Mathf.Lerp(EddyHasteFrom, EddyHasteTo, Mathf.Clamp01(pit.Age / life));
+            pit.Spin -= dt * WellSpin * haste * (eddy.Shut >= 0f ? 1.8f : 1f);
+
+            var wash = Color.Lerp(EddyWash, Color.white, eddy.Kick * .6f);
+            Twirl(pit.DiscBack, pit.Spin, light, wash);
+            Twirl(pit.DiscFront, pit.Spin, light, wash);
+            Twirl(pit.ArmsBack, pit.Spin * 2.4f, light * .95f, wash);
+            Twirl(pit.ArmsFront, pit.Spin * 2.4f, light * .95f, wash);
+            Twirl(pit.Inner, -pit.Spin * .7f + 40f, light * .75f, wash);
+
+            if (pit.Ring != null)
             {
-                _vortex = UIKit.Node("Vortex", _fx);
-                float wide = Cell * 4.4f;
-
-                var disc = WellPiece("Disc", _vortex, GravityFx.Disc, wide, true);
-                var arms = WellPiece("Arms", _vortex, GravityFx.Arms, wide * .94f, true);
-                var ring = WellPiece("Ring", _vortex, GravityFx.Ring, wide * .6f, true);
-                var core = UIKit.Img("Core", _vortex, Art.Glow(96, 2.4f), new Color(.05f, 0f, .1f, .9f), Vector2.one * wide * .32f);
-                core.raycastTarget = false;
-
-                _vortexParts = new[] { disc, arms, ring, core };
-                foreach (var part in _vortexParts) if (part != null && part != core) part.color = Pal.A(VortexHue, .9f);
+                float beat = .8f + .2f * Mathf.Sin(pit.Age * 13f);
+                pit.Ring.color = Pal.A(Color.Lerp(Pal.Lift(VortexHue, .4f), Color.white, eddy.Kick), light * beat);
             }
 
-            float left = _board.VortexLeft;
-            float open = Mathf.Clamp01((_board.Boosts.Arsenal.VortexFor - left) / .25f) * Mathf.Clamp01(left / .3f);
+            if (pit.Veil != null) pit.Veil.color = Pal.A(WellDark, .55f * light);
 
-            _vortex.anchoredPosition = new Vector2(LaneX(_board.VortexLane), MarchY(_board.VortexMarch));
-            _vortex.localScale = new Vector3(1f, .55f, 1f) * Mathf.Lerp(.2f, 1f, Ease.OutBack(open));
-
-            float turn = Time.unscaledTime;
-            if (_vortexParts[1] != null) _vortexParts[1].rectTransform.localRotation = Quaternion.Euler(0f, 0f, -turn * 260f);
-            if (_vortexParts[0] != null) _vortexParts[0].rectTransform.localRotation = Quaternion.Euler(0f, 0f, -turn * 120f);
-            if (_vortexParts[2] != null) _vortexParts[2].rectTransform.localScale = Vector3.one * (1f + .12f * Mathf.Sin(turn * 9f));
-
-            if (Random.value < dt * 30f)
+            // The storm: re-dealt, never animated, because the next frame of lightning is
+            // unrelated to the last (37eu). Squashed and leant with the disc by its holder.
+            if (eddy.Storm != null && eddy.Storm.Host != null)
             {
-                var edge = _vortex.anchoredPosition + Random.insideUnitCircle.normalized * Cell * 2.2f;
-                Cinder(edge, VortexHue, Cell * .2f, .4f, (_vortex.anchoredPosition - edge) * 2.2f);
+                eddy.Sky.localScale = new Vector3(Mathf.Max(0f, size), Mathf.Max(0f, size) * WellTilt, 1f);
+                eddy.Crackle += dt;
+
+                if (eddy.Crackle >= EddyCrackle && eddy.Shut < 0f)
+                {
+                    eddy.Crackle = 0f;
+                    eddy.Storm.Nova(Vector2.zero, Cell * EddyCore * .5f, Cell * EddyWide * (.36f + .08f * Random.value),
+                                    4 + (eddy.Seed & 1), Cell, .5f, ++eddy.Seed);
+                }
+
+                eddy.Storm.Group.alpha = light * (eddy.Shut >= 0f ? 1f - gone : .55f + .45f * Mathf.Abs(Mathf.Sin(pit.Age * 31f)));
+            }
+
+            if (eddy.Shut >= 0f) return;
+
+            pit.Mote += dt;
+            while (pit.Mote >= EddyMote) { pit.Mote -= EddyMote; Infall(pit); }
+
+            pit.Pulse += dt;
+            if (pit.Pulse >= EddyPulse) { pit.Pulse -= EddyPulse; Closing(pit, EddyWide * .95f, .42f); }
+
+            Streaming(pit.At, dt);
+        }
+
+        /// <summary>A piece of the well turned and washed: <see cref="Turn"/> with a colour.</summary>
+        static void Twirl(Image piece, float degrees, float alpha, Color wash)
+        {
+            if (piece == null) return;
+
+            piece.rectTransform.localRotation = Quaternion.Euler(0f, 0f, degrees);
+            piece.color = Pal.A(wash, Mathf.Clamp01(alpha));
+        }
+
+        Eddy RaiseEddy()
+        {
+            if (_hill == null || _fx == null) return null;
+
+            var at = new Vector2(LaneX(_board.VortexLane), MarchY(_board.VortexMarch));
+            var pit = Raise(at, _hill, _fx, Cell * EddyWide, Cell * EddyCore);
+            pit.Over.SetAsFirstSibling();
+
+            // **The storm's holder is a box the size of the board**, centred on the eye, so the
+            // lightning's own rect is never culled and its origin is the eye (`Lightning.Grow`).
+            var sky = UIKit.Box("Eddy storm", _fx, Span, new Vector2(.5f, .5f), at);
+            sky.localRotation = Quaternion.Euler(0f, 0f, WellLean);
+            sky.localScale = Vector3.zero;
+
+            var storm = Lightning.Grow("Storm", sky, Pal.Lift(VortexHue, .25f), Cell * .05f, haloAlpha: .4f);
+            storm.Group.alpha = 0f;
+
+            return new Eddy { Pit = pit, Sky = sky, Storm = storm, Seed = Random.Range(0, 1 << 20) };
+        }
+
+        void ScrapEddy()
+        {
+            if (_eddy == null) return;
+
+            if (_eddy.Pit.Under) Destroy(_eddy.Pit.Under.gameObject);
+            if (_eddy.Pit.Over) Destroy(_eddy.Pit.Over.gameObject);
+            if (_eddy.Sky) Destroy(_eddy.Sky.gameObject);
+            _eddy = null;
+        }
+
+        /// <summary>
+        /// The moment it opens (the model's volley): the sky dims violet, a great ring closes
+        /// on the eye, a flare where it tears open, and every body near enough to be taken is
+        /// drawn a thread of light into it.
+        /// </summary>
+        void EddyOpened(Vector2 at)
+        {
+            if (_eddy != null) at = _eddy.Pit.At;
+
+            Lightup(WellViolet, .16f, .45f);
+            Flash(at, Pal.Bloom, 3.2f);
+            if (_eddy != null) Closing(_eddy.Pit, EddyWide * 1.8f, WellOpens + .12f);
+            ShakeBoard(Cell * .08f);
+
+            float reach = Cell * EddyReach * 1.2f;
+            int drawn = 0;
+
+            for (int i = 0; i < _mob.Count && drawn < 12; i++)
+            {
+                var mob = _mob[i];
+                if (mob == null || !mob.Node || mob.Falling || mob.Boss) continue;
+
+                var from = mob.Node.anchoredPosition;
+                if ((from - at).sqrMagnitude > reach * reach) continue;
+
+                Taken(from, at, i);
+                drawn++;
+            }
+
+            Audio.Sfx("voidblast", .45f, .9f);
+            Audio.Sfx("whoosh", .55f, .6f);
+        }
+
+        /// <summary>
+        /// A bite (the model's cadence, <c>SiegeArsenal.VortexTick</c>): the vortex swells and
+        /// goes white for a beat and a ring closes on it. Once a frame, however many it bit.
+        /// </summary>
+        void EddyBite()
+        {
+            if (_eddy == null || _eddy.Shut >= 0f) return;
+
+            _eddy.Kick = 1f;
+            Closing(_eddy.Pit, EddyWide * .8f, .28f);
+            Audio.SfxVaried("arc", .16f);
+        }
+
+        /// <summary>
+        /// The light being pulled off every body near the eye, in pooled embers: a few a frame
+        /// at most, so a crowd in the vortex costs what a handful does.
+        /// </summary>
+        void Streaming(Vector2 eye, float dt)
+        {
+            float reach = Cell * EddyReach;
+            float chance = dt * 7f;
+            int left = 5;
+
+            for (int i = 0; i < _mob.Count && left > 0; i++)
+            {
+                var mob = _mob[i];
+                if (mob == null || !mob.Node || mob.Falling || mob.Boss) continue;
+
+                var at = mob.Node.anchoredPosition;
+                var toward = eye - at;
+                if (toward.sqrMagnitude > reach * reach || Random.value > chance) continue;
+
+                // Bent round the eye rather than straight at it: it is turning.
+                var swirl = new Vector2(-toward.y, toward.x) * .35f;
+                Cinder(at + Random.insideUnitCircle * Cell * .3f,
+                       Random.value < .3f ? Pal.Bloom : Pal.Lift(VortexHue, .3f),
+                       Cell * Random.Range(.24f, .4f), .34f, toward * .9f + swirl);
+                left--;
             }
         }
 
+        /// <summary>
+        /// The vortex letting go: it falls in on itself, and what comes back out is light - a
+        /// flare, two rings racing out, sparks thrown up and stars - with a thud under it.
+        /// </summary>
+        void EddyShut(Eddy eddy)
+        {
+            eddy.Shut = 0f;
+
+            // Nothing is thrown over a finished run: the panel is on its way.
+            if (Over || _fx == null) return;
+
+            var at = eddy.Pit.At;
+
+            Tween.After(EddyShuts * .8f, () =>
+            {
+                if (_fx == null) return;
+
+                Flash(at, Pal.Bloom, 3.4f);
+                Ripple(at, WellViolet, Cell * 6f, .5f, 0f);
+                Ripple(at, Pal.Sun, Cell * 3.8f, .42f, .06f);
+                Embers(at, Pal.Bloom, 14, Cell * 1.5f, Cell * .26f);
+                Twinkles(at, WellViolet, 7, Cell * 1.5f);
+                ShakeBoard(Cell * .1f);
+
+                Audio.Sfx("boom", .5f, .5f);
+                Audio.Sfx("whoosh", .4f, 1.3f);
+            }, _fx);
+        }
+
+        // ------------------------------------------------------------------ the ray
+        /// <summary>
+        /// The ray's four layers, outside in: width in lanes, colour, alpha, and how tight its
+        /// falloff is. <b>Wide and soft outside, narrow and hard inside, none at full alpha but the
+        /// core</b> - the singularity's beam's lesson (<c>BeamLayers</c>): added columns of one
+        /// shape sum to a white bar with no colour in it.
+        /// </summary>
+        static readonly (float wide, Color tint, float alpha, float power)[] RayLayers =
+        {
+            (1.9f, new Color(.55f, .24f, 1f), .36f, .8f),
+            (1.15f, new Color(1f, .36f, .84f), .5f, 1.1f),
+            (.62f, new Color(1f, .82f, .34f), .62f, 1.5f),
+            (.24f, Color.white, .95f, 2f),
+        };
+
+        /// <summary>Seconds the ray takes to snap open, and to close to a thread once the model lets go.</summary>
+        const float RayOpens = .14f, RayShuts = .3f;
+
+        /// <summary>Pulses racing up the column, and how many a second each laps it.</summary>
+        const int RayPulses = 5;
+        const float RayLaps = 2.2f;
+
+        /// <summary>Afterimages left behind on the sweep, how often one is laid, and how long one lasts.</summary>
+        const int RayGhosts = 10;
+        const float RayGhostEvery = .045f, RayGhostLife = .4f;
+
+        /// <summary>Seconds between two deals of the lightning down its flanks.</summary>
+        const float RayCrackle = .05f;
+
+        sealed class Sweep
+        {
+            public RectTransform Host;
+            public Image[] Column, Pulses, Ghosts, Beads;
+            public float[] GhostAge;
+            public float[] GhostX;
+            public int GhostNext;
+            public float GhostClock;
+
+            public Image[][] Feeds;
+
+            /// <summary>Where the four feeds meet, lit, and the ground glowing under it.</summary>
+            public Image Focus, Flare, Ground;
+
+            public Lightning.Layered[] Arcs;
+            public float Crackle;
+            public int Seed;
+
+            public float X, Age, Shut = -1f;
+        }
+
+        Sweep _sweep;
+
+        /// <summary>A lane's width on the hill, for the ray's widths.</summary>
+        float LanePitch => Mathf.Max(Cell, Mathf.Abs(LaneX(1f) - LaneX(0f)));
+
+        /// <summary>Where the ray stands on the line, where it reaches on the hill, and where a post's feed leaves it.</summary>
+        float RayFoot => _lineY + Cell * 1.6f;
+        float RayTop => Mathf.Min(Span.y * .5f, MarchY(0f) + Cell * 1.5f);
+        Vector2 Muzzle(int ward) => new Vector2(PostX(ward), _lineY + Cell);
+
+        /// <summary>
+        /// The fused ray (<c>SiegeBoard.Rays</c>), put up, swept and taken down off
+        /// <c>RayLive</c> and <c>RayLane</c> every frame: four additive columns stacked into one
+        /// beam, fed by a beam from every standing post into a lit focus on the line, pulses
+        /// racing up it, lightning down both flanks, afterimages smeared behind it on the sweep,
+        /// sparks thrown off its leading edge - and, when the model lets go, a close to a thread
+        /// and a flash.
+        ///
+        /// <para>
+        /// <b>Built once when it opens and moved every frame after</b>: the pulses, the
+        /// afterimages and the beads are a fixed ring of images re-laid where they belong, the
+        /// lightning is two meshes re-dealt, the sparks are pooled embers. A ray costs the same
+        /// on the twentieth wave as on the first.
+        /// </para>
+        /// </summary>
         void Ray(float dt)
         {
-            if (!_board.RayLive)
+            bool live = _board.RayLive && !Over;
+
+            // A board dealt again took the layer this was drawn in with it.
+            if (_sweep != null && !_sweep.Host) _sweep = null;
+
+            if (live && _sweep != null && _sweep.Shut >= 0f) ScrapSweep();
+            if (live && _sweep == null) _sweep = RaiseSweep();
+            if (_sweep == null) return;
+
+            var sweep = _sweep;
+            sweep.Age += dt;
+
+            if (!live && sweep.Shut < 0f) SweepShut(sweep);
+
+            if (sweep.Shut >= 0f)
             {
-                if (_ray != null) Destroy(_ray.gameObject);
-                _ray = null;
-                return;
+                sweep.Shut += dt;
+                if (sweep.Shut >= RayShuts) { ScrapSweep(); return; }
             }
 
-            float x = LaneX(_board.RayLane);
-            var foot = new Vector2(x, _lineY + Cell * 1.6f);
-            var top = new Vector2(x, _hillTop - Cell);
+            float was = sweep.X;
+            if (live) sweep.X = LaneX(_board.RayLane);
+            float moved = sweep.X - was;
+
+            Sweeping(sweep, dt, moved);
+        }
+
+        Sweep RaiseSweep()
+        {
+            var sweep = new Sweep
+            {
+                Host = UIKit.Node("Ray", _fx),
+                X = LaneX(_board.RayLane),
+                Seed = Random.Range(0, 1 << 20),
+            };
+
+            var host = sweep.Host;
             int posts = _posts != null ? _posts.Length : 0;
 
-            // **Built once when the ray opens and moved every frame after**: the column and a
-            // feed from each post, three stretched capsules apiece, laid again where the sweep
-            // has got to (`Lay`) rather than rebuilt - a rebuild would be a dozen images made and
-            // destroyed a frame on the effects canvas for the two seconds the ray lives.
-            if (_ray == null)
+            // Under the column, so it is the column that reads first.
+            sweep.Ghosts = new Image[RayGhosts];
+            sweep.GhostAge = new float[RayGhosts];
+            sweep.GhostX = new float[RayGhosts];
+            for (int i = 0; i < RayGhosts; i++)
             {
-                _ray = UIKit.Node("Ray", _fx);
-                _rayCore = Shaft(_ray, foot, top, RayHue, Cell * 1.1f);
-                _rayFeeds = new Image[posts][];
-                for (int w = 0; w < posts; w++)
-                    _rayFeeds[w] = Shaft(_ray, new Vector2(PostX(w), _lineY + Cell), foot, RayHue, Cell * .28f);
+                sweep.Ghosts[i] = Lit("Ghost", host, Art.Shaft(64, 64, 1.2f), Color.clear, Vector2.one);
+                sweep.GhostAge[i] = RayGhostLife;
             }
 
-            float flicker = .8f + .2f * Mathf.Sin(Time.unscaledTime * 50f);
-            Lay(_rayCore, foot, top, Cell * 1.1f * flicker);
+            sweep.Ground = Lit("Ground", host, Art.Glow(128, 1.6f), Color.clear, new Vector2(Cell * 4.4f, Cell * 2f));
 
-            for (int w = 0; w < posts && w < _rayFeeds.Length; w++)
+            sweep.Feeds = new Image[posts][];
+            sweep.Beads = new Image[posts];
+            for (int w = 0; w < posts; w++)
             {
-                bool lit = _board.Wards[w].Alive;
-                foreach (var img in _rayFeeds[w]) if (img != null) img.enabled = lit;
-                if (lit) Lay(_rayFeeds[w], new Vector2(PostX(w), _lineY + Cell), foot, Cell * .28f * flicker);
+                sweep.Feeds[w] = Shaft(host, Muzzle(w), new Vector2(sweep.X, RayFoot), RayHue, Cell * .26f);
+                sweep.Beads[w] = Lit("Bead", host, Art.Glow(96, 2f), Color.clear, Vector2.one * Cell * .9f);
             }
 
-            if (Random.value < dt * 40f)
-                Burst.Sparks(_fx, new Vector2(x, MarchY(Random.value)), RayHue, 3, Cell * .9f, Cell * .12f, .24f);
+            sweep.Column = new Image[RayLayers.Length];
+            for (int i = 0; i < RayLayers.Length; i++)
+                sweep.Column[i] = Lit("Column", host, Art.Shaft(64, 64, RayLayers[i].power), Color.clear, Vector2.one);
+
+            sweep.Pulses = new Image[RayPulses];
+            for (int i = 0; i < RayPulses; i++)
+                sweep.Pulses[i] = Lit("Pulse", host, Art.Glow(96, 1.6f), Color.clear, new Vector2(Cell * 1.8f, Cell * 3.2f));
+
+            sweep.Focus = Lit("Focus", host, Art.Glow(128, 2f), Color.clear, Vector2.one * Cell * 3.4f);
+            sweep.Flare = Lit("Flare", host, StrikeFx.Flare, Color.clear, Vector2.one * Cell * 3.2f);
+
+            sweep.Arcs = new Lightning.Layered[2];
+            for (int side = 0; side < 2; side++)
+            {
+                sweep.Arcs[side] = Lightning.Grow("Ray arc", host, Pal.Bloom, Cell * .06f, haloAlpha: .45f);
+                sweep.Arcs[side].Group.alpha = 0f;
+            }
+
+            return sweep;
+        }
+
+        /// <summary>Lays the whole ray where the sweep has got to, at the strength its open and close allow.</summary>
+        void Sweeping(Sweep sweep, float dt, float moved)
+        {
+            float foot = RayFoot, top = RayTop, tall = Mathf.Max(Cell, top - foot);
+            float x = sweep.X, pitch = LanePitch, now = sweep.Age;
+
+            float open = sweep.Age < RayOpens ? Ease.OutBack(sweep.Age / RayOpens) : 1f;
+            float shut = sweep.Shut < 0f ? 1f : 1f - Ease.InQuad(Mathf.Clamp01(sweep.Shut / RayShuts));
+            float flick = 1f + .07f * Mathf.Sin(now * 150f) + .04f * Mathf.Sin(now * 67f);
+            float wide = Mathf.Max(0f, open * shut) * flick;
+            float lit = Mathf.Clamp01(open) * (sweep.Shut < 0f ? 1f : shut);
+
+            var mid = new Vector2(x, (foot + top) * .5f);
+
+            for (int i = 0; i < sweep.Column.Length; i++)
+            {
+                var img = sweep.Column[i];
+                if (!img) continue;
+
+                // The core outlasts the sheath: as it closes it goes white, not dim.
+                bool core = i == sweep.Column.Length - 1;
+                var layer = RayLayers[i];
+                float across = layer.wide * pitch * (core ? Mathf.Max(wide, .35f * lit) : wide);
+
+                var rt = img.rectTransform;
+                rt.anchoredPosition = mid;
+                rt.sizeDelta = new Vector2(across, tall);
+                img.color = Pal.A(layer.tint, layer.alpha * (core ? lit : Mathf.Clamp01(wide * 1.3f)));
+            }
+
+            // Pulses racing up it, so it reads as something travelling rather than a bar.
+            for (int i = 0; i < sweep.Pulses.Length; i++)
+            {
+                var pulse = sweep.Pulses[i];
+                if (!pulse) continue;
+
+                float lap = now * RayLaps + i / (float)sweep.Pulses.Length;
+                lap -= Mathf.Floor(lap);
+
+                pulse.rectTransform.anchoredPosition = new Vector2(x, Mathf.Lerp(foot, top, lap));
+                pulse.rectTransform.localScale = new Vector3(Mathf.Max(.2f, wide), 1f, 1f);
+                pulse.color = Pal.A(i % 2 == 0 ? Color.white : Pal.Bloom, Mathf.Sin(lap * Mathf.PI) * .7f * lit);
+            }
+
+            // The focus, where the four feeds meet: a light, and a flare turning in it.
+            var focus = new Vector2(x, foot);
+            float beat = .85f + .15f * Mathf.Sin(now * 22f);
+
+            if (sweep.Focus)
+            {
+                sweep.Focus.rectTransform.anchoredPosition = focus;
+                sweep.Focus.rectTransform.localScale = Vector3.one * beat * Mathf.Max(.2f, wide);
+                sweep.Focus.color = Pal.A(Color.white, .9f * lit);
+            }
+
+            if (sweep.Flare)
+            {
+                sweep.Flare.rectTransform.anchoredPosition = focus;
+                sweep.Flare.rectTransform.localRotation = Quaternion.Euler(0f, 0f, now * 220f);
+                sweep.Flare.rectTransform.localScale = Vector3.one * (.8f + .3f * beat) * Mathf.Max(.2f, wide);
+                sweep.Flare.color = Pal.A(Pal.Bloom, .85f * lit);
+            }
+
+            if (sweep.Ground)
+            {
+                sweep.Ground.rectTransform.anchoredPosition = focus;
+                sweep.Ground.color = Pal.A(RayHue, .5f * lit * beat);
+            }
+
+            // A feed from every standing post, and a bead of light racing down each to the focus.
+            for (int w = 0; w < sweep.Feeds.Length; w++)
+            {
+                bool standing = w < _board.Wards.Count && _board.Wards[w].Alive;
+                var feed = sweep.Feeds[w];
+                var bead = sweep.Beads[w];
+
+                for (int i = 0; i < feed.Length; i++) if (feed[i]) feed[i].enabled = standing && lit > 0f;
+                if (bead) bead.enabled = standing && lit > 0f;
+                if (!standing) continue;
+
+                var from = Muzzle(w);
+                Lay(feed, from, focus, Cell * .26f * Mathf.Max(.25f, wide));
+                for (int i = 0; i < feed.Length; i++)
+                    if (feed[i]) feed[i].color = Pal.A(feed[i].color, (i == 2 ? .95f : .7f) * lit);
+
+                if (bead)
+                {
+                    float run = now * 3.2f + w * .27f;
+                    run -= Mathf.Floor(run);
+                    bead.rectTransform.anchoredPosition = Vector2.Lerp(from, focus, run * run);
+                    bead.color = Pal.A(Color.white, Mathf.Sin(run * Mathf.PI) * .9f * lit);
+                }
+            }
+
+            // Afterimages: a ring of columns laid behind the sweep and let go, oldest first.
+            sweep.GhostClock += dt;
+            if (sweep.Shut < 0f && Mathf.Abs(moved) > .01f && sweep.GhostClock >= RayGhostEvery)
+            {
+                sweep.GhostClock = 0f;
+                sweep.GhostX[sweep.GhostNext] = x;
+                sweep.GhostAge[sweep.GhostNext] = 0f;
+                sweep.GhostNext = (sweep.GhostNext + 1) % sweep.Ghosts.Length;
+            }
+
+            for (int i = 0; i < sweep.Ghosts.Length; i++)
+            {
+                var ghost = sweep.Ghosts[i];
+                if (!ghost) continue;
+
+                sweep.GhostAge[i] += dt;
+                float fade = 1f - Mathf.Clamp01(sweep.GhostAge[i] / RayGhostLife);
+                ghost.enabled = fade > 0f;
+                if (fade <= 0f) continue;
+
+                var rt = ghost.rectTransform;
+                rt.anchoredPosition = new Vector2(sweep.GhostX[i], mid.y);
+                rt.sizeDelta = new Vector2(pitch * Mathf.Lerp(.35f, .9f, fade), tall);
+                ghost.color = Pal.A(Color.Lerp(RayLayers[0].tint, RayLayers[1].tint, fade), .3f * fade * fade);
+            }
+
+            // Lightning down both flanks, re-dealt on a beat.
+            sweep.Crackle += dt;
+            bool deal = sweep.Crackle >= RayCrackle && sweep.Shut < 0f;
+            if (deal) sweep.Crackle = 0f;
+
+            for (int side = 0; side < sweep.Arcs.Length; side++)
+            {
+                var arc = sweep.Arcs[side];
+                if (arc == null || arc.Host == null) continue;
+
+                if (deal)
+                {
+                    var flank = new Vector2((side == 0 ? -1f : 1f) * pitch * .42f, 0f);
+                    arc.Strike(new Vector2(x, top) + flank, focus + flank, Cell, .5f, 1, ++sweep.Seed);
+                }
+
+                arc.Group.alpha = lit * (.6f + .4f * Mathf.Abs(Mathf.Sin(now * 37f + side)));
+            }
+
+            if (sweep.Shut >= 0f) return;
+
+            // Sparks thrown off the leading edge, the way it is going.
+            float ahead = moved >= 0f ? 1f : -1f;
+            int sparks = Mathf.Min(3, Mathf.FloorToInt(dt * 45f + Random.value));
+            for (int i = 0; i < sparks; i++)
+            {
+                var at = new Vector2(x + ahead * pitch * .35f, Mathf.Lerp(foot, top, Random.value));
+                Cinder(at, Random.value < .4f ? Pal.Sun : Random.value < .5f ? Pal.Bloom : Color.white,
+                       Cell * Random.Range(.2f, .36f), .32f,
+                       new Vector2(ahead * Cell * Random.Range(1.2f, 2.6f), Random.Range(-Cell, Cell * 1.4f)));
+            }
 
             if (Random.value < dt * 6f) ShakeBoard(Cell * .04f);
+        }
+
+        /// <summary>
+        /// The moment the ray fuses (the model's volley): a bolt from every standing post into
+        /// the focus, a flare and a ring where they meet, and the sky lit pink.
+        /// </summary>
+        void Fused()
+        {
+            var focus = new Vector2(_sweep != null ? _sweep.X : LaneX(_board.RayLane), RayFoot);
+
+            Lightup(RayHue, .16f, .5f);
+            Flash(focus, Pal.Bloom, 4.2f);
+            Ripple(focus, RayHue, Cell * 6f, .5f, 0f);
+            Twinkles(focus, Pal.Bloom, 6, Cell * 1.2f);
+            ShakeBoard(Cell * .12f);
+
+            int posts = _posts != null ? _posts.Length : 0;
+            for (int w = 0; w < posts; w++)
+            {
+                if (w >= _board.Wards.Count || !_board.Wards[w].Alive) continue;
+
+                var bolt = Lightning.Grow("Fuse", _fx, Pal.Bloom, Cell * .07f, haloAlpha: .5f);
+                bolt.Strike(Muzzle(w), focus, Cell, .45f, 1, Random.Range(0, 1 << 20));
+
+                Tween.Run(.28f, Ease.Linear, t =>
+                {
+                    if (bolt.Host == null) return;
+                    bolt.Group.alpha = (1f - t) * (.6f + .4f * Mathf.Abs(Mathf.Sin(t * 40f)));
+                }, bolt.Host).OnDone(bolt.Destroy);
+
+                Tween.After(.32f, bolt.Destroy, bolt.Host);
+            }
+
+            Audio.Sfx("charge", .5f, .8f);
+            Audio.Sfx("arc", .6f, .85f);
+            Audio.Sfx("thunder", .35f, 1.3f);
+        }
+
+        /// <summary>The ray closing: a flash at the focus where it ends and stars where it stood.</summary>
+        void SweepShut(Sweep sweep)
+        {
+            sweep.Shut = 0f;
+
+            if (Over || _fx == null) return;
+
+            var focus = new Vector2(sweep.X, RayFoot);
+            Flash(focus, Pal.Bloom, 3f);
+            Twinkles(new Vector2(sweep.X, (RayFoot + RayTop) * .5f), Pal.Bloom, 6, Cell * 1.2f);
+            Audio.Sfx("whoosh", .35f, 1.4f);
+        }
+
+        void ScrapSweep()
+        {
+            if (_sweep == null) return;
+            if (_sweep.Host) Destroy(_sweep.Host.gameObject);
+            _sweep = null;
         }
 
         /// <summary>
