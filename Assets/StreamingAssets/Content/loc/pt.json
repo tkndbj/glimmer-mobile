@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Continuar com um vídeo"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Segredo desbloqueado!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Evolução desbloqueada!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "OK"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Nuvem de tempestade"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Uma nuvem de tempestade cobre a colina. A cada 3 segundos, raios atingem os 3 invasores mais próximos."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Fogo gélido"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "A cada 5 segundos, um gêiser de vapor explode sob o maior grupo. Ele congela e queima."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Órbita de lâminas"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Lâminas giram ao redor das suas torres. Cada torre lança uma lâmina bumerangue que acerta 2 invasores."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Praga"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Invasores que morrem no veneno explodem. O veneno se espalha ao redor deles."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Gemas cometa"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Cada gema de poder que você cria ou ativa lança um cometa no invasor mais forte."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "A metade de baixo da colina congela. Invasores no gelo ficam lentos e levam golpes de espinhos de gelo."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Horizonte de eventos"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "A cada 11 segundos, um buraco negro puxa os invasores. Quando ele fecha, esmaga os fracos."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Dragão de fogo"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "A cada 9 segundos, um dragão de fogo cruza a colina e queima todos os invasores no caminho."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Cúpula dourada"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Uma cúpula dourada protege suas torres. Ela bloqueia os primeiros 4 golpes de cada onda."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Cascata arco-íris"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Cada reação em cadeia de gemas lança um raio arco-íris na colina. Quanto mais longa, mais forte."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Canhão solar"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "Um segundo sol nasce. A cada 8 segundos, ele queima a pista mais cheia com um raio gigante."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armagedom"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "A cada 12 segundos, o céu fica vermelho e 8 meteoros chovem sobre os invasores."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Tempo parado"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "A cada 15 segundos, o tempo para por 4 segundos. Os invasores congelam e suas torres atiram duas vezes mais rápido."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Projéteis titã"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "A cada 5 tiros, sai também um projétil gigante que explode nos invasores ao redor."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Olho de águia"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "A cada 4 tiros, um também acerta o invasor mais forte com o triplo de dano."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Fortaleza"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Cada onda cura um pouco suas torres. Invasores que batem numa torre levam o golpe de volta."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Bombas de fragmentação"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "A cada 3 tiros, caem 3 bombas ao redor do alvo."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Raio globular"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "A cada 4 segundos, cada torre envia uma bola de raios colina acima. Ela eletrocuta cada invasor que toca."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Enxame de mísseis"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Cada rajada de mísseis também dispara 8 mísseis pequenos em invasores diferentes."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Pó de diamante"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Seus tiros resfriam. Um invasor estilhaçado deixa uma nevasca que congela tudo ao redor."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Tempestade de cometas"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Cada meteoro se parte em 4 fragmentos em chamas que chovem ao redor."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Lança prisma"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "A cada 6 segundos, seus lasers carregam um prisma. Ele dispara 6 raios arco-íris nos invasores mais fortes."
     }
   ]
 }

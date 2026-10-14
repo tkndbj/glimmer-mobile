@@ -1176,7 +1176,7 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `content.py`). **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
    kept as a typed read for the readers that only ever meant the Infinite lane, and `Tune` and the
    validator read the ramp.
-59d. **A card is a row of code and never content** (20): sixty-five of them in four tiers (59m), told
+59d. **A card is a row of code and never content** (20): sixty-five of them (and the bonds they make, 59n) in four tiers (59m), told
    apart by *what they take* (37z asked of upgrades) - a common moves a number the player already
    has, a rare grants an ability the shelf sells or a new way to attack, an epic changes a rule, a
    legendary changes the shape of the run. One damage card and not three (5d). An id, a tier and a
@@ -1308,6 +1308,35 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    flights, nova fork, blasts). **Held by** `ShuffleFieldTests` (each rule, the plain field, no draw),
    `TheIdentityBoostChangesNothing`, `EveryAttackCardIsSeenOnTheBoard` (laser row) and
    `SiegeCharmTests` (every charm on exactly one of roster or `Made`).
+
+59n. **Secrets and evolutions: what cards held together unlock** (2026-10-14, the owner: "some
+   combination of cards should enable unique, strong and fun abilities ... stacking some cards should
+   give a superior effect ... hard to do ... legendary ones should truly feel super rare"). A bond
+   (`ShuffleBonds.All`) is a **secret** - two, three or four different cards, rare, epic or legendary by
+   count - or an **evolution** - one card at its most. Thirteen secrets and nine evolutions, each granting
+   one `SiegePower` bit (`SiegeBoosts.Powers`, folded by `ShuffleBuild.Compile` after every card, so a bond
+   is a function of the cards held, unlocked on its last part and never lost). **Rules are one file**
+   (`SiegeBoard.Secrets`): every entry returns on `SiegeBoosts.AnyPower`, false on the plain line and on
+   any build that unlocked nothing; every hit goes through `Hit`/`Splinter` at tenths of a plain bolt
+   (`PlainShot`), so a power climbs with the damage cards and never past the ramp; every roll is the
+   build's stream (41); a blocked blow, a time stop and a mend are bounded per wave or per clock. Shared
+   code gained guarded hooks only: `Haste` (exactly one but inside a time stop) on `Shoot`'s cooldown,
+   `Domed`/`Reflected` in `Swing`, `Rallied` in `Mustered`, `Empowered` in `Augment`, `Mourned` in
+   `Perished`, `Snowed` in `Shatter`, `Shards` after a meteor, `Gemmed` per field beat. The clocks and
+   strengths are the mode's (`SiegeSecrets`), not the published tuning, because each note states its
+   numbers in words. **Drawn by** `SiegeView.Secrets` (a power's standing look - a storm cloud, blades
+   round every post, an ice sheet, a golden dome, a second sun, a prism - and its set pieces) through the
+   arsenal's doors. **The hand marks a card that brings one closer**: a green diamond for a secret the
+   build has started (`ShuffleBonds.Advances`), a purple one for an evolution on its way
+   (`ShuffleBonds.Evolves`), under the note (`ShuffleHandLayout.Diamond*`); the art is the kit's gem
+   hue-rotated by `make_shuffle_art.py`, scoped with the lane (`SiegeMode.ShuffleArt`). **An unlock is
+   celebrated** (`ShuffleUnlockOverlay`, laid out by `ShuffleUnlockLayout`): the cards gather into the
+   emblem, the room breaks into colour scaled by tier, then the headline, the name, one sentence and the
+   recipe, closed by OKAY only; several on one take queue, the grandest last. Analytics: `shuffle_ended.bonds`.
+   **Held by** `ShuffleSecretTests` (catalog, words in nine languages, unlocking in any order, the
+   diamonds, every power seen on the board, the dome's bound, time stop, determinism, the panel's
+   layout), `TheIdentityBoostChangesNothing` and `ThePlainLineNeverDrawsTheArsenal`;
+   `render_shuffle.py --marks` and `--unlock` (`--unlock all --measure` fails on a caption at its floor).
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the

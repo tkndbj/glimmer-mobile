@@ -18209,6 +18209,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_spark_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d849e269cc0e13d6faa4c96c6a84646
+    m_Address: Art/Ui/shuffle_evolution
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6d853492f3a75be4597c3c8279a7d521
     m_Address: Art/Fx/Siege/shot_mortar_y/f11
     m_ReadOnly: 0
@@ -20961,6 +20966,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/beacon_g_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cafeaa250c38524cf5bc20e8c524b61
+    m_Address: Art/Ui/shuffle_secret
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7cb55c94695e083d7a8dd8ac913a4341
     m_Address: Art/Ui/Shuffle/hydra

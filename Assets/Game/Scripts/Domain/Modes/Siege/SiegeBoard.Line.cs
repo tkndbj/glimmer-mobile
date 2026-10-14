@@ -285,6 +285,10 @@ namespace GlimmerGrove.Modes
             // (`laser_core`). After the attack cards, before anything that may end this early.
             if (boosts.LaserGuns > 0 && Lasered(index)) Lase(ward, index, target, damage);
 
+            // **And what an evolved card adds** (`SiegeBoard.Secrets`): a titan shell, a sniper
+            // round, bomblets, a swarm. Nothing on a build that has unlocked no power.
+            Empowered(ward, index, target, damage);
+
             if (boosts.SplashTenths > 0)
                 Spread(ward, index, target, Share(damage, boosts.SplashTenths), boosts.SplashReach,
                        SiegeVia.Splash);

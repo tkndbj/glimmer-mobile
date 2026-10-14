@@ -37,7 +37,7 @@ namespace GlimmerGrove.Tests
 
         const uint ShippedSeed = 948309542u;
 
-        static SiegeLayout Lane(int gold = 24)
+        internal static SiegeLayout Lane(int gold = 24)
         {
             Assert.IsTrue(ProtoGrid.TryRead(Field, 8, 5, SiegeLayout.Cells, out var grid, out string error), error);
 
@@ -53,7 +53,7 @@ namespace GlimmerGrove.Tests
         /// player's loadout; the fixtures stand one constant line so a trace, a sweep and a seed
         /// measure the same board on every machine whatever its save holds.
         /// </summary>
-        static WardLine Breakers()
+        internal static WardLine Breakers()
         {
             var breaker = WardCatalog.Default.Find(WardModel.Elemental);
             Assert.IsNotNull(breaker, "the shipped roster has no Breaker");
@@ -600,6 +600,7 @@ namespace GlimmerGrove.Tests
                 b.PactDamage, b.PactFire, b.PactFuelShot, b.PactGuard,
                 b.KineticPercent, b.IronPercent, b.OverflowPercent, b.ChainFuelPercent,
                 b.BlastGems, b.PowerGems, b.LaserGuns, b.LaserTenths, b.LaserHits,
+                b.Powers,
             });
 
         // ------------------------------------------------------------------ the seam
@@ -996,7 +997,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>Takes <paramref name="id"/> to its most.</summary>
-        static void Load(ShuffleRun run, string id)
+        internal static void Load(ShuffleRun run, string id)
         {
             var card = ShuffleCards.Find(id);
             Assert.IsNotNull(card, id);
@@ -1004,7 +1005,12 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>The model player for <paramref name="seconds"/>, handing every report to <paramref name="look"/>.</summary>
-        static void Play(SiegeBoard board, float seconds, Action<SiegeReport> look)
+        internal static void Play(SiegeBoard board, float seconds, Action<SiegeReport> look)
+            => Play(board, seconds, look, null);
+
+        /// <summary>The model player, also handing every swap's turn to <paramref name="swapped"/>.</summary>
+        internal static void Play(SiegeBoard board, float seconds, Action<SiegeReport> look,
+                                  Action<SiegeBoard, SiegeTurn> swapped)
         {
             const float Frame = 1f / 60f;
             float since = 0f;
@@ -1019,7 +1025,8 @@ namespace GlimmerGrove.Tests
                 since += Frame;
                 if (since < 1.2f || !Aimed(board, out int a, out int b)) continue;
 
-                board.Swap(a, b);
+                var turn = board.Swap(a, b);
+                if (turn != null) swapped?.Invoke(board, turn);
                 since = 0f;
             }
         }
@@ -1178,7 +1185,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>A swap that lines up the colour furthest down the hill, else any swap.</summary>
-        static bool Aimed(SiegeBoard board, out int a, out int b)
+        internal static bool Aimed(SiegeBoard board, out int a, out int b)
         {
             var plan = board.Layout;
             char want = '\0';

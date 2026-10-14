@@ -32,12 +32,23 @@ namespace GlimmerGrove.Shuffle
                 held.Append(taken[i].Id);
             }
 
+            // The secrets and evolutions it unlocked (59n), by their permanent ids.
+            var bonds = new StringBuilder(64);
+            var unlocked = run.Build.Bonds;
+
+            for (int i = 0; i < unlocked.Count; i++)
+            {
+                if (i > 0) bonds.Append(',');
+                bonds.Append(unlocked[i].Id);
+            }
+
             Telemetry.Track(Ended,
                 "level_id", level.Id.Value,
                 "waves", waves,
                 "hands", run.Hands,
                 "cards", taken.Count,
                 "build", held.ToString(),
+                "bonds", bonds.ToString(),
                 "seed", (long)run.Seed,
                 "tuning", run.Tuning.Revision);
         }

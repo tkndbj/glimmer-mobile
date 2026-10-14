@@ -56,6 +56,10 @@ namespace GlimmerGrove.Modes
             // arcs, meteors, vortices, toxic pools, the ray, a falling nuke. Shut on the plain
             // line, so a chapter and the Infinite lane never reach past its first line.
             Arsenal(dt);
+
+            // **And what a build's unlocked secrets and evolutions do on theirs**
+            // (`SiegeBoard.Secrets`). Shut on every build that has unlocked none.
+            Secrets(dt);
             Age(dt);
 
             for (int i = _raiders.Count - 1; i >= 0; i--)
@@ -581,6 +585,9 @@ namespace GlimmerGrove.Modes
                 _wards[at].Charges++;
                 _report.Brimmed.Add(at);
             }
+
+            // The dome raised again and the walls mended (`SiegeBoard.Secrets`).
+            Rallied();
         }
 
         /// <summary>
@@ -809,7 +816,9 @@ namespace GlimmerGrove.Modes
                 // nothing to aim at. Nothing to lose on the plain line.
                 if (!ward.Fuelled) { ward.Cool = 0f; Unspin(w); continue; }
 
-                ward.Cool -= dt;
+                // **`Haste` is exactly one but inside a build's time stop** (`SiegeBoard.Secrets`),
+                // so on every other board this runs the cooldown down by `dt`, bit for bit.
+                ward.Cool -= dt * Haste;
                 if (ward.Cool > 0f) continue;
 
                 var target = Aim(ward);
@@ -1395,11 +1404,18 @@ namespace GlimmerGrove.Modes
                 int w = Nearest(raider.Column);
                 if (w < 0) continue;
 
+                // **A build's golden dome may take the blow instead** (`SiegeBoard.Secrets`): the
+                // swing is spent and nothing reaches the post. False on every build without it.
+                if (Domed(w, raider)) continue;
+
                 var ward = _wards[w];
                 int damage = _boosts.Blow(raider.Surge.Blow(SiegeTuning.BlowOf(raider.Kind)));
                 bool felled = Bear(ward, damage);
 
                 _report.Blows.Add(new SiegeBlow(w, raider.Id, damage, felled));
+
+                // And a fortress wall's answer to it. Nothing without the power.
+                Reflected(w, raider);
 
                 // **What a swinger pays for landing it** (`SiegeBoosts.ThornsPercent`): a bolt's
                 // worth back off the post it hit, reported as an extra bolt from that post so

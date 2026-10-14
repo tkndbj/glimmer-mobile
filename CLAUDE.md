@@ -230,7 +230,7 @@ wire or rules mistake reaches live accounts.
 
 ### Modes — in `Assets/Game/MODES.md`
 
-**Invariants 20–26h, 28–36i, 37–43f and 59–59l live in `Assets/Game/MODES.md`** — entry tests, grading, fail
+**Invariants 20–26h, 28–36i, 37–43f and 59–59n live in `Assets/Game/MODES.md`** — entry tests, grading, fail
 states, the withdrawn and hidden modes, and all of Thornwatch (charms, bosses, turrets, utilities, the
 Infinite lane). **Read it before touching a mode, a board, difficulty or the siege.**
 

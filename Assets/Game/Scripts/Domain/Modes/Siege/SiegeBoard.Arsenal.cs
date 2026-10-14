@@ -314,9 +314,11 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Lays a pool on the box <paramref name="at"/> stands in, or refreshes the one there.</summary>
         void Lay(SiegeRaider at, int ward, int tenths, float seconds)
-        {
-            int lane = at.Column, row = SiegeTuning.RowOf(at.March);
+            => LayAt(at.Column, SiegeTuning.RowOf(at.March), ward, tenths, seconds);
 
+        /// <summary>Lays a pool on box (<paramref name="lane"/>, <paramref name="row"/>), or refreshes the one there.</summary>
+        void LayAt(int lane, int row, int ward, int tenths, float seconds)
+        {
             for (int i = 0; i < _pools.Count; i++)
             {
                 var pool = _pools[i];
@@ -418,6 +420,9 @@ namespace GlimmerGrove.Modes
 
             if (_boosts.WildfireReach > 0 && fallen.Burn > 0f)
                 Wildfire(fallen, ward);
+
+            // And what an unlocked secret makes of it (`SiegeBoard.Secrets`).
+            Mourned(fallen, ward);
         }
 
         /// <summary>
@@ -441,6 +446,9 @@ namespace GlimmerGrove.Modes
                 Hit(ward, r, damage, SiegeVia.Shatter, fallen.Id);
                 if (r.Alive) r.Freeze(_boosts.Arsenal.ShatterChillTenths, _boosts.Arsenal.ShatterChillFor);
             }
+
+            // An evolved shatter leaves a blizzard behind (`SiegeBoard.Secrets`).
+            Snowed(lane, row, ward);
         }
 
         /// <summary>A body that died burning sets everything within reach alight at its own fire or the card's, whichever is fiercer.</summary>
@@ -575,6 +583,8 @@ namespace GlimmerGrove.Modes
                                  _boosts.Arsenal.MeteorBurnFor, -1);
                 }
 
+                // An evolved meteor breaks into shards (`SiegeBoard.Secrets`).
+                Shards(_meteorLane, _meteorRow);
                 return;
             }
 

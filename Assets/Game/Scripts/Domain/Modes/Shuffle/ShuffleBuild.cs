@@ -46,6 +46,26 @@ namespace GlimmerGrove.Shuffle
         public int Copies(ShuffleCard card)
             => card != null && _held.TryGetValue(card.Id, out int n) ? n : 0;
 
+        /// <summary>How many copies of the card with id <paramref name="id"/> this build holds.</summary>
+        public int CopiesOf(string id)
+            => id != null && _held.TryGetValue(id, out int n) ? n : 0;
+
+        readonly List<ShuffleBond> _bonds = new List<ShuffleBond>(4);
+        readonly List<ShuffleBond> _unlocked = new List<ShuffleBond>(2);
+
+        /// <summary>
+        /// Every secret and evolution this build has unlocked (MODES.md 59n), in catalog order. A
+        /// function of the cards held like everything else here, worked out by <see cref="Compile"/>.
+        /// </summary>
+        public IReadOnlyList<ShuffleBond> Bonds => _bonds;
+
+        /// <summary>
+        /// The bonds the last <see cref="Take"/> unlocked, lowest tier first - what the screen
+        /// celebrates, in the order it celebrates them (the grandest last). Empty when that take
+        /// unlocked nothing.
+        /// </summary>
+        public IReadOnlyList<ShuffleBond> Unlocked => _unlocked;
+
         /// <summary>Whether another copy of <paramref name="card"/> could still be taken.</summary>
         public bool Takeable(ShuffleCard card) => card != null && Copies(card) < card.Most;
 
@@ -75,20 +95,46 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public bool Take(ShuffleCard card)
         {
+            _unlocked.Clear();
             if (!Takeable(card)) return false;
+
+            int before = _bonds.Count;
+            var had = before > 0 ? new List<ShuffleBond>(_bonds) : null;
 
             _held[card.Id] = Copies(card) + 1;
             _taken.Add(card);
             Compile();
+
+            if (_bonds.Count == before) return true;
+
+            for (int i = 0; i < _bonds.Count; i++)
+                if (had == null || !had.Contains(_bonds[i])) _unlocked.Add(_bonds[i]);
+
+            // Lowest tier first, catalog order within a tier: the grandest is shown last.
+            _unlocked.Sort((a, b) => a.Tier != b.Tier ? a.Tier.CompareTo(b.Tier)
+                                                    : Array.IndexOf(ShuffleBonds.All, a).CompareTo(Array.IndexOf(ShuffleBonds.All, b)));
             return true;
         }
 
-        /// <summary>The fold: the plain line, then every copy of every card held.</summary>
+        /// <summary>
+        /// The fold: the plain line, then every copy of every card held, then every bond those
+        /// cards complete (<see cref="ShuffleBonds"/>), each granting its power.
+        /// </summary>
         public void Compile()
         {
             Boosts.Reset();
 
             for (int i = 0; i < _taken.Count; i++) Fold(Boosts, _taken[i]);
+
+            _bonds.Clear();
+            for (int b = 0; b < ShuffleBonds.All.Length; b++)
+            {
+                var bond = ShuffleBonds.All[b];
+                if (!bond.Completes(this)) continue;
+
+                _bonds.Add(bond);
+                Boosts.SetPower(bond.Power);
+            }
         }
 
         /// <summary>

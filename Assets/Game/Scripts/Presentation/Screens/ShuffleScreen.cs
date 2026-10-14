@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
@@ -188,12 +189,39 @@ namespace GlimmerGrove
 
             Audio.Sfx("unlock", .6f, 1f);
 
+            // **A card that finished a secret or an evolution is celebrated** (MODES.md 59n) - one
+            // panel each, the grandest last - and the panel is the news, so no toast goes under it.
+            var unlocked = _run.Build.Unlocked;
+            if (unlocked.Count > 0)
+            {
+                Celebrate(new List<ShuffleBond>(unlocked), 0);
+                return;
+            }
+
             int copies = _run.Build.Copies(card);
             string name = Loc.Get(card.NameKey);
 
             Scenery.Toast(Safe, copies > 1 ? Loc.Format("ui.shuffle.taken_again", name, copies)
                                            : Loc.Format("ui.shuffle.taken", name),
                           ShuffleChoiceOverlay.TintOf(card.Tier), 2.2f);
+        }
+
+        /// <summary>
+        /// Raises the unlock panel for <paramref name="bonds"/>[<paramref name="at"/>] and, when
+        /// it is put away, the next. Each holds the run while it stands, so the hill never walks
+        /// between two of them. Nothing over a run that has already ended.
+        /// </summary>
+        void Celebrate(List<ShuffleBond> bonds, int at)
+        {
+            if (bonds == null || at >= bonds.Count || RunOver || _run == null) return;
+
+            var tuning = _run.Tuning;
+            Flow.Modal<ShuffleUnlockOverlay>(v =>
+            {
+                v.Bond = bonds[at];
+                v.CardOf = tuning.Find;
+                v.OnDone = () => Celebrate(bonds, at + 1);
+            });
         }
 
         /// <summary>

@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Continuer avec une vidéo"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Secret débloqué !"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Évolution débloquée !"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "OK"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Nuage d'orage"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Un nuage d'orage couvre la colline. Toutes les 3 secondes, la foudre frappe les 3 pillards les plus proches."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Feu glacé"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Toutes les 5 secondes, un geyser de vapeur jaillit sous le plus gros groupe. Il gèle et brûle."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Orbite de lames"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Des lames tournent autour de tes tourelles. Chaque tourelle lance une lame boomerang qui touche 2 pillards."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Peste"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Les pillards qui meurent dans le poison éclatent. Le poison se répand tout autour."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Gemmes comètes"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Chaque gemme de pouvoir que tu crées ou déclenches lance une comète sur le pillard le plus fort."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "La moitié basse de la colline gèle. Les pillards sur la glace ralentissent et subissent des pics de glace."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Horizon des événements"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Toutes les 11 secondes, un trou noir aspire les pillards. En se refermant, il écrase les plus faibles."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Dragon de feu"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Toutes les 9 secondes, un dragon de feu traverse la colline et brûle tous les pillards sur son passage."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Dôme doré"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Un dôme doré protège tes tourelles. Il bloque les 4 premiers coups de chaque vague."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Cascade arc-en-ciel"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Chaque réaction en chaîne de gemmes lance un éclair arc-en-ciel sur la colline. Plus elle est longue, plus il frappe fort."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Canon solaire"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "Un second soleil se lève. Toutes les 8 secondes, il brûle le couloir le plus rempli avec un rayon géant."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armageddon"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Toutes les 12 secondes, le ciel devient rouge et 8 météorites s'abattent sur les pillards."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Arrêt du temps"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Toutes les 15 secondes, le temps s'arrête 4 secondes. Les pillards se figent et tes tourelles tirent deux fois plus vite."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Obus titans"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Un tir sur 5 lance aussi un obus géant qui explose sur les pillards autour."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Œil de lynx"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Un tir sur 4 touche aussi le pillard le plus fort avec trois fois plus de dégâts."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Forteresse"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Chaque vague soigne un peu tes tourelles. Les pillards qui frappent une tourelle sont frappés en retour."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Bombes à fragmentation"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Un tir sur 3 largue 3 bombes autour de la cible."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Foudre en boule"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Toutes les 4 secondes, chaque tourelle envoie une boule de foudre vers le haut de la colline. Elle électrocute chaque pillard touché."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Essaim de missiles"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Chaque salve de missiles tire aussi 8 petits missiles sur des pillards différents."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Poussière de diamant"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Tes tirs refroidissent. Un pillard brisé laisse un blizzard qui fige tout autour."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Tempête de comètes"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Chaque météorite éclate en 4 éclats brûlants qui pleuvent tout autour."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Lance prisme"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Toutes les 6 secondes, tes lasers chargent un prisme. Il tire 6 rayons arc-en-ciel sur les pillards les plus forts."
     }
   ]
 }

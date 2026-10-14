@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "تابع بمشاهدة فيديو"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "تم فتح سر!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "تم فتح تطور!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "حسنا"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "سحابة العاصفة"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "سحابة عاصفة تغطي التل. كل 3 ثوان، يضرب البرق أقرب 3 مهاجمين."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "نار الجليد"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "كل 5 ثوان، ينفجر ينبوع بخار تحت أكبر مجموعة. إنه يجمد ويحرق."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "مدار الشفرات"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "شفرات تدور حول أبراجك. كل برج يرمي شفرة مرتدة تصيب 2 من المهاجمين."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "الطاعون"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "المهاجمون الذين يموتون في السم ينفجرون. وينتشر السم من حولهم."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "جواهر المذنب"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "كل جوهرة قوة تصنعها أو تفجرها ترمي مذنبا على أقوى مهاجم."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "الجليد الدائم"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "النصف السفلي من التل يتجمد. المهاجمون على الجليد يبطؤون وتضربهم أشواك الجليد."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "أفق الحدث"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "كل 11 ثانية، يسحب ثقب أسود المهاجمين. وعندما ينغلق، يسحق الضعفاء منهم."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "تنين النار"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "كل 9 ثوان، يطير تنين من نار عبر التل ويحرق كل مهاجم في طريقه."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "القبة الذهبية"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "قبة ذهبية تحمي أبراجك. وتصد أول 4 ضربات في كل موجة."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "شلال قوس قزح"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "كل تفاعل متسلسل للجواهر يطلق شعاع قوس قزح على التل. كلما طال كانت الضربة أقوى."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "مدفع الشمس"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "تشرق شمس ثانية. كل 8 ثوان، تحرق المسار الأكثر ازدحاما بشعاع عملاق."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "هرمجدون"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "كل 12 ثانية، تحمر السماء وتمطر 8 نيازك على المهاجمين."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "إيقاف الزمن"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "كل 15 ثانية، يتوقف الزمن 4 ثوان. يتجمد المهاجمون وتطلق أبراجك النار بضعف السرعة."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "قذائف العمالقة"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "كل طلقة خامسة تطلق أيضا قذيفة عملاقة تنفجر على المهاجمين حولها."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "عين الصقر"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "كل طلقة رابعة تصيب أيضا أقوى مهاجم بثلاثة أضعاف الضرر."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "الحصن"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "كل موجة تشفي أبراجك قليلا. والمهاجمون الذين يضربون برجا يتلقون ضربة مرتدة."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "قنابل عنقودية"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "كل طلقة ثالثة تلقي 3 قنابل حول الهدف."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "البرق الكروي"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "كل 4 ثوان، يرسل كل برج كرة برق إلى أعلى التل. وتصعق كل مهاجم تلمسه."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "سرب الصواريخ"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "كل دفعة صواريخ تطلق أيضا 8 صواريخ صغيرة على مهاجمين مختلفين."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "غبار الماس"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "طلقاتك تبرد. والمهاجم المحطم يترك عاصفة ثلجية تجمد كل ما حوله."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "عاصفة المذنبات"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "كل نيزك ينقسم إلى 4 شظايا مشتعلة تمطر حوله."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "رمح المنشور"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "كل 6 ثوان، تشحن ليزراتك منشورا. ويطلق 6 أشعة قوس قزح على أقوى المهاجمين."
     }
   ]
 }

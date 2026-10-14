@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Mit Video weiterspielen"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Geheimnis freigeschaltet!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Evolution freigeschaltet!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "OK"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Gewitterwolke"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Eine Gewitterwolke bedeckt den Hügel. Alle 3 Sekunden trifft ein Blitz die 3 nächsten Plünderer."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Frostfeuer"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Alle 5 Sekunden bricht unter der größten Gruppe ein Dampfgeysir aus. Er friert ein und verbrennt."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Klingenkreis"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Klingen kreisen um deine Türme. Jeder Turm wirft eine Bumerangklinge, die 2 Plünderer trifft."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Seuche"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Plünderer, die im Gift sterben, platzen. Das Gift breitet sich rundherum aus."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Kometenjuwelen"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Jedes Kraftjuwel, das du erschaffst oder zündest, schleudert einen Kometen auf den stärksten Plünderer."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "Die untere Hälfte des Hügels gefriert. Plünderer auf dem Eis werden langsamer und von Eisspitzen getroffen."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Ereignishorizont"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Alle 11 Sekunden zieht ein schwarzes Loch Plünderer an. Wenn es sich schließt, zermalmt es die schwachen."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Feuerdrache"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Alle 9 Sekunden fliegt ein Feuerdrache über den Hügel und verbrennt jeden Plünderer auf seinem Weg."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Goldene Kuppel"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Eine goldene Kuppel schützt deine Türme. Sie blockt die ersten 4 Treffer jeder Welle."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Regenbogenkaskade"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Jede Kettenreaktion der Juwelen feuert einen Regenbogenblitz auf den Hügel. Je länger sie ist, desto härter trifft er."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Sonnenkanone"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "Eine zweite Sonne geht auf. Alle 8 Sekunden verbrennt sie die vollste Spur mit einem riesigen Strahl."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armageddon"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Alle 12 Sekunden färbt sich der Himmel rot und 8 Meteore regnen auf die Plünderer."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Zeitstopp"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Alle 15 Sekunden bleibt die Zeit 4 Sekunden stehen. Plünderer erstarren und deine Türme schießen doppelt so schnell."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Titanengranaten"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Jeder 5. Schuss feuert auch eine riesige Granate, die bei den Plünderern ringsum explodiert."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Adlerauge"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Jeder 4. Schuss trifft auch den stärksten Plünderer mit dreifachem Schaden."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Festung"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Jede Welle heilt deine Türme ein wenig. Plünderer, die einen Turm treffen, werden zurückgeschlagen."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Streubomben"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Jeder 3. Schuss wirft 3 Bomben rund um das Ziel."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Kugelblitz"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Alle 4 Sekunden schickt jeder Turm einen Kugelblitz den Hügel hinauf. Er schockt jeden Plünderer, den er berührt."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Raketenschwarm"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Jede Raketensalve feuert auch 8 kleine Raketen auf verschiedene Plünderer."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Diamantstaub"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Deine Schüsse kühlen. Ein zersplitterter Plünderer hinterlässt einen Schneesturm, der alles ringsum einfriert."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Kometensturm"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Jeder Meteor zerbricht in 4 brennende Splitter, die ringsum niederregnen."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Prismalanze"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Alle 6 Sekunden laden deine Laser ein Prisma auf. Es feuert 6 Regenbogenstrahlen auf die stärksten Plünderer."
     }
   ]
 }

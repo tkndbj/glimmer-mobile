@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Videoyla devam et"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Sır açıldı!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Evrim açıldı!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "Tamam"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Fırtına Bulutu"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Tepeyi bir fırtına bulutu kaplar. Her 3 saniyede bir, şimşek en yakın 3 akıncıya çarpar."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Buz Ateşi"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Her 5 saniyede bir, en kalabalık grubun altında bir buhar gayzeri patlar. Hem dondurur hem yakar."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Bıçak Yörüngesi"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Kulelerinin etrafında bıçaklar döner. Her kule, 2 akıncıya çarpan bir bumerang bıçak fırlatır."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Veba"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Zehrin içinde ölen akıncılar patlar. Zehir çevrelerine yayılır."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Kuyruklu Yıldız Mücevherleri"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Yaptığın ya da patlattığın her güç mücevheri, en güçlü akıncıya bir kuyruklu yıldız fırlatır."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Donmuş Toprak"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "Tepenin alt yarısı donar. Buzun üstündeki akıncılar yavaşlar ve buz dikenleri yer."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Olay Ufku"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Her 11 saniyede bir, bir kara delik akıncıları içine çeker. Kapanırken zayıf olanları ezer."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Ateş Ejderhası"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Her 9 saniyede bir, bir ateş ejderhası tepenin üstünden uçar ve yolundaki her akıncıyı yakar."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Altın Kubbe"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Altın bir kubbe kulelerini korur. Her aşamanın ilk 4 darbesini engeller."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Gökkuşağı Şelalesi"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Mücevherlerdeki her zincirleme tepkime tepeye bir gökkuşağı ışını atar. Zincir uzadıkça daha sert vurur."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Güneş Topu"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "İkinci bir güneş doğar. Her 8 saniyede bir, en kalabalık sırayı dev bir ışınla yakar."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Kıyamet"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Her 12 saniyede bir gökyüzü kızarır ve akıncıların üstüne 8 meteor yağar."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Zaman Durdurma"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Her 15 saniyede bir zaman 4 saniye durur. Akıncılar donar, kulelerin iki kat hızlı ateş eder."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Titan Mermileri"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Her 5. kurşun, çevresindeki akıncılarda patlayan dev bir mermi de atar."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Keskin Nişancı"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Her 4. kurşun en güçlü akıncıya da üç kat hasarla isabet eder."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Kale"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Her aşama kulelerini biraz iyileştirir. Bir kuleye vuran akıncılar karşılık olarak darbe yer."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Misket Bombaları"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Her 3. kurşun hedefin çevresine 3 bomba bırakır."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Yıldırım Topu"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Her 4 saniyede bir, her kule tepeye doğru bir yıldırım topu gönderir. Dokunduğu her akıncıyı çarpar."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Füze Sürüsü"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Her füze yaylımı farklı akıncılara 8 küçük füze daha atar."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Elmas Tozu"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Kurşunların dondurur. Parçalanan bir akıncı, çevresindeki her şeyi donduran bir tipi bırakır."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Kuyruklu Yıldız Fırtınası"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Her meteor, çevresine yağan 4 yanan parçaya bölünür."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Prizma Mızrağı"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Her 6 saniyede bir lazerlerin bir prizmayı doldurur. Prizma en güçlü akıncılara 6 gökkuşağı ışını atar."
     }
   ]
 }

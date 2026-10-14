@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Continua con un video"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Segreto sbloccato!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Evoluzione sbloccata!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "OK"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Nube tempestosa"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Una nube tempestosa copre la collina. Ogni 3 secondi, un fulmine colpisce i 3 predoni più vicini."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Fuoco gelido"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Ogni 5 secondi, un geyser di vapore esplode sotto il gruppo più grande. Congela e brucia."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Orbita di lame"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Delle lame ruotano attorno alle tue torrette. Ogni torretta lancia una lama boomerang che colpisce 2 predoni."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Peste"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "I predoni che muoiono nel veleno esplodono. Il veleno si sparge tutto intorno."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Gemme cometa"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Ogni gemma del potere che crei o attivi lancia una cometa contro il predone più forte."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "La metà bassa della collina si congela. I predoni sul ghiaccio rallentano e vengono colpiti da spuntoni di ghiaccio."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Orizzonte degli eventi"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Ogni 11 secondi, un buco nero risucchia i predoni. Quando si chiude, schiaccia i più deboli."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Drago di fuoco"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Ogni 9 secondi, un drago di fuoco attraversa la collina e brucia tutti i predoni sul suo cammino."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Cupola dorata"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Una cupola dorata protegge le tue torrette. Blocca i primi 4 colpi di ogni ondata."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Cascata arcobaleno"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Ogni reazione a catena di gemme lancia un fulmine arcobaleno sulla collina. Più è lunga, più colpisce forte."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Cannone solare"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "Sorge un secondo sole. Ogni 8 secondi, brucia la corsia più piena con un raggio gigante."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armageddon"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Ogni 12 secondi, il cielo diventa rosso e 8 meteore piovono sui predoni."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Tempo fermo"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Ogni 15 secondi, il tempo si ferma per 4 secondi. I predoni si bloccano e le tue torrette sparano due volte più veloci."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Proiettili titanici"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Un colpo su 5 spara anche un proiettile gigante che esplode sui predoni intorno."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Occhio di falco"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Un colpo su 4 colpisce anche il predone più forte con il triplo dei danni."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Fortezza"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Ogni ondata cura un po' le tue torrette. I predoni che colpiscono una torretta vengono colpiti a loro volta."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Bombe a grappolo"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Un colpo su 3 sgancia 3 bombe intorno al bersaglio."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Fulmine globulare"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Ogni 4 secondi, ogni torretta manda una sfera di fulmini su per la collina. Folgora ogni predone che tocca."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Sciame di missili"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Ogni raffica di missili spara anche 8 piccoli missili su predoni diversi."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Polvere di diamante"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "I tuoi colpi raffreddano. Un predone frantumato lascia una tormenta che congela tutto intorno."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Tempesta di comete"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Ogni meteora si spezza in 4 schegge infuocate che piovono intorno."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Lancia prisma"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Ogni 6 secondi, i tuoi laser caricano un prisma. Spara 6 raggi arcobaleno sui predoni più forti."
     }
   ]
 }

@@ -369,6 +369,14 @@ namespace GlimmerGrove.Modes
         /// <summary>How many raiders one laser shot passes through, the first included.</summary>
         public int LaserHits { get; private set; }
 
+        // ------------------------------------------------------------------ the secrets
+        /// <summary>
+        /// The secret and evolution powers this build has unlocked (<see cref="SiegePower"/>), one
+        /// bit each. Nought on the plain line and on a build that has unlocked none, and every
+        /// rule that reads one asks <see cref="Has"/> first (<c>SiegeBoard.Secrets</c>).
+        /// </summary>
+        public ulong Powers { get; private set; }
+
         // ------------------------------------------------------------------ writing
         /// <summary>
         /// Puts every figure back to the plain line. <c>ShuffleBuild.Compile</c> starts here and
@@ -403,6 +411,7 @@ namespace GlimmerGrove.Modes
             KineticPercent = 0; IronPercent = 0; OverflowPercent = 0; ChainFuelPercent = 0;
             BlastGems = 0; PowerGems = false;
             LaserGuns = 0; LaserTenths = 0; LaserHits = 0;
+            Powers = 0UL;
         }
 
         void Guard()
@@ -499,6 +508,25 @@ namespace GlimmerGrove.Modes
             LaserTenths = tenths < 1 ? 1 : tenths;
             LaserHits = hits < 1 ? 1 : hits;
         }
+
+        /// <summary>Unlocks <paramref name="power"/> on this build. <see cref="SiegePower.None"/> is nothing.</summary>
+        public void SetPower(SiegePower power)
+        {
+            Guard();
+            int bit = (int)power;
+            if (bit <= 0 || bit >= 64) return;
+            Powers |= 1UL << bit;
+        }
+
+        /// <summary>Whether this build has unlocked <paramref name="power"/>. Never on the plain line.</summary>
+        public bool Has(SiegePower power)
+        {
+            int bit = (int)power;
+            return !_frozen && bit > 0 && bit < 64 && (Powers & (1UL << bit)) != 0UL;
+        }
+
+        /// <summary>Whether this build has unlocked any power at all: the one question every power's rule asks first.</summary>
+        public bool AnyPower => !_frozen && Powers != 0UL;
 
         // ------------------------------------------------------------------ derived
         /// <summary>The bonus fire rate a build's tubes buy under <see cref="OverflowPercent"/>, per cent.</summary>

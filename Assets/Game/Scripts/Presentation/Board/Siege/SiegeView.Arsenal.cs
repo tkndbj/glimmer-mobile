@@ -205,6 +205,9 @@ namespace GlimmerGrove
                 if (shot.Killed) KillSound();
             };
 
+            // **A hit an unlocked power dealt** is drawn as the power (`SiegeView.Secrets`).
+            if (SecretHit(shot, mob, to, source, tint, land)) return;
+
             switch (shot.Via)
             {
                 case SiegeVia.Splash:
@@ -515,6 +518,11 @@ namespace GlimmerGrove
 
                 case SiegeVia.Ray:
                     Fused();
+                    break;
+
+                // Every place an unlocked power set something off (`SiegeView.Secrets`).
+                default:
+                    SecretVolley(volley);
                     break;
             }
         }
@@ -1033,6 +1041,9 @@ namespace GlimmerGrove
             Ray(dt);
             Heat(dt);
             Lasers(dt);
+
+            // And what an unlocked secret or evolution leaves standing (`SiegeView.Secrets`).
+            Secrets(dt);
         }
 
         void Pools(float dt)

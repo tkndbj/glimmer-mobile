@@ -85,6 +85,12 @@ namespace GlimmerGrove.Modes
         // A laser gun's beam (`laser_core`): every hit a lasered ward deals past its primary bolt,
         // drawn as the beam leaving the body it last struck. Appended, never renumbered.
         Laser,
+
+        // The secrets and evolutions (`SiegeBoard.Secrets`, `SiegePower`). A hit names what
+        // dealt it; a volley names the event round it. Appended, never renumbered.
+        Storm, Steam, Blade, Plague, Comet, Rainbow, Permafrost, Horizon, Dragon, Dome, Solar,
+        Armageddon, TimeStop,
+        Shell, Snipe, Fortress, Reflect, Bomblet, Orb, Swarm, Dust, Shard, Prism,
     }
 
     /// <summary>
@@ -766,6 +772,60 @@ namespace GlimmerGrove.Modes
         public readonly List<SiegeBlastRun> Blasts = new List<SiegeBlastRun>(2);
 
         public readonly List<int> Blasted = new List<int>(8);
+
+        /// <summary>
+        /// Every comet or rainbow bolt this beat threw from the field at the hill (the Shuffle
+        /// lane's <c>gem_comets</c> and <c>rainbow_cascade</c> secrets): where it left and whom it
+        /// was thrown at. It lands a flight later (<c>SiegeSecrets.CometFlight</c>), reported as
+        /// a hit then. Empty on every board but a build's.
+        /// </summary>
+        public readonly List<SiegeComet> Comets = new List<SiegeComet>(1);
+    }
+
+    /// <summary>A comet thrown from the field: the cell it left, the raider it was thrown at (-1 on an empty hill), its colour (-1 for a rainbow), and which kind.</summary>
+    public readonly struct SiegeComet
+    {
+        public readonly int Cell, Raider, Colour;
+
+        /// <summary><see cref="SiegeVia.Comet"/> or <see cref="SiegeVia.Rainbow"/>.</summary>
+        public readonly SiegeVia Via;
+
+        public SiegeComet(int cell, int raider, int colour, SiegeVia via)
+        {
+            Cell = cell;
+            Raider = raider;
+            Colour = colour;
+            Via = via;
+        }
+    }
+
+    /// <summary>A ball of lightning climbing the hill (<c>ball_lightning</c>): where it is, and the post it left.</summary>
+    public readonly struct SiegeOrb
+    {
+        public readonly float Lane, March;
+        public readonly int Ward;
+
+        public SiegeOrb(float lane, float march, int ward)
+        {
+            Lane = lane;
+            March = march;
+            Ward = ward;
+        }
+    }
+
+    /// <summary>A blizzard standing on one box (<c>diamond_dust</c>): where, and how long it has left of how long.</summary>
+    public readonly struct SiegeBlizzard
+    {
+        public readonly int Lane, Row;
+        public readonly float Left, For;
+
+        public SiegeBlizzard(int lane, int row, float left, float laid)
+        {
+            Lane = lane;
+            Row = row;
+            Left = left;
+            For = laid;
+        }
     }
 
     /// <summary>A power gem forged on the field: where, what, its colour and the run that made it.</summary>

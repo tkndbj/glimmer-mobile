@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Kontynuuj z filmem"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Sekret odblokowany!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Ewolucja odblokowana!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "OK"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Chmura burzowa"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Wzgórze okrywa chmura burzowa. Co 3 sekundy piorun trafia 3 najbliższych najeźdźców."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Lodowy ogień"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Co 5 sekund pod największą grupą wybucha gejzer pary. Zamraża i pali."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Krąg ostrzy"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Wokół twoich wież krążą ostrza. Każda wieża rzuca ostrze bumerang, które trafia 2 najeźdźców."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Zaraza"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Najeźdźcy, którzy giną w truciźnie, wybuchają. Trucizna rozlewa się wokół nich."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Kometowe klejnoty"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Każdy klejnot mocy, który stworzysz lub odpalisz, rzuca kometę w najsilniejszego najeźdźcę."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Wieczna zmarzlina"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "Dolna połowa wzgórza zamarza. Najeźdźcy na lodzie zwalniają i obrywają lodowymi kolcami."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Horyzont zdarzeń"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Co 11 sekund czarna dziura wciąga najeźdźców. Gdy się zamyka, miażdży słabych."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Ognisty smok"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Co 9 sekund ognisty smok przelatuje nad wzgórzem i pali każdego najeźdźcę na swojej drodze."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Złota kopuła"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Złota kopuła chroni twoje wieże. Blokuje pierwsze 4 ciosy każdej fali."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Tęczowa kaskada"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Każda reakcja łańcuchowa klejnotów wystrzeliwuje tęczowy pocisk na wzgórze. Im dłuższa, tym mocniej trafia."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Słoneczne działo"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "Wschodzi drugie słońce. Co 8 sekund pali najbardziej zatłoczony tor gigantycznym promieniem."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armagedon"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Co 12 sekund niebo robi się czerwone, a na najeźdźców spada 8 meteorów."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Zatrzymanie czasu"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Co 15 sekund czas staje na 4 sekundy. Najeźdźcy zamierają, a twoje wieże strzelają dwa razy szybciej."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Tytanowe pociski"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Co 5. strzał wystrzeliwuje też ogromny pocisk, który wybucha wśród pobliskich najeźdźców."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Sokole oko"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Co 4. strzał trafia też najsilniejszego najeźdźcę za potrójne obrażenia."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Twierdza"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Każda fala trochę leczy twoje wieże. Najeźdźcy, którzy uderzą wieżę, dostają cios zwrotny."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Bomby kasetowe"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Co 3. strzał zrzuca 3 bomby wokół celu."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Piorun kulisty"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Co 4 sekundy każda wieża posyła w górę wzgórza kulę piorunów. Razi każdego najeźdźcę, którego dotknie."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Rój rakiet"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Każda salwa rakiet wystrzeliwuje też 8 małych rakiet w różnych najeźdźców."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Diamentowy pył"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Twoje strzały mrożą. Roztrzaskany najeźdźca zostawia zamieć, która zamraża wszystko wokół."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Burza komet"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Każdy meteor rozpada się na 4 płonące odłamki, które spadają wokół."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Pryzmatyczna lanca"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Co 6 sekund twoje lasery ładują pryzmat. Wystrzeliwuje on 6 tęczowych promieni w najsilniejszych najeźdźców."
     }
   ]
 }

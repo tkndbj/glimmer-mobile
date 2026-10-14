@@ -59,7 +59,14 @@ namespace GlimmerGrove.Layout
 
         public int NoteSize = 32, NoteFloor = 20;
 
-        public float NoteHeight = 180f, NoteDown = 408f;
+        public float NoteHeight = 162f, NoteDown = 400f;
+
+        /// <summary>
+        /// The row of diamonds under the note (MODES.md 59n): green when the card goes with a
+        /// secret the build has started, purple when it brings its evolution closer. Their
+        /// centre down from the card's top, their size and the air between two.
+        /// </summary>
+        public float DiamondDown = 499f, DiamondSize = 30f, DiamondGap = 10f;
 
         public float TierHeight = 60f, TierDown = 546f;
 
@@ -158,13 +165,17 @@ namespace GlimmerGrove.Layout
             float nameFoot = NameDown + NameHeight * .5f;
             float noteTop = NoteDown - NoteHeight * .5f;
             float noteFoot = NoteDown + NoteHeight * .5f;
+            float diamondTop = DiamondDown - DiamondSize * .5f;
+            float diamondFoot = DiamondDown + DiamondSize * .5f;
             float tierTop = TierDown - TierHeight * .5f;
             float tierFoot = TierDown + TierHeight * .5f;
 
             if (SeatDown - SeatSize * .5f < Inset) { fault = "the seat touches the card's top"; return false; }
             if (seatFoot > nameTop) { fault = $"the seat ends {seatFoot} down and the name begins {nameTop}"; return false; }
             if (nameFoot > noteTop) { fault = $"the name ends {nameFoot} down and the note begins {noteTop}"; return false; }
-            if (noteFoot > tierTop) { fault = $"the note ends {noteFoot} down and the tier begins {tierTop}"; return false; }
+            if (noteFoot > diamondTop) { fault = $"the note ends {noteFoot} down and the diamonds begin {diamondTop}"; return false; }
+            if (diamondFoot > tierTop) { fault = $"the diamonds end {diamondFoot} down and the tier begins {tierTop}"; return false; }
+            if (DiamondSize * 2f + DiamondGap > CardWidth - Inset * 2f) { fault = "two diamonds do not fit across a card"; return false; }
             if (tierFoot + Inset > CardHeight) { fault = $"the tier ends {tierFoot} down a card {CardHeight} tall"; return false; }
             if (IconSize >= SeatSize) { fault = "the picture does not fit its seat"; return false; }
 

@@ -249,6 +249,11 @@ namespace GlimmerGrove.Modes
                     });
                 }
 
+                // **What the field secrets throw at the hill off this beat** (`SiegeBoard.Secrets`):
+                // comets off the power gems that went off, a rainbow off a cascade. Booked to land a
+                // flight later. Returns on its first line on every build that has unlocked none.
+                Gemmed(beat, depth);
+
                 // The power gems this beat forged stand in their cells before the field falls, so
                 // each falls with its column. Nothing to stand on any other board.
                 if (_forged.Count > 0 || _forming.Count > 0) SetPowers();

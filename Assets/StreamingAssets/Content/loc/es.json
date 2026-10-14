@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Continuar con un vídeo"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "¡Secreto desbloqueado!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "¡Evolución desbloqueada!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "OK"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Nube de tormenta"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "Una nube de tormenta cubre la colina. Cada 3 segundos, un rayo cae sobre los 3 invasores más cercanos."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Fuego helado"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Cada 5 segundos, un géiser de vapor estalla bajo el grupo más grande. Congela y quema."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Órbita de cuchillas"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Cuchillas giran alrededor de tus torres. Cada torre lanza una cuchilla bumerán que golpea a 2 invasores."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Plaga"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Los invasores que mueren en veneno revientan. El veneno se esparce a su alrededor."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Gemas cometa"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Cada gema de poder que creas o activas lanza un cometa al invasor más fuerte."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "La mitad baja de la colina se congela. Los invasores sobre el hielo van más lentos y reciben púas de hielo."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Horizonte de sucesos"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Cada 11 segundos, un agujero negro atrae a los invasores. Al cerrarse, aplasta a los débiles."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Dragón de fuego"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Cada 9 segundos, un dragón de fuego cruza la colina y quema a todos los invasores a su paso."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Cúpula dorada"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "Una cúpula dorada protege tus torres. Bloquea los primeros 4 golpes de cada oleada."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Cascada arcoíris"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Cada reacción en cadena de gemas lanza un rayo arcoíris a la colina. Cuanto más larga, más fuerte."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Cañón solar"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "Sale un segundo sol. Cada 8 segundos, quema el carril más lleno con un rayo gigante."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armagedón"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Cada 12 segundos, el cielo se vuelve rojo y caen 8 meteoritos sobre los invasores."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Tiempo detenido"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Cada 15 segundos, el tiempo se detiene 4 segundos. Los invasores se congelan y tus torres disparan el doble de rápido."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Proyectiles titán"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Cada 5.º disparo también lanza un proyectil gigante que explota sobre los invasores cercanos."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Ojo de halcón"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Cada 4.º disparo también golpea al invasor más fuerte con el triple de daño."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Fortaleza"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Cada oleada cura un poco tus torres. Los invasores que golpean una torre reciben un contragolpe."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Bombas de racimo"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Cada 3.er disparo suelta 3 bombas alrededor del objetivo."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Rayo esférico"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Cada 4 segundos, cada torre envía una bola de rayos colina arriba. Electrocuta a cada invasor que toca."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Enjambre de misiles"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Cada ráfaga de misiles también dispara 8 minimisiles a invasores distintos."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Polvo de diamante"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Tus disparos enfrían. Un invasor hecho añicos deja una ventisca que congela todo a su alrededor."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Tormenta de cometas"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Cada meteorito se rompe en 4 fragmentos ardientes que llueven a su alrededor."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Lanza prisma"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Cada 6 segundos, tus láseres cargan un prisma. Dispara 6 rayos arcoíris a los invasores más fuertes."
     }
   ]
 }

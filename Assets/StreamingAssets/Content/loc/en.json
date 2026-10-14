@@ -8584,6 +8584,198 @@
     {
       "key": "ui.ads.continue_video_title",
       "text": "Continue with a video"
+    },
+    {
+      "key": "ui.shuffle.secret_unlocked",
+      "text": "Secret unlocked!"
+    },
+    {
+      "key": "ui.shuffle.evolution_unlocked",
+      "text": "Evolution unlocked!"
+    },
+    {
+      "key": "ui.shuffle.okay",
+      "text": "Okay"
+    },
+    {
+      "key": "ui.shuffle.times",
+      "text": "x{0}"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.name",
+      "text": "Thunderhead"
+    },
+    {
+      "key": "shuffle.secret.thunderhead.note",
+      "text": "A storm cloud covers the hill. Every 3 seconds, lightning hits the 3 closest raiders."
+    },
+    {
+      "key": "shuffle.secret.frostfire.name",
+      "text": "Frostfire"
+    },
+    {
+      "key": "shuffle.secret.frostfire.note",
+      "text": "Every 5 seconds, a steam geyser bursts under the biggest crowd. It freezes and burns."
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.name",
+      "text": "Blade Orbit"
+    },
+    {
+      "key": "shuffle.secret.blade_orbit.note",
+      "text": "Blades spin around your turrets. Each turret throws a boomerang blade that hits 2 raiders."
+    },
+    {
+      "key": "shuffle.secret.plague.name",
+      "text": "Plague"
+    },
+    {
+      "key": "shuffle.secret.plague.note",
+      "text": "Raiders that die in poison burst. The poison spreads all around them."
+    },
+    {
+      "key": "shuffle.secret.gem_comets.name",
+      "text": "Comet Gems"
+    },
+    {
+      "key": "shuffle.secret.gem_comets.note",
+      "text": "Every power gem you make or set off throws a comet at the strongest raider."
+    },
+    {
+      "key": "shuffle.secret.permafrost.name",
+      "text": "Permafrost"
+    },
+    {
+      "key": "shuffle.secret.permafrost.note",
+      "text": "The lower half of the hill freezes. Raiders on the ice slow down and get hit by ice spikes."
+    },
+    {
+      "key": "shuffle.secret.event_horizon.name",
+      "text": "Event Horizon"
+    },
+    {
+      "key": "shuffle.secret.event_horizon.note",
+      "text": "Every 11 seconds, a black hole pulls raiders in. When it closes, it crushes the weak ones."
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.name",
+      "text": "Fire Dragon"
+    },
+    {
+      "key": "shuffle.secret.fire_dragon.note",
+      "text": "Every 9 seconds, a fire dragon flies across the hill and burns every raider in its path."
+    },
+    {
+      "key": "shuffle.secret.golden_dome.name",
+      "text": "Golden Dome"
+    },
+    {
+      "key": "shuffle.secret.golden_dome.note",
+      "text": "A golden dome guards your turrets. It blocks the first 4 hits of every wave."
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.name",
+      "text": "Rainbow Cascade"
+    },
+    {
+      "key": "shuffle.secret.rainbow_cascade.note",
+      "text": "Every chain reaction on the gems fires a rainbow bolt at the hill. Longer chains hit harder."
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.name",
+      "text": "Solar Cannon"
+    },
+    {
+      "key": "shuffle.secret.solar_cannon.note",
+      "text": "A second sun rises. Every 8 seconds, it burns the busiest lane with a giant beam."
+    },
+    {
+      "key": "shuffle.secret.armageddon.name",
+      "text": "Armageddon"
+    },
+    {
+      "key": "shuffle.secret.armageddon.note",
+      "text": "Every 12 seconds, the sky turns red and 8 meteors rain down on the raiders."
+    },
+    {
+      "key": "shuffle.secret.time_stop.name",
+      "text": "Time Stop"
+    },
+    {
+      "key": "shuffle.secret.time_stop.note",
+      "text": "Every 15 seconds, time stops for 4 seconds. Raiders freeze, and your turrets shoot twice as fast."
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.name",
+      "text": "Titan Shells"
+    },
+    {
+      "key": "shuffle.evolution.titan_shells.note",
+      "text": "Every 5th shot also fires a giant shell that explodes on the raiders around it."
+    },
+    {
+      "key": "shuffle.evolution.deadeye.name",
+      "text": "Deadeye"
+    },
+    {
+      "key": "shuffle.evolution.deadeye.note",
+      "text": "Every 4th shot also hits the strongest raider for triple damage."
+    },
+    {
+      "key": "shuffle.evolution.fortress.name",
+      "text": "Fortress"
+    },
+    {
+      "key": "shuffle.evolution.fortress.note",
+      "text": "Every wave heals your turrets a little. Raiders that hit a turret get hit back."
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.name",
+      "text": "Cluster Bombs"
+    },
+    {
+      "key": "shuffle.evolution.cluster_bombs.note",
+      "text": "Every 3rd shot drops 3 bombs around the target."
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.name",
+      "text": "Ball Lightning"
+    },
+    {
+      "key": "shuffle.evolution.ball_lightning.note",
+      "text": "Every 4 seconds, each turret sends a ball of lightning up the hill. It zaps every raider it touches."
+    },
+    {
+      "key": "shuffle.evolution.swarm.name",
+      "text": "Missile Swarm"
+    },
+    {
+      "key": "shuffle.evolution.swarm.note",
+      "text": "Each missile volley also fires 8 small missiles at different raiders."
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.name",
+      "text": "Diamond Dust"
+    },
+    {
+      "key": "shuffle.evolution.diamond_dust.note",
+      "text": "Your shots chill. A shattered raider leaves a blizzard that freezes everything near it."
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.name",
+      "text": "Comet Storm"
+    },
+    {
+      "key": "shuffle.evolution.comet_storm.note",
+      "text": "Every meteor breaks into 4 burning shards that rain down around it."
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.name",
+      "text": "Prism Lance"
+    },
+    {
+      "key": "shuffle.evolution.prism_lance.note",
+      "text": "Every 6 seconds, your lasers charge a prism. It fires 6 rainbow beams at the strongest raiders."
     }
   ]
 }

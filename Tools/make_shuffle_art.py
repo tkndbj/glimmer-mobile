@@ -205,6 +205,35 @@ def crest(source):
     return out
 
 
+#: The two diamonds a hand's card wears (MODES.md 59n): green when it goes with a secret the
+#: build has started, purple when it brings its own evolution closer. **Cut from the kit's own
+#: gem** (`Ui/ic_gem`, committed, so this needs no pack) by a hue rotation (CLAUDE.md 44g), never
+#: a tint: the gem is pink and a multiply can only darken it. Each row is the file, the hue it
+#: is turned to (Pillow's 0..255) and how much of its colour is kept.
+MARK_SOURCE = UI / "ic_gem.png"
+MARKS = (("shuffle_secret", 92, 1.05), ("shuffle_evolution", 196, 1.0))
+
+
+def mark(hue, saturation):
+    """The kit's gem turned to `hue`: every pixel rotated by the same amount, measured off the
+    gem's own median hue, so its facets and highlights survive in the new colour."""
+    import numpy as np
+
+    im = Image.open(MARK_SOURCE).convert("RGBA")
+    hsv = np.asarray(im.convert("RGB").convert("HSV")).astype(np.int32)
+    alpha = np.asarray(im)[:, :, 3]
+
+    body = (alpha > 200) & (hsv[:, :, 1] > 80)
+    turn = int(hue - int(np.median(hsv[:, :, 0][body])))
+
+    hsv[:, :, 0] = (hsv[:, :, 0] + turn) % 256
+    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * saturation, 0, 255)
+
+    turned = Image.fromarray(hsv.astype(np.uint8), "HSV").convert("RGB")
+    turned.putalpha(im.split()[3])
+    return turned
+
+
 def raw(im):
     buf = io.BytesIO()
     im.save(buf, "PNG", optimize=False)
@@ -228,6 +257,9 @@ def cut():
             made[UI / ("%s.png" % name)] = (raw(tile), meta_for(ICON_TEMPLATE, name, "glimmer.ui.shuffle."))
 
     made[BG / "plain_shuffle.png"] = (raw(wall()), meta_for(WALL_TEMPLATE, "plain_shuffle", "glimmer.bg."))
+
+    for name, hue, saturation in MARKS:
+        made[UI / ("%s.png" % name)] = (raw(mark(hue, saturation)), meta_for(ICON_TEMPLATE, name, "glimmer.ui.shuffle."))
 
     for code, source in CREST_SOURCES.items():
         if source.exists():

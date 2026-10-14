@@ -142,6 +142,10 @@ namespace GlimmerGrove
             var forges = Forges(beat);
             var blown = Blasting(beat);
 
+            // **And what the field secrets throw at the hill off this beat** - comets off the
+            // power gems, a rainbow off a cascade (`SiegeView.Secrets`). Nothing on any other board.
+            Comets(beat);
+
             // **A broken curse takes its stones before the clear does** - they are dragged into
             // the break rather than shattered where they stand, so the ordinary clear below skips
             // every cell `Unbinding` has taken (`SiegeView.Obsidian`).
