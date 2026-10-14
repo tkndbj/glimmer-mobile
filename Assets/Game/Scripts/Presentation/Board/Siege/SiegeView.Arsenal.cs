@@ -309,7 +309,8 @@ namespace GlimmerGrove
                     break;
 
                 case SiegeVia.Meteor:
-                    Pop(to, MeteorHue, 1.8f, .24f);
+                    Cinder(to, Pal.Sun, Cell * 1.3f, .3f, new Vector2(0f, Cell * .8f));
+                    Cinder(to, Pal.Ember, Cell * .7f, .45f, new Vector2(Random.Range(-Cell, Cell), Cell * 1.4f));
                     land();
                     break;
 
@@ -518,42 +519,209 @@ namespace GlimmerGrove
             }
         }
 
-        /// <summary>A meteor's shadow on the box it will land on, and the rock coming down out of the sky.</summary>
+        // ------------------------------------------------------------------ the meteor
+        /// <summary>How far up and to the side of its box a meteor enters, in cells: off the top of the board.</summary>
+        const float MeteorFrom = 3.4f, MeteorOver = 2.5f;
+
+        /// <summary>Seconds the crater glows after it lands: about the burn it leaves on the bodies it hit.</summary>
+        const float CraterFor = 1.6f;
+
+        /// <summary>Seconds between two embers off the crater.</summary>
+        const float CraterEmber = .09f;
+
+        /// <summary>
+        /// A meteor on its way, for exactly the fall the model books (<c>SiegeArsenal.MeteorFall</c>):
+        /// a target ring tightening on the box it will hit and the ground there heating up, its
+        /// shadow growing, and the rock itself coming down out of the sky on a two-layer burning
+        /// tail, shedding embers and smoke.
+        ///
+        /// <para>
+        /// <b>A meteor can come every few seconds and several cards can stack its clock</b>, so
+        /// every piece here is a handful of images for under a second, hosted on one node and
+        /// handed back on its tween and on a timer, and everything it sheds is a pooled ember.
+        /// The landing is <see cref="MeteorLands"/>, drawn off the model's second volley (37s).
+        /// </para>
+        /// </summary>
         void MeteorFalls(Vector2 at, float over)
         {
-            var shadow = UIKit.Img("Shadow", _fx, Art.Glow(96, 1.6f), new Color(0f, 0f, 0f, 0f),
-                                   new Vector2(Cell * 4f, Cell * 2f));
+            var mark = UIKit.Node("Meteor mark", _fx);
+
+            var shadow = UIKit.Img("Shadow", mark, Art.Glow(96, 1.6f), new Color(0f, 0f, 0f, 0f),
+                                   new Vector2(Cell * 4.2f, Cell * 4.2f * GroundSquash));
             shadow.raycastTarget = false;
             shadow.rectTransform.anchoredPosition = at;
-            shadow.rectTransform.localScale = Vector3.one * .3f;
 
-            var mark = Lit("Mark", _fx, StrikeFx.Ring, Pal.A(Pal.Poppy, 0f), new Vector2(Cell * 3.6f, Cell * 1.8f));
+            var heat = Lit("Heat", mark, Art.Glow(128, 1.8f), Pal.A(Pal.Ember, 0f),
+                           new Vector2(Cell * 3.6f, Cell * 3.6f * GroundSquash));
+            heat.rectTransform.anchoredPosition = at;
 
-            Tween.Run(over, Ease.InQuad, t =>
+            var ring = Lit("Target", mark, StrikeFx.Ring, Pal.A(MeteorHue, 0f),
+                           new Vector2(Cell * 4.4f, Cell * 4.4f * GroundSquash));
+            if (ring != null) ring.rectTransform.anchoredPosition = at;
+
+            Tween.Run(over, Ease.Linear, t =>
             {
-                if (shadow) { shadow.color = new Color(0f, 0f, 0f, .45f * t); shadow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.3f, 1f, t); }
-                if (mark) { mark.rectTransform.anchoredPosition = at; mark.color = Pal.A(Pal.Poppy, .8f * Mathf.Abs(Mathf.Sin(t * 14f))); }
-            }, shadow).OnDone(() =>
-            {
-                if (shadow) Destroy(shadow.gameObject);
-                if (mark) Destroy(mark.gameObject);
-            });
+                if (!mark) return;
 
-            var sky = new Vector2(at.x - Cell * 3f, _hillTop + Cell * 4f);
-            Fly(sky, at, MeteorHue, Cell * 1.3f, over, 0f, Pal.Ember, null);
-            Audio.Sfx("whoosh", .4f, .7f);
+                float rise = Mathf.Clamp01(t / .15f);
+                float blink = Mathf.Sin(Mathf.PI * 2f * (3f * t + 6f * t * t)) > 0f ? 1f : .45f;
+
+                shadow.color = new Color(0f, 0f, 0f, .45f * t * t);
+                shadow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.25f, 1f, t * t);
+
+                heat.color = Pal.A(Color.Lerp(Pal.Ember, Pal.Sun, t), .55f * t * t);
+                heat.rectTransform.localScale = Vector3.one * Mathf.Lerp(.4f, 1f, t);
+
+                if (ring)
+                {
+                    ring.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.4f, .75f, Ease.OutCubic(t));
+                    ring.rectTransform.localRotation = Quaternion.Euler(0f, 0f, t * 140f);
+                    ring.color = Pal.A(Color.Lerp(MeteorHue, Pal.Sun, t), .85f * rise * blink);
+                }
+            }, mark).OnDone(() => { if (mark) Destroy(mark.gameObject); });
+
+            Tween.After(over + .1f, () => { if (mark) Destroy(mark.gameObject); }, mark);
+
+            Rock(at, over);
+            Audio.Sfx("whoosh", .5f, .62f);
         }
 
+        /// <summary>
+        /// The rock: a dark body inside a burning aura, white-hot on the side it is falling
+        /// toward, trailing a wide ember tail with a narrow gold one inside it, falling faster
+        /// the nearer it gets.
+        /// </summary>
+        void Rock(Vector2 at, float over)
+        {
+            var sky = new Vector2(at.x - Cell * MeteorOver, Span.y * .5f + Cell * MeteorFrom);
+
+            var node = UIKit.Box("Meteor", _fx, Vector2.zero, new Vector2(.5f, .5f), sky);
+            var tail = Lit("Tail", node, Art.SoftCapsule(40, 120), Pal.A(Pal.Ember, .8f), Vector2.one);
+            var inner = Lit("Inner", node, Art.SoftCapsule(40, 120), Pal.A(Pal.Sun, .9f), Vector2.one);
+            var aura = Lit("Aura", node, Art.Glow(96, 1.5f), Pal.A(Pal.Ember, .85f), Vector2.one * Cell * 2.4f);
+            var flare = Lit("Flare", node, StrikeFx.Flare, Pal.A(Pal.Sun, .7f), Vector2.one * Cell * 2.2f);
+
+            // The rock is the one dark thing in it, drawn with ordinary alpha, and the lit edge
+            // over it is what says it is burning on the way in.
+            var body = UIKit.Img("Body", node, Art.Glow(96, 4f), new Color(.22f, .1f, .06f, .95f), Vector2.one * Cell * .9f);
+            body.raycastTarget = false;
+            var edge = Lit("Edge", node, Art.Glow(96, 2.4f), Color.white, Vector2.one * Cell * .75f);
+
+            var tailRt = tail.rectTransform;
+            var innerRt = inner.rectTransform;
+            var last = sky;
+            float nextEmber = 0f;
+
+            Tween.Run(over, Ease.Linear, t =>
+            {
+                if (!node) return;
+
+                var spot = Vector2.Lerp(sky, at, t * t);
+                var dir = spot - last;
+                node.anchoredPosition = spot;
+
+                if (dir.sqrMagnitude > .01f)
+                {
+                    var back = -dir.normalized;
+                    float turn = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+                    float len = Cell * Mathf.Lerp(1.4f, 5f, t);
+
+                    tailRt.sizeDelta = new Vector2(Cell * Mathf.Lerp(.7f, 1.1f, t), len);
+                    tailRt.anchoredPosition = back * len * .45f;
+                    tailRt.localRotation = Quaternion.Euler(0f, 0f, turn);
+
+                    innerRt.sizeDelta = new Vector2(Cell * .4f, len * .65f);
+                    innerRt.anchoredPosition = back * len * .3f;
+                    innerRt.localRotation = Quaternion.Euler(0f, 0f, turn);
+
+                    edge.rectTransform.anchoredPosition = -back * Cell * .14f;
+
+                    if (t >= nextEmber)
+                    {
+                        nextEmber = t + .04f;
+                        var side = new Vector2(-back.y, back.x) * Random.Range(-.35f, .35f) * Cell;
+                        Cinder(spot + back * Cell * .5f, Random.value < .5f ? Pal.Sun : Pal.Ember,
+                               Cell * Random.Range(.3f, .5f), .38f, back * Cell * 1.2f + side);
+                        if (Random.value < .5f)
+                            Cinder(spot + back * Cell * .9f, Pal.Hollow, Cell * Random.Range(.4f, .65f), .5f,
+                                   back * Cell * .6f + new Vector2(0f, Cell * .5f));
+                    }
+                }
+
+                float throb = .88f + .12f * Mathf.Sin(t * 60f);
+                aura.rectTransform.localScale = Vector3.one * Mathf.Lerp(.75f, 1.2f, t) * throb;
+                body.rectTransform.localRotation = Quaternion.Euler(0f, 0f, t * 400f);
+                if (flare) flare.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -t * 480f);
+
+                last = spot;
+            }, node).OnDone(() => { if (node) Destroy(node.gameObject); });
+
+            Tween.After(over + .1f, () => { if (node) Destroy(node.gameObject); }, node);
+        }
+
+        /// <summary>
+        /// The landing, on the frame the model struck the box: a flash, a fireball, the ground
+        /// cracked and thrown up, two fronts racing out over the hill, smoke rolling off it,
+        /// rubble and sparks flung up and falling back, and a crater left glowing about as long
+        /// as the burn it gives the bodies it hit.
+        /// </summary>
         void MeteorLands(Vector2 at, int reach)
         {
             float wide = Cell * (3f + reach * 1.8f);
+
+            Flash(at, Pal.Sun, 4.6f);
+            Fireball(at, .5f, .9f);
             Boom(at, Blast("boom_fire"), wide * 1.2f);
             Boom(at + new Vector2(0f, Cell * .4f), Blast("boom_smoke"), wide * 1.3f, 18f);
-            Ripple(at, MeteorHue, wide * 1.4f, .5f, 0f);
-            Embers(at, Pal.Ember, 18, Cell * .8f, Cell * .3f);
-            Lightup(MeteorHue, .16f, .35f);
-            ShakeBoard(Cell * .22f);
-            Audio.Sfx("boom", .55f, .8f);
+
+            Answer(at, Pal.Sun, wide / Cell * 1.1f, StrikeFx.Crack, wide / Cell * .9f);
+            Ripple(at, MeteorHue, wide * 1.5f, .55f, 0f);
+            Ripple(at, Pal.Sun, wide * 1.05f, .45f, .07f);
+
+            Embers(at, Pal.Ember, 16, Cell * .9f, Cell * .3f);
+            Embers(at, Pal.Hollow, 8, Cell * .7f, Cell * .42f);
+            Crater(at, wide);
+
+            Lightup(MeteorHue, .18f, .35f);
+            ShakeBoard(Cell * .24f);
+
+            Audio.Sfx("boom", .6f, .75f);
+            Audio.Sfx("land", .4f, .7f);
+        }
+
+        /// <summary>
+        /// The crater: a molten glow on the ground, flickering and cooling from gold to ember,
+        /// breathing a few embers up off it. One image, its embers pooled.
+        /// </summary>
+        void Crater(Vector2 at, float wide)
+        {
+            var pit = Lit("Crater", _fx, Art.Glow(128, 2f), Pal.A(Pal.Sun, 0f),
+                          new Vector2(wide * .8f, wide * .8f * GroundSquash));
+            var rt = pit.rectTransform;
+            rt.anchoredPosition = at;
+            rt.SetAsFirstSibling();
+
+            float nextEmber = 0f;
+            float seed = Random.value * 20f;
+
+            Tween.Run(CraterFor, Ease.Linear, t =>
+            {
+                if (!pit) return;
+
+                float flicker = .8f + .2f * Mathf.Sin(t * 37f + seed) * Mathf.Sin(t * 13f);
+                pit.color = Pal.A(Color.Lerp(Pal.Sun, Pal.Ember, t), .6f * (1f - t) * flicker);
+                rt.localScale = Vector3.one * Mathf.Lerp(.7f, 1f, Ease.OutCubic(Mathf.Clamp01(t * 4f)));
+
+                if (t >= nextEmber && t < .8f)
+                {
+                    nextEmber = t + CraterEmber / CraterFor;
+                    var from = at + new Vector2(Random.Range(-wide, wide) * .3f, Random.Range(-wide, wide) * .3f * GroundSquash);
+                    Cinder(from, Random.value < .5f ? Pal.Ember : Pal.Sun, Cell * Random.Range(.18f, .3f), .5f,
+                           new Vector2(Random.Range(-Cell, Cell) * .3f, Cell * Random.Range(.8f, 1.4f)));
+                }
+            }, pit).OnDone(() => { if (pit) Destroy(pit.gameObject); });
+
+            Tween.After(CraterFor + .1f, () => { if (pit) Destroy(pit.gameObject); }, pit);
         }
 
         // ------------------------------------------------------------------ the nuke
@@ -762,23 +930,23 @@ namespace GlimmerGrove
         /// from the inside out - the white core first, the gold next, the ember last - and
         /// lifting as it goes, because fire rises.
         /// </summary>
-        void Fireball(Vector2 centre)
+        void Fireball(Vector2 centre, float scale = 1f, float life = FireballFor)
         {
             var host = UIKit.Box("Fireball", _fx, Vector2.zero, new Vector2(.5f, .5f), centre);
 
-            var outer = Lit("Outer", host, Art.Glow(128, 1.4f), Pal.A(Pal.Ember, 0f), Vector2.one * Cell * 11f);
-            var mid = Lit("Mid", host, Art.Glow(128, 1.8f), Pal.A(Pal.Sun, 0f), Vector2.one * Cell * 7.5f);
-            var core = Lit("Core", host, Art.Glow(128, 2.4f), Pal.A(Color.white, 0f), Vector2.one * Cell * 4.4f);
+            var outer = Lit("Outer", host, Art.Glow(128, 1.4f), Pal.A(Pal.Ember, 0f), Vector2.one * Cell * 11f * scale);
+            var mid = Lit("Mid", host, Art.Glow(128, 1.8f), Pal.A(Pal.Sun, 0f), Vector2.one * Cell * 7.5f * scale);
+            var core = Lit("Core", host, Art.Glow(128, 2.4f), Pal.A(Color.white, 0f), Vector2.one * Cell * 4.4f * scale);
 
-            Tween.Run(FireballFor, Ease.Linear, t =>
+            Tween.Run(life, Ease.Linear, t =>
             {
                 if (!host) return;
 
-                float s = t * FireballFor;
+                float s = t * life;
                 float swell = Ease.OutQuint(Mathf.Clamp01(s / .28f));
 
                 host.localScale = new Vector3(1f, .82f, 1f) * Mathf.Lerp(.2f, 1f, swell);
-                host.anchoredPosition = centre + new Vector2(0f, Cell * 1.3f * t);
+                host.anchoredPosition = centre + new Vector2(0f, Cell * 1.3f * scale * t);
 
                 // Each layer holds, then lets go: the core at a third of a second, the gold by
                 // nine tenths, the ember over the whole of it.
@@ -787,7 +955,7 @@ namespace GlimmerGrove
                 if (outer) outer.color = Pal.A(Color.Lerp(Pal.Ember, Pal.Poppy, t), .6f * (1f - t) * (1f - t));
             }, host).OnDone(() => { if (host) Destroy(host.gameObject); });
 
-            Tween.After(FireballFor + .1f, () => { if (host) Destroy(host.gameObject); }, host);
+            Tween.After(life + .1f, () => { if (host) Destroy(host.gameObject); }, host);
         }
 
         /// <summary>
