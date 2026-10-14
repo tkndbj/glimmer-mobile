@@ -1035,6 +1035,17 @@ namespace GlimmerGrove.Tests
             {
                 if (charm == SiegeCharm.None) continue;
 
+                // **A charm the field makes is on no roster, and says so** (`SiegeCharms.Made`,
+                // the Shuffle lane's power gems): forged by a match, never dealt, so no body may
+                // name one. Every member is on exactly one of the two lists.
+                if (System.Array.IndexOf(SiegeCharms.Made, charm) >= 0)
+                {
+                    Assert.AreEqual('\0', SiegeCharms.LetterOf(charm), $"{charm} is made by the field and may not be dealt");
+                    Assert.IsTrue(SiegeCharms.IsPower(charm), $"{charm} is made but is not a power");
+                    continue;
+                }
+
+                Assert.IsFalse(SiegeCharms.IsPower(charm), $"{charm} is dealt but reads as a power gem");
                 Assert.AreNotEqual('\0', SiegeCharms.LetterOf(charm),
                                    $"{charm} is a charm no chapter body can name");
             }

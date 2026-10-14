@@ -230,7 +230,7 @@ namespace GlimmerGrove.Modes
             {
                 var ward = _wards[i];
 
-                int full = SiegeTuning.HealthOf(ward.Build) * _boosts.GuardPercent / 100;
+                int full = _boosts.Guarded(SiegeTuning.HealthOf(ward.Build));
                 float capacity = SiegeTuning.CapacityOf(ward.Model) * _boosts.CapacityPercent / 100f;
 
                 ward.Fortify(full, capacity, SiegeTuning.MostCharges + _boosts.ExtraCharges,

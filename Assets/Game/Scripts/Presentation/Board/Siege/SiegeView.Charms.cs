@@ -188,7 +188,12 @@ namespace GlimmerGrove
             // cell that does not hold it yet. Invariant 6b, which the bomber's tip already paid
             // for once: it used to ring the bomber rather than the bomb, and arrived seconds
             // before the thing it told the player to tap existed.
-            if (charm != SiegeCharm.None && _announced.Add(charm)) _newly.Add(charm);
+            // **A power gem is never announced**: the field forges it out of the player's own
+            // match (the Shuffle lane's `power_gems`), so there is no lesson to raise for it.
+            if (charm != SiegeCharm.None && !SiegeCharms.IsPower(charm) && _announced.Add(charm)) _newly.Add(charm);
+
+            // The light a power gem wears, or none (`SiegeView.Power`).
+            if (gem.Power != null || SiegeCharms.IsPower(charm)) Empowered(gem, charm);
 
             bool lit = charm != SiegeCharm.None;
 
@@ -272,6 +277,9 @@ namespace GlimmerGrove
                 gem.Ring.color = new Color(c.r, c.g, c.b, k);
                 gem.Ring.transform.localScale = Vector3.one * (.95f + (k - .78f) * .55f);
             }
+
+            // And the power gems' own light, where a build has forged any (`SiegeView.Power`).
+            if (_board != null && _board.Boosts.PowerGems) Glowing(dt);
         }
 
         float _breath;
@@ -361,7 +369,9 @@ namespace GlimmerGrove
             // arm a cell is on should not decide how late it is - only how far along it is.
             int far = Mathf.Max(Mathf.Abs(ax - bx), Mathf.Abs(ay - by));
 
-            return Mathf.Min(far * WaveStep, Mathf.Max(SiegeTuning.BeatFor * .5f, HoldLeft));
+            // `_sprangLead` is nought for a lance, whose timing shipped as it is; a rocket's or a
+            // nova's wind-up for theirs, so a gem goes the moment the head or the bolt reaches it.
+            return Mathf.Min(_sprangLead + far * WaveStep, Mathf.Max(SiegeTuning.BeatFor * .5f, HoldLeft));
         }
 
         // ------------------------------------------------------------------ going off
@@ -398,6 +408,19 @@ namespace GlimmerGrove
                     break;
                 case SiegeCharm.Anvil:
                     Anviling(spark.Cell, spark.Colour, tint);
+                    break;
+
+                // The Shuffle lane's power gems (`SiegeView.Power`).
+                case SiegeCharm.RocketRow:
+                    Rocketed(spark.Cell, spark.Colour, tint, true);
+                    break;
+
+                case SiegeCharm.RocketColumn:
+                    Rocketed(spark.Cell, spark.Colour, tint, false);
+                    break;
+
+                case SiegeCharm.Nova:
+                    Novaed(spark.Cell, spark.Colour, tint);
                     break;
 
                 case SiegeCharm.Prism:

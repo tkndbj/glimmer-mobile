@@ -8462,6 +8462,110 @@
       "text": "As torres atiram duas vezes mais rápido e os tiros gastam metade do combustível."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Gemas explosivas"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Cada combinação explode as gemas ao redor. Mais cópias, explosões maiores."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Gemas de poder"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "Combine 4 para criar um foguete que limpa a linha dele. Combine 5 ou um canto para criar uma nova que limpa a cor dela."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Pacto do titã"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "Os tiros causam {0}% mais dano, mas as torres atiram {1}% mais devagar."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Pacto do avarento"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "Os tiros gastam {0}% menos combustível, mas causam {1}% menos dano."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Pacto do frenesi"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "As torres atiram {0}% mais rápido, mas os tiros causam {1}% menos dano."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Pacto de sangue"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "Os tiros causam {0}% mais dano e as torres atiram {0}% mais rápido, mas as torres têm {1}% menos vida."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Pacto imprudente"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "Os tiros causam {0}% mais dano e as torres atiram {0}% mais rápido, mas os invasores andam {1}% mais rápido."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Gemas cinéticas"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "As gemas dão mais combustível: {0}% da velocidade extra das suas torres."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Canhões de ferro"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "Os tiros causam mais dano: {0}% da vida extra das suas torres."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Transbordo"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "As torres atiram mais rápido: {0}% do combustível extra que guardam."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Combustível em cadeia"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Cada passo de uma reação em cadeia dá {0}% mais combustível que o anterior."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Grande mão"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Cada mão oferece 5 cartas em vez de 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Núcleo laser"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "Uma torre vira um canhão laser, a mais forte primeiro. Os tiros dela ricocheteiam em mais 3 invasores com {0}% de dano."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },

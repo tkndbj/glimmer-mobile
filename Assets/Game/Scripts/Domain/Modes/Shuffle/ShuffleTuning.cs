@@ -558,7 +558,7 @@ namespace GlimmerGrove.Shuffle
             {
                 if (most != 1) { fault = $"{at}most is {most}; this card does nothing a second time, so it is 1"; return null; }
             }
-            else if (!Within(at + "most", most, 1, shipped.Most * 2, shipped.Most, out fault))
+            else if (!Within(at + "most", most, 1, Math.Min(shipped.Most * 2, MostCeiling(shipped)), shipped.Most, out fault))
             {
                 return null;
             }
@@ -585,15 +585,48 @@ namespace GlimmerGrove.Shuffle
                 case ShuffleEffect.Hex:
                 case ShuffleEffect.Execute:
                 case ShuffleEffect.Nuke:
+                // A pact's cost is a share taken away, and a miser's gain is one too.
+                case ShuffleEffect.Miser:
                     return 90;
                 default:
                     return int.MaxValue;
             }
         }
 
-        /// <summary>An extent with a ceiling of its own: a last stand's health line is a share of a hundred.</summary>
+        /// <summary>
+        /// An extent with a ceiling of its own: a last stand's health line is a share of a
+        /// hundred, and so is every pact's cost (a figure lost past nine tenths is a figure gone).
+        /// </summary>
         static int ExtentCeiling(ShuffleCard card)
-            => card.Effect == ShuffleEffect.Desperate ? 90 : int.MaxValue;
+        {
+            switch (card.Effect)
+            {
+                case ShuffleEffect.Desperate:
+                case ShuffleEffect.Frenzy:
+                case ShuffleEffect.Titan:
+                case ShuffleEffect.Miser:
+                case ShuffleEffect.Blood:
+                case ShuffleEffect.Reckless:
+                    return 90;
+                default:
+                    return int.MaxValue;
+            }
+        }
+
+        /// <summary>
+        /// A most with a ceiling of its own: a copy past it would do nothing, which is a card
+        /// dealt for nothing (5d). There are four turrets to make laser guns, and a blast reaches
+        /// the corners at its widest.
+        /// </summary>
+        static int MostCeiling(ShuffleCard card)
+        {
+            switch (card.Effect)
+            {
+                case ShuffleEffect.Laser: return Wards.WardLine.Colours.Length;
+                case ShuffleEffect.BlastGems: return 2;
+                default: return int.MaxValue;
+            }
+        }
 
         /// <summary>
         /// Takes <paramref name="card"/> to its most on a fresh build and reads the board's figures

@@ -1176,7 +1176,7 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `content.py`). **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
    kept as a typed read for the readers that only ever meant the Infinite lane, and `Tune` and the
    validator read the ramp.
-59d. **A card is a row of code and never content** (20): fifty-two of them in four tiers, told
+59d. **A card is a row of code and never content** (20): sixty-five of them in four tiers (59m), told
    apart by *what they take* (37z asked of upgrades) - a common moves a number the player already
    has, a rare grants an ability the shelf sells or a new way to attack, an epic changes a rule, a
    legendary changes the shape of the run. One damage card and not three (5d). An id, a tier and a
@@ -1279,6 +1279,35 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    firebase/seed/seed-shuffle.mjs --check`, then without; the tool runs the game's own strict reader
    (`ShuffleTuningTests.ThePublishedFileIsAccepted...`) before it writes, refuses a revision not
    above the live one, and reads the document back. A new meaning is `schema2` beside `schema1`.
+
+59m. **The 2026-10-14 drop: field cards, pacts, synergies, a wider hand and laser guns** (the owner:
+   "crazy and unique every run", "do not affect other existing cards", "never a card that makes a run
+   go on for ever"). Thirteen cards, sixty-five in all. **Field cards** (`SiegeBoard.Gems`, shut on
+   `IsIdentity` and on a build holding neither): `blast_gems` adds every coloured gem round each run
+   to the beat (sides and ends; a second copy the corners), never a hole, a stone or a forming gem;
+   `power_gems` forges a rocket from a run of four (lying the way the run lay; it takes its row or
+   column) and a nova from five or two runs crossing (it takes every gem of its colour). A power gem
+   is a **made** charm (`SiegeCharms.Made`: `RocketRow`, `RocketColumn`, `Nova`, appended ordinals 7-9)
+   on no roster and taught by no lesson, so it rides, falls and springs through the charm machinery
+   unchanged; it stands where the player moved on the swap's own beat, else mid-run, never on a prism
+   or a charmed cell, and `_forming` spares it from every cross, rocket and blast that beat. Neither
+   draws from any stream (41). **Pacts** (rare/epic, two copies, stack with anything) multiply four
+   products in thousandths (`PactDamage`, `PactFire`, `PactFuelShot`, `PactGuard`), never under a
+   tenth, applied after every additive card; `FireEvery` is now floored at `QuickestShot` on a live
+   build (no build before reached it). **Synergies** are rates read off other figures at read time
+   (`KineticBonus`, `IronBonus`, `OverflowBonus`, each capped at `MostSynergy` 300) and `chain_fuel`
+   pays per cascade beat (`FuelGem(fuel, depth)`, capped at `MostChainFuel` 200). **`grand_hand`**
+   (legendary, once) is the deck's figure, not the board's: `ShuffleBuild.HandSize`, at most
+   `ShuffleDeck.MostHand` 5, laid out three over two by `ShuffleHandLayout.Place`/`PanelHeightFor`;
+   a hand of three is laid out and dealt exactly as before (same rolls). **`laser_core`** (legendary,
+   four copies) makes the `LaserGuns` strongest turrets laser guns (`SiegeBoard.Lasered`, a reading
+   ranked by bolt worth, leftmost on a tie): every primary bolt goes on into the nearest unstruck
+   raiders (`SiegeVia.Laser`, `From` the body it left) and the turret's own ability hits are reported
+   as lasers too, so an Eclipse's six chain hops are six beams. Drawn by `SiegeView.Laser` (pooled
+   five-layer beams, a lens on the barrel, a conversion scan) and `SiegeView.Power` (forge, rocket
+   flights, nova fork, blasts). **Held by** `ShuffleFieldTests` (each rule, the plain field, no draw),
+   `TheIdentityBoostChangesNothing`, `EveryAttackCardIsSeenOnTheBoard` (laser row) and
+   `SiegeCharmTests` (every charm on exactly one of roster or `Made`).
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the

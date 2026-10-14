@@ -8462,6 +8462,110 @@
       "text": "Kuleler iki kat hızlı ateş eder, kurşunlar yarı yakıt harcar."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Patlayan Mücevherler"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Her eşleşme etrafındaki mücevherleri patlatır. Daha çok kopya, daha büyük patlamalar."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Güç Mücevherleri"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "4'lü eşleştir, sırasını temizleyen bir roket yap. 5'li ya da köşe eşleştir, rengini temizleyen bir nova yap."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Titan Anlaşması"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "Kurşunlar %{0} daha fazla hasar verir, ama kuleler %{1} daha yavaş ateş eder."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Cimri Anlaşması"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "Kurşunlar %{0} daha az yakıt harcar, ama %{1} daha az hasar verir."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Çılgınlık Anlaşması"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "Kuleler %{0} daha hızlı ateş eder, ama kurşunlar %{1} daha az hasar verir."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Kan Anlaşması"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "Kurşunlar %{0} daha fazla hasar verir ve kuleler %{0} daha hızlı ateş eder, ama kulelerin canı %{1} azalır."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Gözü Kara Anlaşma"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "Kurşunlar %{0} daha fazla hasar verir ve kuleler %{0} daha hızlı ateş eder, ama akıncılar %{1} daha hızlı yürür."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Kinetik Mücevherler"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "Mücevherler, kulelerinin ek hızının %{0} oranında daha çok yakıt verir."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Demir Toplar"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "Kurşunlar, kulelerinin ek canının %{0} oranında daha çok hasar verir."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Taşma"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "Kuleler, aldıkları ek yakıtın %{0} oranında daha hızlı ateş eder."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Zincir Yakıtı"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Zincirleme tepkimenin her adımı bir öncekinden %{0} daha fazla yakıt verir."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Büyük El"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Her el 3 yerine 5 kart sunar."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Lazer Çekirdeği"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "Bir kule lazer topuna dönüşür, önce en güçlüsü. Kurşunları 3 akıncıya daha seker, %{0} hasarla."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-%{0}"
     },

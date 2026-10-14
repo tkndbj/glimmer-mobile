@@ -28,7 +28,7 @@
   ],
 
   "schema": 1,
-  "revision": 2,
+  "revision": 3,
 
   "ramp": {
     "firstWave": 4,
@@ -137,6 +137,17 @@
     { "id": "wildfire"        , "magnitude": 3, "extent": 1, "most": 2, "enabled": true },
     { "id": "meteor_call"     , "magnitude": 30, "extent": 60, "most": 2, "enabled": true },
     { "id": "vortex"          , "magnitude": 3, "extent": 90, "most": 2, "enabled": true },
+    { "id": "blast_gems"      , "magnitude": 1, "extent": 0, "most": 2, "enabled": true },
+    { "id": "power_gems"      , "magnitude": 1, "extent": 0, "most": 1, "enabled": true },
+    { "id": "titan_pact"      , "magnitude": 100, "extent": 50, "most": 2, "enabled": true },
+    { "id": "miser_pact"      , "magnitude": 50, "extent": 20, "most": 2, "enabled": true },
+    { "id": "frenzy_pact"     , "magnitude": 200, "extent": 50, "most": 2, "enabled": true },
+    { "id": "blood_pact"      , "magnitude": 20, "extent": 50, "most": 2, "enabled": true },
+    { "id": "reckless_pact"   , "magnitude": 35, "extent": 20, "most": 2, "enabled": true },
+    { "id": "kinetic_gems"    , "magnitude": 50, "extent": 0, "most": 2, "enabled": true },
+    { "id": "iron_cannons"    , "magnitude": 50, "extent": 0, "most": 2, "enabled": true },
+    { "id": "overflow"        , "magnitude": 50, "extent": 0, "most": 2, "enabled": true },
+    { "id": "chain_fuel"      , "magnitude": 40, "extent": 0, "most": 2, "enabled": true },
     { "id": "phoenix"         , "magnitude": 1, "extent": 0, "most": 1, "enabled": true },
     { "id": "overdrive"       , "magnitude": 40, "extent": 25, "most": 1, "enabled": true },
     { "id": "rainbow_fuel"    , "magnitude": 25, "extent": 0, "most": 1, "enabled": true },
@@ -145,6 +156,8 @@
     { "id": "death_ray"       , "magnitude": 6, "extent": 100, "most": 1, "enabled": true },
     { "id": "hydra"           , "magnitude": 5, "extent": 2, "most": 1, "enabled": true },
     { "id": "wild_magic"      , "magnitude": 100, "extent": 0, "most": 1, "enabled": true },
-    { "id": "bullet_hell"     , "magnitude": 100, "extent": 50, "most": 1, "enabled": true }
+    { "id": "bullet_hell"     , "magnitude": 100, "extent": 50, "most": 1, "enabled": true },
+    { "id": "grand_hand"      , "magnitude": 2, "extent": 0, "most": 1, "enabled": true },
+    { "id": "laser_core"      , "magnitude": 7, "extent": 4, "most": 4, "enabled": true }
   ]
 }

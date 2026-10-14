@@ -24,8 +24,14 @@ namespace GlimmerGrove.Shuffle
     /// </summary>
     public static class ShuffleDeck
     {
-        /// <summary>Cards in a hand.</summary>
+        /// <summary>Cards in a hand, before a card widens it (<see cref="ShuffleBuild.HandSize"/>).</summary>
         public const int HandSize = 3;
+
+        /// <summary>
+        /// The most cards a hand may offer, whatever widens it: the panel lays out three across
+        /// and two under (<c>ShuffleHandLayout</c>), and a test holds the layout to this.
+        /// </summary>
+        public const int MostHand = 5;
 
         /// <summary>
         /// How often each tier is dealt, per hundred: common, rare, epic, legendary.
@@ -60,7 +66,7 @@ namespace GlimmerGrove.Shuffle
         /// Deals hand number <paramref name="hand"/> (counting from one) for <paramref name="build"/>,
         /// drawing off <paramref name="roll"/>: a function answering a number under a hundred.
         ///
-        /// Fewer than <see cref="HandSize"/> cards when the build has fewer left to take, and
+        /// Fewer than the build's hand (<see cref="ShuffleBuild.HandSize"/>) when it has fewer left to take, and
         /// none at all once everything is held to its most - the caller then deals nothing.
         /// </summary>
         public static List<ShuffleCard> Deal(ShuffleBuild build, int hand, Func<int> roll)
@@ -75,14 +81,18 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public static List<ShuffleCard> Deal(ShuffleBuild build, int hand, Func<int> roll, ShuffleTuning tuning)
         {
-            var dealt = new List<ShuffleCard>(HandSize);
+            var dealt = new List<ShuffleCard>(MostHand);
             if (build == null || roll == null) return dealt;
 
             tuning = tuning ?? ShuffleTuning.Shipped;
             var deck = tuning.Deck;
             var weights = deck.TableFor(hand);
 
-            for (int slot = 0; slot < HandSize; slot++)
+            // **The build says how many** (`grand_hand` widens it); every slot past the third is
+            // dealt exactly as the first three are, so a wider hand is the same deck dealt longer.
+            int size = build.HandSize;
+
+            for (int slot = 0; slot < size; slot++)
             {
                 var tier = TierFor(roll(), weights);
 

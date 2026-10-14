@@ -8462,6 +8462,110 @@
       "text": "Le torrette sparano il doppio più veloce e i colpi consumano metà carburante."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Gemme esplosive"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Ogni abbinamento fa esplodere le gemme intorno. Più copie, esplosioni più grandi."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Gemme del potere"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "Abbina 4 gemme per creare un razzo che svuota la sua linea. Abbinane 5 o ad angolo per creare una nova che svuota il suo colore."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Patto del titano"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "I colpi fanno il {0}% di danni in più, ma le torrette sparano il {1}% più lente."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Patto dell'avaro"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "I colpi consumano il {0}% di carburante in meno, ma fanno il {1}% di danni in meno."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Patto della frenesia"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "Le torrette sparano il {0}% più veloce, ma i colpi fanno il {1}% di danni in meno."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Patto di sangue"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "I colpi fanno il {0}% di danni in più e le torrette sparano il {0}% più veloce, ma hanno il {1}% di vita in meno."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Patto spericolato"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "I colpi fanno il {0}% di danni in più e le torrette sparano il {0}% più veloce, ma i predoni camminano il {1}% più veloci."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Gemme cinetiche"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "Le gemme danno più carburante: il {0}% della velocità in più delle tue torrette."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Cannoni di ferro"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "I colpi fanno più danni: il {0}% della vita in più delle tue torrette."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Traboccare"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "Le torrette sparano più veloce: il {0}% del carburante in più che contengono."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Carburante a catena"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Ogni passo di una reazione a catena dà il {0}% di carburante in più del precedente."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Grande mano"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Ogni mano offre 5 carte invece di 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Nucleo laser"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "Una torretta diventa un cannone laser, la più forte per prima. I suoi colpi rimbalzano su altri 3 predoni con il {0}% dei danni."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },

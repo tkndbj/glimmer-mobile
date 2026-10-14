@@ -542,6 +542,14 @@ namespace GlimmerGrove
                 return;
             }
 
+            // **A laser gun fires a beam, not a comet** (`SiegeView.Laser`). False on every board
+            // but a build's, so every chapter goes on down the path below.
+            if (Lasered(shot.Ward))
+            {
+                Lasing(shot);
+                return;
+            }
+
             var post = _posts[shot.Ward];
             var ward = _board.Wards[shot.Ward];
 

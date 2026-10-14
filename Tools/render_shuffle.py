@@ -181,15 +181,24 @@ def screen(cards, lang, held, wave):
     # `VictoryFrame.Build`, as `render_welcome.choice` draws it: the whole block on its own layer,
     # fitted to the canvas as `MakeFit` fits it.
     pw = L["PanelWidth"]
-    ph = L["CardsTop"] + L["CardHeight"] + L["Foot"]
+    # `ShuffleHandLayout.PanelHeightFor`: one row for three cards, rows of `PerRow` for a wider
+    # hand (`grand_hand` deals five, three over two).
+    per = int(L.get("PerRow", 3))
+    rows = 1 if len(cards) <= per else (len(cards) + per - 1) // per
+    ph = L["CardsTop"] + rows * L["CardHeight"] + (rows - 1) * L.get("RowGap", 0) + L["Foot"]
     reach = ph + CREST_REACH
     fit = min(1.0, (H - 20 * 2) / reach)
 
     block = Image.new("RGBA", (1680, int(reach + 500)), (0, 0, 0, 0))
     bw, bh = block.size
     bcx = bw / 2
-    top = bh / 2 - CREST_REACH / 2 - ph / 2
-    crest_cy = top - CREST_REACH / 2
+    # `VictoryFrame` hangs the window half the crest *below* the layer's middle (Unity's y is up:
+    # `-CrestReach * .5f`), so the crest and the window together are what is centred. This
+    # read "- CREST_REACH / 2" (the window lifted instead), which a three-card window had the
+    # room to hide and a five-card one does not.
+    top = bh / 2 + CREST_REACH / 2 - ph / 2
+    # `VictoryFrame.Build`'s `crestY` is the window's top edge; the fan and the bloom hang under it.
+    crest_cy = top
 
     fan = K.rays(1680, 14)
     fan_rgba = Image.new("RGBA", fan.size, (255, 204, 77, 0))
@@ -214,11 +223,16 @@ def screen(cards, lang, held, wave):
     print("  line %-28r at %dpx (floor 20)%s" % (line, px, "  !!" if px <= 20 else ""))
 
     pitch = L["CardWidth"] + L["CardGap"]
-    left = bcx - (len(cards) - 1) * pitch / 2
     for i, cid in enumerate(cards):
         if cid not in tiers:
             sys.exit("'%s' is not a card the catalog names" % cid)
-        card(block, L, cid, tiers[cid], left + i * pitch, top + L["CardsTop"], strings, held.get(cid, 0))
+        # `ShuffleHandLayout.Place`: each row centred on its own.
+        row = 0 if len(cards) <= per else i // per
+        in_row = len(cards) if len(cards) <= per else min(per, len(cards) - row * per)
+        at = i if len(cards) <= per else i - row * per
+        cx = bcx - (in_row - 1) * pitch / 2 + at * pitch
+        card_top = top + L["CardsTop"] + row * (L["CardHeight"] + L.get("RowGap", 0))
+        card(block, L, cid, tiers[cid], cx, card_top, strings, held.get(cid, 0))
 
     if fit < 1.0:
         block = block.resize((int(bw * fit), int(bh * fit)), Image.LANCZOS)

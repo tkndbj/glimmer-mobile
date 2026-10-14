@@ -81,6 +81,10 @@ namespace GlimmerGrove.Modes
         // The attack cards.
         Pellet, Ricochet, Missile, Quake, Toxic, Tesla, Shatter, Wildfire, Meteor, Vortex, Nuke,
         Ray, Hydra,
+
+        // A laser gun's beam (`laser_core`): every hit a lasered ward deals past its primary bolt,
+        // drawn as the beam leaving the body it last struck. Appended, never renumbered.
+        Laser,
     }
 
     /// <summary>
@@ -745,6 +749,60 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Which beat of the cascade this is, counting from one.</summary>
         public int Depth;
+
+        /// <summary>
+        /// Every power gem this beat forged (the Shuffle lane's <c>power_gems</c>), in the order
+        /// the scan found them: the cell it stands in, what it became and the run it was made of.
+        /// Empty on every board but a build's. <b>Recorded rather than read back</b>, for
+        /// <see cref="Paid"/>'s reason: the run's cells are holes by the time the view draws them
+        /// flying into the forge.
+        /// </summary>
+        public readonly List<SiegeForging> Forged = new List<SiegeForging>(1);
+
+        /// <summary>
+        /// Every run this beat blew up (the Shuffle lane's <c>blast_gems</c>), and the cells the
+        /// blasts took that no run did. Both empty on every board but a build's.
+        /// </summary>
+        public readonly List<SiegeBlastRun> Blasts = new List<SiegeBlastRun>(2);
+
+        public readonly List<int> Blasted = new List<int>(8);
+    }
+
+    /// <summary>A power gem forged on the field: where, what, its colour and the run that made it.</summary>
+    public readonly struct SiegeForging
+    {
+        public readonly int Cell;
+        public readonly SiegeCharm Charm;
+
+        /// <summary>Which of <see cref="SiegeLayout.Letters"/> it is.</summary>
+        public readonly int Colour;
+
+        /// <summary>The run's other cells, which the view draws flying into <see cref="Cell"/>.</summary>
+        public readonly int[] Run;
+
+        public SiegeForging(int cell, SiegeCharm charm, int colour, int[] run)
+        {
+            Cell = cell;
+            Charm = charm;
+            Colour = colour;
+            Run = run ?? System.Array.Empty<int>();
+        }
+    }
+
+    /// <summary>
+    /// A run that went off as a blast: its two end cells (the blast is drawn along the line
+    /// between them) and its colour.
+    /// </summary>
+    public readonly struct SiegeBlastRun
+    {
+        public readonly int First, Last, Colour;
+
+        public SiegeBlastRun(int first, int last, int colour)
+        {
+            First = first;
+            Last = last;
+            Colour = colour;
+        }
     }
 
     /// <summary>What one swap turned into.</summary>

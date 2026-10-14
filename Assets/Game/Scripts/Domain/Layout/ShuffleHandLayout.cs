@@ -68,10 +68,48 @@ namespace GlimmerGrove.Layout
         /// <summary>Air under the cards to the panel's foot.</summary>
         public float Foot = 34f;
 
+        /// <summary>
+        /// The most cards one row carries. A wider hand (<c>grand_hand</c>, five cards) is laid
+        /// out as rows of this many, the last row centred under the one above: three over two.
+        /// </summary>
+        public int PerRow = 3;
+
+        /// <summary>Air between two rows of cards.</summary>
+        public float RowGap = 24f;
+
+        /// <summary>The panel's height for a hand of three or fewer: one row.</summary>
         public float PanelHeight => CardsTop + CardHeight + Foot;
+
+        /// <summary>How many rows a hand of <paramref name="cards"/> is laid out in.</summary>
+        public int Rows(int cards) => cards <= PerRow ? 1 : (cards + PerRow - 1) / PerRow;
+
+        /// <summary>The panel's height for a hand of <paramref name="cards"/>, every row and the air between.</summary>
+        public float PanelHeightFor(int cards)
+        {
+            int rows = Rows(cards);
+            return CardsTop + rows * CardHeight + (rows - 1) * RowGap + Foot;
+        }
 
         /// <summary>The cards' centre line, down from the panel's top (what <c>UIKit.Box</c> pivots on).</summary>
         public float CardsCentre => CardsTop + CardHeight * .5f;
+
+        /// <summary>
+        /// Where card <paramref name="index"/> of a hand of <paramref name="cards"/> stands: its
+        /// centre across the panel (nought the middle) and its <b>top edge</b> down from the
+        /// panel's top - what the overlay's cards pivot on. Each row is centred on its own, so the
+        /// two under three sit in the gaps.
+        /// </summary>
+        public void Place(int index, int cards, out float x, out float top)
+        {
+            int row = cards <= PerRow ? 0 : index / PerRow;
+            int first = row * PerRow;
+            int inRow = cards <= PerRow ? cards : System.Math.Min(PerRow, cards - first);
+            int at = cards <= PerRow ? index : index - first;
+
+            float pitch = CardWidth + CardGap;
+            x = -(inRow - 1) * pitch * .5f + at * pitch;
+            top = CardsTop + row * (CardHeight + RowGap);
+        }
 
         /// <summary>How wide three cards and their gaps run.</summary>
         public float RowWidth(int cards) => cards * CardWidth + (cards - 1) * CardGap;
@@ -84,9 +122,16 @@ namespace GlimmerGrove.Layout
         {
             fault = null;
 
-            if (RowWidth(cards) + Inset * 2f > PanelWidth)
+            int widest = cards < PerRow ? cards : PerRow;
+            if (RowWidth(widest) + Inset * 2f > PanelWidth)
             {
-                fault = $"{cards} cards run {RowWidth(cards)} across a {PanelWidth} panel";
+                fault = $"{widest} cards run {RowWidth(widest)} across a {PanelWidth} panel";
+                return false;
+            }
+
+            if (RowGap < 0f)
+            {
+                fault = $"two rows of cards overlap by {-RowGap}";
                 return false;
             }
 
@@ -124,9 +169,9 @@ namespace GlimmerGrove.Layout
             if (IconSize >= SeatSize) { fault = "the picture does not fit its seat"; return false; }
 
             // The whole panel, centred, fits the shortest canvas this game lays out for.
-            if (PanelHeight > PanelStack.TallestPanel)
+            if (PanelHeightFor(cards) > PanelStack.TallestPanel)
             {
-                fault = $"the panel is {PanelHeight} tall against a ceiling of {PanelStack.TallestPanel}";
+                fault = $"the panel is {PanelHeightFor(cards)} tall against a ceiling of {PanelStack.TallestPanel}";
                 return false;
             }
 

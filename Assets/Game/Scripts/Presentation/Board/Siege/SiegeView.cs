@@ -146,6 +146,19 @@ namespace GlimmerGrove
 
             /// <summary>When this stone next gives off a wisp of the curse, in real seconds.</summary>
             public float Wisp;
+
+            /// <summary>
+            /// The light a power gem wears over its face (the Shuffle lane's rockets and novas,
+            /// <c>SiegeView.Power</c>), or null. A child of the gem for <see cref="Web"/>'s reason.
+            /// </summary>
+            public RectTransform Power;
+
+            public Image[] PowerParts;
+
+            /// <summary>Which power <see cref="Power"/> was built for, and how long it has burned.</summary>
+            public SiegeCharm Powered;
+
+            public float PowerAge;
         }
 
         sealed class Mob

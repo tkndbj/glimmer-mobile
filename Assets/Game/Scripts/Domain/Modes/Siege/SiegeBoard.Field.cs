@@ -145,6 +145,11 @@ namespace GlimmerGrove.Modes
 
             var turn = new SiegeTurn { A = a, B = b };
 
+            // Where a power gem forms on this swap's own beat (`SiegeBoard.Gems`). Read by
+            // nothing on a board that holds no build.
+            _swapA = a;
+            _swapB = b;
+
             int depth = 0;
             while (true)
             {
@@ -166,6 +171,12 @@ namespace GlimmerGrove.Modes
                 // the same reason** - and before `Spring`, so nothing it swallows goes off
                 // inside it. See `SiegeBoard.Singularity.cs`.
                 Devour(hit, beat);
+
+                // **A build's field cards, before the charms go off** (`SiegeBoard.Gems`): a power
+                // gem forged out of a run of four or five is taken out of the clear, and a blast
+                // round every run is added to it - so a charm a blast takes goes off on this beat.
+                // Returns on its first line on every board but the Shuffle lane's.
+                Empower(hit, beat);
 
                 // **Everything a charm adds is folded into the beat that set it off, before a
                 // single cell is taken away.** A lance that takes its row and column has not
@@ -198,7 +209,7 @@ namespace GlimmerGrove.Modes
                     beat.Paid.Add(SiegeLayout.FaceOf(worth));
 
                     int ward = Layout.WardOf(worth);
-                    if (ward >= 0) beat.Fuel[ward] += _boosts.FuelGem(SiegeTuning.FuelPerGem);
+                    if (ward >= 0) beat.Fuel[ward] += _boosts.FuelGem(SiegeTuning.FuelPerGem, depth);
 
                     _cells[cell] = Hole;
                     _charms[cell] = SiegeCharm.None;
@@ -237,6 +248,10 @@ namespace GlimmerGrove.Modes
                         In = SiegeTuning.FuelLands(depth - 1),
                     });
                 }
+
+                // The power gems this beat forged stand in their cells before the field falls, so
+                // each falls with its column. Nothing to stand on any other board.
+                if (_forged.Count > 0 || _forming.Count > 0) SetPowers();
 
                 Collapse(beat);
                 turn.Beats.Add(beat);

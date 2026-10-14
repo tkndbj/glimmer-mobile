@@ -8462,6 +8462,110 @@
       "text": "الأبراج تطلق أسرع بمرتين، والطلقات تستهلك نصف الوقود."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "جواهر متفجرة"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "كل مطابقة تفجر الجواهر من حولها. نسخ أكثر، انفجارات أكبر."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "جواهر القوة"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "طابق 4 لتصنع صاروخا يمسح خطه. طابق 5 أو زاوية لتصنع نجما متفجرا يمسح لونه."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "ميثاق العملاق"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "الطلقات تسبب ضررا أكثر بنسبة {0}%، لكن الأبراج تطلق أبطأ بنسبة {1}%."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "ميثاق البخيل"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "الطلقات تستهلك وقودا أقل بنسبة {0}%، لكنها تسبب ضررا أقل بنسبة {1}%."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "ميثاق الهياج"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "الأبراج تطلق أسرع بنسبة {0}%، لكن الطلقات تسبب ضررا أقل بنسبة {1}%."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "ميثاق الدم"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "الطلقات تسبب ضررا أكثر بنسبة {0}% والأبراج تطلق أسرع بنسبة {0}%، لكن صحة الأبراج أقل بنسبة {1}%."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "ميثاق التهور"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "الطلقات تسبب ضررا أكثر بنسبة {0}% والأبراج تطلق أسرع بنسبة {0}%، لكن المهاجمين يمشون أسرع بنسبة {1}%."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "جواهر حركية"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "الجواهر تعطي وقودا أكثر: {0}% من السرعة الإضافية لأبراجك."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "مدافع حديدية"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "الطلقات تسبب ضررا أكثر: {0}% من الصحة الإضافية لأبراجك."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "فيض"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "الأبراج تطلق أسرع: {0}% من الوقود الإضافي الذي تتسع له."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "وقود السلسلة"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "كل خطوة من التفاعل المتسلسل تعطي وقودا أكثر بنسبة {0}% من الخطوة السابقة."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "اليد الكبرى"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "كل يد تعرض 5 بطاقات بدلا من 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "نواة الليزر"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "يصبح برج مدفع ليزر، الأقوى أولا. طلقاته ترتد إلى 3 مهاجمين آخرين بنسبة {0}% من الضرر."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },

@@ -36,6 +36,19 @@ namespace GlimmerGrove.Shuffle
         Scatter, Ricochet, Missiles, Quake, Toxic, Tesla,
         SpinUp, Shatter, Wildfire, Meteor, Vortex,
         Nuke, Ray, Hydra, Wild, BulletHell,
+
+        // The field cards (`SiegeBoard.Gems`): each changes what a match does on the gem board.
+        BlastGems, PowerGems,
+
+        // The pacts: a gain bought with a loss, multiplied into the figures (`SiegeBoosts.Pact`).
+        // Magnitude is the gain and extent the cost, both per cent.
+        Frenzy, Titan, Miser, Blood, Reckless,
+
+        // The synergies: a rate read off another figure (`SiegeBoosts.KineticBonus` and kin).
+        Kinetic, Iron, Overflow, ChainFuel,
+
+        // The legendaries of this drop: a bigger hand, and a turret made a laser gun.
+        Hand, Laser,
     }
 
     /// <summary>
@@ -110,7 +123,7 @@ namespace GlimmerGrove.Shuffle
     /// the board does, and a rule is a build (invariant 20).
     ///
     /// <para>
-    /// <b>Fifty-two cards in four tiers, and what separates them is <em>what they take</em></b>
+    /// <b>Sixty-five cards in four tiers, and what separates them is <em>what they take</em></b>
     /// (invariant 37z's rule about bosses, asked of upgrades): the common tier moves a number the
     /// player already has - weight, cadence, fuel, health; the rare tier grants the turrets an
     /// ability the shelf sells or a new way to attack; the epic tier changes a <em>rule</em> - a
@@ -198,6 +211,25 @@ namespace GlimmerGrove.Shuffle
             new ShuffleCard("meteor_call",     ShuffleTier.Epic, ShuffleEffect.Meteor,     30, 60, 2, 35),
             new ShuffleCard("vortex",          ShuffleTier.Epic, ShuffleEffect.Vortex,      3, 90, 2, 16),
 
+            // ------------------------------------------------------------ epic: the field's rules
+            new ShuffleCard("blast_gems",      ShuffleTier.Epic, ShuffleEffect.BlastGems,   1, 0, 2, 17),
+            new ShuffleCard("power_gems",      ShuffleTier.Epic, ShuffleEffect.PowerGems,   1, 0, 1, 89),
+
+            // ------------------------------------------------------------ the pacts: a gain for a loss
+            // **Rare or epic, never legendary** (the owner, 2026-10-14: a legendary is pure
+            // benefit), and stackable with themselves and everything else because they multiply.
+            new ShuffleCard("titan_pact",      ShuffleTier.Rare, ShuffleEffect.Titan,     100, 50, 2, 96),
+            new ShuffleCard("miser_pact",      ShuffleTier.Rare, ShuffleEffect.Miser,      50, 20, 2, 86),
+            new ShuffleCard("frenzy_pact",     ShuffleTier.Epic, ShuffleEffect.Frenzy,    200, 50, 2, 80),
+            new ShuffleCard("blood_pact",      ShuffleTier.Epic, ShuffleEffect.Blood,      20, 50, 2, 95),
+            new ShuffleCard("reckless_pact",   ShuffleTier.Epic, ShuffleEffect.Reckless,   35, 20, 2, 87),
+
+            // ------------------------------------------------------------ the synergies: one figure feeds another
+            new ShuffleCard("kinetic_gems",    ShuffleTier.Rare, ShuffleEffect.Kinetic,    50, 0, 2, 58),
+            new ShuffleCard("iron_cannons",    ShuffleTier.Rare, ShuffleEffect.Iron,       50, 0, 2, 69),
+            new ShuffleCard("overflow",        ShuffleTier.Rare, ShuffleEffect.Overflow,   50, 0, 2, 57),
+            new ShuffleCard("chain_fuel",      ShuffleTier.Epic, ShuffleEffect.ChainFuel,  40, 0, 2, 100),
+
             // ------------------------------------------------------------ legendary: a run's shape
             new ShuffleCard("phoenix",      ShuffleTier.Legendary, ShuffleEffect.Phoenix,   1, 0, 1, 90),
             new ShuffleCard("overdrive",    ShuffleTier.Legendary, ShuffleEffect.Overdrive, 40, 25, 1, 94),
@@ -208,6 +240,15 @@ namespace GlimmerGrove.Shuffle
             new ShuffleCard("hydra",        ShuffleTier.Legendary, ShuffleEffect.Hydra,      5, 2, 1, 93),
             new ShuffleCard("wild_magic",   ShuffleTier.Legendary, ShuffleEffect.Wild,     100, 0, 1, 10),
             new ShuffleCard("bullet_hell",  ShuffleTier.Legendary, ShuffleEffect.BulletHell, 100, 50, 1, 81),
+
+            // **Dealt once and costs nothing** (the owner, 2026-10-14): two more cards in every
+            // hand from the next one on (`ShuffleBuild.HandSize`).
+            new ShuffleCard("grand_hand",   ShuffleTier.Legendary, ShuffleEffect.Hand,        2, 0, 1, 5),
+
+            // **One turret a copy**, the strongest first, until the whole line fires lasers
+            // (`SiegeBoard.Lasered`): magnitude is each bounce's share in tenths, extent how many
+            // raiders one shot passes through.
+            new ShuffleCard("laser_core",   ShuffleTier.Legendary, ShuffleEffect.Laser,       7, 4, 4, 2),
         };
 
         /// <summary>

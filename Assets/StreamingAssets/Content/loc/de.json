@@ -8462,6 +8462,110 @@
       "text": "Türme schießen doppelt so schnell, und Schüsse verbrauchen halb so viel Treibstoff."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Explosive Juwelen"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Jede Kombination sprengt die Juwelen drumherum. Mehr Kopien, größere Explosionen."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Kraftjuwelen"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "Kombiniere 4 für eine Rakete, die ihre Linie räumt. Kombiniere 5 oder eine Ecke für eine Nova, die ihre Farbe räumt."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Titanenpakt"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "Schüsse machen {0}% mehr Schaden, aber Türme schießen {1}% langsamer."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Geizpakt"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "Schüsse verbrauchen {0}% weniger Treibstoff, machen aber {1}% weniger Schaden."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Raserei-Pakt"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "Türme schießen {0}% schneller, aber Schüsse machen {1}% weniger Schaden."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Blutpakt"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "Schüsse machen {0}% mehr Schaden und Türme schießen {0}% schneller, aber Türme haben {1}% weniger Leben."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Tollkühner Pakt"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "Schüsse machen {0}% mehr Schaden und Türme schießen {0}% schneller, aber Plünderer laufen {1}% schneller."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Kinetische Juwelen"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "Juwelen geben mehr Treibstoff: {0}% des Tempo-Bonus deiner Türme."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Eisenkanonen"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "Schüsse machen mehr Schaden: {0}% des Lebens-Bonus deiner Türme."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Überlauf"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "Türme schießen schneller: {0}% des Treibstoff-Bonus, den sie fassen."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Kettentreibstoff"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Jeder Schritt einer Kettenreaktion gibt {0}% mehr Treibstoff als der davor."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Große Hand"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Jede Hand bietet 5 Karten statt 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Laserkern"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "Ein Turm wird zur Laserkanone, der stärkste zuerst. Seine Schüsse springen auf 3 weitere Plünderer über, mit {0}% Schaden."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },

@@ -53,6 +53,23 @@ namespace GlimmerGrove.Shuffle
         public int Distinct => _held.Count;
 
         /// <summary>
+        /// How many cards this build's next hand offers: <see cref="ShuffleDeck.HandSize"/>, and
+        /// what every card that widens a hand (<c>grand_hand</c>) adds. A function of the cards
+        /// held, like everything else a build is (59e).
+        /// </summary>
+        public int HandSize
+        {
+            get
+            {
+                int size = ShuffleDeck.HandSize;
+                for (int i = 0; i < _taken.Count; i++)
+                    if (_taken[i].Effect == ShuffleEffect.Hand) size += _taken[i].Magnitude;
+
+                return size > ShuffleDeck.MostHand ? ShuffleDeck.MostHand : size;
+            }
+        }
+
+        /// <summary>
         /// Takes a card, answering whether it was taken. A card at its most is refused rather
         /// than clamped, so a hand that offered one is the fault and not the fold.
         /// </summary>
@@ -261,6 +278,55 @@ namespace GlimmerGrove.Shuffle
                 case ShuffleEffect.BulletHell:
                     into.AddFire(card.Magnitude);
                     into.AddFuelShot(-card.Extent);
+                    break;
+
+                // ---------------------------------------------------------- the field cards
+                // A second blast is a wider one: the corners as well as the sides.
+                case ShuffleEffect.BlastGems:
+                    into.SetBlastGems(card.Magnitude * n);
+                    break;
+
+                case ShuffleEffect.PowerGems:
+                    into.SetPowerGems(true);
+                    break;
+
+                // ---------------------------------------------------------- the pacts
+                // **One fold per copy, multiplied** (`SiegeBoosts.Pact`): two copies are the
+                // bargain struck twice, never a gain doubled against a loss doubled.
+                case ShuffleEffect.Frenzy:
+                    into.Pact(-card.Extent, card.Magnitude, 0, 0);
+                    break;
+
+                case ShuffleEffect.Titan:
+                    into.Pact(card.Magnitude, -card.Extent, 0, 0);
+                    break;
+
+                case ShuffleEffect.Miser:
+                    into.Pact(-card.Extent, 0, -card.Magnitude, 0);
+                    break;
+
+                case ShuffleEffect.Blood:
+                    into.Pact(card.Magnitude, card.Magnitude, 0, -card.Extent);
+                    break;
+
+                case ShuffleEffect.Reckless:
+                    into.Pact(card.Magnitude, card.Magnitude, 0, 0);
+                    into.AddHillPace(card.Extent);
+                    break;
+
+                // ---------------------------------------------------------- the synergies
+                case ShuffleEffect.Kinetic: into.AddKinetic(card.Magnitude); break;
+                case ShuffleEffect.Iron: into.AddIron(card.Magnitude); break;
+                case ShuffleEffect.Overflow: into.AddOverflow(card.Magnitude); break;
+                case ShuffleEffect.ChainFuel: into.AddChainFuel(card.Magnitude); break;
+
+                // **A bigger hand is the deck's, not the board's** (`HandSize`): nothing to fold.
+                case ShuffleEffect.Hand:
+                    break;
+
+                // One more laser gun a copy, the strongest turret without one first.
+                case ShuffleEffect.Laser:
+                    into.SetLaser(n, card.Magnitude, card.Extent);
                     break;
 
                 default:

@@ -343,6 +343,12 @@ namespace GlimmerGrove
                         () => { Pop(to, HydraHue, 1.4f, .2f); land(); });
                     break;
 
+                // A laser gun's light going on into another body (`SiegeView.Laser`), or its own
+                // ability's hit drawn as the beam it now is. It lands its own number.
+                case SiegeVia.Laser:
+                    Bounced(shot, source, to);
+                    break;
+
                 default:
                     Pop(to, tint, 1.2f, .2f);
                     land();
@@ -858,6 +864,7 @@ namespace GlimmerGrove
             Vortex(dt);
             Ray(dt);
             Heat(dt);
+            Lasers(dt);
         }
 
         void Pools(float dt)

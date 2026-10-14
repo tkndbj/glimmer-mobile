@@ -76,7 +76,9 @@ namespace GlimmerGrove
             // carries the wave**, because a banner carries one word (DEALS, REWARD) and "choose
             // an upgrade" is a sentence in every language - it goes on the line under, where the
             // Deals sheet says what the free allowance is.
-            var frame = VictoryFrame.Build(Content, L.PanelHeight, Loc.Format("ui.shuffle.wave", Wave).Upper(), L.PanelWidth);
+            // **As tall as the hand's rows** (`grand_hand` deals five: three over two), and the
+            // frame fits the whole block to the canvas it is drawn on (`VictoryFrame.Fit`).
+            var frame = VictoryFrame.Build(Content, L.PanelHeightFor(cards), Loc.Format("ui.shuffle.wave", Wave).Upper(), L.PanelWidth);
             Backing = frame.Backing;
             Panel = frame.Panel;
 
@@ -87,11 +89,11 @@ namespace GlimmerGrove
                              new Vector2(0f, -L.NoteY), 2f, 2f),
                 20);
 
-            float pitch = L.CardWidth + L.CardGap;
-            float left = -(cards - 1) * pitch * .5f;
-
             for (int i = 0; i < cards; i++)
-                Card(Hand[i], i, new Vector2(left + i * pitch, -L.CardsCentre), L);
+            {
+                L.Place(i, cards, out float x, out float top);
+                Card(Hand[i], i, new Vector2(x, -(top + L.CardHeight * .5f)), L);
+            }
 
             if (Rebuilding)
             {

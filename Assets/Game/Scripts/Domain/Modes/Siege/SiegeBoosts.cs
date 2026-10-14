@@ -299,6 +299,76 @@ namespace GlimmerGrove.Modes
         /// <summary>The chance a primary bolt rolls a wild element, per hundred. Nought is never.</summary>
         public int WildChance { get; private set; }
 
+        // ------------------------------------------------------------------ the pacts
+        // **A pact multiplies, it never adds** (MODES.md 59m): a figure the pacts move is held as
+        // a product in thousandths, a thousand on the plain line and on a build holding none, so
+        // two pacts that each halve a figure leave a quarter of it rather than nothing - which is
+        // what lets a pact be taken twice, and beside any other card, and never take a line to
+        // nought. Applied after every additive card, in `Bolt`, `FireEvery`, `FuelShot` and
+        // `Guarded`, so the order cards were taken in still moves nothing (59e).
+
+        /// <summary>What every hit is multiplied by, in thousandths.</summary>
+        public int PactDamage { get; private set; } = 1000;
+
+        /// <summary>What every ward's fire rate is multiplied by, in thousandths (two thousand fires twice as often).</summary>
+        public int PactFire { get; private set; } = 1000;
+
+        /// <summary>What a bolt's fuel is multiplied by, in thousandths.</summary>
+        public int PactFuelShot { get; private set; } = 1000;
+
+        /// <summary>What every ward's health is multiplied by, in thousandths.</summary>
+        public int PactGuard { get; private set; } = 1000;
+
+        // ------------------------------------------------------------------ the synergies
+        // **A synergy is a rate read off another figure, never a stored sum** (59m): it is worked
+        // out at the moment the figure is read, off the build's figures as they stand, so it
+        // follows every card taken after it and no order of taking can change it. Each is capped
+        // at `MostSynergy`, so a stack of them stays a number a ramp can answer.
+
+        /// <summary>Gem fuel gained per hundred of bonus fire rate, per cent. Nought is none.</summary>
+        public int KineticPercent { get; private set; }
+
+        /// <summary>Damage gained per hundred of bonus ward health, per cent. Nought is none.</summary>
+        public int IronPercent { get; private set; }
+
+        /// <summary>Fire rate gained per hundred of bonus tube size, per cent. Nought is none.</summary>
+        public int OverflowPercent { get; private set; }
+
+        /// <summary>
+        /// Extra fuel a gem pays on each beat of a cascade past the first, per cent - a third beat
+        /// pays twice this - capped at <see cref="MostChainFuel"/>. Nought is none.
+        /// </summary>
+        public int ChainFuelPercent { get; private set; }
+
+        /// <summary>The most any one synergy adds, per cent.</summary>
+        public const int MostSynergy = 300;
+
+        /// <summary>The most a cascade's beat adds to its gems' fuel, per cent.</summary>
+        public const int MostChainFuel = 200;
+
+        // ------------------------------------------------------------------ the field
+        /// <summary>
+        /// How far a match blows up the gems round its runs: nought none, one the gems touching a
+        /// run's sides and ends, two the corners as well (<c>SiegeBoard.Gems</c>).
+        /// </summary>
+        public int BlastGems { get; private set; }
+
+        /// <summary>Whether a match of four forges a rocket and five or a corner a nova (<c>SiegeBoard.Gems</c>).</summary>
+        public bool PowerGems { get; private set; }
+
+        // ------------------------------------------------------------------ the laser
+        /// <summary>
+        /// How many of the line's turrets are laser guns, the strongest first
+        /// (<c>SiegeBoard.Lasered</c>). Nought is none.
+        /// </summary>
+        public int LaserGuns { get; private set; }
+
+        /// <summary>What each raider a laser bounces into takes, in tenths of the bolt that set it off.</summary>
+        public int LaserTenths { get; private set; }
+
+        /// <summary>How many raiders one laser shot passes through, the first included.</summary>
+        public int LaserHits { get; private set; }
+
         // ------------------------------------------------------------------ writing
         /// <summary>
         /// Puts every figure back to the plain line. <c>ShuffleBuild.Compile</c> starts here and
@@ -329,6 +399,10 @@ namespace GlimmerGrove.Modes
             MeteorEvery = 0f; MeteorTenths = 0; VortexEvery = 0f; VortexTenths = 0;
             NukeEvery = 0; NukePercent = 0; RayEvery = 0f; RayTenths = 0;
             HydraTenths = 0; HydraHeads = 0; WildChance = 0;
+            PactDamage = 1000; PactFire = 1000; PactFuelShot = 1000; PactGuard = 1000;
+            KineticPercent = 0; IronPercent = 0; OverflowPercent = 0; ChainFuelPercent = 0;
+            BlastGems = 0; PowerGems = false;
+            LaserGuns = 0; LaserTenths = 0; LaserHits = 0;
         }
 
         void Guard()
@@ -390,6 +464,77 @@ namespace GlimmerGrove.Modes
         public void SetHydra(int tenths, int heads) { Guard(); HydraTenths = tenths; HydraHeads = heads; }
         public void SetWild(int chance) { Guard(); WildChance = chance > 100 ? 100 : chance; }
 
+        /// <summary>
+        /// One pact's bargain, as per cents gained or lost on each figure (+200 is three times,
+        /// -50 is half), multiplied into that figure's product - never under a tenth of it.
+        /// </summary>
+        public void Pact(int damage, int fire, int fuelShot, int guard)
+        {
+            Guard();
+            PactDamage = Times(PactDamage, damage);
+            PactFire = Times(PactFire, fire);
+            PactFuelShot = Times(PactFuelShot, fuelShot);
+            PactGuard = Times(PactGuard, guard);
+        }
+
+        static int Times(int product, int percent)
+        {
+            if (percent == 0) return product;
+
+            long moved = (long)product * (100 + percent) / 100;
+            return moved < 100 ? 100 : moved > 1000000 ? 1000000 : (int)moved;
+        }
+
+        public void AddKinetic(int percent) { Guard(); KineticPercent += percent; }
+        public void AddIron(int percent) { Guard(); IronPercent += percent; }
+        public void AddOverflow(int percent) { Guard(); OverflowPercent += percent; }
+        public void AddChainFuel(int percent) { Guard(); ChainFuelPercent += percent; }
+        public void SetBlastGems(int reach) { Guard(); BlastGems = reach < 0 ? 0 : reach > 2 ? 2 : reach; }
+        public void SetPowerGems(bool on) { Guard(); PowerGems = on; }
+
+        public void SetLaser(int guns, int tenths, int hits)
+        {
+            Guard();
+            LaserGuns = guns < 0 ? 0 : guns;
+            LaserTenths = tenths < 1 ? 1 : tenths;
+            LaserHits = hits < 1 ? 1 : hits;
+        }
+
+        // ------------------------------------------------------------------ derived
+        /// <summary>The bonus fire rate a build's tubes buy under <see cref="OverflowPercent"/>, per cent.</summary>
+        public int OverflowBonus => Synergy(CapacityPercent - 100, OverflowPercent);
+
+        /// <summary>Every ward's fire rate under this build, per cent, before a low ward's last stand.</summary>
+        public int EffectiveFirePercent
+            => _frozen ? 100 : (int)((long)(FirePercent + OverflowBonus) * PactFire / 1000);
+
+        /// <summary>Every ward's health under this build, per cent of its own figure.</summary>
+        public int EffectiveGuardPercent
+            => _frozen ? 100 : (int)((long)GuardPercent * PactGuard / 1000);
+
+        /// <summary>The bonus damage a build's health buys under <see cref="IronPercent"/>, per cent.</summary>
+        public int IronBonus => Synergy(EffectiveGuardPercent - 100, IronPercent);
+
+        /// <summary>The bonus gem fuel a build's fire rate buys under <see cref="KineticPercent"/>, per cent.</summary>
+        public int KineticBonus => Synergy(EffectiveFirePercent - 100, KineticPercent);
+
+        int Synergy(int bonus, int rate)
+        {
+            if (_frozen || rate <= 0 || bonus <= 0) return 0;
+
+            long gained = (long)bonus * rate / 100;
+            return gained > MostSynergy ? MostSynergy : (int)gained;
+        }
+
+        /// <summary>A ward's health under this build, from its own figure. Never under one.</summary>
+        public int Guarded(int health)
+        {
+            if (_frozen) return health;
+
+            long full = (long)health * GuardPercent / 100 * PactGuard / 1000;
+            return full < 1 ? 1 : full > int.MaxValue ? int.MaxValue : (int)full;
+        }
+
         // ------------------------------------------------------------------ reading
         /// <summary>
         /// What a bolt that would have been worth <paramref name="damage"/> is worth under this
@@ -402,11 +547,14 @@ namespace GlimmerGrove.Modes
             if (damage <= 0) return 0;
             if (_frozen) return damage;
 
-            int percent = DamagePercent;
+            int percent = DamagePercent + IronBonus;
             if (HeavyPercent > 0 && (kind == SiegeKind.Brute || kind == SiegeKind.Bulwark))
                 percent += HeavyPercent;
 
-            int hit = damage * percent / 100;
+            // **Widened for the pact's product**, which on a stacked build multiplies a hit every
+            // additive card has already moved; narrowed back once the answer is known.
+            long hit = (long)damage * percent / 100;
+            if (PactDamage != 1000) hit = hit * PactDamage / 1000;
 
             if (CritChance > 0 && Chance(CritChance))
             {
@@ -414,7 +562,7 @@ namespace GlimmerGrove.Modes
                 hit = hit * CritPercent / 100;
             }
 
-            return hit < 1 ? 1 : hit;
+            return hit < 1 ? 1 : hit > int.MaxValue ? int.MaxValue : (int)hit;
         }
 
         /// <summary>A bolt from a ward holding <paramref name="healthPercent"/> of its health: the desperate bonus.</summary>
@@ -431,17 +579,44 @@ namespace GlimmerGrove.Modes
         {
             if (_frozen) return every;
 
-            int percent = FirePercent;
+            int percent = FirePercent + OverflowBonus;
             if (DesperatePercent > 0 && healthPercent <= DesperateBelow) percent += DesperatePercent;
+            if (percent <= 0) return every;
 
-            return percent <= 0 ? every : every * 100f / percent;
+            float cool = every * 100f / percent;
+            if (PactFire != 1000) cool = cool * 1000f / PactFire;
+
+            // **Never quicker than `QuickestShot`**, for that floor's reason: a cadence under a
+            // frame is a rate the device decides. No build before the pacts came near it.
+            return cool < QuickestShot ? QuickestShot : cool;
         }
 
-        /// <summary>What a bolt costs, from the mode's own figure.</summary>
-        public float FuelShot(float fuel) => _frozen ? fuel : fuel * FuelShotPercent / 100f;
+        /// <summary>What a bolt costs, from the mode's own figure. Never under a tenth of it.</summary>
+        public float FuelShot(float fuel)
+        {
+            if (_frozen) return fuel;
+
+            float cost = fuel * FuelShotPercent / 100f;
+            if (PactFuelShot != 1000) cost = cost * PactFuelShot / 1000f;
+            return cost < fuel * .1f ? fuel * .1f : cost;
+        }
 
         /// <summary>What a gem is worth, from the mode's own figure.</summary>
-        public float FuelGem(float fuel) => _frozen ? fuel : fuel * FuelGemPercent / 100f;
+        public float FuelGem(float fuel) => _frozen ? fuel : fuel * (FuelGemPercent + KineticBonus) / 100f;
+
+        /// <summary>
+        /// What a gem is worth on beat <paramref name="depth"/> of a cascade (one is the swap's
+        /// own): <see cref="FuelGem(float)"/>, and the chain's share on every beat past the first.
+        /// </summary>
+        public float FuelGem(float fuel, int depth)
+        {
+            float worth = FuelGem(fuel);
+            if (_frozen || ChainFuelPercent <= 0 || depth <= 1) return worth;
+
+            int extra = ChainFuelPercent * (depth - 1);
+            if (extra > MostChainFuel) extra = MostChainFuel;
+            return worth * (100 + extra) / 100f;
+        }
 
         /// <summary>What an overcharge is worth, from the tube's own figure.</summary>
         public int Overcharge(int damage) => _frozen || damage <= 0 ? damage : Math.Max(1, damage * OverchargePercent / 100);

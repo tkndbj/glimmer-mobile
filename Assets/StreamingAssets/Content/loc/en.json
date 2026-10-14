@@ -8462,6 +8462,110 @@
       "text": "Turrets shoot twice as fast, and shots use half the fuel."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Explosive Gems"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Every match blows up the gems around it. More copies, bigger blasts."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Power Gems"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "Match 4 to make a rocket that clears its line. Match 5 or a corner to make a nova that clears its colour."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Titan Pact"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "Shots deal {0}% more damage, but turrets shoot {1}% slower."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Miser's Pact"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "Shots use {0}% less fuel, but deal {1}% less damage."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Frenzy Pact"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "Turrets shoot {0}% faster, but shots deal {1}% less damage."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Blood Pact"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "Shots deal {0}% more damage and turrets shoot {0}% faster, but turrets have {1}% less health."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Reckless Pact"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "Shots deal {0}% more damage and turrets shoot {0}% faster, but raiders walk {1}% faster."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Kinetic Gems"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "Gems give more fuel: {0}% of your turrets' bonus speed."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Iron Cannons"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "Shots deal more damage: {0}% of your turrets' bonus health."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Overflow"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "Turrets shoot faster: {0}% of the bonus fuel they hold."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Chain Fuel"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Each step of a chain reaction gives {0}% more fuel than the one before."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Grand Hand"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Every hand offers 5 cards instead of 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Laser Core"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "A turret becomes a laser gun, the strongest first. Its shots bounce to 3 more raiders for {0}% damage."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },

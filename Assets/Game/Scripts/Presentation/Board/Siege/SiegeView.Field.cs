@@ -133,7 +133,14 @@ namespace GlimmerGrove
             // beat that springs nothing has to answer "nobody", or the next ordinary match on the
             // board would come apart in rings around a stone that is long gone.
             _sprang = -1;
+            _sprangLead = 0f;
+            _beatNow = beat;
             for (int i = 0; i < beat.Sprung.Count; i++) Sprung(beat.Sprung[i]);
+
+            // **A build's field cards** (`SiegeView.Power`): runs flying into the power gems they
+            // forged, and runs going off as blasts. Both null on every board but a build's.
+            var forges = Forges(beat);
+            var blown = Blasting(beat);
 
             // **A broken curse takes its stones before the clear does** - they are dragged into
             // the break rather than shattered where they stand, so the ordinary clear below skips
@@ -166,6 +173,15 @@ namespace GlimmerGrove
                 // completed (`SiegeBeat.Paid`).
                 int paid = i < beat.Paid.Count ? beat.Paid[i] : gem.Colour;
 
+                // **A gem of a forged run goes into its forge** rather than coming apart where it
+                // stood, and pays from there (`SiegeView.Power`). Never on a board without a build.
+                if (forges != null && forges.TryGetValue(cell, out int forge))
+                {
+                    IntoForge(gem, cell, forge, paid, paid >= 0 ? TintOf(paid) : Pal.Cream);
+                    _gems[cell] = null;
+                    continue;
+                }
+
                 // An obsidian a lance swept up without a curse breaking goes in the curse's own
                 // light - it is the stone it was, and a cream burst would say it was nothing.
                 var tint = paid >= 0 ? TintOf(paid) : paid == ObsidianColour ? Hex : Pal.Cream;
@@ -181,6 +197,15 @@ namespace GlimmerGrove
                 // the row failing behind it. An ordinary match answers the old `i * .012f`,
                 // because three touching cells in any order look the same. See `ClearDelay`.
                 float late = ClearDelay(cell, i);
+
+                // **A gem a blast took is thrown out and bursts in fire**, a beat after the match
+                // that set the blast off (`SiegeView.Power`). Never on a board without a build.
+                if (blown != null && blown.Contains(cell))
+                {
+                    late = Mathf.Max(late, BlastAt + .1f + (i % 4) * .02f);
+                    Blown(gem, cell, beat, late);
+                    tint = Color.Lerp(tint, Pal.Ember, .3f);
+                }
 
                 Shatter(at, tint, late);
 
@@ -214,6 +239,9 @@ namespace GlimmerGrove
                 _gems[cell] = null;
                 Tween.After(late + .23f, () => { if (img) Destroy(img.gameObject); });
             }
+
+            // The power gems this beat forged, igniting in their cells as the run arrives.
+            for (int i = 0; i < beat.Forged.Count; i++) Forging(beat.Forged[i]);
 
             // The cogs this beat took, drawn as a journey rather than as a disappearance: what
             // the player decided was *which colour to line up beside that cog*, and it is paid on

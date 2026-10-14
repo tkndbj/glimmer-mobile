@@ -220,6 +220,24 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         Anvil = 6,
+
+        // ---------------------------------------------------------------- made, never dealt
+        // **The Shuffle lane's power gems** (MODES.md 59m): forged on the field by a match of
+        // four or five when a build holds `power_gems`, and never dealt by any body - so they are
+        // on no roster (`SiegeCharms.Made`) and no lesson teaches them. Appended for this enum's
+        // reason: an ordinal reaches the run's readings and may never move.
+
+        /// <summary>A rocket forged from a row of four: when it goes, it takes its whole row.</summary>
+        RocketRow = 7,
+
+        /// <summary>A rocket forged from a column of four: when it goes, it takes its whole column.</summary>
+        RocketColumn = 8,
+
+        /// <summary>
+        /// A nova forged from five in a line or a corner of one colour: when it goes, it takes
+        /// every gem of its colour on the field.
+        /// </summary>
+        Nova = 9,
     }
 
     /// <summary>
@@ -367,5 +385,21 @@ namespace GlimmerGrove.Modes
         /// that slow the hill down" would be asking about a category nobody designed.
         /// </summary>
         public static bool ShovesTheHill(SiegeCharm charm) => charm == SiegeCharm.Anvil;
+
+        /// <summary>
+        /// <b>The charms the field makes rather than deals</b> (the Shuffle lane's power gems):
+        /// on no <see cref="Roster"/>, so no body can name one and no chapter's ladder reaches
+        /// one, and taught by no lesson. <c>SiegeCharmTests</c> holds every enum member to
+        /// exactly one of the two lists.
+        /// </summary>
+        public static readonly SiegeCharm[] Made = { SiegeCharm.RocketRow, SiegeCharm.RocketColumn, SiegeCharm.Nova };
+
+        /// <summary>Whether <paramref name="charm"/> is one the field forges (<see cref="Made"/>).</summary>
+        public static bool IsPower(SiegeCharm charm)
+            => charm == SiegeCharm.RocketRow || charm == SiegeCharm.RocketColumn || charm == SiegeCharm.Nova;
+
+        /// <summary>Whether <paramref name="charm"/> is a rocket, and so takes a line.</summary>
+        public static bool IsRocket(SiegeCharm charm)
+            => charm == SiegeCharm.RocketRow || charm == SiegeCharm.RocketColumn;
     }
 }

@@ -117,6 +117,21 @@ namespace GlimmerGrove.Shuffle
             { "spin_up", new Note(None, ME) },
             { "meteor_call", new Note(WE) },                // "Every 6 seconds"
             { "vortex", new Note(WE) },                     // "Every 9 seconds"
+            { "blast_gems", new Note(WM) },                 // "the gems touching it"
+            { "power_gems", new Note(WM) },                 // "Match 4 ... match 5"
+
+            // the pacts: the gain, then the cost
+            { "titan_pact", new Note(None, M, E) },
+            { "miser_pact", new Note(None, M, E) },
+            { "frenzy_pact", new Note(None, M, E) },
+            { "blood_pact", new Note(None, M, E) },
+            { "reckless_pact", new Note(None, M, E) },
+
+            // the synergies
+            { "kinetic_gems", new Note(None, M) },
+            { "iron_cannons", new Note(None, M) },
+            { "overflow", new Note(None, M) },
+            { "chain_fuel", new Note(None, M) },
 
             // legendary
             { "phoenix", new Note(WM) },                    // "come back once"
@@ -127,6 +142,8 @@ namespace GlimmerGrove.Shuffle
             { "hydra", new Note(WB) },                      // "splits in 2 ... half"
             { "wild_magic", new Note(WM) },                 // "Every shot"
             { "bullet_hell", new Note(WB) },                // "twice as fast ... half the fuel"
+            { "grand_hand", new Note(WM) },                 // "5 cards instead of 3"
+            { "laser_core", new Note(WE, M10) },            // "through 4 raiders"
         };
 
         /// <summary>The figures <paramref name="card"/>'s note prints, slot by slot.</summary>

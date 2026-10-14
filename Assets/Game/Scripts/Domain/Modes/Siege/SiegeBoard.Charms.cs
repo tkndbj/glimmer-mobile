@@ -174,6 +174,21 @@ namespace GlimmerGrove.Modes
                         Cross(cell, colour, hit, queue);
                         break;
 
+                    // **The Shuffle lane's power gems** (`SiegeBoard.Gems`): forged, never dealt,
+                    // and taken by a beat exactly as a lance's cross is - so a rocket that reaches
+                    // a lance sets it off, and the other way round.
+                    case SiegeCharm.RocketRow:
+                        Rocket(cell, colour, true, hit, queue);
+                        break;
+
+                    case SiegeCharm.RocketColumn:
+                        Rocket(cell, colour, false, hit, queue);
+                        break;
+
+                    case SiegeCharm.Nova:
+                        Nova(colour, hit, queue);
+                        break;
+
                     case SiegeCharm.Storm:
                         _storms.Add(new Tempest
                         {
@@ -226,6 +241,11 @@ namespace GlimmerGrove.Modes
             void Reach(int at)
             {
                 if (!SiegeLayout.IsGem(_cells[at])) return;
+
+                // A power gem being forged this beat is the match's payoff and stays standing
+                // (`SiegeBoard.Gems`). Never a cell on any board that holds no build.
+                if (_forming.Count > 0 && _forming.Contains(at)) return;
+
                 if (!hit.Add(at)) return;
 
                 // **A wild a cross takes is paid as the lance's colour, and it is the one cell on

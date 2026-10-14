@@ -8462,6 +8462,110 @@
       "text": "Wieże strzelają dwa razy szybciej, a strzały zużywają połowę paliwa."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Wybuchowe klejnoty"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Każde dopasowanie wysadza klejnoty wokół. Więcej kopii, większe wybuchy."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Klejnoty mocy"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "Dopasuj 4, by zrobić rakietę, która czyści swoją linię. Dopasuj 5 lub róg, by zrobić novę, która czyści swój kolor."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Pakt tytana"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "Strzały zadają o {0}% więcej obrażeń, ale wieże strzelają o {1}% wolniej."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Pakt skąpca"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "Strzały zużywają o {0}% mniej paliwa, ale zadają o {1}% mniej obrażeń."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Pakt szału"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "Wieże strzelają o {0}% szybciej, ale strzały zadają o {1}% mniej obrażeń."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Pakt krwi"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "Strzały zadają o {0}% więcej obrażeń, a wieże strzelają o {0}% szybciej, ale wieże mają o {1}% mniej życia."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Pakt brawury"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "Strzały zadają o {0}% więcej obrażeń, a wieże strzelają o {0}% szybciej, ale najeźdźcy idą o {1}% szybciej."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Kinetyczne klejnoty"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "Klejnoty dają więcej paliwa: {0}% premii do szybkości twoich wież."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Żelazne działa"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "Strzały zadają więcej obrażeń: {0}% premii do życia twoich wież."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Przelew"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "Wieże strzelają szybciej: {0}% premii do paliwa, które mieszczą."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Paliwo łańcuchowe"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Każdy krok reakcji łańcuchowej daje o {0}% więcej paliwa niż poprzedni."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Wielka ręka"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Każda ręka oferuje 5 kart zamiast 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Rdzeń lasera"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "Wieża staje się działem laserowym, najsilniejsza pierwsza. Jej strzały odbijają się do 3 kolejnych najeźdźców za {0}% obrażeń."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },

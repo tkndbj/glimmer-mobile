@@ -50,14 +50,20 @@ namespace GlimmerGrove.Modes
 
             var model = ward.Model;
 
+            // **A laser gun's own ability fires lasers too** (`laser_core`): a chain turret's arcs
+            // become beams hopping body to body, a pierce turret's lance a beam up its lane, a
+            // splash a beam into each body round the hit - the same hits through the same doors,
+            // only drawn as what the turret now is. `None` on every board that holds no build.
+            var via = Lasered(index) ? SiegeVia.Laser : SiegeVia.None;
+
             switch (model.Ability)
             {
                 case WardAbility.Splash:
-                    Spread(ward, index, target, Share(damage, model.Magnitude), model.Extent);
+                    Spread(ward, index, target, Share(damage, model.Magnitude), model.Extent, via);
                     break;
 
                 case WardAbility.Chain:
-                    Arc(ward, index, target, Share(damage, model.Magnitude), model.Extent);
+                    Arc(ward, index, target, Share(damage, model.Magnitude), model.Extent, via);
                     break;
 
                 case WardAbility.Frost:
@@ -73,7 +79,7 @@ namespace GlimmerGrove.Modes
 
                 case WardAbility.Pierce:
                     if (model.Extent > 0 && ward.Shots % model.Extent == 0)
-                        Lance(ward, index, target, Share(damage, model.Magnitude));
+                        Lance(ward, index, target, Share(damage, model.Magnitude), via);
                     break;
 
                 case WardAbility.Ember:
@@ -275,6 +281,10 @@ namespace GlimmerGrove.Modes
             // execute below, which may end this method early.
             Volley(ward, index, target, damage, element);
 
+            // **A laser gun's beam goes on** through the raiders nearest the one it struck
+            // (`laser_core`). After the attack cards, before anything that may end this early.
+            if (boosts.LaserGuns > 0 && Lasered(index)) Lase(ward, index, target, damage);
+
             if (boosts.SplashTenths > 0)
                 Spread(ward, index, target, Share(damage, boosts.SplashTenths), boosts.SplashReach,
                        SiegeVia.Splash);
@@ -429,5 +439,69 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Scratch for <see cref="Arc"/>. One list, because a bolt is resolved at once.</summary>
         readonly HashSet<int> _arced = new HashSet<int>();
+
+        // ------------------------------------------------------------------ the laser
+        /// <summary>
+        /// Whether ward <paramref name="ward"/> is a laser gun under this build (<c>laser_core</c>):
+        /// the <see cref="SiegeBoosts.LaserGuns"/> strongest turrets on the line, strongest by
+        /// what their bolt is worth and the leftmost on a tie. <b>A reading, never a stored
+        /// choice</b>, so a build stays a function of its cards (59e) and the same line makes the
+        /// same turrets lasers on every device. False on every board that holds no build.
+        /// </summary>
+        public bool Lasered(int ward)
+        {
+            int guns = _boosts.LaserGuns;
+            if (guns <= 0 || ward < 0 || ward >= _wards.Length) return false;
+            if (guns >= _wards.Length) return true;
+
+            int mine = Strength(_wards[ward]), stronger = 0;
+
+            for (int w = 0; w < _wards.Length; w++)
+            {
+                if (w == ward) continue;
+
+                int theirs = Strength(_wards[w]);
+                if (theirs > mine || (theirs == mine && w < ward)) stronger++;
+            }
+
+            return stronger < guns;
+        }
+
+        static int Strength(SiegeWard ward)
+            => SiegeTuning.DamageTo(SiegeKind.Creeper, ward.Rank, true, ward.Build);
+
+        readonly HashSet<int> _beamed = new HashSet<int>();
+
+        /// <summary>
+        /// A laser gun's beam going on from the raider its bolt struck: into the nearest raider it
+        /// has not yet passed through, and on from there, until it has passed through
+        /// <see cref="SiegeBoosts.LaserHits"/> bodies or the hill runs out - any colour, each at
+        /// <see cref="SiegeBoosts.LaserTenths"/> of the bolt, through <see cref="Splinter"/>, so a
+        /// bulwark's plating reads it as it reads every partner shot. It goes on past a body it
+        /// killed: a beam is light, not a bolt.
+        /// </summary>
+        void Lase(SiegeWard ward, int index, SiegeRaider target, int damage)
+        {
+            int bounces = _boosts.LaserHits - 1;
+            if (bounces <= 0) return;
+
+            int share = Share(damage, _boosts.LaserTenths);
+
+            _beamed.Clear();
+            _beamed.Add(target.Id);
+
+            var from = target;
+            for (int n = 0; n < bounces; n++)
+            {
+                var next = Nearest(from, _beamed);
+                if (next == null) break;
+
+                _beamed.Add(next.Id);
+                Splinter(ward, index, next, share, SiegeVia.Laser, from.Id);
+                from = next;
+            }
+
+            _beamed.Clear();
+        }
     }
 }

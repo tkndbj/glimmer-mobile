@@ -543,11 +543,12 @@ namespace GlimmerGrove.Tests
             foreach (var card in ShuffleCards.All)
             {
                 var build = new ShuffleBuild(1u);
-                var before = Snapshot(build.Boosts);
+                var before = Snapshot(build.Boosts) + "|hand " + build.HandSize;
 
                 Assert.IsTrue(build.Take(card), card.Id);
 
-                var after = Snapshot(build.Boosts);
+                // A bigger hand is the deck's figure rather than the board's, so it is read too.
+                var after = Snapshot(build.Boosts) + "|hand " + build.HandSize;
                 Assert.AreNotEqual(before, after, $"'{card.Id}' moved nothing");
 
                 // Every copy to its most, and never one past it.
@@ -596,6 +597,9 @@ namespace GlimmerGrove.Tests
                 b.MeteorEvery, b.MeteorTenths, b.VortexEvery, b.VortexTenths,
                 b.NukeEvery, b.NukePercent, b.RayEvery, b.RayTenths, b.HydraTenths, b.HydraHeads,
                 b.WildChance,
+                b.PactDamage, b.PactFire, b.PactFuelShot, b.PactGuard,
+                b.KineticPercent, b.IronPercent, b.OverflowPercent, b.ChainFuelPercent,
+                b.BlastGems, b.PowerGems, b.LaserGuns, b.LaserTenths, b.LaserHits,
             });
 
         // ------------------------------------------------------------------ the seam
@@ -764,6 +768,7 @@ namespace GlimmerGrove.Tests
                 ("pierce_rounds", null, SiegeVia.Lance),
                 ("execution", null, SiegeVia.Execute),
                 ("chain_reaction", null, SiegeVia.Blast),
+                ("laser_core", null, SiegeVia.Laser),
             };
 
             var silent = new List<string>();

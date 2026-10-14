@@ -8462,6 +8462,110 @@
       "text": "Les tourelles tirent deux fois plus vite et les tirs coûtent moitié moins de carburant."
     },
     {
+      "key": "shuffle.blast_gems.name",
+      "text": "Gemmes explosives"
+    },
+    {
+      "key": "shuffle.blast_gems.note",
+      "text": "Chaque alignement fait exploser les gemmes autour. Plus de copies, plus grandes explosions."
+    },
+    {
+      "key": "shuffle.power_gems.name",
+      "text": "Gemmes de pouvoir"
+    },
+    {
+      "key": "shuffle.power_gems.note",
+      "text": "Aligne 4 gemmes pour créer une fusée qui vide sa ligne. Aligne-en 5 ou en coin pour créer une nova qui vide sa couleur."
+    },
+    {
+      "key": "shuffle.titan_pact.name",
+      "text": "Pacte du titan"
+    },
+    {
+      "key": "shuffle.titan_pact.note",
+      "text": "Les tirs font {0} % de dégâts en plus, mais les tourelles tirent {1} % moins vite."
+    },
+    {
+      "key": "shuffle.miser_pact.name",
+      "text": "Pacte de l'avare"
+    },
+    {
+      "key": "shuffle.miser_pact.note",
+      "text": "Les tirs coûtent {0} % de carburant en moins, mais font {1} % de dégâts en moins."
+    },
+    {
+      "key": "shuffle.frenzy_pact.name",
+      "text": "Pacte de frénésie"
+    },
+    {
+      "key": "shuffle.frenzy_pact.note",
+      "text": "Les tourelles tirent {0} % plus vite, mais les tirs font {1} % de dégâts en moins."
+    },
+    {
+      "key": "shuffle.blood_pact.name",
+      "text": "Pacte de sang"
+    },
+    {
+      "key": "shuffle.blood_pact.note",
+      "text": "Les tirs font {0} % de dégâts en plus et les tourelles tirent {0} % plus vite, mais elles ont {1} % de vie en moins."
+    },
+    {
+      "key": "shuffle.reckless_pact.name",
+      "text": "Pacte téméraire"
+    },
+    {
+      "key": "shuffle.reckless_pact.note",
+      "text": "Les tirs font {0} % de dégâts en plus et les tourelles tirent {0} % plus vite, mais les pillards marchent {1} % plus vite."
+    },
+    {
+      "key": "shuffle.kinetic_gems.name",
+      "text": "Gemmes cinétiques"
+    },
+    {
+      "key": "shuffle.kinetic_gems.note",
+      "text": "Les gemmes donnent plus de carburant : {0} % de la vitesse en plus de tes tourelles."
+    },
+    {
+      "key": "shuffle.iron_cannons.name",
+      "text": "Canons de fer"
+    },
+    {
+      "key": "shuffle.iron_cannons.note",
+      "text": "Les tirs font plus de dégâts : {0} % de la vie en plus de tes tourelles."
+    },
+    {
+      "key": "shuffle.overflow.name",
+      "text": "Trop-plein"
+    },
+    {
+      "key": "shuffle.overflow.note",
+      "text": "Les tourelles tirent plus vite : {0} % du carburant en plus qu'elles stockent."
+    },
+    {
+      "key": "shuffle.chain_fuel.name",
+      "text": "Carburant en chaîne"
+    },
+    {
+      "key": "shuffle.chain_fuel.note",
+      "text": "Chaque étape d'une réaction en chaîne donne {0} % de carburant en plus que la précédente."
+    },
+    {
+      "key": "shuffle.grand_hand.name",
+      "text": "Grande main"
+    },
+    {
+      "key": "shuffle.grand_hand.note",
+      "text": "Chaque main propose 5 cartes au lieu de 3."
+    },
+    {
+      "key": "shuffle.laser_core.name",
+      "text": "Cœur laser"
+    },
+    {
+      "key": "shuffle.laser_core.note",
+      "text": "Une tourelle devient un canon laser, la plus forte d'abord. Ses tirs rebondissent sur 3 pillards de plus pour {0} % des dégâts."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0} %"
     },
