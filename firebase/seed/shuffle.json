@@ -28,7 +28,7 @@
   ],
 
   "schema": 1,
-  "revision": 1,
+  "revision": 2,
 
   "ramp": {
     "firstWave": 4,
@@ -120,7 +120,7 @@
     { "id": "scatter_shot"    , "magnitude": 4, "extent": 2, "most": 3, "enabled": true },
     { "id": "ricochet"        , "magnitude": 8, "extent": 1, "most": 3, "enabled": true },
     { "id": "missile_pod"     , "magnitude": 10, "extent": 4, "most": 3, "enabled": true },
-    { "id": "quake_rounds"    , "magnitude": 6, "extent": 5, "most": 3, "enabled": true },
+    { "id": "quake_rounds"    , "magnitude": 6, "extent": 5, "most": 3, "enabled": false },
     { "id": "toxic_rounds"    , "magnitude": 2, "extent": 30, "most": 3, "enabled": true },
     { "id": "tesla_coil"      , "magnitude": 6, "extent": 1, "most": 3, "enabled": true },
     { "id": "second_wind"     , "magnitude": 1, "extent": 0, "most": 3, "enabled": true },

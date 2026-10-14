@@ -173,9 +173,18 @@ namespace GlimmerGrove.Social
                 return;
             }
 
+            // The level the server will publish, read off the same file: no high-water floor
+            // (client-written, so `publishGrove` never reads one) and nothing the push has not
+            // carried. `PlayerProgression.Level` is the device's own level, floor and all; on an
+            // account whose floor stands above what it can prove, a fingerprint built from it
+            // never moved while the server's level did, and the card stayed behind with the badge
+            // that level gated. The badge is asked about the same earned level, as `rungOf` is.
+            var level = ProvableLevel.In(receipt.Save, Content.GameContent.Index, ProgressionRules.Table,
+                                         Challenges.ChallengeRules.Table.Rewards);
+
             var card = GroveCard.OfSave(receipt.Save, CloudState.UserId,
-                                        PlayerProgression.Level.Level,
-                                        PlayerProgression.EarnedLevel.Level, SaveSchema.NowUnix());
+                                        level.Level.Level, level.Earned.Level,
+                                        SaveSchema.NowUnix());
 
             _policy.Request(card.Fingerprint(), receipt.ServerRevision,
                             GrovePublishPolicy.WorthPublishing(card));

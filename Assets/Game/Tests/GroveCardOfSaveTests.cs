@@ -74,6 +74,13 @@ namespace GlimmerGrove.Tests
             var upgraded = Save();
             upgraded.wardStars[0].stars = 5;
             Assert.AreNotEqual(baseline, Print(upgraded), "a turret's rung is visible");
+
+            // The keeper level is drawn on every public profile. It once was not fingerprinted,
+            // on the reasoning that it moves with every star - XP does, the level does not - and a
+            // keeper who levelled with nothing else moving kept the old level and the badge it
+            // gated in public (ProvableLevelTests has the account).
+            Assert.AreNotEqual(baseline, GroveCard.OfSave(Save(), "uid", 9, 1_000L).Fingerprint(),
+                "a level gained is visible");
         }
 
         [Test]
@@ -89,11 +96,6 @@ namespace GlimmerGrove.Tests
             played.cloud = new CloudStateDto { revision = 77L, userId = "uid" };
 
             Assert.AreEqual(baseline, Print(played));
-
-            // Nor the keeper level: it is drawn on the card, and it moves with every star,
-            // so fingerprinting it would be a publish per session for a number the ranking
-            // job does not read. It reaches the board with the next real change.
-            Assert.AreEqual(baseline, GroveCard.OfSave(Save(), "uid", 9, 1_000L).Fingerprint());
         }
 
         [Test]

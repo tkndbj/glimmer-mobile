@@ -515,11 +515,19 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static long BonusFrom(long provableXp)
+            => BonusFrom(provableXp, Wallet.XpBoostEarned, Table.MaxPercent);
+
+        /// <summary>
+        /// <see cref="BonusFrom(long)"/> as a pure function of its three inputs, so the figure can
+        /// be taken off a save file as well as off the live wallet (<see cref="ProvableXp"/>). The
+        /// one-argument form is this one over the wallet and the live table; there is no second
+        /// copy of the clamp.
+        /// </summary>
+        public static long BonusFrom(long provableXp, long held, int maxPercent)
         {
-            long held = Wallet.XpBoostEarned;
             if (held <= 0L || provableXp <= 0L) return 0L;
 
-            long ceiling = BonusOn(provableXp, Table.MaxPercent);
+            long ceiling = BonusOn(provableXp, maxPercent);
             if (held > ceiling) held = ceiling;
 
             return held > XpBoostLimits.HardMaxBonusXp ? XpBoostLimits.HardMaxBonusXp : held;

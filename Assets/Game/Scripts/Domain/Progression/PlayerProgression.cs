@@ -328,29 +328,38 @@ namespace GlimmerGrove.Progression
             _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table,
                                                 RewardSeed.PlayerKey);
 
-            // The Infinite lane, added here and nowhere else. It is a second *addend* rather than
+            // The Infinite lane, added to the star ledger here (through `ProvableXp.Of`) and
+            // nowhere else. It is a second *addend* rather than
             // a second clause inside the ledger, so `_totals` keeps meaning "what the star records
             // are worth" for every caller that already reads it - and so the rule the server
             // mirrors stays the one the shared vectors prove. See `EndlessRewardTable`.
-            _endlessXp = table.Endless.XpFor(EndlessLedger.LifetimeWaves);
-
+            //
             // The daily challenges, the same shape one file over: a rate over a lifetime tally,
             // read from the challenge table rather than the reward table because the two files
             // are kept apart on purpose (invariant 56).
-            _challengeXp = Challenges.ChallengeRules.Table.Rewards.XpFor(Challenges.ChallengeLedger.LifetimeClears);
-
+            //
             // And what boosts have paid on top of all three. Clamped against the sum above it
             // rather than against a ceiling of its own: a boost can only ever have multiplied XP
             // that was really paid, so anything beyond `provable x maxPercent%` is arithmetically
             // impossible however it got into the file. That is `groveWorth`'s "clamped to what the
             // account could afford" (19a) said about a multiplier, and it is a far tighter bound
             // than any flat figure would be. The server applies the identical clamp.
-            _boostXp = XpBoost.BonusFrom(_totals.Xp + _endlessXp + _challengeXp);
+            //
+            // All three through `ProvableXp.Of`, the one statement of the sum, which a save file
+            // is read through as well (`ProvableXp.In`) - the reading a published card is
+            // predicted from, so the device and the server cannot come to disagree about it.
+            var provable = ProvableXp.Of(_totals.Xp, EndlessLedger.LifetimeWaves,
+                                         Challenges.ChallengeLedger.LifetimeClears,
+                                         Wallet.XpBoostEarned, table,
+                                         Challenges.ChallengeRules.Table.Rewards);
+            _endlessXp = provable.Endless;
+            _challengeXp = provable.Challenges;
+            _boostXp = provable.Boost;
 
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream - level, progress bar, remaining XP - then stays
             // internally consistent instead of being patched up afterwards.
-            long effectiveXp = _totals.Xp + _endlessXp + _challengeXp + _boostXp;
+            long effectiveXp = provable.Total;
             if (ProgressionStore.XpHighWater > effectiveXp) effectiveXp = ProgressionStore.XpHighWater;
 
             long levelFloorXp = table.XpToReach(ProgressionStore.LevelHighWater);

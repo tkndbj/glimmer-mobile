@@ -388,7 +388,7 @@ namespace GlimmerGrove.Social
         /// </summary>
         public string Fingerprint()
         {
-            var parts = new List<string>(_line.Count + 3)
+            var parts = new List<string>(_line.Count + 5)
             {
                 // The wave is on the card, so a new best is a change a visitor can see and owes
                 // a publish. Left out, a keeper could hold out ten waves further than anybody
@@ -405,6 +405,15 @@ namespace GlimmerGrove.Social
                 // wave and no name, and the keeper would wear the old badge on every board for
                 // ever. Same fault as the endless wave, arriving through a second field.
                 "r:" + RungId,
+
+                // The keeper level, drawn on every public profile. It was left out on the
+                // reasoning that it "moves with every star"; XP does, the level moves once per
+                // level gained, so this costs one publish per level-up. Left out, a keeper who
+                // levelled without a new wave, name, badge or turret kept their old level in
+                // public until one of those happened to move - and the badge that level gated
+                // with it. The caller hands in the level the server will publish (no floor,
+                // `ProvableLevel`), or this would be a part that never moves either.
+                "l:" + KeeperLevel.ToString(System.Globalization.CultureInfo.InvariantCulture),
             };
 
             // The Shuffle best, for the wave's reason. **Only once there is one**: an absent part
