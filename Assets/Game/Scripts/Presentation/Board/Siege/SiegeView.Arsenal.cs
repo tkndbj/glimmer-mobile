@@ -539,8 +539,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A meteor on its way, for exactly the fall the model books (<c>SiegeArsenal.MeteorFall</c>):
-        /// a target ring tightening on the box it will hit and the ground there heating up, its
-        /// shadow growing, and the rock itself coming down out of the sky on a two-layer burning
+        /// the ground under the box it will hit heating up, its shadow growing, and the rock itself coming down out of the sky on a two-layer burning
         /// tail, shedding embers and smoke.
         ///
         /// <para>
@@ -563,29 +562,15 @@ namespace GlimmerGrove
                            new Vector2(Cell * 3.6f, Cell * 3.6f * GroundSquash));
             heat.rectTransform.anchoredPosition = at;
 
-            var ring = Lit("Target", mark, StrikeFx.Ring, Pal.A(MeteorHue, 0f),
-                           new Vector2(Cell * 4.4f, Cell * 4.4f * GroundSquash));
-            if (ring != null) ring.rectTransform.anchoredPosition = at;
-
             Tween.Run(over, Ease.Linear, t =>
             {
                 if (!mark) return;
-
-                float rise = Mathf.Clamp01(t / .15f);
-                float blink = Mathf.Sin(Mathf.PI * 2f * (3f * t + 6f * t * t)) > 0f ? 1f : .45f;
 
                 shadow.color = new Color(0f, 0f, 0f, .45f * t * t);
                 shadow.rectTransform.localScale = Vector3.one * Mathf.Lerp(.25f, 1f, t * t);
 
                 heat.color = Pal.A(Color.Lerp(Pal.Ember, Pal.Sun, t), .55f * t * t);
                 heat.rectTransform.localScale = Vector3.one * Mathf.Lerp(.4f, 1f, t);
-
-                if (ring)
-                {
-                    ring.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.4f, .75f, Ease.OutCubic(t));
-                    ring.rectTransform.localRotation = Quaternion.Euler(0f, 0f, t * 140f);
-                    ring.color = Pal.A(Color.Lerp(MeteorHue, Pal.Sun, t), .85f * rise * blink);
-                }
             }, mark).OnDone(() => { if (mark) Destroy(mark.gameObject); });
 
             Tween.After(over + .1f, () => { if (mark) Destroy(mark.gameObject); }, mark);
