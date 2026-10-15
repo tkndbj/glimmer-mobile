@@ -323,6 +323,9 @@ namespace GlimmerGrove
         {
             if (!_run || _teaching || !_run.Teachable) return;
 
+            // A mode with its own rules page shows that instead of every tip again.
+            if (_run.ExplainsItself) { _run.Explain(); return; }
+
             _queue.Clear();
             _taught = 0;
 
@@ -636,8 +639,8 @@ namespace GlimmerGrove
         /// <summary>Shows or hides the review key, and remembers the answer for a later header.</summary>
         void Offer(bool teaches)
         {
-            _teaches = teaches;
-            if (_key) _key.gameObject.SetActive(teaches);
+            _teaches = teaches || (_run && _run.ExplainsItself);
+            if (_key) _key.gameObject.SetActive(_teaches);
 
             // Every path that changes whether the key is there also settles whether it is live,
             // so a mode that only ever calls one of the two cannot leave a key greyed for the

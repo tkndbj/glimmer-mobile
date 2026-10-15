@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "HOW TO PLAY"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "Line up three gems to fire that colour's turret."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Stop the raiders before they break your turrets."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "Every two waves, choose one of three upgrades."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "Upgrades stack, and some combine into secrets."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "The waves never end and keep getting harder. Go as far as you can."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Thunderhead"
     },

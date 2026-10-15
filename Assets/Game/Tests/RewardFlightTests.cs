@@ -68,8 +68,18 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------- the readout
+        // What a pill reads is the live balance less what is still in the air, kept per reward
+        // (ResourceSlots.Payout) so several can land in one pill at once - the page no longer
+        // waits for one cascade to finish before it takes the tap that starts the next.
+
+        static ResourceSlots.Payout Pay(long sequence, long before, int landed, int tokens)
+            => new ResourceSlots.Payout(sequence, before) { Landed = landed, Tokens = tokens };
+
+        static long Read(long live, params ResourceSlots.Payout[] payouts)
+            => ResourceSlots.Owed(live, payouts);
+
         /// <summary>
-        /// The last token writes the balance itself rather than the interpolation. Without
+        /// The last token writes the balance itself rather than an interpolation. Without
         /// this a 1,000-credit prize thrown as seven lands on 999 for ever - one short, on
         /// the number a player is most likely to be watching.
         /// </summary>
@@ -77,11 +87,11 @@ namespace GlimmerGrove.Tests
         public void TheLastTokenWritesTheBalanceRatherThanTheInterpolation()
         {
             const int Tokens = 7;
-            Assert.AreEqual(1_000L, RewardFlight.Shown(0L, 1_000L, Tokens, Tokens));
+            Assert.AreEqual(1_000L, Read(1_000L, Pay(1, 0L, Tokens, Tokens)));
 
             // And the step before it is genuinely short of the total, or the last landing
             // would have nothing left to say.
-            Assert.Less(RewardFlight.Shown(0L, 1_000L, Tokens - 1, Tokens), 1_000L);
+            Assert.Less(Read(1_000L, Pay(1, 0L, Tokens - 1, Tokens)), 1_000L);
         }
 
         [Test]
@@ -91,7 +101,7 @@ namespace GlimmerGrove.Tests
 
             for (int landed = 0; landed <= 7; landed++)
             {
-                long shown = RewardFlight.Shown(100L, 800L, landed, 7);
+                long shown = Read(800L, Pay(1, 100L, landed, 7));
                 Assert.GreaterOrEqual(shown, previous, "landing " + landed + " went backwards");
                 Assert.GreaterOrEqual(shown, 100L);
                 Assert.LessOrEqual(shown, 800L);
@@ -99,6 +109,13 @@ namespace GlimmerGrove.Tests
             }
 
             Assert.AreEqual(800L, previous);
+        }
+
+        /// <summary>A held panel that has not paid yet owes its whole prize: the pill stands at the snapshot.</summary>
+        [Test]
+        public void AHeldPayoutShowsTheSnapshot()
+        {
+            Assert.AreEqual(4_000L, Read(5_000L, Pay(1, 4_000L, 0, 0)));
         }
 
         /// <summary>
@@ -120,7 +137,7 @@ namespace GlimmerGrove.Tests
                 // Nothing from the server for the first three landings, then the grant lands.
                 long live = landed < 4 ? Before : Before + 1_000L;
 
-                long shown = RewardFlight.Shown(Before, live, landed, Tokens);
+                long shown = Read(live, Pay(1, Before, landed, Tokens));
                 Assert.GreaterOrEqual(shown, previous, "landing " + landed + " went backwards");
                 previous = shown;
             }
@@ -137,35 +154,131 @@ namespace GlimmerGrove.Tests
         public void AGrantThatHasNotLandedLeavesTheReadoutExactlyWhereItWas()
         {
             for (int landed = 0; landed <= 7; landed++)
-                Assert.AreEqual(4_000L, RewardFlight.Shown(4_000L, 4_000L, landed, 7));
+                Assert.AreEqual(4_000L, Read(4_000L, Pay(1, 4_000L, landed, 7)));
         }
 
         /// <summary>
-        /// A balance that has fallen since the snapshot cannot happen on the hub - nothing is
-        /// spent from behind a modal - but the reading is defined for it anyway, because the
-        /// alternative to defining it is a number that jitters if it ever does.
+        /// A balance below the snapshot (a spend landing mid-cascade) owes nothing, so the pill
+        /// reads the balance - never above it, and never a figure walked down to it.
         /// </summary>
         [Test]
-        public void AFallenBalanceStillWalksOneWay()
+        public void AFallenBalanceReadsTheBalance()
         {
-            long previous = long.MaxValue;
-
             for (int landed = 0; landed <= 5; landed++)
-            {
-                long shown = RewardFlight.Shown(900L, 500L, landed, 5);
-                Assert.LessOrEqual(shown, previous);
-                Assert.GreaterOrEqual(shown, 500L);
-                Assert.LessOrEqual(shown, 900L);
-                previous = shown;
-            }
-
-            Assert.AreEqual(500L, previous);
+                Assert.AreEqual(500L, Read(500L, Pay(1, 900L, landed, 5)));
         }
 
         [Test]
-        public void APillWithNoTokensReadsTheBalance()
+        public void APillWithNothingInTheAirReadsTheBalance()
         {
-            Assert.AreEqual(730L, RewardFlight.Shown(0L, 730L, 0, 0));
+            Assert.AreEqual(730L, Read(730L));
+            Assert.AreEqual(730L, Read(730L, new ResourceSlots.Payout(1, 0L) { Done = true }));
+        }
+
+        /// <summary>
+        /// Two chests opened back to back: the first is still landing when the second is
+        /// granted. Each owes only its own prize - the gap from its snapshot to the next - so
+        /// the pill climbs by the first's tokens and then the second's, and is never shown the
+        /// sum early, never walked backwards, and ends exactly on the balance.
+        /// </summary>
+        [Test]
+        public void TwoRewardsLandingInOnePillEachOweOnlyTheirOwn()
+        {
+            // 100 before the first chest (+50), 150 before the second (+30), 180 now.
+            var first = Pay(1, 100L, 3, 7);
+            var second = Pay(2, 150L, 0, 0);    // held: its panel is up, nothing thrown yet
+
+            Assert.AreEqual(100L + 50L * 3 / 7, Read(180L, first, second),
+                            "the first walks; the second is all owed");
+
+            first.Landed = 7;
+            Assert.AreEqual(150L, Read(180L, first, second), "the first is paid in full, the second still held");
+
+            second.Tokens = 7;
+            second.Landed = 7;
+            Assert.AreEqual(180L, Read(180L, first, second));
+        }
+
+        /// <summary>
+        /// The newer reward can finish first - a small prize thrown after a large one. The
+        /// older one still owes exactly its own segment, which ends where the newer one's
+        /// snapshot was taken, so the newer one's prize is shown once and not walked again.
+        /// </summary>
+        [Test]
+        public void TheNewerRewardCanFinishFirst()
+        {
+            var first = Pay(1, 100L, 0, 7);
+            var second = Pay(2, 150L, 7, 7);
+
+            Assert.AreEqual(180L - 50L, Read(180L, first, second));
+
+            second.Done = true;
+            Assert.AreEqual(180L - 50L, Read(180L, first, second), "done changes nothing it had not already paid");
+
+            first.Landed = 7;
+            Assert.AreEqual(180L, Read(180L, first, second));
+        }
+
+        /// <summary>
+        /// Through the real readouts: entries are ordered by snapshot, a finished entry that an
+        /// older one still measures to is kept, and once everything is released the readout is
+        /// free and reads the balance. Release is idempotent.
+        /// </summary>
+        [Test]
+        public void ReleasingEveryPayoutFreesTheReadout()
+        {
+            const ResourceSlots.Kind Kind = ResourceSlots.Kind.Gems;
+            try
+            {
+                var newer = ResourceSlots.Claim(Kind, 20, 150L);
+                var older = ResourceSlots.Claim(Kind, 10, 100L);
+                Assert.IsTrue(ResourceSlots.IsPaying(Kind));
+
+                ResourceSlots.Release(Kind, newer);
+                Assert.IsTrue(ResourceSlots.IsPaying(Kind), "the older one still owes, measured to the newer one's snapshot");
+
+                ResourceSlots.Release(Kind, older);
+                ResourceSlots.Release(Kind, older);
+                Assert.IsFalse(ResourceSlots.IsPaying(Kind));
+                Assert.AreEqual(ResourceSlots.Balance(Kind), ResourceSlots.Walked(Kind));
+            }
+            finally
+            {
+                ResourceSlots.ResetPayouts();
+            }
+        }
+
+        /// <summary>
+        /// Two flights at once through the real readouts: the first to finish must not hand the
+        /// pill back while the second still holds it - the fault a single flag per readout had,
+        /// and the reason a page could not take a second chest while the first was landing.
+        /// </summary>
+        [Test]
+        public void TheFirstFlightToFinishDoesNotReleaseTheSecondsHold()
+        {
+            var a = new UnityEngine.GameObject("first");
+            var b = new UnityEngine.GameObject("second");
+            try
+            {
+                var first = RewardFlight.Begin();
+                first.Hold(a.transform);
+                var second = RewardFlight.Begin();
+                second.Hold(b.transform);
+
+                first.Play(null, null);
+                for (int k = 0; k < 3; k++)
+                    Assert.IsTrue(ResourceSlots.IsPaying((ResourceSlots.Kind)k), "still held by the second: " + (ResourceSlots.Kind)k);
+
+                second.Play(null, null);
+                for (int k = 0; k < 3; k++)
+                    Assert.IsFalse(ResourceSlots.IsPaying((ResourceSlots.Kind)k), "released: " + (ResourceSlots.Kind)k);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(a);
+                UnityEngine.Object.DestroyImmediate(b);
+                ResourceSlots.ResetPayouts();
+            }
         }
 
         // ------------------------------------------------------------- the hold
@@ -195,7 +308,7 @@ namespace GlimmerGrove.Tests
             finally
             {
                 UnityEngine.Object.DestroyImmediate(owner);
-                for (int k = 0; k < 3; k++) ResourceSlots.Release((ResourceSlots.Kind)k);
+                ResourceSlots.ResetPayouts();
             }
         }
 

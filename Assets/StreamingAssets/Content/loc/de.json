@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "SO WIRD GESPIELT"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "Bilde eine Reihe aus drei Juwelen, damit der Turm dieser Farbe feuert."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Halte die Plünderer auf, bevor sie deine Türme zerstören."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "Alle zwei Wellen wählst du eine von drei Verbesserungen."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "Verbesserungen addieren sich, und manche ergeben zusammen Geheimnisse."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "Die Wellen enden nie und werden immer schwerer. Komm so weit du kannst."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Gewitterwolke"
     },

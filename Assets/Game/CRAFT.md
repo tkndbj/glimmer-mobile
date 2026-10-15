@@ -740,10 +740,13 @@ Presentation and are invisible in a compile, a validator and a screenshot of the
   `CompanionLedger.Changed`, `CloudSaveService.IdentityChanged`, `GameSettings.Changed`.
 - **A reward that lands somewhere is worth more than one that is merely granted, and the cascade that does it
   exists once.** `RewardFlight` - the chest's collect, lifted out when the rewarded ad and then the shop's
-  receipt needed the same thing. Two rules keep it honest. A readout has **one writer**: the payout rewinds a
-  pill to what it said before the grant and walks it forward a token at a time, so it `Claim`s the slot and
-  `ResourceSlots.Repaint` refuses the hub underneath - a wallet change landing mid-cascade would jump the
-  number to the truth and have the next token drag it back down. And the target is **read live at every
+  receipt needed the same thing. Two rules keep it honest. A readout has **one answer**: the payout rewinds a
+  pill to what it said before the grant and walks it forward a token at a time, so it enters a
+  `ResourceSlots.Payout` on the slot and every writer (`Repaint` and the landings alike) writes `Walked` -
+  the balance less what every reward still has in the air, each owing the gap from its snapshot to the next.
+  A flag would do for one cascade; it fails the moment two overlap, and they do, because **a paying panel
+  steps out of the player's way** (`Flow.Depart`) and a page takes its next tap while tokens fly (a streak
+  night's go in `View.Airspace`, which a redraw does not empty). And the target is **read live at every
   landing, never captured**, because an ad's currency is granted by the server (10d), so the figure is walked
   towards whatever the balance says when a token arrives and a grant that has not arrived leaves the number
   where it was rather than anywhere invented. A prize with no pill adds nothing and simply closes: a reward

@@ -876,6 +876,17 @@ namespace GlimmerGrove
         protected internal virtual bool Teachable => true;
 
         /// <summary>
+        /// Whether the header's "i" opens a panel of this mode's own instead of replaying the
+        /// lessons. False everywhere but a mode that overrides it (the Shuffle lane, whose
+        /// rules are a page of their own rather than the siege's tips again); the opening
+        /// lessons are untouched either way.
+        /// </summary>
+        protected internal virtual bool ExplainsItself => false;
+
+        /// <summary>Opens that panel. Asked only when <see cref="ExplainsItself"/> is true.</summary>
+        protected internal virtual void Explain() { }
+
+        /// <summary>
         /// How long to wait before the first lesson appears, so the board it points at has
         /// finished arriving. A mode whose entrance is longer overrides it.
         /// </summary>

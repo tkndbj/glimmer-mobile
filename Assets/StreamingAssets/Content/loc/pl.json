@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "JAK GRAĆ"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "Ułóż trzy klejnoty w rzędzie, a wieża tego koloru strzeli."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Zatrzymaj najeźdźców, zanim zniszczą twoje wieże."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "Co dwie fale wybierz jedno z trzech ulepszeń."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "Ulepszenia się sumują, a niektóre łączą się w sekrety."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "Fale nigdy się nie kończą i są coraz trudniejsze. Zajdź jak najdalej."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Chmura burzowa"
     },

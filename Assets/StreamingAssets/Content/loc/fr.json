@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "COMMENT JOUER"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "Aligne trois gemmes pour faire tirer la tourelle de cette couleur."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Arrête les pillards avant qu'ils ne cassent tes tourelles."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "Toutes les deux vagues, choisis une amélioration parmi trois."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "Les améliorations se cumulent, et certaines se combinent en secrets."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "Les vagues ne s'arrêtent jamais et deviennent de plus en plus dures. Va le plus loin possible."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Nuage d'orage"
     },

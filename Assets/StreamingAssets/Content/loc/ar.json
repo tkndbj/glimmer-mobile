@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "طريقة اللعب"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "طابق ثلاث جواهر ليطلق برج ذلك اللون النار."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "أوقف المهاجمين قبل أن يحطموا أبراجك."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "كل موجتين، اختر ترقية واحدة من ثلاث."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "الترقيات تتراكم، وبعضها يجتمع ليكشف أسرارا."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "الموجات لا تنتهي وتزداد صعوبة. اذهب لأبعد ما تستطيع."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "سحابة العاصفة"
     },

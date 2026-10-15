@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "NASIL OYNANIR"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "O rengin kulesini ateşlemek için üç mücevheri yan yana getir."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Akıncılar kulelerini yıkmadan önce onları durdur."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "Her iki aşamada bir, üç geliştirmeden birini seç."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "Geliştirmeler birikir, bazıları birleşip sırları açar."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "Aşamalar hiç bitmez ve giderek zorlaşır. Gidebildiğin kadar ilerle."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Fırtına Bulutu"
     },

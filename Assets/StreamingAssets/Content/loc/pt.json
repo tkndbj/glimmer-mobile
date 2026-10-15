@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "COMO JOGAR"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "Alinhe três gemas para a torre dessa cor disparar."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Pare os invasores antes que eles quebrem suas torres."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "A cada duas ondas, escolha uma de três melhorias."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "As melhorias se somam, e algumas se combinam em segredos."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "As ondas nunca acabam e ficam cada vez mais difíceis. Vá o mais longe que puder."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Nuvem de tempestade"
     },

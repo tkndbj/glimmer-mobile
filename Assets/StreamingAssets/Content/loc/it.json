@@ -8598,6 +8598,30 @@
       "text": "x{0}"
     },
     {
+      "key": "ui.shuffle.info_title",
+      "text": "COME SI GIOCA"
+    },
+    {
+      "key": "ui.shuffle.info_match",
+      "text": "Allinea tre gemme per far sparare la torretta di quel colore."
+    },
+    {
+      "key": "ui.shuffle.info_raiders",
+      "text": "Ferma i predoni prima che distruggano le tue torrette."
+    },
+    {
+      "key": "ui.shuffle.info_cards",
+      "text": "Ogni due ondate, scegli uno di tre potenziamenti."
+    },
+    {
+      "key": "ui.shuffle.info_secrets",
+      "text": "I potenziamenti si sommano, e alcuni si combinano in segreti."
+    },
+    {
+      "key": "ui.shuffle.info_far",
+      "text": "Le ondate non finiscono mai e diventano sempre più difficili. Arriva più lontano che puoi."
+    },
+    {
       "key": "shuffle.secret.thunderhead.name",
       "text": "Nube tempestosa"
     },

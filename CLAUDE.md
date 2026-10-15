@@ -566,7 +566,7 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    trigger names a win, the last 3 hours, or `daily`); only after the consent questions. The day is
    device-local (`glimmer.deals.shownDay`), marked at open. `tasks.dealsSeen` (v41) is still written
    and joined, and gates nothing. Short of gems stacks `GemShopOverlay` over `DealOverlay`, which lists any number of
-   deals and pays coins out on close.
+   deals and flies each deal's coins home as it is bought, panel standing.
 60d. **A deal's value seal is derived, never authored**: its coins over what its gems buy at the
    shop's own rate (`StoreCatalog.CreditsPerGem`), floored to ten, hidden at 100% or under or without
    a rate (`DealValue`). Shop band and panel rows are one `DealCard` (`Hud/plate_flat`, tinted).

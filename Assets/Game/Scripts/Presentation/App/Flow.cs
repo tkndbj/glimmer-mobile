@@ -161,6 +161,35 @@ namespace GlimmerGrove
             _safe = null;
         }
 
+        RectTransform _airspace;
+
+        /// <summary>
+        /// A layer over <see cref="Content"/> for things in flight - reward tokens on their way
+        /// to a readout - that catches no taps and that a redraw does not empty.
+        ///
+        /// <para>
+        /// <b>Outside <see cref="Content"/> on purpose.</b> A page that pays from its own rows
+        /// no longer holds still until the payout lands (see <c>RewardFlight.Play</c>), so it
+        /// may redraw itself while tokens are in the air - and <see cref="ClearContent"/> would
+        /// take them with it. Here they survive the redraw, die with the screen, and never stand
+        /// between a finger and the control under it. Created on first use, after
+        /// <see cref="Content"/>, so it draws above everything the screen builds.
+        /// </para>
+        /// </summary>
+        public RectTransform Airspace
+        {
+            get
+            {
+                if (_airspace != null || Root == null) return _airspace;
+
+                _airspace = UIKit.Node("Airspace", Root);
+                var group = UIKit.Group(_airspace);
+                group.blocksRaycasts = false;
+                group.interactable = false;
+                return _airspace;
+            }
+        }
+
         Lifeline _life;
 
         /// <summary>
@@ -353,6 +382,9 @@ namespace GlimmerGrove
         public static bool Busy { get; private set; }
 
         static readonly List<View> _modals = new List<View>();
+
+        /// <summary>Panels that have left the stack but are still drawing - see <see cref="Depart"/>.</summary>
+        static readonly List<View> _departing = new List<View>();
         static Image _iris;
         static Image _flash;
 
@@ -404,6 +436,11 @@ namespace GlimmerGrove
             {
                 foreach (var m in _modals) if (m) UnityEngine.Object.Destroy(m.gameObject);
                 _modals.Clear();
+
+                // A departing panel belongs to the screen it was paying into, and goes with it.
+                // Its flight's lease lets the readouts go (RewardFlight.TieTo).
+                foreach (var m in _departing) if (m) UnityEngine.Object.Destroy(m.gameObject);
+                _departing.Clear();
                 if (Current) UnityEngine.Object.Destroy(Current.gameObject);
 
                 var rt = UIKit.Node(view.Name, Screens);
@@ -664,7 +701,44 @@ namespace GlimmerGrove
         public static void Dismiss(View v)
         {
             _modals.Remove(v);
+            _departing.Remove(v);
             if (v) UnityEngine.Object.Destroy(v.gameObject);
+            Touches();
+        }
+
+        /// <summary>
+        /// Takes a panel out of the player's way while it finishes drawing: it leaves the stack,
+        /// stops catching taps, and stays on screen until it calls <see cref="Dismiss"/> itself.
+        ///
+        /// <para>
+        /// <b>For a panel whose remaining work is only a report.</b> A chest pays at the start
+        /// of its ceremony (the grant is in the ledger before the lid opens), so once COLLECT is
+        /// pressed what is left is tokens flying into the readouts - and a panel that stayed in
+        /// the stack for that made the player wait out every coin before they could open the
+        /// next chest or go back. Nothing the page can do next can disturb the report: the
+        /// readouts are a ledger of payouts, not a lock (<c>ResourceSlots.Payout</c>), and the
+        /// flight ends itself whichever way the panel goes.
+        /// </para>
+        /// <para>
+        /// Out of the stack means out of everything the stack answers: <see cref="HasModal"/>
+        /// and <see cref="LiveModal{T}"/> (so the next chest can be raised while this one's
+        /// tokens land - above it, since <see cref="Restack"/> only lifts the stack), the back
+        /// key, and the one-finger rule. <see cref="Covered"/> still counts it, because the
+        /// moments waiting for a calm screen (a reminder ask after a chest) should wait for the
+        /// report to finish too. A screen change destroys it with the screen. Idempotent; a
+        /// panel not in the stack is left alone.
+        /// </para>
+        /// </summary>
+        public static void Depart(View v)
+        {
+            if (!v || !_modals.Remove(v)) return;
+
+            _departing.Add(v);
+
+            var group = UIKit.Group(v.Root);
+            group.blocksRaycasts = false;
+            group.interactable = false;
+
             Touches();
         }
 
@@ -698,6 +772,9 @@ namespace GlimmerGrove
             {
                 for (int i = _modals.Count - 1; i >= 0; i--)
                     if (_modals[i]) return true;
+
+                for (int i = _departing.Count - 1; i >= 0; i--)
+                    if (_departing[i]) return true;
 
                 return false;
             }

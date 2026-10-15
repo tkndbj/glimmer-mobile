@@ -718,7 +718,13 @@ namespace GlimmerGrove
             _flight.Fallback = _rewardRow;
 
             FadeChrome();
-            _flight.Play(Content, () => Flow.Dismiss(this));
+            _flight.Play(Content, () => { if (this) Flow.Dismiss(this); });
+
+            // Out of the player's way from this instant: the chest is banked and what is left
+            // is a report. The page under it takes the next tap - another chest, the back key -
+            // while the tokens land, and this panel dismisses itself when they have (or goes
+            // with the screen, which ends the flight through its lease). See Flow.Depart.
+            Flow.Depart(this);
         }
 
         /// <summary>
@@ -756,11 +762,10 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Swallowed once the payout has started. Everything is already banked, so leaving
-        /// early costs the player nothing - but <see cref="ModalView.Close"/> fades the whole
-        /// content group, and the tokens are in it, so the back key would delete the animation
-        /// mid-flight and leave the pills rewound to their old figures until the page next
-        /// rebuilt them.
+        /// Swallowed once the payout has started - which in practice never reaches here, since
+        /// a paying panel has left the stack (<see cref="Flow.Depart"/>) and the back key goes
+        /// to the page. Kept for the frame between COLLECT and the departure:
+        /// <see cref="ModalView.Close"/> fades the whole content group, and the tokens are in it.
         /// </summary>
         public override bool OnBack()
         {

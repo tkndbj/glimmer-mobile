@@ -218,9 +218,11 @@ namespace GlimmerGrove
         float _boardH, _bandH;
 
         /// <summary>
-        /// True while a night is being handed over. The page is mid-animation and describes
-        /// state it is in the middle of changing, so a rebuild underneath it would destroy
-        /// the tiles the sequence is still animating.
+        /// True while a night is being handed over - the synchronous span of a tap, in which
+        /// the ledger raises its change before the page has finished reacting to it, so a
+        /// rebuild underneath would destroy the tile the tap is still working on. Not held
+        /// through the reward's flight: the tokens fly in <see cref="View.Airspace"/>, which a
+        /// rebuild does not empty, so the next tap need not wait for them.
         /// </summary>
         bool _collecting;
 
@@ -1581,19 +1583,18 @@ namespace GlimmerGrove
             // already says the night has been taken.
             Stamp(tile);
 
-            if (!flying)
-            {
-                Finish();
-                return;
-            }
+            // Played in the airspace rather than the page, and the page let go at once rather
+            // than when the last token lands. The night is banked and the seal is on; the
+            // tokens are a report, and the player may take the next night or leave while they
+            // fly. The airspace is outside Content, so the settle below - which redraws the
+            // whole board when this night rolls the lap over - cannot take the tokens with it,
+            // and the flight remembers where each one leaves from if the tile it was printed on
+            // goes. The readouts are a ledger of payouts (ResourceSlots.Payout), so a second
+            // night taken mid-flight is walked in on top of this one rather than over it.
+            if (flying) flight.Play(Airspace, null);
 
-            flight.Play(Content, Finish);
-
-            void Finish()
-            {
-                _collecting = false;
-                Settle();
-            }
+            _collecting = false;
+            Settle();
         }
 
         /// <summary>

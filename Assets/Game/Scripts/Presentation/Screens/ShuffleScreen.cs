@@ -73,6 +73,18 @@ namespace GlimmerGrove
             Reseat();
         }
 
+        /// <summary>
+        /// The "i" opens this lane's own rules page rather than every siege tip again (the
+        /// owner, 2026-10-14). The opening lessons still run; the panel holds the run
+        /// (<c>RunHold.Covered</c>) like any modal.
+        /// </summary>
+        protected internal override bool ExplainsItself => true;
+
+        protected internal override void Explain()
+        {
+            if (!Flow.HasModal) Flow.Modal<ShuffleInfoOverlay>();
+        }
+
         /// <summary>The figures the run being dealt plays on. See <see cref="Arm"/>.</summary>
         ShuffleTuning _tuning;
 

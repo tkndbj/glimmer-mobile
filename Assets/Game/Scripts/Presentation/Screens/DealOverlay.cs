@@ -46,7 +46,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Every buy is re-checked at the tap</b> (<see cref="DealLedger.TryBuy"/>): a deal can end,
     /// another phone can buy it, or a sync can move the balance while the panel is open. The coins
-    /// fly home when the panel closes (<see cref="DealPayout"/>), from whatever screen is under it.
+    /// fly home the moment a deal is bought (<see cref="PayOut"/>), out of the row's coffer and into
+    /// the coin readout of the screen underneath, with the panel still standing.
     /// </para>
     /// </summary>
     public sealed class DealOverlay : ModalView
@@ -82,8 +83,15 @@ namespace GlimmerGrove
         int Lead => _welcome != null ? 1 : 0;
         GridView _grid;
 
-        /// <summary>The deals bought from this panel, paid out when it closes.</summary>
+        /// <summary>The deals bought from this panel, each paid out as it was bought.</summary>
         readonly List<ShopDeal> _paid = new List<ShopDeal>();
+
+        /// <summary>
+        /// True while a bought deal's coins are in the air. Further taps are ignored, not queued, as
+        /// with <see cref="_checking"/>: two cascades would each claim the coin readout, and the first
+        /// to settle would jump it past the second's landings.
+        /// </summary>
+        bool _flying;
 
         /// <summary>The row the player went to buy gems for; it pulses once they land.</summary>
         string _wanted;
@@ -256,7 +264,7 @@ namespace GlimmerGrove
 
         void Buy(ShopDeal deal)
         {
-            if (_leaving || _checking || deal == null) return;
+            if (_leaving || _checking || _flying || deal == null) return;
 
             // Asked before the ledger, because a deal is the one gem purchase the server must see
             // promptly: bought offline it would be judged at the next sync, possibly after the
@@ -318,13 +326,12 @@ namespace GlimmerGrove
                     if (Trigger != DealTrigger.None)
                         Telemetry.Track("deal_offer_bought", "trigger", DealPrompt.Id(Trigger), "deal", deal.Id);
 
-                    // The last one this panel can still sell: nothing is left to decide here, so it
-                    // gets out of the way of the coins.
-                    if (!AnythingLeftToBuy()) { Leave(); return; }
-
-                    // Others are still on sale: the row says BOUGHT, and the coins come home with
-                    // the rest when the panel closes.
+                    // The row says BOUGHT at once and its coins fly home now, panel standing. The
+                    // last one this panel can still sell closes it once they have landed: nothing
+                    // is left to decide here.
+                    bool more = AnythingLeftToBuy();
                     Repaint();
+                    PayOut(deal, more ? (Action)null : () => Leave(quiet: true));
                     return;
 
                 case DealBuy.TooPoor:
@@ -363,10 +370,53 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Closes the panel, and pays the coins of everything bought from it once it has gone - so
-        /// the coins land on the readout of whatever screen is underneath rather than behind a scrim.
+        /// A bought deal's coins flying out of its row into the coin readout of the screen underneath,
+        /// while this panel stands. <see cref="RewardFlight.AfterGrant"/>, because the coins are
+        /// already in the wallet (the ledger queued them with the debit) and credits are one of the two
+        /// things nothing clamps, so the rewind is exact. Drawn in this panel's own content so the
+        /// tokens fly over the scrim, and held on this panel (<see cref="RewardFlight.Hold"/>), so a
+        /// panel closed mid-flight puts every readout straight back on the live balance. A screen with
+        /// no coin readout gets the toast alone - the coins are banked either way.
         /// </summary>
-        void Leave()
+        void PayOut(ShopDeal deal, Action then)
+        {
+            long credits = deal.Credits;
+            Scenery.Toast(Content, Loc.Format("ui.deal.bought", credits.ToString("N0")), Pal.Gold, 2.4f);
+
+            var flight = RewardFlight.AfterGrant(credits, 0L);
+            flight.Hold(this);
+
+            // A stand-in over the row's coffer rather than the coffer itself: the flight punches and
+            // fades its source as the tokens leave, and the row has to stay drawn, saying BOUGHT.
+            var source = UIKit.Box("DealCoins", Content, new Vector2(200f, 200f), new Vector2(.5f, .5f), Vector2.zero);
+            var coffer = CofferOf(deal.Id);
+            if (coffer) source.position = coffer.position;
+
+            _flying = true;
+            flight.Add(new Daily.ChestDrop(Daily.ChestDropKind.Credits, (int)Math.Min(credits, int.MaxValue)), source);
+            flight.Play(Content, () =>
+            {
+                if (source) Destroy(source.gameObject);
+                if (!this) return;
+                _flying = false;
+                then?.Invoke();
+            });
+        }
+
+        /// <summary>The coffer picture of the row drawing <paramref name="dealId"/>, or null when it is scrolled out of the list.</summary>
+        RectTransform CofferOf(string dealId)
+        {
+            foreach (var row in _rows)
+                if (row.Shows(dealId)) return row.Coffer;
+            return null;
+        }
+
+        /// <summary>
+        /// Closes the panel. Every deal bought from it has already paid out (<see cref="PayOut"/>).
+        /// <paramref name="quiet"/> when it closes itself after the last deal's coins have landed,
+        /// which have just made their own sound.
+        /// </summary>
+        void Leave(bool quiet = false)
         {
             if (_leaving) return;
             _leaving = true;
@@ -374,10 +424,7 @@ namespace GlimmerGrove
             if (_paid.Count == 0 && Trigger != DealTrigger.None)
                 Telemetry.Track("deal_offer_dismissed", "trigger", DealPrompt.Id(Trigger), "deals", _deals.Count);
 
-            long credits = 0L;
-            foreach (var deal in _paid) credits += deal.Credits;
-
-            Close(() => { if (credits > 0L) DealPayout.Play(credits); }, quiet: credits > 0L);
+            Close(quiet: quiet);
         }
 
         // ------------------------------------------------------------------ one row
@@ -426,6 +473,13 @@ namespace GlimmerGrove
             float _tickAt;
 
             public RectTransform Root => _root;
+
+            /// <summary>The picture at the left - a deal's coffer - which its coins fly out of.</summary>
+            public RectTransform Coffer => _card.Art ? _card.Art.rectTransform : _card.Root;
+
+            /// <summary>True while this row is drawing the deal <paramref name="dealId"/>.</summary>
+            public bool Shows(string dealId)
+                => _deal != null && _bundle == null && _root.gameObject.activeSelf && _deal.Id == dealId;
 
             public DealRow(DealOverlay panel, RectTransform parent)
             {
@@ -517,6 +571,10 @@ namespace GlimmerGrove
                 if (!force && state == _state) return;
                 _state = state;
 
+                // The gem rides only on a price. Before the caption, so the fit centres the word
+                // alone - see `ShowGlyph`.
+                ShowGlyph(state == RowState.Ready);
+
                 switch (state)
                 {
                     case RowState.Bought:
@@ -539,8 +597,23 @@ namespace GlimmerGrove
                         _key.Interactable = true;
                         break;
                 }
+            }
 
-                if (_key.Icon) _key.Icon.enabled = state == RowState.Ready;
+            /// <summary>
+            /// Shows or hides the key's gem, and re-centres the caption against what is left.
+            /// <para>
+            /// <b>The glyph's object, not its <c>Image</c>.</b> <see cref="UIKit.CentreGlyph"/> asks
+            /// <c>activeSelf</c>, so a gem merely disabled still took its width and gap out of the
+            /// face, and BOUGHT, ENDED and the store's price stood half a gem right of centre. The
+            /// fit is run here as well as by <c>SetCaption</c>, because <c>SetCaption</c> skips a
+            /// caption that did not change and the glyph may have changed without it (44mc).
+            /// </para>
+            /// </summary>
+            void ShowGlyph(bool shown)
+            {
+                if (!_key.Icon) return;
+                _key.Icon.gameObject.SetActive(shown);
+                UIKit.FitLabel(_key);
             }
 
             /// <summary>
@@ -566,13 +639,13 @@ namespace GlimmerGrove
                 _state = state;
                 _bundleCaption = caption;
 
+                ShowGlyph(false);
                 _key.SetCaption(caption);
                 // The money face for a price, the deal rows' blue for bought, shut otherwise.
                 _keyPlate.sprite = Art.S("Ui/" + (state == RowState.Ready ? Skins.Buy
                                                  : state == RowState.Bought ? Skins.Alternate
                                                  : Skins.Shut));
                 _key.Interactable = state == RowState.Ready;
-                if (_key.Icon) _key.Icon.enabled = false;
             }
 
             /// <summary>The caption the welcome key last wore, so a price arriving repaints it.</summary>
@@ -598,31 +671,6 @@ namespace GlimmerGrove
                               && PlayerProgression.CanAfford(Currency.Gems, _deal.Gems);
                 _key.transform.localScale = Vector3.one * (wanted ? 1f + .06f * (.5f + .5f * Mathf.Sin(now * 6f)) : 1f);
             }
-        }
-    }
-
-    /// <summary>
-    /// A deal's coins flying into the coin readout of whatever screen is showing, once the panel that
-    /// sold them has gone. <see cref="RewardFlight.AfterGrant"/>, because the coins are already in
-    /// the wallet (the ledger queued them with the debit) and credits are one of the two things
-    /// nothing clamps, so the rewind is exact. A screen with no coin readout gets the toast alone -
-    /// the coins are banked either way.
-    /// </summary>
-    public static class DealPayout
-    {
-        public static void Play(long credits)
-        {
-            var host = Flow.Current;
-            if (!host || credits <= 0L) return;
-
-            Scenery.Toast(host.Content, Loc.Format("ui.deal.bought", credits.ToString("N0")), Pal.Gold, 2.4f);
-
-            var flight = RewardFlight.AfterGrant(credits, 0L);
-            flight.Hold(host);
-
-            var source = UIKit.Box("DealCoins", host.Content, new Vector2(200f, 200f), new Vector2(.5f, .5f), Vector2.zero);
-            flight.Add(new Daily.ChestDrop(Daily.ChestDropKind.Credits, (int)Math.Min(credits, int.MaxValue)), source);
-            flight.Play(host.Content, () => { if (source) UnityEngine.Object.Destroy(source.gameObject); });
         }
     }
 }

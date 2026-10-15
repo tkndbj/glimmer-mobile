@@ -623,7 +623,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Opens the deals panel with every deal on offer - the band shows the one closing soonest,
         /// the panel all of them. A modal over the shop, this screen's rule for anything that answers
-        /// "I want more of this"; it pays the coins out when it closes (<c>DealPayout</c>).
+        /// "I want more of this"; it pays each deal's coins out as it is bought (<c>DealOverlay.PayOut</c>).
         /// </summary>
         void TapDeal(ShopDeal deal)
         {

@@ -99,16 +99,38 @@ namespace GlimmerGrove
         readonly int[] _tokens = new int[3];
         readonly int[] _landed = new int[3];
 
+        /// <summary>
+        /// This flight's entry on each readout, null where it has none. See
+        /// <see cref="ResourceSlots.Payout"/> for why a readout keeps one per reward.
+        /// </summary>
+        readonly ResourceSlots.Payout[] _payouts = new ResourceSlots.Payout[3];
+
+        /// <summary>Where each prize's tokens last left from - see <see cref="Throw"/>.</summary>
+        Vector2[] _from;
+
+        /// <summary>
+        /// When the snapshot was taken, relative to every other flight's. Readouts order their
+        /// payouts by it, because that is the order the grants were made in.
+        /// </summary>
+        readonly long _sequence;
+        static long _sequences;
+
         int _thrown, _arrived;
         bool _played, _finished, _held;
         Action _done;
-        Lease _lease;
+        readonly List<Lease> _leases = new List<Lease>();
 
-        RewardFlight() { }
+        RewardFlight() { _sequence = ++_sequences; }
 
         /// <summary>
         /// Snapshots what every pill reads right now. Call this <em>before</em> granting the
         /// reward - see the class remarks.
+        ///
+        /// <para>
+        /// The balance itself, not what the pill happens to be drawing: with another reward
+        /// still landing the pill reads less than the balance, and a snapshot of the drawing
+        /// would make this reward owe the other one's tokens as well.
+        /// </para>
         /// </summary>
         public static RewardFlight Begin()
         {
@@ -172,6 +194,10 @@ namespace GlimmerGrove
         /// <paramref name="owner"/>, whenever that panel is destroyed without playing, which is
         /// what keeps a pill from ever standing frozen below the balance. Idempotent.
         /// </para>
+        /// <para>
+        /// "Frozen" is this reward's share only: a pill another reward is still landing in goes
+        /// on climbing by that one's tokens, and stops short of this one's prize.
+        /// </para>
         /// </summary>
         public void Hold(Component owner)
         {
@@ -179,24 +205,33 @@ namespace GlimmerGrove
             _held = true;
 
             for (int k = 0; k < 3; k++)
-            {
-                ResourceSlots.Claim((ResourceSlots.Kind)k);
-                ResourceSlots.Show((ResourceSlots.Kind)k, _before[k]);
-            }
+                _payouts[k] = ResourceSlots.Claim((ResourceSlots.Kind)k, _sequence, _before[k]);
 
-            _lease = owner.gameObject.AddComponent<Lease>();
-            _lease.Flight = this;
+            TieTo(owner);
         }
 
-        /// <summary>Releases a hold whose panel went away without paying. The reward is banked
-        /// either way; this only puts the pills back on the live balance.</summary>
+        /// <summary>
+        /// Ties the flight to <paramref name="owner"/>'s lifetime: if it is destroyed first, the
+        /// flight lets every readout go. A flight can hold several (the panel that held the pills,
+        /// the space the tokens are drawn in), and the first to go ends it.
+        /// </summary>
+        void TieTo(Component owner)
+        {
+            if (owner == null) return;
+            var lease = owner.gameObject.AddComponent<Lease>();
+            lease.Flight = this;
+            _leases.Add(lease);
+        }
+
+        /// <summary>Releases a flight whose panel or space went away before it finished. The
+        /// reward is banked either way; this only puts the pills back on the live balance.</summary>
         void Abandon()
         {
             _done = null;
             Finish(0f);
         }
 
-        /// <summary>Dies with the panel that holds the pills - see <see cref="Hold"/>.</summary>
+        /// <summary>Dies with whatever the flight depends on - see <see cref="TieTo"/>.</summary>
         sealed class Lease : MonoBehaviour
         {
             public RewardFlight Flight;
@@ -249,28 +284,6 @@ namespace GlimmerGrove
              : Mathf.Clamp(drop.Amount, 1, TokensPerDrop);
 
         /// <summary>
-        /// What a pill should read once <paramref name="landed"/> of its
-        /// <paramref name="tokens"/> have arrived, given what it stood at before the grant
-        /// and what the balance says now.
-        ///
-        /// <para>
-        /// The last token writes <paramref name="live"/> itself rather than the
-        /// interpolation, so a rounding error can never leave a pill reading one short of the
-        /// balance - the same guarantee <c>Roll.Number</c> and <c>Payout.Land</c> make. The
-        /// clamp under it is for the currency case: <paramref name="live"/> can rise
-        /// <em>during</em> the cascade when a sync lands, and a reading that went backwards on
-        /// the next token would be the one thing worse than a reading that had not moved.
-        /// </para>
-        /// </summary>
-        public static long Shown(long before, long live, int landed, int tokens)
-        {
-            if (tokens <= 0 || landed >= tokens) return live;
-
-            long stepped = before + (long)Mathf.Round((live - before) * (landed / (float)tokens));
-            return live >= before ? Math.Max(before, stepped) : Math.Min(before, stepped);
-        }
-
-        /// <summary>
         /// How long the cascade takes if every token flies and lands as scheduled. Public so a
         /// caller can hold for exactly this rather than for a number somebody guessed and then
         /// had to keep in step.
@@ -300,6 +313,15 @@ namespace GlimmerGrove
         /// tween here is scheduled against, so the cascade dies with the panel rather than
         /// outliving it.
         /// </para>
+        /// <para>
+        /// <b>Nothing the player does next has to wait for this.</b> The reward is banked
+        /// before the first token leaves, the readouts are a ledger rather than a lock (see
+        /// <see cref="ResourceSlots.Payout"/>), and every way the cascade can end - the last
+        /// landing, the space being destroyed, the deadline - lets the readouts go exactly once.
+        /// So a panel paying through this can step out of the player's way the moment it starts
+        /// (<see cref="Flow.Depart"/>), and a page can take its next tap while tokens are still
+        /// in the air.
+        /// </para>
         /// </summary>
         public void Play(RectTransform space, Action done)
         {
@@ -317,24 +339,45 @@ namespace GlimmerGrove
             for (int i = 0; i < _items.Count; i++)
                 _tokens[(int)_items[i].Kind] += TokenCount(_items[i].Drop);
 
-            // Rewound to what the pills said before the grant, and claimed while they are
-            // there. The grant already happened - deliberately, so a player who kills the app
-            // has still opened the chest and has still been paid for the video - and the hub
-            // repaints the instant the wallet moves, so by now the pills already read the new
-            // totals. The player has been looking at a scrim this whole time and has seen
-            // neither figure, so nothing is being faked: the report simply arrives in the
-            // order the events were experienced.
+            // Rewound to what the pills said before the grant, and entered on the readouts
+            // while they are there. The grant already happened - deliberately, so a player who
+            // kills the app has still opened the chest and has still been paid for the video -
+            // and the hub repaints the instant the wallet moves, so by now the pills already
+            // read the new totals. The player has been looking at a scrim this whole time and
+            // has seen neither figure, so nothing is being faked: the report simply arrives in
+            // the order the events were experienced.
             //
-            // The claim is what stops the hub writing over the rewind from underneath. A
-            // wallet change landing mid-cascade - an ad's credits arriving from the server is
-            // exactly that - would otherwise jump the pill to the true figure, and the next
-            // token would drag it back down.
+            // The entry is what stops the hub writing over the rewind from underneath: every
+            // writer asks the readout's ledger, so a wallet change landing mid-cascade moves the
+            // pill only by what is no longer owed. A pill this reward pays nothing into is let
+            // go now rather than at the end, so it does not stand still for the whole cascade.
             for (int k = 0; k < 3; k++)
             {
-                if (_tokens[k] <= 0) continue;
-                ResourceSlots.Claim((ResourceSlots.Kind)k);
-                ResourceSlots.Show((ResourceSlots.Kind)k, _before[k]);
+                var kind = (ResourceSlots.Kind)k;
+
+                if (_tokens[k] <= 0)
+                {
+                    ResourceSlots.Release(kind, _payouts[k]);
+                    _payouts[k] = null;
+                    continue;
+                }
+
+                if (_payouts[k] == null) _payouts[k] = ResourceSlots.Claim(kind, _sequence, _before[k]);
+                _payouts[k].Tokens = _tokens[k];
+                _payouts[k].Landed = 0;
+                ResourceSlots.Show(kind, ResourceSlots.Walked(kind));
             }
+
+            // Where each prize leaves from, read now while every card is certainly there. A
+            // page that pays from its own rows may redraw them while tokens are still leaving -
+            // it no longer waits for the cascade - and a token whose card has gone leaves from
+            // where the card last stood rather than from the middle of the screen.
+            _from = new Vector2[_items.Count];
+            for (int i = 0; i < _items.Count; i++) _from[i] = SourceIn(space, _items[i].Source);
+
+            // Ended by the space as well as by the panel: tokens drawn in a node that is
+            // destroyed never land, and their readouts must not wait on them.
+            TieTo(space);
 
             for (int i = 0; i < _items.Count; i++) _thrown += Throw(space, i);
 
@@ -343,8 +386,17 @@ namespace GlimmerGrove
             // Nothing is played here. The button that was pressed has already made its one
             // sound, and the cascade starts a quarter-second later as its own event - see
             // Btn.ClickSfx for why a tap does not get to make two noises.
-            Tween.After(Duration + Safety, () => Finish(0f), space);
+            //
+            // Unowned on purpose: this is the net under every other ending, so it may not die
+            // with the space whose loss it exists to survive. Finish is latched, so a cascade
+            // that ended properly makes it a no-op.
+            Tween.After(Duration + Safety, () => Finish(0f));
         }
+
+        Vector2 SourceIn(RectTransform space, RectTransform card)
+            => card ? TokenFlight.LocalIn(space, card)
+             : Fallback ? TokenFlight.LocalIn(space, Fallback)
+             : Vector2.zero;
 
         // --------------------------------------------------------------- internals
         /// <summary>
@@ -394,12 +446,13 @@ namespace GlimmerGrove
                     if (space == null) return;
 
                     // The card is still shrinking as its tokens leave, so its position is read
-                    // now rather than captured. Both fallbacks matter: the row survives the
-                    // card, and if neither is there the token still has to fly and land, or
-                    // the cascade never finishes and the panel never closes.
-                    Vector2 from = card ? TokenFlight.LocalIn(space, card)
-                                 : Fallback ? TokenFlight.LocalIn(space, Fallback)
-                                 : Vector2.zero;
+                    // now rather than captured. Once it has gone the token leaves from where it
+                    // last stood (read at Play, refreshed on every throw) - a page redrawing its
+                    // rows under the cascade must not send the rest of a handful from the
+                    // middle of the screen. Either way the token still flies and lands, or the
+                    // cascade would wait for its deadline.
+                    if (card) _from[index] = TokenFlight.LocalIn(space, card);
+                    Vector2 from = _from[index];
 
                     // Resolved late for the same reason, and this one is load-bearing: the hub
                     // can replace the pill a token was aimed at while it is in the air.
@@ -432,12 +485,24 @@ namespace GlimmerGrove
 
             var kind = (ResourceSlots.Kind)slot;
 
-            // Read now, not captured at Play. See the class remarks: for currency the balance
-            // may only have moved a moment ago, and it may not have moved yet at all.
-            long live = ResourceSlots.Balance(kind);
+            // The ledger's figure, read now rather than captured at Play. See the class
+            // remarks: for currency the balance may only have moved a moment ago, and it may not
+            // have moved yet at all - and another reward may be landing in this pill too. The
+            // last token of a pill lets this flight's entry go, so what it writes owes this
+            // reward nothing: exactly the balance, less only what other rewards still have in
+            // the air.
+            var payout = _payouts[slot];
+            if (payout != null)
+            {
+                payout.Landed = _landed[slot];
+                if (lastOfPill)
+                {
+                    _payouts[slot] = null;
+                    ResourceSlots.Release(kind, payout);
+                }
+            }
 
-            ResourceSlots.Land(kind, Shown(_before[slot], live, _landed[slot], _tokens[slot]),
-                               lastOfPill);
+            ResourceSlots.Land(kind, ResourceSlots.Walked(kind), lastOfPill);
 
             // The run of notes climbs across the whole cascade rather than restarting per
             // prize, so six coins and two gems are one ascending phrase instead of two. It is
@@ -473,17 +538,25 @@ namespace GlimmerGrove
             // walk them forward, so a cascade that did not finish would leave the hub reading
             // less than the truth until something happened to repaint it - which, on a screen
             // the player may now just sit on, could be a long time.
+            // Only this flight's own entries: another reward still landing keeps its share.
             for (int k = 0; k < 3; k++)
             {
-                if (_tokens[k] <= 0 && !_held) continue;
-                var kind = (ResourceSlots.Kind)k;
-                ResourceSlots.Release(kind);
-                ResourceSlots.Show(kind, ResourceSlots.Balance(kind));
+                var payout = _payouts[k];
+                if (payout == null) continue;
+                _payouts[k] = null;
+                ResourceSlots.Release((ResourceSlots.Kind)k, payout);
             }
 
-            // The panel is going; its lease must not release a hold a later payout has taken.
-            if (_lease != null) _lease.Flight = null;
-            _lease = null;
+            // Disarmed rather than left to fire into a finished flight, and taken off a page
+            // that lives on (a screen paying several nights in a visit) so they do not pile up.
+            for (int i = 0; i < _leases.Count; i++)
+            {
+                var lease = _leases[i];
+                if (lease == null) continue;
+                lease.Flight = null;
+                if (Application.isPlaying) UnityEngine.Object.Destroy(lease);
+            }
+            _leases.Clear();
 
             var done = _done;
             _done = null;
