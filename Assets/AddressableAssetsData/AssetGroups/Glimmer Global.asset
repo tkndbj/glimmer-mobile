@@ -4663,6 +4663,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_ember_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1cb4b00c42e5b36f0ea080873452495d
+    m_Address: Art/Ui/shuffle_secret_thunderhead
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1cbfdd070978eb5409eccc08d04df719
     m_Address: Art/Fx/Siege/shot_mortar_g/f07
     m_ReadOnly: 0
@@ -7957,6 +7962,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_lighthouse_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 306d0908b62dd63fc25c1e654ba14e16
+    m_Address: Art/Ui/shuffle_secret_time_stop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 307fa61d30076c9408b0e789c156fbe8
     m_Address: Art/Fx/Siege/hit_bolt_y/f04
     m_ReadOnly: 0
@@ -9137,6 +9147,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_apex_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 37d55a50b1b3453ba9fab98b1429a1d9
+    m_Address: Audio/Sfx/secret
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 37d90ba0e452df247ad4e3744825e17e
     m_Address: Art/Siege/wildMon_b_swing/f01
@@ -11187,6 +11202,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_apex_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4370b0f2ee315fc5d34ef4ad044401af
+    m_Address: Art/Ui/shuffle_secret_fire_dragon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 43a2931475cb63f4c8a9e3431a4a1c8a
     m_Address: Art/Siege/courtMon_b/f00
@@ -13652,6 +13672,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_mortar_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5249d3193ded09cdc7735ac6f10273b8
+    m_Address: Art/Ui/shuffle_secret_golden_dome
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 527474f9f754c8d49b668f782a6a81ea
     m_Address: Art/Siege/stilldial/f18
@@ -19769,6 +19794,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/snare_muzzle
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 761ada98fec6c91aa0bd35ca88160c31
+    m_Address: Art/Ui/shuffle_secret_armageddon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7624b52332137f5059124639125be843
     m_Address: Art/Fx/Victory/f12
     m_ReadOnly: 0
@@ -20966,11 +20996,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/beacon_g_fire
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7cafeaa250c38524cf5bc20e8c524b61
-    m_Address: Art/Ui/shuffle_secret
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7cb55c94695e083d7a8dd8ac913a4341
     m_Address: Art/Ui/Shuffle/hydra
@@ -26865,6 +26890,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/bolt_r_fire
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f899c34cd28d277ca1936698e3e3bf5
+    m_Address: Art/Ui/shuffle_secret_blade_orbit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9f8a0da1970b47f49b0801a2e8074428
     m_Address: Art/Fx/Siege/hit_pyroclast/f06
     m_ReadOnly: 0
@@ -27467,6 +27497,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/hit_rime_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a33bf694cc99c3840240f38e66816d7e
+    m_Address: Art/Ui/shuffle_secret_plague
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a342b575383b99246b4a01488c8915ac
     m_Address: Art/Siege/fire5_g/f02
@@ -28673,6 +28708,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_prism_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9cdeaf878e3c1bde0a8b0b9ba533d0f
+    m_Address: Art/Ui/shuffle_secret_permafrost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9d1d34d6f4eedf48b01e5fc7148af89
     m_Address: Art/Fx/Siege/quake/f17
@@ -35506,6 +35546,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/wildBulwark_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d3dff7dd6a2da6d1c94f3e1871afb73f
+    m_Address: Art/Ui/shuffle_secret_frostfire
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d3e074a5f76a63d478986e869a453e9c
     m_Address: Art/Fx/Siege/snare/f07
     m_ReadOnly: 0
@@ -36316,6 +36361,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/rabbleBulwark_b_swing
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d85d4bbde3dd2bdae87856d78db61eff
+    m_Address: Art/Ui/shuffle_secret_event_horizon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d85dfbac7b4ebdc43870a4163873ebef
     m_Address: Art/Bg/sky_26
@@ -38964,6 +39014,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e78208f4cc26f2c9c40f70077a3905e0
+    m_Address: Art/Ui/shuffle_secret_gem_comets
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e793afb0af06daf4fa34b7da190f1062
     m_Address: Art/Siege/boneMon_y/f01
     m_ReadOnly: 0
@@ -40451,6 +40506,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/levin_hit
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f036e6f9ae300c5105ec727e14baac73
+    m_Address: Art/Ui/shuffle_secret_rainbow_cascade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f038aaa6a871a1740a1c24a984a4a01d
     m_Address: Art/Fx/Siege/hex_hit/f12
     m_ReadOnly: 0
@@ -40634,6 +40694,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/bolt_g_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1312fd49cd4952d8b3af97c8645b2e1
+    m_Address: Art/Ui/shuffle_secret_solar_cannon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f136dcc944664854ca9e03bf5b95e922
     m_Address: Art/Siege/rabbleMon_b_swing/f02

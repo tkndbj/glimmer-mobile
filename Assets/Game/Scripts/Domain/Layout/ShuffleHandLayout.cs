@@ -59,16 +59,24 @@ namespace GlimmerGrove.Layout
 
         public int NoteSize = 32, NoteFloor = 20;
 
-        public float NoteHeight = 162f, NoteDown = 400f;
+        public float NoteHeight = 156f, NoteDown = 398f;
 
         /// <summary>
-        /// The row of diamonds under the note (MODES.md 59n): green when the card goes with a
-        /// secret the build has started, purple when it brings its evolution closer. Their
-        /// centre down from the card's top, their size and the air between two.
+        /// The row of diamonds under the note (MODES.md 59n): one in each started secret's own
+        /// colour, purple when the card brings its evolution closer. Their centre down from the
+        /// card's top, their size and the air between two. <b>Clear of the note by
+        /// <see cref="DiamondAir"/></b> (owner, 2026-10-14: they touched the text), counting the
+        /// glow drawn round each (<see cref="DiamondGlow"/> times the size).
         /// </summary>
-        public float DiamondDown = 499f, DiamondSize = 30f, DiamondGap = 10f;
+        public float DiamondDown = 516f, DiamondSize = 38f, DiamondGap = 12f;
 
-        public float TierHeight = 60f, TierDown = 546f;
+        /// <summary>The glow round a diamond as a multiple of its size, and the least air between that glow's body and the note.</summary>
+        public float DiamondGlow = 1.7f, DiamondAir = 4f;
+
+        /// <summary>The most diamonds one card wears: a card can go with several started secrets and its evolution.</summary>
+        public int MostDiamonds = 4;
+
+        public float TierHeight = 60f, TierDown = 570f;
 
         public int TierSize = 30, TierFloor = 18;
 
@@ -166,6 +174,7 @@ namespace GlimmerGrove.Layout
             float noteTop = NoteDown - NoteHeight * .5f;
             float noteFoot = NoteDown + NoteHeight * .5f;
             float diamondTop = DiamondDown - DiamondSize * .5f;
+            float glowTop = DiamondDown - DiamondSize * DiamondGlow * .5f;
             float diamondFoot = DiamondDown + DiamondSize * .5f;
             float tierTop = TierDown - TierHeight * .5f;
             float tierFoot = TierDown + TierHeight * .5f;
@@ -174,8 +183,13 @@ namespace GlimmerGrove.Layout
             if (seatFoot > nameTop) { fault = $"the seat ends {seatFoot} down and the name begins {nameTop}"; return false; }
             if (nameFoot > noteTop) { fault = $"the name ends {nameFoot} down and the note begins {noteTop}"; return false; }
             if (noteFoot > diamondTop) { fault = $"the note ends {noteFoot} down and the diamonds begin {diamondTop}"; return false; }
+            if (noteFoot + DiamondAir > glowTop) { fault = $"the note ends {noteFoot} down and the diamonds' glow begins {glowTop}"; return false; }
             if (diamondFoot > tierTop) { fault = $"the diamonds end {diamondFoot} down and the tier begins {tierTop}"; return false; }
-            if (DiamondSize * 2f + DiamondGap > CardWidth - Inset * 2f) { fault = "two diamonds do not fit across a card"; return false; }
+            if (DiamondSize * MostDiamonds + DiamondGap * (MostDiamonds - 1) > CardWidth - Inset * 2f)
+            {
+                fault = $"{MostDiamonds} diamonds do not fit across a card";
+                return false;
+            }
             if (tierFoot + Inset > CardHeight) { fault = $"the tier ends {tierFoot} down a card {CardHeight} tall"; return false; }
             if (IconSize >= SeatSize) { fault = "the picture does not fit its seat"; return false; }
 

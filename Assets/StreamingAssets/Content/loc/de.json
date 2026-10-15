@@ -4402,6 +4402,10 @@
       "text": "der Hüter-Pass öffnet diese Seite"
     },
     {
+      "key": "ui.mark.pass_unlock",
+      "text": "Hol dir den Hüter-Pass und schalte {0} Truhen frei!"
+    },
+    {
       "key": "ui.mark.purchase_hint",
       "text": "Einmal kaufen, kein Abo. Frühere Stufen sind inklusive."
     },
@@ -8038,14 +8042,6 @@
       "text": "{0} x{1}"
     },
     {
-      "key": "ui.shuffle.taken",
-      "text": "{0} gewählt"
-    },
-    {
-      "key": "ui.shuffle.taken_again",
-      "text": "{0} x{1}"
-    },
-    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Schwere Bolzen"
     },
@@ -8131,7 +8127,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Schüsse treffen auch Plünderer in der Nähe mit {0}% Schaden."
+      "text": "Schüsse treffen nahe Plünderer mit {0}% Schaden."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8187,7 +8183,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Geladene Schüsse machen {0}% mehr Schaden, und Türme speichern 1 mehr."
+      "text": "Geladene Schüsse treffen {0}% härter. Türme speichern 1 geladenen Schuss mehr."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8235,7 +8231,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Ein zerstörter Turm kommt einmal mit halbem Leben zurück."
+      "text": "Ein gefallener Turm kehrt einmal mit halbem Leben zurück."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8251,7 +8247,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "{0}% der Plünderer, die deine Türme erreichen, werden zurückgestoßen."
+      "text": "Türme stoßen {0}% der Plünderer zurück, die sie erreichen."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8255,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Schüsse töten Plünderer unter {0}% Leben sofort."
+      "text": "Schüsse töten Plünderer unter {0}% Leben."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8263,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "{0}% der Schüsse treffen ein zweites Mal mit halbem Schaden."
+      "text": "{0}% der Schüsse treffen erneut mit halbem Schaden."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8275,7 +8271,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Ein Turm ohne Ziel schießt mit halbem Schaden auf andere Farben."
+      "text": "Türme ohne Ziel schießen mit halbem Schaden auf andere Farben."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8283,7 +8279,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "Getötete Plünderer explodieren und verletzen Plünderer in der Nähe."
+      "text": "Getötete Plünderer explodieren und verletzen andere in der Nähe."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8291,7 +8287,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "{0}% der Schüsse verfluchen einen Plünderer: Er nimmt 3 Sekunden lang 20% mehr Schaden."
+      "text": "{0}% der Schüsse verfluchen: Der Plünderer nimmt 3 Sekunden lang 20% mehr Schaden."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8307,7 +8303,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Fällt dein letzter Turm, kommen alle Türme einmal mit vollem Leben zurück."
+      "text": "Fallen alle Türme, kehren sie einmal mit vollem Leben zurück."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8315,7 +8311,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Schüsse machen {0}% mehr Schaden und Türme schießen {1}% schneller."
+      "text": "Türme machen {0}% mehr Schaden und schießen {1}% schneller."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8323,7 +8319,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Jede Kombination gibt auch den anderen drei Türmen Treibstoff."
+      "text": "Jede Kombination betankt auch die anderen drei Türme."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8331,7 +8327,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Türme unter {0}% Leben machen {1}% mehr Schaden und schießen {1}% schneller."
+      "text": "Türme unter {0}% Leben erhalten {1}% mehr Schaden und Tempo."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8363,7 +8359,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Jeder 5. Schuss schickt eine Druckwelle durch seine Reihe, die Plünderer zurückstößt."
+      "text": "Jeder 5. Schuss schickt eine Druckwelle, die Plünderer zurückstößt."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8371,7 +8367,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Schüsse hinterlassen Giftpfützen, die Plünderer beim Durchlaufen verletzen."
+      "text": "Schüsse hinterlassen Giftpfützen, die Plünderer verletzen."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8379,7 +8375,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Türme schlagen mit Blitzen auf den nächsten Plünderer ein, auch ohne Treibstoff."
+      "text": "Türme schocken den nächsten Plünderer, auch ohne Treibstoff."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8387,7 +8383,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Türme schießen schneller, je länger sie feuern, bis zu {0}%."
+      "text": "Türme werden beim Schießen schneller, bis zu {0}%."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8395,7 +8391,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Gebremste oder betäubte Plünderer zerspringen beim Tod in Splitter und treffen Plünderer in der Nähe."
+      "text": "Gebremste oder betäubte Plünderer zerspringen beim Tod in Splitter."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8403,7 +8399,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Brennende Plünderer geben ihr Feuer beim Tod an Plünderer in der Nähe weiter."
+      "text": "Brennende Plünderer verbreiten beim Tod ihr Feuer."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8411,7 +8407,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Alle 6 Sekunden trifft ein Meteor die größte Gruppe Plünderer."
+      "text": "Alle 6 Sekunden trifft ein Meteor die größte Gruppe."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8419,7 +8415,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Alle 9 Sekunden zieht ein Wirbel die größte Gruppe Plünderer zusammen."
+      "text": "Alle 9 Sekunden zieht ein Wirbel Plünderer zusammen."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8443,7 +8439,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Jeder Schuss teilt sich in 2, und jede Hälfte teilt sich noch einmal."
+      "text": "Jeder Schuss teilt sich in 2, dann noch einmal."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8451,7 +8447,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Jeder Schuss wird zufällig zu Feuer, Gift, Eis oder Blitz."
+      "text": "Jeder Schuss ist zufällig Feuer, Gift, Eis oder Blitz."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8459,7 +8455,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Türme schießen doppelt so schnell, und Schüsse verbrauchen halb so viel Treibstoff."
+      "text": "Türme schießen doppelt so schnell für halb so viel Treibstoff."
     },
     {
       "key": "shuffle.blast_gems.name",
@@ -8467,7 +8463,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Jede Kombination sprengt die Juwelen drumherum. Mehr Kopien, größere Explosionen."
+      "text": "Kombinationen sprengen nahe Juwelen. Mehr Kopien, größere Explosionen."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8475,7 +8471,7 @@
     },
     {
       "key": "shuffle.power_gems.note",
-      "text": "Kombiniere 4 für eine Rakete, die ihre Linie räumt. Kombiniere 5 oder eine Ecke für eine Nova, die ihre Farbe räumt."
+      "text": "Kombiniere 4: Eine Rakete räumt eine Linie. 5 oder eine Ecke: Eine Nova räumt eine Farbe."
     },
     {
       "key": "shuffle.titan_pact.name",
@@ -8483,7 +8479,7 @@
     },
     {
       "key": "shuffle.titan_pact.note",
-      "text": "Schüsse machen {0}% mehr Schaden, aber Türme schießen {1}% langsamer."
+      "text": "Türme treffen {0}% härter, schießen aber {1}% langsamer."
     },
     {
       "key": "shuffle.miser_pact.name",
@@ -8499,7 +8495,7 @@
     },
     {
       "key": "shuffle.frenzy_pact.note",
-      "text": "Türme schießen {0}% schneller, aber Schüsse machen {1}% weniger Schaden."
+      "text": "Türme schießen {0}% schneller, machen aber {1}% weniger Schaden."
     },
     {
       "key": "shuffle.blood_pact.name",
@@ -8507,7 +8503,7 @@
     },
     {
       "key": "shuffle.blood_pact.note",
-      "text": "Schüsse machen {0}% mehr Schaden und Türme schießen {0}% schneller, aber Türme haben {1}% weniger Leben."
+      "text": "Türme erhalten {0}% mehr Schaden und Tempo, aber {1}% weniger Leben."
     },
     {
       "key": "shuffle.reckless_pact.name",
@@ -8515,7 +8511,7 @@
     },
     {
       "key": "shuffle.reckless_pact.note",
-      "text": "Schüsse machen {0}% mehr Schaden und Türme schießen {0}% schneller, aber Plünderer laufen {1}% schneller."
+      "text": "Türme erhalten {0}% mehr Schaden und Tempo, aber Plünderer laufen {1}% schneller."
     },
     {
       "key": "shuffle.kinetic_gems.name",
@@ -8523,7 +8519,7 @@
     },
     {
       "key": "shuffle.kinetic_gems.note",
-      "text": "Juwelen geben mehr Treibstoff: {0}% des Tempo-Bonus deiner Türme."
+      "text": "{0}% deines Tempo-Bonus kommen zum Treibstoff der Juwelen dazu."
     },
     {
       "key": "shuffle.iron_cannons.name",
@@ -8531,7 +8527,7 @@
     },
     {
       "key": "shuffle.iron_cannons.note",
-      "text": "Schüsse machen mehr Schaden: {0}% des Lebens-Bonus deiner Türme."
+      "text": "{0}% deines Lebens-Bonus kommen zum Schaden dazu."
     },
     {
       "key": "shuffle.overflow.name",
@@ -8539,7 +8535,7 @@
     },
     {
       "key": "shuffle.overflow.note",
-      "text": "Türme schießen schneller: {0}% des Treibstoff-Bonus, den sie fassen."
+      "text": "{0}% deines Treibstoff-Bonus kommen zum Schusstempo dazu."
     },
     {
       "key": "shuffle.chain_fuel.name",
@@ -8547,7 +8543,7 @@
     },
     {
       "key": "shuffle.chain_fuel.note",
-      "text": "Jeder Schritt einer Kettenreaktion gibt {0}% mehr Treibstoff als der davor."
+      "text": "Jeder Kettenschritt gibt {0}% mehr Treibstoff als der davor."
     },
     {
       "key": "shuffle.grand_hand.name",
@@ -8563,7 +8559,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Ein Turm wird zur Laserkanone, der stärkste zuerst. Seine Schüsse springen auf 3 weitere Plünderer über, mit {0}% Schaden."
+      "text": "Jede Kopie macht einen Turm zum Laser, den besten zuerst. Er springt auf 3 Plünderer über, mit {0}% Schaden."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8607,7 +8603,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Eine Gewitterwolke bedeckt den Hügel. Alle 3 Sekunden trifft ein Blitz die 3 nächsten Plünderer."
+      "text": "Alle 3 Sekunden trifft ein Blitz die 3 nächsten Plünderer."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8615,7 +8611,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "Alle 5 Sekunden bricht unter der größten Gruppe ein Dampfgeysir aus. Er friert ein und verbrennt."
+      "text": "Alle 5 Sekunden friert und verbrennt ein Geysir die größte Gruppe."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8623,7 +8619,7 @@
     },
     {
       "key": "shuffle.secret.blade_orbit.note",
-      "text": "Klingen kreisen um deine Türme. Jeder Turm wirft eine Bumerangklinge, die 2 Plünderer trifft."
+      "text": "Jeder Turm wirft eine Bumerangklinge, die 2 Plünderer trifft."
     },
     {
       "key": "shuffle.secret.plague.name",
@@ -8631,7 +8627,7 @@
     },
     {
       "key": "shuffle.secret.plague.note",
-      "text": "Plünderer, die im Gift sterben, platzen. Das Gift breitet sich rundherum aus."
+      "text": "Stirbt ein vergifteter Plünderer, vergiftet er alle in der Nähe."
     },
     {
       "key": "shuffle.secret.gem_comets.name",
@@ -8639,7 +8635,7 @@
     },
     {
       "key": "shuffle.secret.gem_comets.note",
-      "text": "Jedes Kraftjuwel, das du erschaffst oder zündest, schleudert einen Kometen auf den stärksten Plünderer."
+      "text": "Kraftjuwelen werfen einen Kometen auf den stärksten Plünderer."
     },
     {
       "key": "shuffle.secret.permafrost.name",
@@ -8647,7 +8643,7 @@
     },
     {
       "key": "shuffle.secret.permafrost.note",
-      "text": "Die untere Hälfte des Hügels gefriert. Plünderer auf dem Eis werden langsamer und von Eisspitzen getroffen."
+      "text": "Eis bedeckt den unteren Hügel. Es bremst und verletzt Plünderer."
     },
     {
       "key": "shuffle.secret.event_horizon.name",
@@ -8655,7 +8651,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "Alle 11 Sekunden zieht ein schwarzes Loch Plünderer an. Wenn es sich schließt, zermalmt es die schwachen."
+      "text": "Alle 11 Sekunden zieht ein Schwarzes Loch Plünderer an und zermalmt schwache."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8663,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "Alle 9 Sekunden fliegt ein Feuerdrache über den Hügel und verbrennt jeden Plünderer auf seinem Weg."
+      "text": "Alle 9 Sekunden verbrennt ein Feuerdrache alles auf seinem Weg."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8671,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.golden_dome.note",
-      "text": "Eine goldene Kuppel schützt deine Türme. Sie blockt die ersten 4 Treffer jeder Welle."
+      "text": "Eine goldene Kuppel blockt jede Welle die ersten 4 Treffer auf deine Türme."
     },
     {
       "key": "shuffle.secret.rainbow_cascade.name",
@@ -8679,7 +8675,7 @@
     },
     {
       "key": "shuffle.secret.rainbow_cascade.note",
-      "text": "Jede Kettenreaktion der Juwelen feuert einen Regenbogenblitz auf den Hügel. Je länger sie ist, desto härter trifft er."
+      "text": "Kettenreaktionen feuern Regenbogenblitze. Längere Ketten treffen härter."
     },
     {
       "key": "shuffle.secret.solar_cannon.name",
@@ -8687,7 +8683,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "Eine zweite Sonne geht auf. Alle 8 Sekunden verbrennt sie die vollste Spur mit einem riesigen Strahl."
+      "text": "Alle 8 Sekunden verbrennt eine zweite Sonne die vollste Bahn."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8695,7 +8691,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "Alle 12 Sekunden färbt sich der Himmel rot und 8 Meteore regnen auf die Plünderer."
+      "text": "Alle 12 Sekunden regnen 8 Meteore auf die Plünderer."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8703,7 +8699,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "Alle 15 Sekunden bleibt die Zeit 4 Sekunden stehen. Plünderer erstarren und deine Türme schießen doppelt so schnell."
+      "text": "Alle 15 Sekunden erstarren Plünderer 4 Sekunden lang. Türme schießen doppelt so schnell."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8711,7 +8707,7 @@
     },
     {
       "key": "shuffle.evolution.titan_shells.note",
-      "text": "Jeder 5. Schuss feuert auch eine riesige Granate, die bei den Plünderern ringsum explodiert."
+      "text": "Jeder 5. Schuss feuert eine riesige explodierende Granate."
     },
     {
       "key": "shuffle.evolution.deadeye.name",
@@ -8719,7 +8715,7 @@
     },
     {
       "key": "shuffle.evolution.deadeye.note",
-      "text": "Jeder 4. Schuss trifft auch den stärksten Plünderer mit dreifachem Schaden."
+      "text": "Jeder 4. Schuss trifft den stärksten Plünderer mit dreifachem Schaden."
     },
     {
       "key": "shuffle.evolution.fortress.name",
@@ -8727,7 +8723,7 @@
     },
     {
       "key": "shuffle.evolution.fortress.note",
-      "text": "Jede Welle heilt deine Türme ein wenig. Plünderer, die einen Turm treffen, werden zurückgeschlagen."
+      "text": "Türme heilen sich jede Welle und schlagen zurück, wenn sie getroffen werden."
     },
     {
       "key": "shuffle.evolution.cluster_bombs.name",
@@ -8743,7 +8739,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "Alle 4 Sekunden schickt jeder Turm einen Kugelblitz den Hügel hinauf. Er schockt jeden Plünderer, den er berührt."
+      "text": "Alle 4 Sekunden schicken Türme Kugelblitze los."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8751,7 +8747,7 @@
     },
     {
       "key": "shuffle.evolution.swarm.note",
-      "text": "Jede Raketensalve feuert auch 8 kleine Raketen auf verschiedene Plünderer."
+      "text": "Jede Raketensalve feuert auch 8 Mini-Raketen."
     },
     {
       "key": "shuffle.evolution.diamond_dust.name",
@@ -8759,7 +8755,7 @@
     },
     {
       "key": "shuffle.evolution.diamond_dust.note",
-      "text": "Deine Schüsse kühlen. Ein zersplitterter Plünderer hinterlässt einen Schneesturm, der alles ringsum einfriert."
+      "text": "Schüsse kühlen. Zersplitterte Plünderer hinterlassen einen eisigen Schneesturm."
     },
     {
       "key": "shuffle.evolution.comet_storm.name",
@@ -8767,7 +8763,7 @@
     },
     {
       "key": "shuffle.evolution.comet_storm.note",
-      "text": "Jeder Meteor zerbricht in 4 brennende Splitter, die ringsum niederregnen."
+      "text": "Jeder Meteor zerbricht in 4 brennende Splitter."
     },
     {
       "key": "shuffle.evolution.prism_lance.name",
@@ -8775,7 +8771,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "Alle 6 Sekunden laden deine Laser ein Prisma auf. Es feuert 6 Regenbogenstrahlen auf die stärksten Plünderer."
+      "text": "Alle 6 Sekunden feuert ein Prisma 6 Strahlen auf die stärksten Plünderer."
     }
   ]
 }

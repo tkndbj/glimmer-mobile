@@ -4402,6 +4402,10 @@
       "text": "o Passe do Guardião abre este lado"
     },
     {
+      "key": "ui.mark.pass_unlock",
+      "text": "Pegue o Passe do Guardião para desbloquear {0} baús!"
+    },
+    {
       "key": "ui.mark.purchase_hint",
       "text": "Uma única compra, sem assinatura. Os degraus anteriores vêm junto."
     },
@@ -8038,14 +8042,6 @@
       "text": "{0} x{1}"
     },
     {
-      "key": "ui.shuffle.taken",
-      "text": "{0} escolhida"
-    },
-    {
-      "key": "ui.shuffle.taken_again",
-      "text": "{0} x{1}"
-    },
-    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Raios Pesados"
     },
@@ -8131,7 +8127,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Os tiros também atingem invasores próximos com {0}% de dano."
+      "text": "Os tiros respingam em invasores próximos com {0}% de dano."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8187,7 +8183,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Os tiros carregados causam {0}% mais dano e as torres guardam mais 1."
+      "text": "Tiros carregados batem {0}% mais forte. As torres guardam mais 1 tiro carregado."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8235,7 +8231,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Uma torre destruída volta uma vez com metade da vida."
+      "text": "Uma torre caída volta uma vez com metade da vida."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8251,7 +8247,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "{0}% dos invasores que chegam às suas torres são empurrados para trás."
+      "text": "As torres empurram {0}% dos invasores que chegam até elas."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8255,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Os tiros matam na hora invasores com menos de {0}% de vida."
+      "text": "Os tiros matam invasores com menos de {0}% de vida."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8275,7 +8271,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Uma torre sem alvo atira em outras cores com metade do dano."
+      "text": "Torres sem alvo atiram em outras cores com metade do dano."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8283,7 +8279,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "Invasores abatidos explodem e causam dano aos próximos."
+      "text": "Invasores abatidos explodem e ferem os próximos."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8291,7 +8287,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "{0}% dos tiros amaldiçoam um invasor: ele sofre 20% mais dano por 3 segundos."
+      "text": "{0}% dos tiros amaldiçoam: o invasor sofre 20% mais dano por 3 segundos."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8307,7 +8303,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Quando sua última torre cai, todas voltam uma vez com vida cheia."
+      "text": "Se todas as torres caírem, elas voltam uma vez com vida cheia."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8315,7 +8311,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Os tiros causam {0}% mais dano e as torres atiram {1}% mais rápido."
+      "text": "As torres causam {0}% mais dano e atiram {1}% mais rápido."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8323,7 +8319,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Cada combinação também dá combustível às outras três torres."
+      "text": "Cada combinação também abastece as outras três torres."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8331,7 +8327,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Torres com menos de {0}% de vida causam {1}% mais dano e atiram {1}% mais rápido."
+      "text": "Torres com menos de {0}% de vida ganam {1}% mais dano e velocidade."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8363,7 +8359,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "A cada 5 tiros, uma onda de choque corre a fileira e empurra os invasores para trás."
+      "text": "A cada 5 tiros, uma onda de choque empurra os invasores."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8371,7 +8367,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Os tiros deixam poças de veneno que ferem os invasores que passam."
+      "text": "Os tiros deixam poças de veneno que ferem os invasores."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8379,7 +8375,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "As torres lançam raios no invasor mais próximo, mesmo sem combustível."
+      "text": "As torres eletrocutam o invasor mais próximo, mesmo sem combustível."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8387,7 +8383,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "As torres atiram mais rápido quanto mais tempo atiram, até {0}%."
+      "text": "As torres aceleram ao atirar, até {0}% mais rápido."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8395,7 +8391,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Invasores lentos ou atordoados viram estilhaços ao morrer e ferem os próximos."
+      "text": "Invasores lentos ou atordoados viram estilhaços ao morrer."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8403,7 +8399,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Invasores em chamas espalham o fogo aos próximos ao morrer."
+      "text": "Invasores em chamas espalham o fogo ao morrer."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8411,7 +8407,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "A cada 6 segundos, um meteoro cai no maior grupo de invasores."
+      "text": "A cada 6 segundos, um meteoro cai no maior grupo."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8419,7 +8415,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "A cada 9 segundos, um vórtice junta o maior grupo de invasores."
+      "text": "A cada 9 segundos, um vórtice junta os invasores."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8443,7 +8439,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Cada tiro se divide em 2, e cada metade se divide de novo."
+      "text": "Cada tiro se divide em 2 e depois de novo."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8451,7 +8447,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Cada tiro vira fogo, veneno, gelo ou raio ao acaso."
+      "text": "Cada tiro é ao acaso fogo, veneno, gelo ou raio."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8459,7 +8455,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "As torres atiram duas vezes mais rápido e os tiros gastam metade do combustível."
+      "text": "As torres atiram duas vezes mais rápido com metade do combustível."
     },
     {
       "key": "shuffle.blast_gems.name",
@@ -8467,7 +8463,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Cada combinação explode as gemas ao redor. Mais cópias, explosões maiores."
+      "text": "Combinações explodem as gemas próximas. Mais cópias, explosões maiores."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8475,7 +8471,7 @@
     },
     {
       "key": "shuffle.power_gems.note",
-      "text": "Combine 4 para criar um foguete que limpa a linha dele. Combine 5 ou um canto para criar uma nova que limpa a cor dela."
+      "text": "Combine 4: um foguete limpa uma linha. Combine 5 ou um canto: uma nova limpa uma cor."
     },
     {
       "key": "shuffle.titan_pact.name",
@@ -8483,7 +8479,7 @@
     },
     {
       "key": "shuffle.titan_pact.note",
-      "text": "Os tiros causam {0}% mais dano, mas as torres atiram {1}% mais devagar."
+      "text": "As torres batem {0}% mais forte, mas atiram {1}% mais devagar."
     },
     {
       "key": "shuffle.miser_pact.name",
@@ -8499,7 +8495,7 @@
     },
     {
       "key": "shuffle.frenzy_pact.note",
-      "text": "As torres atiram {0}% mais rápido, mas os tiros causam {1}% menos dano."
+      "text": "As torres atiram {0}% mais rápido, mas causam {1}% menos dano."
     },
     {
       "key": "shuffle.blood_pact.name",
@@ -8507,7 +8503,7 @@
     },
     {
       "key": "shuffle.blood_pact.note",
-      "text": "Os tiros causam {0}% mais dano e as torres atiram {0}% mais rápido, mas as torres têm {1}% menos vida."
+      "text": "As torres ganham {0}% mais dano e velocidade, mas {1}% menos vida."
     },
     {
       "key": "shuffle.reckless_pact.name",
@@ -8515,7 +8511,7 @@
     },
     {
       "key": "shuffle.reckless_pact.note",
-      "text": "Os tiros causam {0}% mais dano e as torres atiram {0}% mais rápido, mas os invasores andam {1}% mais rápido."
+      "text": "As torres ganham {0}% mais dano e velocidade, mas os invasores andam {1}% mais rápido."
     },
     {
       "key": "shuffle.kinetic_gems.name",
@@ -8523,7 +8519,7 @@
     },
     {
       "key": "shuffle.kinetic_gems.note",
-      "text": "As gemas dão mais combustível: {0}% da velocidade extra das suas torres."
+      "text": "{0}% da sua velocidade extra de tiro vira combustível das gemas."
     },
     {
       "key": "shuffle.iron_cannons.name",
@@ -8531,7 +8527,7 @@
     },
     {
       "key": "shuffle.iron_cannons.note",
-      "text": "Os tiros causam mais dano: {0}% da vida extra das suas torres."
+      "text": "{0}% da sua vida extra vira dano."
     },
     {
       "key": "shuffle.overflow.name",
@@ -8539,7 +8535,7 @@
     },
     {
       "key": "shuffle.overflow.note",
-      "text": "As torres atiram mais rápido: {0}% do combustível extra que guardam."
+      "text": "{0}% do seu combustível extra vira velocidade de tiro."
     },
     {
       "key": "shuffle.chain_fuel.name",
@@ -8547,7 +8543,7 @@
     },
     {
       "key": "shuffle.chain_fuel.note",
-      "text": "Cada passo de uma reação em cadeia dá {0}% mais combustível que o anterior."
+      "text": "Cada passo da cadeia dá {0}% mais combustível que o anterior."
     },
     {
       "key": "shuffle.grand_hand.name",
@@ -8563,7 +8559,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Uma torre vira um canhão laser, a mais forte primeiro. Os tiros dela ricocheteiam em mais 3 invasores com {0}% de dano."
+      "text": "Cada cópia vira uma torre em laser, a melhor primeiro. Ricocheteia em 3 invasores com {0}% de dano."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8607,7 +8603,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Uma nuvem de tempestade cobre a colina. A cada 3 segundos, raios atingem os 3 invasores mais próximos."
+      "text": "A cada 3 segundos, raios atingem os 3 invasores mais próximos."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8615,7 +8611,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "A cada 5 segundos, um gêiser de vapor explode sob o maior grupo. Ele congela e queima."
+      "text": "A cada 5 segundos, um gêiser congela e queima o maior grupo."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8623,7 +8619,7 @@
     },
     {
       "key": "shuffle.secret.blade_orbit.note",
-      "text": "Lâminas giram ao redor das suas torres. Cada torre lança uma lâmina bumerangue que acerta 2 invasores."
+      "text": "Cada torre lança uma lâmina bumerangue que acerta 2 invasores."
     },
     {
       "key": "shuffle.secret.plague.name",
@@ -8631,7 +8627,7 @@
     },
     {
       "key": "shuffle.secret.plague.note",
-      "text": "Invasores que morrem no veneno explodem. O veneno se espalha ao redor deles."
+      "text": "Quando um invasor envenenado morre, ele envenena todos os próximos."
     },
     {
       "key": "shuffle.secret.gem_comets.name",
@@ -8639,7 +8635,7 @@
     },
     {
       "key": "shuffle.secret.gem_comets.note",
-      "text": "Cada gema de poder que você cria ou ativa lança um cometa no invasor mais forte."
+      "text": "Gemas de poder lançam um cometa no invasor mais forte."
     },
     {
       "key": "shuffle.secret.permafrost.name",
@@ -8647,7 +8643,7 @@
     },
     {
       "key": "shuffle.secret.permafrost.note",
-      "text": "A metade de baixo da colina congela. Invasores no gelo ficam lentos e levam golpes de espinhos de gelo."
+      "text": "O gelo cobre a parte baixa da colina. Ele freia e fere os invasores."
     },
     {
       "key": "shuffle.secret.event_horizon.name",
@@ -8655,7 +8651,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "A cada 11 segundos, um buraco negro puxa os invasores. Quando ele fecha, esmaga os fracos."
+      "text": "A cada 11 segundos, um buraco negro puxa invasores e esmaga os fracos."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8663,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "A cada 9 segundos, um dragão de fogo cruza a colina e queima todos os invasores no caminho."
+      "text": "A cada 9 segundos, um dragão de fogo queima tudo no caminho."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8671,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.golden_dome.note",
-      "text": "Uma cúpula dourada protege suas torres. Ela bloqueia os primeiros 4 golpes de cada onda."
+      "text": "Uma cúpula dourada bloqueia os 4 primeiros golpes nas suas torres a cada onda."
     },
     {
       "key": "shuffle.secret.rainbow_cascade.name",
@@ -8679,7 +8675,7 @@
     },
     {
       "key": "shuffle.secret.rainbow_cascade.note",
-      "text": "Cada reação em cadeia de gemas lança um raio arco-íris na colina. Quanto mais longa, mais forte."
+      "text": "Reações em cadeia disparam raios arco-íris. Cadeias maiores batem mais forte."
     },
     {
       "key": "shuffle.secret.solar_cannon.name",
@@ -8687,7 +8683,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "Um segundo sol nasce. A cada 8 segundos, ele queima a pista mais cheia com um raio gigante."
+      "text": "A cada 8 segundos, um segundo sol queima a faixa mais cheia."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8695,7 +8691,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "A cada 12 segundos, o céu fica vermelho e 8 meteoros chovem sobre os invasores."
+      "text": "A cada 12 segundos, 8 meteoros chovem sobre os invasores."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8703,7 +8699,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "A cada 15 segundos, o tempo para por 4 segundos. Os invasores congelam e suas torres atiram duas vezes mais rápido."
+      "text": "A cada 15 segundos, os invasores congelam por 4 segundos. As torres atiram duas vezes mais rápido."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8711,7 +8707,7 @@
     },
     {
       "key": "shuffle.evolution.titan_shells.note",
-      "text": "A cada 5 tiros, sai também um projétil gigante que explode nos invasores ao redor."
+      "text": "A cada 5 tiros, sai uma bala gigante que explode."
     },
     {
       "key": "shuffle.evolution.deadeye.name",
@@ -8719,7 +8715,7 @@
     },
     {
       "key": "shuffle.evolution.deadeye.note",
-      "text": "A cada 4 tiros, um também acerta o invasor mais forte com o triplo de dano."
+      "text": "A cada 4 tiros, um acerta o invasor mais forte com o triplo de dano."
     },
     {
       "key": "shuffle.evolution.fortress.name",
@@ -8727,7 +8723,7 @@
     },
     {
       "key": "shuffle.evolution.fortress.note",
-      "text": "Cada onda cura um pouco suas torres. Invasores que batem numa torre levam o golpe de volta."
+      "text": "As torres se curam a cada onda e revidam quando atacadas."
     },
     {
       "key": "shuffle.evolution.cluster_bombs.name",
@@ -8743,7 +8739,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "A cada 4 segundos, cada torre envia uma bola de raios colina acima. Ela eletrocuta cada invasor que toca."
+      "text": "A cada 4 segundos, as torres lançam bolas de raio."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8751,7 +8747,7 @@
     },
     {
       "key": "shuffle.evolution.swarm.note",
-      "text": "Cada rajada de mísseis também dispara 8 mísseis pequenos em invasores diferentes."
+      "text": "Cada rajada de mísseis também lança 8 minimísseis."
     },
     {
       "key": "shuffle.evolution.diamond_dust.name",
@@ -8759,7 +8755,7 @@
     },
     {
       "key": "shuffle.evolution.diamond_dust.note",
-      "text": "Seus tiros resfriam. Um invasor estilhaçado deixa uma nevasca que congela tudo ao redor."
+      "text": "Os tiros resfriam. Invasores estilhaçados deixam uma nevasca gelada."
     },
     {
       "key": "shuffle.evolution.comet_storm.name",
@@ -8767,7 +8763,7 @@
     },
     {
       "key": "shuffle.evolution.comet_storm.note",
-      "text": "Cada meteoro se parte em 4 fragmentos em chamas que chovem ao redor."
+      "text": "Cada meteoro se parte em 4 fragmentos em chamas."
     },
     {
       "key": "shuffle.evolution.prism_lance.name",
@@ -8775,7 +8771,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "A cada 6 segundos, seus lasers carregam um prisma. Ele dispara 6 raios arco-íris nos invasores mais fortes."
+      "text": "A cada 6 segundos, um prisma dispara 6 raios nos invasores mais fortes."
     }
   ]
 }

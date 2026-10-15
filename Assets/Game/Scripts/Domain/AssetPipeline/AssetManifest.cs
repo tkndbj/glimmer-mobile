@@ -640,6 +640,7 @@ namespace GlimmerGrove.AssetPipeline
             "rankup",
             "thunder", "arc", "charge",
             "voidblast",
+            "secret",
         };
 
         // ------------------------------------------------------------ shuffle crest

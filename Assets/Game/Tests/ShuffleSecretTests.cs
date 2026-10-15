@@ -215,6 +215,58 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(ShuffleBonds.Advances(kindling, build), "an unlocked secret still marked its part");
         }
 
+        /// <summary>
+        /// <b>A card wears one diamond per secret it goes with</b>, so kindling beside frostbite
+        /// and wildfire says both frostfire and fire dragon - in the order the catalog lists them.
+        /// </summary>
+        [Test]
+        public void ACardIsMarkedForEverySecretItGoesWith()
+        {
+            var build = new ShuffleBuild(1u);
+            var kindling = ShuffleCards.Find("kindling");
+            var into = new List<ShuffleBond>();
+
+            Take(build, "frostbite");
+            Assert.AreEqual(1, ShuffleBonds.Advanced(kindling, build, into));
+            Assert.AreEqual("frostfire", into[0].Id);
+
+            Take(build, "wildfire");
+            into.Clear();
+            Assert.AreEqual(2, ShuffleBonds.Advanced(kindling, build, into), "kindling goes with two started secrets");
+            CollectionAssert.AreEqual(new[] { "frostfire", "fire_dragon" }, into.ConvertAll(b => b.Id));
+
+            Assert.AreEqual(2, ShuffleBonds.Advanced(kindling, build, null), "the count needs no list");
+        }
+
+        /// <summary>
+        /// <b>Every secret wears its own colour</b> (owner, 2026-10-14), none of them the
+        /// evolutions' purple, and every diamond a bond names is a picture in the repo - cut by
+        /// <c>make_shuffle_art.py</c> from these same figures (its <c>--check</c> holds the pixels).
+        /// </summary>
+        [Test]
+        public void EverySecretWearsItsOwnColour()
+        {
+            var colours = new HashSet<string>(StringComparer.Ordinal)
+            {
+                ShuffleBond.EvolutionHue + "/" + ShuffleBond.EvolutionSaturation,
+            };
+            string ui = Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Ui");
+
+            foreach (var bond in ShuffleBonds.All)
+            {
+                Assert.IsTrue(File.Exists(Path.Combine(ui, bond.Mark + ".png")), $"{bond.Id}'s diamond '{bond.Mark}' was never cut");
+
+                if (!bond.IsSecret)
+                {
+                    Assert.AreEqual(ShuffleBond.EvolutionMark, bond.Mark, bond.Id);
+                    continue;
+                }
+
+                Assert.That(bond.Hue, Is.InRange(0, 359), bond.Id);
+                Assert.IsTrue(colours.Add(bond.Hue + "/" + bond.Saturation), $"secret {bond.Id} wears another bond's colour");
+            }
+        }
+
         [Test]
         public void ThePurpleDiamondMarksACardOnItsWayToEvolving()
         {

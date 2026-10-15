@@ -1020,11 +1020,6 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ what persists
-        /// <summary>A pool's picture, keyed by its box.</summary>
-        readonly Dictionary<int, Image> _poolArt = new Dictionary<int, Image>(8);
-        readonly HashSet<int> _poolsSeen = new HashSet<int>();
-        float _bubble;
-
         Image[] _heat;
 
         /// <summary>
@@ -1046,15 +1041,63 @@ namespace GlimmerGrove
             Secrets(dt);
         }
 
+        // ------------------------------------------------------------------ the toxic pools
+        /// <summary>
+        /// One pool on the ground, built once and re-tinted every frame: a dark stain and the
+        /// liquid in it (ordinary blending, so they read on a bright hill where light alone
+        /// vanishes), a glow and a rim over them, a sheen sliding across, and bubbles swelling
+        /// and popping.
+        /// </summary>
+        sealed class PoolLook
+        {
+            public RectTransform Root;
+            public Image Stain, Liquid, Glow, Rim, Sheen;
+            public Image[] Bubbles;
+            public Vector2[] BubbleAt;
+            public float[] BubbleT, BubbleFor;
+            public float Age;
+        }
+
+        /// <summary>
+        /// The pools' own layer: <b>on the ground, under the raiders</b> (owner, 2026-10-14: the
+        /// pools were not visible on the hill - one additive glow over the effects was lost on
+        /// bright grass), as the last child of the hill. <b>A canvas of its own</b> for
+        /// <c>_fx</c>'s reason: twenty pools re-tinted every frame would otherwise re-mesh the
+        /// whole board's canvas, ground, line and gems with them.
+        /// </summary>
+        RectTransform _puddles;
+
+        readonly Dictionary<int, PoolLook> _poolArt = new Dictionary<int, PoolLook>(8);
+        readonly HashSet<int> _poolsSeen = new HashSet<int>();
+        readonly List<int> _poolsGone = new List<int>(8);
+        float _fume;
+
+        const int PoolBubbles = 3;
+
+        /// <summary>Seconds a pool takes to splash open, and the seconds of its life it spends drying up.</summary>
+        const float PoolOpens = .28f, PoolDries = .6f;
+
+        static readonly Color PoolDeep = new Color(.06f, .2f, .07f), PoolAcid = Color.Lerp(Pal.Verdant, Pal.Pollen, .3f);
+
         void Pools(float dt)
         {
             var pools = _board.Pools;
             _poolsSeen.Clear();
-            _bubble -= dt;
-            bool bubble = _bubble <= 0f;
-            if (bubble) _bubble = .18f;
 
-            for (int i = 0; i < pools.Count; i++)
+            _fume -= dt;
+            bool fume = _fume <= 0f;
+            if (fume) _fume = .14f;
+
+            if (pools.Count > 0 && !_puddles && _hill)
+            {
+                _puddles = UIKit.Node("Pools", _hill);
+                _puddles.gameObject.AddComponent<Canvas>().overrideSorting = false;
+            }
+
+            float wide = BoxWide * .92f, tall = Mathf.Min(BoxTall * .62f, wide * .5f);
+            float clock = Time.unscaledTime;
+
+            for (int i = 0; i < pools.Count && _puddles; i++)
             {
                 var pool = pools[i];
                 int key = pool.Row * SiegeTuning.Lanes + pool.Lane;
@@ -1062,32 +1105,128 @@ namespace GlimmerGrove
 
                 var at = BoxAt(pool.Lane, pool.Row);
 
-                if (!_poolArt.TryGetValue(key, out var img) || img == null)
+                if (!_poolArt.TryGetValue(key, out var look) || look == null || !look.Root)
                 {
-                    img = Lit("Pool", _fx, Art.Glow(96, 1.4f), Pal.A(ToxicHue, 0f), new Vector2(Cell * 2.6f, Cell * 1.3f));
-                    img.transform.SetAsFirstSibling();
-                    _poolArt[key] = img;
+                    look = Puddle(at, wide, tall);
+                    _poolArt[key] = look;
+                    Splash(at, wide);
                 }
 
-                float life = pool.For > 0f ? Mathf.Clamp01(pool.Left / pool.For) : 0f;
-                float throb = .85f + .15f * Mathf.Sin(Time.unscaledTime * 6f + key);
-                img.rectTransform.anchoredPosition = at;
-                img.color = Pal.A(ToxicHue, .55f * Mathf.Sqrt(life) * throb);
+                look.Age += dt;
+                look.Root.anchoredPosition = at;
 
-                if (bubble && Random.value < .6f)
-                    Cinder(at + new Vector2(Random.Range(-Cell, Cell), Random.Range(-Cell * .3f, Cell * .3f)),
-                           ToxicHue, Cell * .22f, .5f, new Vector2(0f, Cell * .6f));
+                // Splashed open, then full, then drying up over its last moments.
+                float opened = Mathf.Clamp01(look.Age / PoolOpens);
+                float dry = Mathf.Clamp01(pool.Left / PoolDries);
+                float shown = Mathf.Min(opened, dry);
+                float scale = Ease.OutBack(opened) * Mathf.Lerp(.6f, 1f, dry);
+                look.Root.localScale = new Vector3(scale, scale, 1f);
+
+                float throb = .5f + .5f * Mathf.Sin(clock * 4.2f + key);
+
+                look.Stain.color = Pal.A(PoolDeep, .55f * shown);
+                look.Liquid.color = Pal.A(Color.Lerp(PoolAcid, Pal.Verdant, throb), .78f * shown);
+                look.Glow.color = Pal.A(ToxicHue, (.35f + .2f * throb) * shown);
+                look.Rim.color = Pal.A(Color.Lerp(PoolAcid, Color.white, .25f), (.55f + .3f * throb) * shown);
+
+                // The sheen slides across the surface and back.
+                float slide = Mathf.Sin(clock * 1.3f + key * .7f);
+                look.Sheen.rectTransform.anchoredPosition = new Vector2(slide * wide * .22f, tall * .12f);
+                look.Sheen.color = Pal.A(Color.white, (.22f + .12f * throb) * shown);
+
+                Bubble(look, dt, wide, tall, shown);
+
+                // Fumes rising off it, often enough to read as poison from across the hill.
+                if (fume && Random.value < .7f * shown)
+                    Cinder(at + new Vector2(Random.Range(-wide, wide) * .4f, Random.Range(-tall, tall) * .3f),
+                           Color.Lerp(ToxicHue, PoolAcid, Random.value), Cell * Random.Range(.22f, .34f), .7f,
+                           new Vector2(Random.Range(-.15f, .15f) * Cell, Cell * Random.Range(.7f, 1.1f)));
             }
 
             if (_poolArt.Count == _poolsSeen.Count) return;
 
-            var gone = new List<int>();
-            foreach (var pair in _poolArt) if (!_poolsSeen.Contains(pair.Key)) gone.Add(pair.Key);
-            foreach (int key in gone)
+            _poolsGone.Clear();
+            foreach (var pair in _poolArt) if (!_poolsSeen.Contains(pair.Key)) _poolsGone.Add(pair.Key);
+            foreach (int key in _poolsGone)
             {
-                if (_poolArt[key] != null) Destroy(_poolArt[key].gameObject);
+                var look = _poolArt[key];
+                if (look != null && look.Root) Destroy(look.Root.gameObject);
                 _poolArt.Remove(key);
             }
+        }
+
+        /// <summary>A new pool's pieces, under its own node so the whole of it scales as one.</summary>
+        PoolLook Puddle(Vector2 at, float wide, float tall)
+        {
+            var look = new PoolLook { Root = UIKit.Node("Pool", _puddles) };
+            look.Root.anchoredPosition = at;
+            look.Root.localScale = Vector3.zero;
+
+            look.Stain = UIKit.Img("Stain", look.Root, Art.Glow(128, .6f), Color.clear, new Vector2(wide * 1.12f, tall * 1.2f));
+            look.Stain.raycastTarget = false;
+
+            look.Liquid = UIKit.Img("Liquid", look.Root, Art.Glow(128, .45f), Color.clear, new Vector2(wide * .86f, tall * .9f));
+            look.Liquid.raycastTarget = false;
+
+            look.Glow = Lit("Glow", look.Root, Art.Glow(128, 1.2f), Color.clear, new Vector2(wide * 1.3f, tall * 1.7f));
+            look.Rim = Lit("Rim", look.Root, Art.Ring(128, 9f), Color.clear, new Vector2(wide * .84f, tall * .86f));
+            look.Sheen = Lit("Sheen", look.Root, Art.Glow(96, 1.6f), Color.clear, new Vector2(wide * .34f, tall * .22f));
+
+            look.Bubbles = new Image[PoolBubbles];
+            look.BubbleAt = new Vector2[PoolBubbles];
+            look.BubbleT = new float[PoolBubbles];
+            look.BubbleFor = new float[PoolBubbles];
+
+            for (int b = 0; b < PoolBubbles; b++)
+            {
+                look.Bubbles[b] = Lit("Bubble", look.Root, Art.Ring(64, 7f), Color.clear, Vector2.one);
+                look.BubbleFor[b] = Random.Range(.45f, .8f);
+                look.BubbleT[b] = -b * .22f; // staggered, so three never rise as one
+            }
+
+            return look;
+        }
+
+        /// <summary>The bubbles: each swells somewhere in the liquid, pops into a ring and starts again elsewhere.</summary>
+        void Bubble(PoolLook look, float dt, float wide, float tall, float shown)
+        {
+            for (int b = 0; b < look.Bubbles.Length; b++)
+            {
+                var img = look.Bubbles[b];
+                if (!img) continue;
+
+                look.BubbleT[b] += dt;
+                float t = look.BubbleT[b] / look.BubbleFor[b];
+
+                if (t >= 1f)
+                {
+                    look.BubbleT[b] = 0f;
+                    look.BubbleFor[b] = Random.Range(.45f, .8f);
+                    var spot = Random.insideUnitCircle;
+                    look.BubbleAt[b] = new Vector2(spot.x * wide * .32f, spot.y * tall * .28f);
+                    t = 0f;
+                }
+
+                if (t < 0f) { img.color = Color.clear; continue; }
+
+                // Swells for most of its life, then pops: a quick widening ring that fades.
+                bool popping = t > .78f;
+                float size = popping ? Mathf.Lerp(.3f, .55f, (t - .78f) / .22f) : Mathf.Lerp(.06f, .3f, t / .78f);
+                float alpha = popping ? 1f - (t - .78f) / .22f : .9f;
+
+                img.rectTransform.anchoredPosition = look.BubbleAt[b];
+                img.rectTransform.sizeDelta = new Vector2(Cell * size, Cell * size * .8f);
+                img.color = Pal.A(Color.Lerp(PoolAcid, Color.white, .45f), alpha * shown);
+            }
+        }
+
+        /// <summary>A pool landing: a ring of acid thrown out across the ground and drops flung up.</summary>
+        void Splash(Vector2 at, float wide)
+        {
+            Ripple(at, ToxicHue, wide * 1.2f, .35f, 0f);
+            for (int i = 0; i < 5; i++)
+                Cinder(at, PoolAcid, Cell * .26f, .45f,
+                       new Vector2(Random.Range(-1f, 1f) * Cell * 1.4f, Cell * Random.Range(.5f, 1.3f)));
         }
 
         // ------------------------------------------------------------------ the vortex

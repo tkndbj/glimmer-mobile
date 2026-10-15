@@ -189,21 +189,11 @@ namespace GlimmerGrove
 
             Audio.Sfx("unlock", .6f, 1f);
 
-            // **A card that finished a secret or an evolution is celebrated** (MODES.md 59n) - one
-            // panel each, the grandest last - and the panel is the news, so no toast goes under it.
+            // **A taken card says nothing more** (owner, 2026-10-14: no toast on a pick; the next
+            // hand's tier line counts the copies). **A card that finished a secret or an evolution is celebrated**
+            // (MODES.md 59n) - one panel each, the grandest last.
             var unlocked = _run.Build.Unlocked;
-            if (unlocked.Count > 0)
-            {
-                Celebrate(new List<ShuffleBond>(unlocked), 0);
-                return;
-            }
-
-            int copies = _run.Build.Copies(card);
-            string name = Loc.Get(card.NameKey);
-
-            Scenery.Toast(Safe, copies > 1 ? Loc.Format("ui.shuffle.taken_again", name, copies)
-                                           : Loc.Format("ui.shuffle.taken", name),
-                          ShuffleChoiceOverlay.TintOf(card.Tier), 2.2f);
+            if (unlocked.Count > 0) Celebrate(new List<ShuffleBond>(unlocked), 0);
         }
 
         /// <summary>

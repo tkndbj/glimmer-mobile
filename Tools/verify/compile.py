@@ -865,6 +865,44 @@ def check_capitals(files):
     return problems
 
 
+# ------------------------------------------------- a channel is killed by the owner it ran on
+# `Tween.KillChannel` matches owners by reference, so a loop started on an Image (`Run(..., img,
+# "holy")`) is not found by `KillChannel(img.transform, "holy")`: nothing is killed, nothing says
+# so, and the loop keeps writing its light over every "off" that follows. Five reward screens
+# shipped exactly that, each row staying lit after its chest was opened. Within one file, a
+# channel started on `x` and killed on `x.transform` (or the reverse) is refused.
+TWEEN_START = re.compile(r",\s*([A-Za-z_][\w.]*)\s*,\s*\"(\w+)\"\s*\)")
+TWEEN_KILL = re.compile(r"\bKillChannel\s*\(\s*([A-Za-z_][\w.]*)\s*,\s*\"(\w+)\"\s*\)")
+
+
+def check_tween_owners(files):
+    problems = []
+
+    for path in files:
+        name = path.replace("\\", "/")
+        if "/Presentation/" not in name:
+            continue
+
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+        started = set((m.group(1), m.group(2)) for m in TWEEN_START.finditer(text))
+        if not started:
+            continue
+
+        for hit in TWEEN_KILL.finditer(text):
+            owner, channel = hit.group(1), hit.group(2)
+            if (owner, channel) in started:
+                continue
+            other = owner[:-len(".transform")] if owner.endswith(".transform") else owner + ".transform"
+            if (other, channel) not in started:
+                continue
+            line = text[:hit.start()].count("\n") + 1
+            problems.append("%s:%d  kills channel \"%s\" on %s but it is started on %s - "
+                            "KillChannel matches owners by reference, so this kills nothing"
+                            % (name, line, channel, owner, other))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -913,7 +951,11 @@ def main():
         for line in capitals:
             print("  caps    FAILED  " + line)
 
-        if problems or boards or dtos or wallets or wipes or endings or lanes or capitals:
+        owners = check_tween_owners(every)
+        for line in owners:
+            print("  tween   FAILED  " + line)
+
+        if problems or boards or dtos or wallets or wipes or endings or lanes or capitals or owners:
             ok = False
 
     print("OK" if ok else "FAILED")

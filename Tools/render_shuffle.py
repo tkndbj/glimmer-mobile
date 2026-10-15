@@ -5,7 +5,7 @@
     python Tools/render_shuffle.py --cards phoenix,sure_sight,heavy_bolts
     python Tools/render_shuffle.py --lang de             # the longest names are not English
     python Tools/render_shuffle.py --held heavy_bolts=2  # a card the build already holds
-    python Tools/render_shuffle.py --marks chain_arc=s,heavy_bolts=e,second_wind=se
+    python Tools/render_shuffle.py --marks chain_arc=thunderhead,heavy_bolts=e,kindling=frostfire+fire_dragon+e
     python Tools/render_shuffle.py --unlock fire_dragon --lang de   # the unlock panel, settled
     python Tools/render_shuffle.py --unlock all --measure           # every bond in every language
     python Tools/render_shuffle.py --out out/hand.png
@@ -84,11 +84,29 @@ def layout():
     need = ("PanelWidth", "CrestFoot", "NoteY", "NoteHeightLine", "CardWidth", "CardGap", "CardHeight", "CardsTop", "Inset",
             "SeatSize", "IconSize", "SeatDown", "NameSize", "NameFloor", "NameHeight", "NameDown",
             "NoteSize", "NoteFloor", "NoteHeight", "NoteDown", "TierHeight", "TierDown",
-            "TierSize", "TierFloor", "Foot", "DiamondDown", "DiamondSize", "DiamondGap")
+            "TierSize", "TierFloor", "Foot", "DiamondDown", "DiamondSize", "DiamondGap", "DiamondGlow",
+            "MostDiamonds")
     missing = [n for n in need if n not in found]
     if missing:
         sys.exit("ShuffleHandLayout.cs no longer carries %s" % ", ".join(missing))
     return found
+
+
+def glow_of(bid):
+    """`ShuffleChoiceOverlay.GlowOf`: a secret's hue at full brightness and .85 of its
+    saturation; every evolution the kit's foxglove. Figures read out of `ShuffleSecrets.cs`."""
+    import colorsys
+    text = BONDS.read_text(encoding="utf-8")
+    m = re.search(r'ShuffleBond\.Secret\("%s", SiegePower\.\w+, (\d+), (\d+),' % re.escape(bid), text)
+    if not m:
+        return (180, 120, 255)
+    r, g, b = colorsys.hsv_to_rgb(int(m.group(1)) / 360.0, min(1.0, int(m.group(2)) / 100.0) * .85, 1.0)
+    return (int(r * 255), int(g * 255), int(b * 255))
+
+
+def mark_of(bid):
+    """`ShuffleBond.Mark`: one picture per secret, one for every evolution."""
+    return "shuffle_secret_" + bid if bonds()[bid][0] == "secret" else "shuffle_evolution"
 
 
 def catalog():
@@ -177,16 +195,18 @@ def card(sheet, L, cid, tier, cx, top, strings, held, marks=""):
     flag = "  !!" if size <= L["NoteFloor"] else ""
     print("  %-16s note %2d lines at %dpx (floor %d)%s" % ("", lines, size, L["NoteFloor"], flag))
 
-    # `ShuffleChoiceOverlay.Diamonds`: the secret's green, then the evolution's purple, centred.
-    shown = [m for m in ("s", "e") if m in marks]
+    # `ShuffleChoiceOverlay.Diamonds`: one per secret in its own colour, then the evolution's
+    # purple, centred, at most `MostDiamonds`.
+    wants = [m for m in marks if m and m != "e"]
+    evolve = "e" in marks
+    secrets = wants[:int(L["MostDiamonds"]) - (1 if evolve else 0)]
+    shown = [(mark_of(b), glow_of(b)) for b in secrets] + ([("shuffle_evolution", (180, 120, 255))] if evolve else [])
     pitch = L["DiamondSize"] + L["DiamondGap"]
-    for i, m in enumerate(shown):
+    for i, (pic, hue) in enumerate(shown):
         dx = cx - (len(shown) - 1) * pitch / 2 + i * pitch
         dy = top + L["DiamondDown"]
-        hue = (84, 228, 140) if m == "s" else (180, 120, 255)
-        K.paste(sheet, K.glow(L["DiamondSize"] * 2.6, 2.1, hue, .6), dx, dy)
-        mark = K.load("shuffle_secret" if m == "s" else "shuffle_evolution")[0]
-        K.paste(sheet, K.fit(mark, (L["DiamondSize"], L["DiamondSize"])), dx, dy)
+        K.paste(sheet, K.glow(L["DiamondSize"] * L["DiamondGlow"], 2.1, hue, .6), dx, dy)
+        K.paste(sheet, K.fit(K.load(pic)[0], (L["DiamondSize"], L["DiamondSize"])), dx, dy)
 
     K.paste(sheet, K.skin("Hud/trough", cw - L["Inset"] * 2, L["TierHeight"]), cx, top + L["TierDown"])
     word = strings.get("ui.shuffle.tier.%s" % tier.lower(), tier).upper()
@@ -263,7 +283,7 @@ def screen(cards, lang, held, wave, marks=None):
         at = i if len(cards) <= per else i - row * per
         cx = bcx - (in_row - 1) * pitch / 2 + at * pitch
         card_top = top + L["CardsTop"] + row * (L["CardHeight"] + L.get("RowGap", 0))
-        card(block, L, cid, tiers[cid], cx, card_top, strings, held.get(cid, 0), marks.get(cid, ""))
+        card(block, L, cid, tiers[cid], cx, card_top, strings, held.get(cid, 0), marks.get(cid, []))
 
     if fit < 1.0:
         block = block.resize((int(bw * fit), int(bh * fit)), Image.LANCZOS)
@@ -306,7 +326,7 @@ def unlock(bid, lang, art=True):
     tiers = catalog()
     secret = kind == "secret"
     grand = 3 if tier == "Legendary" else 2 if tier == "Epic" else 1
-    hue = (84, 228, 140) if secret else (180, 120, 255)
+    hue = glow_of(bid)
     tint = TINTS[tier]
     floored = []
 
@@ -330,8 +350,7 @@ def unlock(bid, lang, art=True):
         K.paste(sheet, rgba, cx, ey)
     K.paste(sheet, K.glow(900, 1.6, hue, .4 + .08 * grand), cx, ey)
     K.paste(sheet, K.glow(U["EmblemSize"] * 2.4, 2.0, hue, .7), cx, ey)
-    K.paste(sheet, K.fit(K.load("shuffle_secret" if secret else "shuffle_evolution")[0],
-                         (U["EmblemSize"], U["EmblemSize"])), cx, ey)
+    K.paste(sheet, K.fit(K.load(mark_of(bid))[0], (U["EmblemSize"], U["EmblemSize"])), cx, ey)
 
     def caption(what, s, cy, box_w, box_h, size, floor, fill, outline):
         px = K.shrunk(sheet, s, cx, cy, box_w, box_h, int(size), int(floor), fill=fill, outline=outline)
@@ -383,7 +402,7 @@ def main():
     ap.add_argument("--lang", default="en")
     ap.add_argument("--held", default="", help="card=copies, comma separated")
     ap.add_argument("--wave", type=int, default=3)
-    ap.add_argument("--marks", default="", help="card=s|e|se: the green and purple diamonds")
+    ap.add_argument("--marks", default="", help="card=secret+secret+e: a diamond per secret id, e for the evolution's")
     ap.add_argument("--unlock", default="", help="a bond id, or 'all': the unlock panel instead of a hand")
     ap.add_argument("--measure", action="store_true", help="with --unlock all: every language, fail on a floor")
     ap.add_argument("--out", type=Path, default=REPO / "Tools" / "out" / "shuffle_hand.png")
@@ -419,7 +438,7 @@ def main():
     marks = {}
     for part in filter(None, args.marks.split(",")):
         cid, which = part.split("=")
-        marks[cid] = which
+        marks[cid] = which.split("+")
 
     out = screen(args.cards.split(","), args.lang, held, args.wave, marks)
     args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -4402,6 +4402,10 @@
       "text": "bu tarafı Bekçi Kartı açar"
     },
     {
+      "key": "ui.mark.pass_unlock",
+      "text": "{0} sandığın kilidini açmak için Bekçi Kartı'nı al!"
+    },
+    {
       "key": "ui.mark.purchase_hint",
       "text": "Tek seferlik alım, abonelik yok. Önceki basamaklar da dahil."
     },
@@ -8038,14 +8042,6 @@
       "text": "{0} x{1}"
     },
     {
-      "key": "ui.shuffle.taken",
-      "text": "{0} seçildi"
-    },
-    {
-      "key": "ui.shuffle.taken_again",
-      "text": "{0} x{1}"
-    },
-    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Ağır Kurşunlar"
     },
@@ -8131,7 +8127,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Kurşunlar yakındaki akıncılara da %{0} hasar verir."
+      "text": "Kurşunlar yakındaki akıncılara %{0} hasar sıçratır."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8187,7 +8183,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Şarjlı kurşunlar %{0} daha fazla hasar verir ve kuleler 1 şarj fazla biriktirir."
+      "text": "Şarjlı kurşunlar %{0} daha sert vurur. Kuleler 1 şarjlı kurşun fazla tutar."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8235,7 +8231,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Yıkılan bir kule bir kez yarım canla geri gelir."
+      "text": "Yıkılan kule bir kez yarım canla döner."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8251,7 +8247,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "Kulelerine ulaşan akıncıların %{0}'i geri itilir."
+      "text": "Kuleler, ulaşan akıncıların %{0}'ini geri iter."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8255,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Kurşunlar canı %{0}'in altındaki akıncıları anında öldürür."
+      "text": "Kurşunlar canı %{0}'in altındaki akıncıları öldürür."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8263,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "Kurşunların %{0}'i ikinci kez yarım hasarla vurur."
+      "text": "Kurşunların %{0}'i yarım hasarla tekrar vurur."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8275,7 +8271,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Hedefi olmayan kule diğer renklere yarım hasarla ateş eder."
+      "text": "Boştaki kuleler diğer renklere yarım hasarla ateş eder."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8291,7 +8287,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "Kurşunların %{0}'sı akıncıyı lanetler: 3 saniye %20 daha fazla hasar alır."
+      "text": "Kurşunların %{0}'si lanetler: akıncı 3 saniye %20 daha fazla hasar alır."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8307,7 +8303,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Son kulen yıkılınca tüm kuleler bir kez tam canla geri gelir."
+      "text": "Tüm kuleler yıkılırsa bir kez tam canla döner."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8315,7 +8311,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Kurşunlar %{0} daha fazla hasar verir, kuleler %{1} daha hızlı ateş eder."
+      "text": "Kuleler %{0} daha fazla hasar verir ve %{1} daha hızlı ateş eder."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8331,7 +8327,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Canı %{0}'un altındaki kuleler %{1} daha sert ve %{1} daha hızlı ateş eder."
+      "text": "Canı %{0}'un altındaki kuleler %{1} daha fazla hasar ve hız kazanır."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8363,7 +8359,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Her 5. kurşun kendi sırasında akıncıları geri iten bir şok dalgası yollar."
+      "text": "Her 5. kurşun akıncıları geri iten bir şok dalgası gönderir."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8371,7 +8367,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Kurşunlar, üstünden geçen akıncılara hasar veren zehir birikintileri bırakır."
+      "text": "Kurşunlar akıncılara hasar veren zehir birikintileri bırakır."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8379,7 +8375,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Kuleler, yakıtları bitse bile en yakın akıncıya şimşek çaktırır."
+      "text": "Kuleler yakıtsız bile en yakın akıncıyı çarpar."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8387,7 +8383,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Kuleler ateş ettikçe hızlanır, en fazla %{0}'ye kadar."
+      "text": "Kuleler ateş ettikçe hızlanır, en fazla %{0}."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8395,7 +8391,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Yavaşlamış ya da sersemlemiş akıncılar ölünce parçalanıp yakındakilere vurur."
+      "text": "Yavaşlamış ya da sersemlemiş akıncılar ölünce parçalara ayrılır."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8403,7 +8399,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Yanan akıncılar ölünce ateşi yakındakilere yayar."
+      "text": "Yanan akıncılar ölünce ateşi yayar."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8411,7 +8407,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Her 6 saniyede bir meteor en kalabalık akıncı grubuna düşer."
+      "text": "Her 6 saniyede bir meteor en kalabalık gruba düşer."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8419,7 +8415,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Her 9 saniyede bir girdap en kalabalık akıncı grubunu bir araya çeker."
+      "text": "Her 9 saniyede bir girdap akıncıları bir araya çeker."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8443,7 +8439,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Her kurşun 2'ye bölünür, her parça bir kez daha bölünür."
+      "text": "Her kurşun 2'ye bölünür, sonra yine bölünür."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8451,7 +8447,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Her kurşun rastgele ateş, zehir, buz ya da şimşeğe dönüşür."
+      "text": "Her kurşun rastgele ateş, zehir, buz ya da şimşektir."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8459,7 +8455,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Kuleler iki kat hızlı ateş eder, kurşunlar yarı yakıt harcar."
+      "text": "Kuleler yarı yakıtla iki kat hızlı ateş eder."
     },
     {
       "key": "shuffle.blast_gems.name",
@@ -8467,7 +8463,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Her eşleşme etrafındaki mücevherleri patlatır. Daha çok kopya, daha büyük patlamalar."
+      "text": "Eşleşmeler yakındaki mücevherleri patlatır. Daha çok kopya, daha büyük patlama."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8475,7 +8471,7 @@
     },
     {
       "key": "shuffle.power_gems.note",
-      "text": "4'lü eşleştir, sırasını temizleyen bir roket yap. 5'li ya da köşe eşleştir, rengini temizleyen bir nova yap."
+      "text": "4'lü eşleştir: roket bir sırayı temizler. 5'li ya da köşe: nova bir rengi temizler."
     },
     {
       "key": "shuffle.titan_pact.name",
@@ -8483,7 +8479,7 @@
     },
     {
       "key": "shuffle.titan_pact.note",
-      "text": "Kurşunlar %{0} daha fazla hasar verir, ama kuleler %{1} daha yavaş ateş eder."
+      "text": "Kuleler %{0} daha sert vurur ama %{1} daha yavaş ateş eder."
     },
     {
       "key": "shuffle.miser_pact.name",
@@ -8499,7 +8495,7 @@
     },
     {
       "key": "shuffle.frenzy_pact.note",
-      "text": "Kuleler %{0} daha hızlı ateş eder, ama kurşunlar %{1} daha az hasar verir."
+      "text": "Kuleler %{0} daha hızlı ateş eder ama %{1} daha az hasar verir."
     },
     {
       "key": "shuffle.blood_pact.name",
@@ -8507,7 +8503,7 @@
     },
     {
       "key": "shuffle.blood_pact.note",
-      "text": "Kurşunlar %{0} daha fazla hasar verir ve kuleler %{0} daha hızlı ateş eder, ama kulelerin canı %{1} azalır."
+      "text": "Kuleler %{0} daha fazla hasar ve hız kazanır ama canları %{1} azalır."
     },
     {
       "key": "shuffle.reckless_pact.name",
@@ -8515,7 +8511,7 @@
     },
     {
       "key": "shuffle.reckless_pact.note",
-      "text": "Kurşunlar %{0} daha fazla hasar verir ve kuleler %{0} daha hızlı ateş eder, ama akıncılar %{1} daha hızlı yürür."
+      "text": "Kuleler %{0} daha fazla hasar ve hız kazanır ama akıncılar %{1} daha hızlı yürür."
     },
     {
       "key": "shuffle.kinetic_gems.name",
@@ -8523,7 +8519,7 @@
     },
     {
       "key": "shuffle.kinetic_gems.note",
-      "text": "Mücevherler, kulelerinin ek hızının %{0} oranında daha çok yakıt verir."
+      "text": "Ek atış hızının %{0}'i mücevher yakıtına eklenir."
     },
     {
       "key": "shuffle.iron_cannons.name",
@@ -8531,7 +8527,7 @@
     },
     {
       "key": "shuffle.iron_cannons.note",
-      "text": "Kurşunlar, kulelerinin ek canının %{0} oranında daha çok hasar verir."
+      "text": "Ek canının %{0}'i hasara eklenir."
     },
     {
       "key": "shuffle.overflow.name",
@@ -8539,7 +8535,7 @@
     },
     {
       "key": "shuffle.overflow.note",
-      "text": "Kuleler, aldıkları ek yakıtın %{0} oranında daha hızlı ateş eder."
+      "text": "Ek yakıtının %{0}'i atış hızına eklenir."
     },
     {
       "key": "shuffle.chain_fuel.name",
@@ -8547,7 +8543,7 @@
     },
     {
       "key": "shuffle.chain_fuel.note",
-      "text": "Zincirleme tepkimenin her adımı bir öncekinden %{0} daha fazla yakıt verir."
+      "text": "Zincirin her adımı öncekinden %{0} fazla yakıt verir."
     },
     {
       "key": "shuffle.grand_hand.name",
@@ -8563,7 +8559,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Bir kule lazer topuna dönüşür, önce en güçlüsü. Kurşunları 3 akıncıya daha seker, %{0} hasarla."
+      "text": "Her kopya bir kuleyi lazere çevirir, önce en iyisini. Lazer 3 akıncıya %{0} hasarla seker."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8607,7 +8603,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Tepeyi bir fırtına bulutu kaplar. Her 3 saniyede bir, şimşek en yakın 3 akıncıya çarpar."
+      "text": "Her 3 saniyede bir şimşek en yakın 3 akıncıya çarpar."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8615,7 +8611,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "Her 5 saniyede bir, en kalabalık grubun altında bir buhar gayzeri patlar. Hem dondurur hem yakar."
+      "text": "Her 5 saniyede bir gayzer en kalabalık grubu dondurur ve yakar."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8623,7 +8619,7 @@
     },
     {
       "key": "shuffle.secret.blade_orbit.note",
-      "text": "Kulelerinin etrafında bıçaklar döner. Her kule, 2 akıncıya çarpan bir bumerang bıçak fırlatır."
+      "text": "Her kule 2 akıncıya çarpan bir bumerang bıçak fırlatır."
     },
     {
       "key": "shuffle.secret.plague.name",
@@ -8631,7 +8627,7 @@
     },
     {
       "key": "shuffle.secret.plague.note",
-      "text": "Zehrin içinde ölen akıncılar patlar. Zehir çevrelerine yayılır."
+      "text": "Zehirli bir akıncı ölünce yakındaki tüm akıncıları zehirler."
     },
     {
       "key": "shuffle.secret.gem_comets.name",
@@ -8639,7 +8635,7 @@
     },
     {
       "key": "shuffle.secret.gem_comets.note",
-      "text": "Yaptığın ya da patlattığın her güç mücevheri, en güçlü akıncıya bir kuyruklu yıldız fırlatır."
+      "text": "Güç mücevherleri en güçlü akıncıya kuyruklu yıldız fırlatır."
     },
     {
       "key": "shuffle.secret.permafrost.name",
@@ -8647,7 +8643,7 @@
     },
     {
       "key": "shuffle.secret.permafrost.note",
-      "text": "Tepenin alt yarısı donar. Buzun üstündeki akıncılar yavaşlar ve buz dikenleri yer."
+      "text": "Tepenin alt yarısını buz kaplar. Akıncıları yavaşlatır ve yaralar."
     },
     {
       "key": "shuffle.secret.event_horizon.name",
@@ -8655,7 +8651,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "Her 11 saniyede bir, bir kara delik akıncıları içine çeker. Kapanırken zayıf olanları ezer."
+      "text": "Her 11 saniyede bir kara delik akıncıları çeker ve zayıfları ezer."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8663,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "Her 9 saniyede bir, bir ateş ejderhası tepenin üstünden uçar ve yolundaki her akıncıyı yakar."
+      "text": "Her 9 saniyede bir ateş ejderhası yolundaki her şeyi yakar."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8671,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.golden_dome.note",
-      "text": "Altın bir kubbe kulelerini korur. Her aşamanın ilk 4 darbesini engeller."
+      "text": "Altın bir kubbe her aşamada kulelerine gelen ilk 4 vuruşu engeller."
     },
     {
       "key": "shuffle.secret.rainbow_cascade.name",
@@ -8679,7 +8675,7 @@
     },
     {
       "key": "shuffle.secret.rainbow_cascade.note",
-      "text": "Mücevherlerdeki her zincirleme tepkime tepeye bir gökkuşağı ışını atar. Zincir uzadıkça daha sert vurur."
+      "text": "Zincirleme tepkimeler gökkuşağı şimşeği atar. Uzun zincir, sert vuruş."
     },
     {
       "key": "shuffle.secret.solar_cannon.name",
@@ -8687,7 +8683,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "İkinci bir güneş doğar. Her 8 saniyede bir, en kalabalık sırayı dev bir ışınla yakar."
+      "text": "Her 8 saniyede bir ikinci güneş en kalabalık şeridi yakar."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8695,7 +8691,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "Her 12 saniyede bir gökyüzü kızarır ve akıncıların üstüne 8 meteor yağar."
+      "text": "Her 12 saniyede bir akıncıların üstüne 8 meteor yağar."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8703,7 +8699,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "Her 15 saniyede bir zaman 4 saniye durur. Akıncılar donar, kulelerin iki kat hızlı ateş eder."
+      "text": "Her 15 saniyede bir akıncılar 4 saniye donar. Kuleler iki kat hızlı ateş eder."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8711,7 +8707,7 @@
     },
     {
       "key": "shuffle.evolution.titan_shells.note",
-      "text": "Her 5. kurşun, çevresindeki akıncılarda patlayan dev bir mermi de atar."
+      "text": "Her 5. kurşun dev bir patlayan mermi atar."
     },
     {
       "key": "shuffle.evolution.deadeye.name",
@@ -8719,7 +8715,7 @@
     },
     {
       "key": "shuffle.evolution.deadeye.note",
-      "text": "Her 4. kurşun en güçlü akıncıya da üç kat hasarla isabet eder."
+      "text": "Her 4. kurşun en güçlü akıncıya üç kat hasar verir."
     },
     {
       "key": "shuffle.evolution.fortress.name",
@@ -8727,7 +8723,7 @@
     },
     {
       "key": "shuffle.evolution.fortress.note",
-      "text": "Her aşama kulelerini biraz iyileştirir. Bir kuleye vuran akıncılar karşılık olarak darbe yer."
+      "text": "Kuleler her aşamada iyileşir ve saldırıya karşılık verir."
     },
     {
       "key": "shuffle.evolution.cluster_bombs.name",
@@ -8743,7 +8739,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "Her 4 saniyede bir, her kule tepeye doğru bir yıldırım topu gönderir. Dokunduğu her akıncıyı çarpar."
+      "text": "Her 4 saniyede bir kuleler şimşek topları gönderir."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8751,7 +8747,7 @@
     },
     {
       "key": "shuffle.evolution.swarm.note",
-      "text": "Her füze yaylımı farklı akıncılara 8 küçük füze daha atar."
+      "text": "Her füze yaylımı 8 mini füze daha atar."
     },
     {
       "key": "shuffle.evolution.diamond_dust.name",
@@ -8759,7 +8755,7 @@
     },
     {
       "key": "shuffle.evolution.diamond_dust.note",
-      "text": "Kurşunların dondurur. Parçalanan bir akıncı, çevresindeki her şeyi donduran bir tipi bırakır."
+      "text": "Kurşunlar dondurur. Parçalanan akıncılar dondurucu bir tipi bırakır."
     },
     {
       "key": "shuffle.evolution.comet_storm.name",
@@ -8767,7 +8763,7 @@
     },
     {
       "key": "shuffle.evolution.comet_storm.note",
-      "text": "Her meteor, çevresine yağan 4 yanan parçaya bölünür."
+      "text": "Her meteor 4 yanan parçaya bölünür."
     },
     {
       "key": "shuffle.evolution.prism_lance.name",
@@ -8775,7 +8771,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "Her 6 saniyede bir lazerlerin bir prizmayı doldurur. Prizma en güçlü akıncılara 6 gökkuşağı ışını atar."
+      "text": "Her 6 saniyede bir prizma en güçlü akıncılara 6 ışın atar."
     }
   ]
 }

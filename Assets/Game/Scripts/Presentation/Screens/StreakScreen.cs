@@ -1452,8 +1452,9 @@ namespace GlimmerGrove
         /// </summary>
         static void Shine(NightTile tile, bool on)
         {
-            if (tile.Pool) Tween.KillChannel(tile.Pool.transform, "holy");
-            if (tile.Rim) Tween.KillChannel(tile.Rim.transform, "holy");
+            // By the owner the loop was started with: `KillChannel` matches by reference, so
+            // the Transform found nothing and the light kept breathing over the fade-out.
+            if (tile.Pool) Tween.KillChannel(tile.Pool, "holy");
 
             if (!on)
             {

@@ -1326,13 +1326,17 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    strengths are the mode's (`SiegeSecrets`), not the published tuning, because each note states its
    numbers in words. **Drawn by** `SiegeView.Secrets` (a power's standing look - a storm cloud, blades
    round every post, an ice sheet, a golden dome, a second sun, a prism - and its set pieces) through the
-   arsenal's doors. **The hand marks a card that brings one closer**: a green diamond for a secret the
-   build has started (`ShuffleBonds.Advances`), a purple one for an evolution on its way
-   (`ShuffleBonds.Evolves`), under the note (`ShuffleHandLayout.Diamond*`); the art is the kit's gem
-   hue-rotated by `make_shuffle_art.py`, scoped with the lane (`SiegeMode.ShuffleArt`). **An unlock is
-   celebrated** (`ShuffleUnlockOverlay`, laid out by `ShuffleUnlockLayout`): the cards gather into the
-   emblem, the room breaks into colour scaled by tier, then the headline, the name, one sentence and the
-   recipe, closed by OKAY only; several on one take queue, the grandest last. Analytics: `shuffle_ended.bonds`.
+   arsenal's doors. **The hand marks a card that brings one closer**: a diamond per secret the build
+   has started, **each in that secret's own colour** (`ShuffleBonds.Advanced`; `ShuffleBond.Hue`/
+   `Saturation`, the one table both the art and the glow read), a purple one for an evolution on its
+   way (`ShuffleBonds.Evolves`), at most four, under the note and clear of it with their glow
+   (`ShuffleHandLayout.Diamond*`); the art is the kit's gem hue-rotated by `make_shuffle_art.py`
+   (`shuffle_secret_{id}`, `shuffle_evolution`: `ShuffleBond.Mark`), scoped with the lane
+   (`SiegeMode.ShuffleArt`). **A pick says nothing** (no toast); **an unlock is celebrated**
+   (`ShuffleUnlockOverlay`, laid out by `ShuffleUnlockLayout`, in the bond's colour, its own sound
+   `secret`, never the level's `win`): the cards gather into the emblem, the room breaks into colour
+   scaled by tier, then the headline, the name, one sentence and the recipe, closed by OKAY only;
+   several on one take queue, the grandest last. Analytics: `shuffle_ended.bonds`.
    **Held by** `ShuffleSecretTests` (catalog, words in nine languages, unlocking in any order, the
    diamonds, every power seen on the board, the dome's bound, time stop, determinism, the panel's
    layout), `TheIdentityBoostChangesNothing` and `ThePlainLineNeverDrawsTheArsenal`;

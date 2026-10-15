@@ -108,7 +108,7 @@ namespace GlimmerGrove
         static readonly Vector2 Top = new Vector2(.5f, 1f);
 
         /// <summary>What a cell is drawing, so a bind only touches what changed.</summary>
-        enum Face { Blank, Locked, Ready, Claimed, Sealed }
+        enum Face { Blank, Locked, Ready, Claimed, Sealed, Teaser }
 
         /// <summary>One track's chest inside one row.</summary>
         sealed class Cell
@@ -122,6 +122,7 @@ namespace GlimmerGrove
 
             public Image Chest;
             public Image Halo;
+            public Image Rays;
             public RectTransform Seal;
             public Image Lock;
             public Btn Tap;
@@ -149,6 +150,14 @@ namespace GlimmerGrove
         GroveEvent _season;
         EventProgress _progress;
         bool _owned;
+
+        /// <summary>
+        /// Whether the season can still sell its pass, read off the clock on every repaint so a
+        /// deadline passing under an open page turns the teasers off on the next frame. A
+        /// closed season refuses the purchase (<c>SeasonLedger.PassBuy.Closed</c>), so a pass
+        /// chest shining there would be offering something no tap can buy.
+        /// </summary>
+        bool _live;
 
         RectTransform _band, _list, _lights;
         float _visible, _width;
@@ -238,10 +247,13 @@ namespace GlimmerGrove
                 UIKit.Titled("N", seat.transform, string.Empty, 40, Pal.Cream, TextAnchor.MiddleCenter,
                              new Vector2(88f, 56f), Centre, new Vector2(0f, 2f), 3f, 3f), 22);
 
+            // Grown at the owner's instruction (24 in a 170 box read as a footnote). The box
+            // still ends short of the free cell's own edge (FreeX - 120), so it never reaches
+            // under a chest.
             row.Goal = UIKit.Shrinkable(
-                UIKit.Titled("Goal", row.Root, string.Empty, 24, Pal.A(Pal.Cream, .82f),
-                             TextAnchor.MiddleLeft, new Vector2(170f, 34f), Left,
-                             new Vector2(_width * .5f + GoalX + 85f, 0f), 3f, 3f), 14);
+                UIKit.Titled("Goal", row.Root, string.Empty, 32, Pal.A(Pal.Cream, .82f),
+                             TextAnchor.MiddleLeft, new Vector2(210f, 44f), Left,
+                             new Vector2(_width * .5f + GoalX + 105f, 0f), 3f, 3f), 18);
 
             // The rule between the two columns. A rung is one goal paying two chests, and with
             // nothing separating them the card reads as two unrelated pictures sitting on it;
@@ -274,6 +286,14 @@ namespace GlimmerGrove
             // On the drawn chest's own middle - which is this host's middle, because the sprite
             // is the thing that moves (see ChestTall). A halo centred on the sprite's box would
             // light the empty air the lid opens into.
+            // The shine behind every chest that is reached and waiting, built under the halo:
+            // turning rays, so a chest that can be had reads as treasure from across the list.
+            // Drawn on a locked pass chest too (Face.Teaser), which is the point of it - the
+            // player sees what the pass would hand over right now.
+            cell.Rays = UIKit.Img("Rays", host, Art.Rays(256, 14), Pal.A(Pal.Sun, 0f),
+                                  new Vector2(ChestTall * 1.6f, ChestTall * 1.6f), Centre, Vector2.zero);
+            cell.Rays.raycastTarget = false;
+
             cell.Halo = UIKit.Img("Halo", host, Art.Glow(128, 2f), Pal.A(Pal.Gold, 0f),
                                   new Vector2(ChestTall * 2f, ChestTall * 2f), Centre, Vector2.zero);
 
@@ -374,6 +394,7 @@ namespace GlimmerGrove
 
             _progress = progress;
             _owned = owned;
+            _live = _season.IsLiveAt(GameClock.NowUnix());
 
             int rungs = _season.Milestones.Count;
             float scrolled = _list.anchoredPosition.y;
@@ -448,6 +469,7 @@ namespace GlimmerGrove
 
             var face = !pays || tier == null ? Face.Blank
                      : claimed ? Face.Sealed
+                     : walled && reached && _live ? Face.Teaser
                      : walled ? Face.Locked
                      : ready ? Face.Ready
                      : Face.Claimed;      // reached-but-not-yet, or simply not reached: drawn plain
@@ -458,27 +480,34 @@ namespace GlimmerGrove
 
             if (face == cell.Painted && !rebound) return ready;
 
-            bool wasReady = cell.Painted == Face.Ready;
+            bool wasShining = cell.Painted == Face.Ready || cell.Painted == Face.Teaser;
             cell.Painted = face;
+
+            bool shining = face == Face.Ready || face == Face.Teaser;
 
             cell.Chest.enabled = face != Face.Blank;
             cell.Seal.gameObject.SetActive(face == Face.Sealed);
-            cell.Lock.gameObject.SetActive(face == Face.Locked);
+            cell.Lock.gameObject.SetActive(face == Face.Locked || face == Face.Teaser);
             cell.Tap.gameObject.SetActive(face != Face.Blank);
 
-            cell.Chest.color = face == Face.Ready ? Color.white
+            cell.Chest.color = shining ? Color.white
                              : face == Face.Sealed ? new Color(.74f, .78f, .84f, 1f)
                              : new Color(.62f, .66f, .74f, .88f);
 
-            if (face == Face.Ready)
+            if (shining)
             {
-                // Both on the *change* into Ready, for the reason above: a rebind that found
-                // the cell already ready restarted the breathe from scale one and started a
-                // second tint toward a colour the halo was already wearing - a jump on every
-                // chest that could be opened, once per rung scrolled.
-                if (!wasReady)
+                // All on the *change* into a shining face, for the reason above: a rebind that
+                // found the cell already shining restarted the breathe from scale one and
+                // started a second tint toward a colour the halo was already wearing - a jump
+                // on every chest that could be opened, once per rung scrolled.
+                if (!wasShining)
                 {
                     Tween.Tint(cell.Halo, Pal.A(Pal.Gold, .55f), .35f);
+                    Tween.Tint(cell.Rays, Pal.A(Pal.Sun, .5f), .35f);
+                    var rays = cell.Rays;
+                    Tween.Run(12f, Ease.Linear,
+                              t => { if (rays) rays.transform.localRotation = Quaternion.Euler(0f, 0f, -t * 360f); },
+                              rays, "spin").Loop(-1, false);
                     Tween.KillChannel(cell.Chest.transform, "breathe");
                     Tween.Breathe(cell.Chest.transform, .07f, 1.5f);
                 }
@@ -486,6 +515,8 @@ namespace GlimmerGrove
             else
             {
                 cell.Halo.color = Pal.A(Pal.Gold, 0f);
+                cell.Rays.color = Pal.A(Pal.Sun, 0f);
+                Tween.KillChannel(cell.Rays, "spin");
                 Tween.KillChannel(cell.Chest.transform, "breathe");
                 cell.Chest.transform.localScale = Vector3.one;
             }
@@ -503,7 +534,10 @@ namespace GlimmerGrove
         /// </summary>
         static void Shine(Row row, bool on)
         {
-            if (row.Pool) Tween.KillChannel(row.Pool.transform, "holy");
+            // Killed by the owner it was started with (`row.Pool`, the Image). `KillChannel`
+            // matches owners by reference, so asking with the Transform found nothing and the
+            // loop kept writing the light on after the row had gone dark.
+            if (row.Pool) Tween.KillChannel(row.Pool, "holy");
 
             if (!on)
             {

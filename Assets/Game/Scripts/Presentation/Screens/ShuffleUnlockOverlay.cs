@@ -57,7 +57,7 @@ namespace GlimmerGrove
             if (Bond == null) { Close(); return; }
 
             _grand = Bond.Tier == ShuffleTier.Legendary ? 3 : Bond.Tier == ShuffleTier.Epic ? 2 : 1;
-            _kind = Bond.IsSecret ? ShuffleChoiceOverlay.SecretGlow : ShuffleChoiceOverlay.EvolutionGlow;
+            _kind = ShuffleChoiceOverlay.GlowOf(Bond); // each secret's own colour, the evolutions' purple
             _tint = ShuffleChoiceOverlay.TintOf(Bond.Tier);
 
             BuildRoom();
@@ -144,7 +144,7 @@ namespace GlimmerGrove
                               new Vector2(.5f, .5f), at);
             _halo.raycastTarget = false;
 
-            var mark = Art.S("Ui/" + (Bond.IsSecret ? GlimmerGrove.Content.SiegeMode.SecretMark : GlimmerGrove.Content.SiegeMode.EvolutionMark));
+            var mark = Art.S("Ui/" + Bond.Mark);
             _emblem = UIKit.Img("Emblem", _stage, mark, Color.white, Vector2.one * L.EmblemSize, new Vector2(.5f, .5f), at);
             _emblem.preserveAspect = true;
             _emblem.raycastTarget = false;
@@ -435,7 +435,9 @@ namespace GlimmerGrove
         /// </summary>
         void Break(Vector2 at)
         {
-            Audio.Sfx("win", .7f);
+            // Its own sting, never `win` (owner, 2026-10-14: a combo must not sound like a level
+            // finished), struck lower the grander it is; the bigger tiers keep their blast under it.
+            Audio.Sfx("secret", .8f, 1.06f - .06f * _grand);
             if (_grand >= 2) Audio.Sfx("boom", .45f + .15f * _grand, .7f);
             if (_grand >= 3) Audio.Sfx("thunder", .5f, .9f);
 

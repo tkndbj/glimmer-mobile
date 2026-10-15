@@ -1136,8 +1136,9 @@ namespace GlimmerGrove
             w.Lit = on;
             w.LitGoal = on ? w.Goal : -1;
 
-            if (w.Pool) Tween.KillChannel(w.Pool.transform, "holy");
-            if (w.Rim) Tween.KillChannel(w.Rim.transform, "holy");
+            // By the owner the loop was started with (`w.Rim`): `KillChannel` matches by
+            // reference, so the Transform found nothing and the light kept breathing.
+            if (w.Rim) Tween.KillChannel(w.Rim, "holy");
 
             if (!on)
             {

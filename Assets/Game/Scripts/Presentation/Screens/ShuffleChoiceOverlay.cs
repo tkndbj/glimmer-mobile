@@ -201,49 +201,64 @@ namespace GlimmerGrove
             Tween.Pop(t, 0f, .5f, CardPopAt + index * CardPopStagger);
         }
 
-        /// <summary>What the secret's diamond glows in, and the evolution's: the two marks' own colours.</summary>
-        public static readonly Color SecretGlow = Pal.Verdant, EvolutionGlow = Pal.Foxglove;
+        /// <summary>What every evolution's diamond glows in: its mark's own purple.</summary>
+        public static readonly Color EvolutionGlow = Pal.Foxglove;
 
         /// <summary>
-        /// The marks under a card's note, centred in their row: the secret's, the evolution's, or
-        /// both, and nothing for a card that brings neither closer (<see cref="ShuffleBonds.Advances"/>,
+        /// What <paramref name="bond"/>'s diamond glows in: the colour its picture was turned to
+        /// (<see cref="ShuffleBond.Hue"/>), lifted to full brightness so a glow reads on the
+        /// card. A pale secret (the sun, the blades) glows pale.
+        /// </summary>
+        public static Color GlowOf(ShuffleBond bond)
+        {
+            if (bond == null || !bond.IsSecret) return EvolutionGlow;
+            float s = Mathf.Clamp01(bond.Saturation / 100f) * .85f;
+            return Color.HSVToRGB(bond.Hue / 360f, s, 1f);
+        }
+
+        readonly List<ShuffleBond> _marks = new List<ShuffleBond>(4);
+
+        /// <summary>
+        /// The marks under a card's note, centred in their row: one per secret the card goes
+        /// with, each in that secret's own colour, then the evolution's purple; nothing for a
+        /// card that brings neither closer (<see cref="ShuffleBonds.Advanced"/>,
         /// <see cref="ShuffleBonds.Evolves"/>).
         /// </summary>
         void Diamonds(Transform t, ShuffleCard card, float top, Layout.ShuffleHandLayout L)
         {
             if (Held == null) return;
 
-            bool secret = ShuffleBonds.Advances(card, Held);
+            _marks.Clear();
+            ShuffleBonds.Advanced(card, Held, _marks);
             bool evolve = ShuffleBonds.Evolves(card, Held);
-            int marks = (secret ? 1 : 0) + (evolve ? 1 : 0);
+
+            int secrets = Mathf.Min(_marks.Count, L.MostDiamonds - (evolve ? 1 : 0));
+            int marks = secrets + (evolve ? 1 : 0);
             if (marks == 0) return;
 
             float pitch = L.DiamondSize + L.DiamondGap;
             float x = -(marks - 1) * pitch * .5f;
             float y = top - L.DiamondDown;
 
-            if (secret)
-            {
-                Diamond(t, GlimmerGrove.Content.SiegeMode.SecretMark, SecretGlow, new Vector2(x, y), L.DiamondSize);
-                x += pitch;
-            }
+            for (int i = 0; i < secrets; i++, x += pitch)
+                Diamond(t, _marks[i].Mark, GlowOf(_marks[i]), new Vector2(x, y), L);
 
-            if (evolve) Diamond(t, GlimmerGrove.Content.SiegeMode.EvolutionMark, EvolutionGlow, new Vector2(x, y), L.DiamondSize);
+            if (evolve) Diamond(t, ShuffleBond.EvolutionMark, EvolutionGlow, new Vector2(x, y), L);
         }
 
         /// <summary>
         /// One diamond, breathing in a glow of its own colour. <b>Nothing at all when its picture
         /// has not arrived</b> (invariant 7b): an <c>Image</c> with no sprite is a white square.
         /// </summary>
-        static void Diamond(Transform t, string address, Color glow, Vector2 at, float size)
+        static void Diamond(Transform t, string address, Color glow, Vector2 at, Layout.ShuffleHandLayout L)
         {
             var sprite = Art.S("Ui/" + address);
             if (sprite == null) return;
 
-            var halo = UIKit.Halo(t, glow, size * 2.6f, .6f, at);
+            var halo = UIKit.Halo(t, glow, L.DiamondSize * L.DiamondGlow, .6f, at);
             halo.raycastTarget = false;
 
-            var img = UIKit.Img("Diamond", t, sprite, Color.white, Vector2.one * size, new Vector2(.5f, .5f), at);
+            var img = UIKit.Img("Diamond", t, sprite, Color.white, Vector2.one * L.DiamondSize, new Vector2(.5f, .5f), at);
             img.preserveAspect = true;
             img.raycastTarget = false;
 

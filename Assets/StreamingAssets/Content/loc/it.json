@@ -4402,6 +4402,10 @@
       "text": "il Pass del Custode apre questo lato"
     },
     {
+      "key": "ui.mark.pass_unlock",
+      "text": "Prendi il Pass del Custode per sbloccare {0} forzieri!"
+    },
+    {
       "key": "ui.mark.purchase_hint",
       "text": "Un solo acquisto, nessun abbonamento. Include i gradini precedenti."
     },
@@ -8038,14 +8042,6 @@
       "text": "{0} x{1}"
     },
     {
-      "key": "ui.shuffle.taken",
-      "text": "{0} scelta"
-    },
-    {
-      "key": "ui.shuffle.taken_again",
-      "text": "{0} x{1}"
-    },
-    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Dardi Pesanti"
     },
@@ -8131,7 +8127,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "I colpi colpiscono anche i predoni vicini con il {0}% dei danni."
+      "text": "I colpi schizzano i predoni vicini con il {0}% dei danni."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8187,7 +8183,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "I colpi carichi fanno il {0}% di danni in più e le torrette ne tengono 1 in più."
+      "text": "I colpi carichi colpiscono il {0}% più forte. Le torrette tengono 1 colpo carico in più."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8235,7 +8231,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Una torretta distrutta torna una volta con metà vita."
+      "text": "Una torretta caduta torna una volta con metà vita."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8251,7 +8247,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "Il {0}% dei predoni che raggiungono le tue torrette viene respinto."
+      "text": "Le torrette respingono il {0}% dei predoni che le raggiungono."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8255,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "I colpi uccidono subito i predoni sotto il {0}% di vita."
+      "text": "I colpi uccidono i predoni sotto il {0}% di vita."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8263,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "Il {0}% dei colpi colpisce una seconda volta con metà danni."
+      "text": "Il {0}% dei colpi colpisce ancora con metà danni."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8275,7 +8271,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Una torretta senza bersaglio spara agli altri colori con metà danni."
+      "text": "Le torrette senza bersaglio sparano agli altri colori con metà danni."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8283,7 +8279,7 @@
     },
     {
       "key": "shuffle.chain_reaction.note",
-      "text": "I predoni uccisi esplodono e danneggiano quelli vicini."
+      "text": "I predoni uccisi esplodono e feriscono quelli vicini."
     },
     {
       "key": "shuffle.cursed_fire.name",
@@ -8291,7 +8287,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "Il {0}% dei colpi maledice un predone: subisce il 20% di danni in più per 3 secondi."
+      "text": "Il {0}% dei colpi maledice: il predone subisce il 20% di danni in più per 3 secondi."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8307,7 +8303,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Quando cade la tua ultima torretta, tornano tutte una volta con vita piena."
+      "text": "Se cadono tutte le torrette, tornano una volta con vita piena."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8315,7 +8311,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "I colpi fanno il {0}% di danni in più e le torrette sparano il {1}% più veloce."
+      "text": "Le torrette fanno il {0}% di danni in più e sparano il {1}% più veloce."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8323,7 +8319,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Ogni abbinamento dà carburante anche alle altre tre torrette."
+      "text": "Ogni abbinamento rifornisce anche le altre tre torrette."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8331,7 +8327,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Le torrette sotto il {0}% di vita fanno il {1}% di danni in più e sparano il {1}% più veloce."
+      "text": "Le torrette sotto il {0}% di vita ottengono il {1}% di danni e velocità in più."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8363,7 +8359,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Un colpo su 5 manda un'onda d'urto lungo la sua fila che respinge i predoni."
+      "text": "Ogni 5 colpi parte un'onda d'urto che respinge i predoni."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8371,7 +8367,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "I colpi lasciano pozze di veleno che feriscono i predoni che ci passano."
+      "text": "I colpi lasciano pozze di veleno che feriscono i predoni."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8387,7 +8383,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Più a lungo sparano, più le torrette accelerano, fino al {0}%."
+      "text": "Le torrette accelerano sparando, fino al {0}% più veloce."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8395,7 +8391,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "I predoni rallentati o storditi esplodono in schegge quando muoiono e colpiscono quelli vicini."
+      "text": "I predoni rallentati o storditi esplodono in schegge quando muoiono."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8403,7 +8399,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "I predoni in fiamme passano il fuoco a quelli vicini quando muoiono."
+      "text": "I predoni in fiamme spargono il fuoco quando muoiono."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8411,7 +8407,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Ogni 6 secondi, una meteora colpisce il gruppo più grande di predoni."
+      "text": "Ogni 6 secondi, una meteora colpisce il gruppo più grande."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8419,7 +8415,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Ogni 9 secondi, un vortice raduna il gruppo più grande di predoni."
+      "text": "Ogni 9 secondi, un vortice raduna i predoni."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8443,7 +8439,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Ogni colpo si divide in 2, e ogni metà si divide di nuovo."
+      "text": "Ogni colpo si divide in 2, poi di nuovo."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8451,7 +8447,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Ogni colpo diventa a caso fuoco, veleno, ghiaccio o fulmine."
+      "text": "Ogni colpo è a caso fuoco, veleno, ghiaccio o fulmine."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8459,7 +8455,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Le torrette sparano il doppio più veloce e i colpi consumano metà carburante."
+      "text": "Le torrette sparano il doppio più veloce con metà carburante."
     },
     {
       "key": "shuffle.blast_gems.name",
@@ -8467,7 +8463,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Ogni abbinamento fa esplodere le gemme intorno. Più copie, esplosioni più grandi."
+      "text": "Gli abbinamenti fanno esplodere le gemme vicine. Più copie, esplosioni più grandi."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8475,7 +8471,7 @@
     },
     {
       "key": "shuffle.power_gems.note",
-      "text": "Abbina 4 gemme per creare un razzo che svuota la sua linea. Abbinane 5 o ad angolo per creare una nova che svuota il suo colore."
+      "text": "Abbina 4: un razzo svuota una linea. Abbina 5 o ad angolo: una nova svuota un colore."
     },
     {
       "key": "shuffle.titan_pact.name",
@@ -8483,7 +8479,7 @@
     },
     {
       "key": "shuffle.titan_pact.note",
-      "text": "I colpi fanno il {0}% di danni in più, ma le torrette sparano il {1}% più lente."
+      "text": "Le torrette colpiscono il {0}% più forte, ma sparano il {1}% più lente."
     },
     {
       "key": "shuffle.miser_pact.name",
@@ -8499,7 +8495,7 @@
     },
     {
       "key": "shuffle.frenzy_pact.note",
-      "text": "Le torrette sparano il {0}% più veloce, ma i colpi fanno il {1}% di danni in meno."
+      "text": "Le torrette sparano il {0}% più veloce, ma fanno il {1}% di danni in meno."
     },
     {
       "key": "shuffle.blood_pact.name",
@@ -8507,7 +8503,7 @@
     },
     {
       "key": "shuffle.blood_pact.note",
-      "text": "I colpi fanno il {0}% di danni in più e le torrette sparano il {0}% più veloce, ma hanno il {1}% di vita in meno."
+      "text": "Le torrette ottengono il {0}% di danni e velocità in più, ma il {1}% di vita in meno."
     },
     {
       "key": "shuffle.reckless_pact.name",
@@ -8515,7 +8511,7 @@
     },
     {
       "key": "shuffle.reckless_pact.note",
-      "text": "I colpi fanno il {0}% di danni in più e le torrette sparano il {0}% più veloce, ma i predoni camminano il {1}% più veloci."
+      "text": "Le torrette ottengono il {0}% di danni e velocità in più, ma i predoni camminano il {1}% più veloci."
     },
     {
       "key": "shuffle.kinetic_gems.name",
@@ -8523,7 +8519,7 @@
     },
     {
       "key": "shuffle.kinetic_gems.note",
-      "text": "Le gemme danno più carburante: il {0}% della velocità in più delle tue torrette."
+      "text": "Il {0}% della tua velocità di tiro in più si aggiunge al carburante delle gemme."
     },
     {
       "key": "shuffle.iron_cannons.name",
@@ -8531,7 +8527,7 @@
     },
     {
       "key": "shuffle.iron_cannons.note",
-      "text": "I colpi fanno più danni: il {0}% della vita in più delle tue torrette."
+      "text": "Il {0}% della tua vita in più si aggiunge ai danni."
     },
     {
       "key": "shuffle.overflow.name",
@@ -8539,7 +8535,7 @@
     },
     {
       "key": "shuffle.overflow.note",
-      "text": "Le torrette sparano più veloce: il {0}% del carburante in più che contengono."
+      "text": "Il {0}% del tuo carburante in più si aggiunge alla velocità di tiro."
     },
     {
       "key": "shuffle.chain_fuel.name",
@@ -8547,7 +8543,7 @@
     },
     {
       "key": "shuffle.chain_fuel.note",
-      "text": "Ogni passo di una reazione a catena dà il {0}% di carburante in più del precedente."
+      "text": "Ogni passo della catena dà il {0}% di carburante in più del precedente."
     },
     {
       "key": "shuffle.grand_hand.name",
@@ -8563,7 +8559,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Una torretta diventa un cannone laser, la più forte per prima. I suoi colpi rimbalzano su altri 3 predoni con il {0}% dei danni."
+      "text": "Ogni copia trasforma una torretta in laser, la migliore per prima. Rimbalza su 3 predoni con il {0}% dei danni."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8607,7 +8603,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Una nube tempestosa copre la collina. Ogni 3 secondi, un fulmine colpisce i 3 predoni più vicini."
+      "text": "Ogni 3 secondi, un fulmine colpisce i 3 predoni più vicini."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8615,7 +8611,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "Ogni 5 secondi, un geyser di vapore esplode sotto il gruppo più grande. Congela e brucia."
+      "text": "Ogni 5 secondi, un geyser congela e brucia il gruppo più grande."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8623,7 +8619,7 @@
     },
     {
       "key": "shuffle.secret.blade_orbit.note",
-      "text": "Delle lame ruotano attorno alle tue torrette. Ogni torretta lancia una lama boomerang che colpisce 2 predoni."
+      "text": "Ogni torretta lancia una lama boomerang che colpisce 2 predoni."
     },
     {
       "key": "shuffle.secret.plague.name",
@@ -8631,7 +8627,7 @@
     },
     {
       "key": "shuffle.secret.plague.note",
-      "text": "I predoni che muoiono nel veleno esplodono. Il veleno si sparge tutto intorno."
+      "text": "Quando un predone avvelenato muore, avvelena tutti quelli vicini."
     },
     {
       "key": "shuffle.secret.gem_comets.name",
@@ -8639,7 +8635,7 @@
     },
     {
       "key": "shuffle.secret.gem_comets.note",
-      "text": "Ogni gemma del potere che crei o attivi lancia una cometa contro il predone più forte."
+      "text": "Le gemme del potere lanciano una cometa sul predone più forte."
     },
     {
       "key": "shuffle.secret.permafrost.name",
@@ -8647,7 +8643,7 @@
     },
     {
       "key": "shuffle.secret.permafrost.note",
-      "text": "La metà bassa della collina si congela. I predoni sul ghiaccio rallentano e vengono colpiti da spuntoni di ghiaccio."
+      "text": "Il ghiaccio copre la parte bassa della collina. Rallenta e ferisce i predoni."
     },
     {
       "key": "shuffle.secret.event_horizon.name",
@@ -8655,7 +8651,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "Ogni 11 secondi, un buco nero risucchia i predoni. Quando si chiude, schiaccia i più deboli."
+      "text": "Ogni 11 secondi, un buco nero attira i predoni e schiaccia i deboli."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8663,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "Ogni 9 secondi, un drago di fuoco attraversa la collina e brucia tutti i predoni sul suo cammino."
+      "text": "Ogni 9 secondi, un drago di fuoco brucia tutto sul suo cammino."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8671,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.golden_dome.note",
-      "text": "Una cupola dorata protegge le tue torrette. Blocca i primi 4 colpi di ogni ondata."
+      "text": "Una cupola dorata blocca i primi 4 colpi alle tue torrette a ogni ondata."
     },
     {
       "key": "shuffle.secret.rainbow_cascade.name",
@@ -8679,7 +8675,7 @@
     },
     {
       "key": "shuffle.secret.rainbow_cascade.note",
-      "text": "Ogni reazione a catena di gemme lancia un fulmine arcobaleno sulla collina. Più è lunga, più colpisce forte."
+      "text": "Le reazioni a catena sparano fulmini arcobaleno. Catene più lunghe colpiscono più forte."
     },
     {
       "key": "shuffle.secret.solar_cannon.name",
@@ -8687,7 +8683,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "Sorge un secondo sole. Ogni 8 secondi, brucia la corsia più piena con un raggio gigante."
+      "text": "Ogni 8 secondi, un secondo sole brucia la corsia più affollata."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8695,7 +8691,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "Ogni 12 secondi, il cielo diventa rosso e 8 meteore piovono sui predoni."
+      "text": "Ogni 12 secondi, 8 meteore piovono sui predoni."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8703,7 +8699,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "Ogni 15 secondi, il tempo si ferma per 4 secondi. I predoni si bloccano e le tue torrette sparano due volte più veloci."
+      "text": "Ogni 15 secondi, i predoni si congelano per 4 secondi. Le torrette sparano il doppio più veloce."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8711,7 +8707,7 @@
     },
     {
       "key": "shuffle.evolution.titan_shells.note",
-      "text": "Un colpo su 5 spara anche un proiettile gigante che esplode sui predoni intorno."
+      "text": "Ogni 5 colpi parte un proiettile gigante che esplode."
     },
     {
       "key": "shuffle.evolution.deadeye.name",
@@ -8719,7 +8715,7 @@
     },
     {
       "key": "shuffle.evolution.deadeye.note",
-      "text": "Un colpo su 4 colpisce anche il predone più forte con il triplo dei danni."
+      "text": "Ogni 4 colpi, uno colpisce il predone più forte con il triplo dei danni."
     },
     {
       "key": "shuffle.evolution.fortress.name",
@@ -8727,7 +8723,7 @@
     },
     {
       "key": "shuffle.evolution.fortress.note",
-      "text": "Ogni ondata cura un po' le tue torrette. I predoni che colpiscono una torretta vengono colpiti a loro volta."
+      "text": "Le torrette si curano a ogni ondata e restituiscono i colpi."
     },
     {
       "key": "shuffle.evolution.cluster_bombs.name",
@@ -8743,7 +8739,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "Ogni 4 secondi, ogni torretta manda una sfera di fulmini su per la collina. Folgora ogni predone che tocca."
+      "text": "Ogni 4 secondi, le torrette lanciano sfere di fulmini."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8751,7 +8747,7 @@
     },
     {
       "key": "shuffle.evolution.swarm.note",
-      "text": "Ogni raffica di missili spara anche 8 piccoli missili su predoni diversi."
+      "text": "Ogni salva di missili spara anche 8 mini missili."
     },
     {
       "key": "shuffle.evolution.diamond_dust.name",
@@ -8759,7 +8755,7 @@
     },
     {
       "key": "shuffle.evolution.diamond_dust.note",
-      "text": "I tuoi colpi raffreddano. Un predone frantumato lascia una tormenta che congela tutto intorno."
+      "text": "I colpi raffreddano. I predoni frantumati lasciano una bufera gelida."
     },
     {
       "key": "shuffle.evolution.comet_storm.name",
@@ -8767,7 +8763,7 @@
     },
     {
       "key": "shuffle.evolution.comet_storm.note",
-      "text": "Ogni meteora si spezza in 4 schegge infuocate che piovono intorno."
+      "text": "Ogni meteora si spezza in 4 schegge infuocate."
     },
     {
       "key": "shuffle.evolution.prism_lance.name",
@@ -8775,7 +8771,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "Ogni 6 secondi, i tuoi laser caricano un prisma. Spara 6 raggi arcobaleno sui predoni più forti."
+      "text": "Ogni 6 secondi, un prisma spara 6 raggi sui predoni più forti."
     }
   ]
 }

@@ -1436,23 +1436,21 @@ namespace GlimmerGrove.Content
         /// when the lane is left. Named in <see cref="Art"/> as well, because that is the
         /// question about what <em>exists</em> and the audit walks it.
         /// </summary>
-        /// <summary>The secret's and the evolution's diamonds (<c>Tools/make_shuffle_art.py</c>), by their address under <c>Ui/</c>.</summary>
-        public const string SecretMark = "shuffle_secret", EvolutionMark = "shuffle_evolution";
-
-        static readonly string[] ShuffleMarks = { SecretMark, EvolutionMark };
-
         public static IReadOnlyList<AssetRequest> ShuffleArt()
         {
             var cards = GlimmerGrove.Shuffle.ShuffleCards.All;
-            var list = new List<AssetRequest>(cards.Length + ShuffleMarks.Length);
+            var bonds = GlimmerGrove.Shuffle.ShuffleBonds.All;
+            var list = new List<AssetRequest>(cards.Length + bonds.Length);
 
             for (int i = 0; i < cards.Length; i++)
                 list.Add(AssetRequest.Sprite(AssetManifest.Ui(cards[i].Icon.Substring(3))));
 
-            // The two diamonds a card wears and the unlock panel stands as its emblem (59n),
-            // drawn on nothing but this lane's hand and panel, so they travel with its scope.
-            for (int i = 0; i < ShuffleMarks.Length; i++)
-                list.Add(AssetRequest.Sprite(AssetManifest.Ui(ShuffleMarks[i])));
+            // The diamonds a card wears and the unlock panel stands as its emblem (59n): one per
+            // secret, one shared by every evolution (`ShuffleBond.Mark`), drawn on nothing but
+            // this lane's hand and panel, so they travel with its scope.
+            var marks = new HashSet<string>(System.StringComparer.Ordinal);
+            for (int i = 0; i < bonds.Length; i++)
+                if (marks.Add(bonds[i].Mark)) list.Add(AssetRequest.Sprite(AssetManifest.Ui(bonds[i].Mark)));
 
             return list;
         }

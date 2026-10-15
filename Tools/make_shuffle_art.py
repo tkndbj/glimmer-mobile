@@ -205,13 +205,34 @@ def crest(source):
     return out
 
 
-#: The two diamonds a hand's card wears (MODES.md 59n): green when it goes with a secret the
-#: build has started, purple when it brings its own evolution closer. **Cut from the kit's own
-#: gem** (`Ui/ic_gem`, committed, so this needs no pack) by a hue rotation (CLAUDE.md 44g), never
-#: a tint: the gem is pink and a multiply can only darken it. Each row is the file, the hue it
-#: is turned to (Pillow's 0..255) and how much of its colour is kept.
+#: The diamonds a hand's card wears (MODES.md 59n): **one per secret, each in that secret's own
+#: colour** (owner, 2026-10-14), and one purple shared by every evolution. **Cut from the kit's
+#: own gem** (`Ui/ic_gem`, committed, so this needs no pack) by a hue rotation (CLAUDE.md 44g),
+#: never a tint: the gem is pink and a multiply can only darken it.
+#:
+#: **The colours are read out of `ShuffleSecrets.cs`**, never typed here: the game draws each
+#: diamond's glow from the same figures, so one table is the only way the two cannot disagree.
+#: A changed figure fails `--check` until the art is cut again.
 MARK_SOURCE = UI / "ic_gem.png"
-MARKS = (("shuffle_secret", 92, 1.05), ("shuffle_evolution", 196, 1.0))
+BONDS_CS = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Modes" / "Shuffle" / "ShuffleSecrets.cs"
+
+
+def marks():
+    """Every diamond as `(file, Pillow hue 0..255, saturation factor)`: one per secret, then the
+    evolutions' shared one. Hue is held in degrees and saturation in percent on the C# side."""
+    text = BONDS_CS.read_text(encoding="utf-8")
+    stem = re.search(r'SecretMarkStem = "(\w+)", EvolutionMark = "(\w+)"', text)
+    evo = re.search(r"EvolutionHue = (\d+), EvolutionSaturation = (\d+)", text)
+    secrets = re.findall(r'ShuffleBond\.Secret\("(\w+)", SiegePower\.\w+, (\d+), (\d+),', text)
+    if not stem or not evo or not secrets:
+        sys.exit("cannot read the diamonds' colours out of %s" % BONDS_CS)
+
+    def pillow(deg):
+        return int(round(int(deg) % 360 * 256 / 360.0)) % 256
+
+    rows = [(stem.group(1) + sid, pillow(h), int(sat) / 100.0) for sid, h, sat in secrets]
+    rows.append((stem.group(2), pillow(evo.group(1)), int(evo.group(2)) / 100.0))
+    return rows
 
 
 def mark(hue, saturation):
@@ -258,7 +279,7 @@ def cut():
 
     made[BG / "plain_shuffle.png"] = (raw(wall()), meta_for(WALL_TEMPLATE, "plain_shuffle", "glimmer.bg."))
 
-    for name, hue, saturation in MARKS:
+    for name, hue, saturation in marks():
         made[UI / ("%s.png" % name)] = (raw(mark(hue, saturation)), meta_for(ICON_TEMPLATE, name, "glimmer.ui.shuffle."))
 
     for code, source in CREST_SOURCES.items():

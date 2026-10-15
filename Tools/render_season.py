@@ -398,8 +398,8 @@ def pass_banner(sheet, y, owned):
 def headings(sheet, y):
     """`EventScreen.BuildHeadings` — said once above the list, not on forty cards."""
     cy = y + HEADING_H / 2
-    K.text(sheet, txt("ui.mark.free").upper(), W / 2 + FREE_X, cy, 24, fill=K.MINT)
-    K.text(sheet, txt("ui.mark.pass").upper(), W / 2 + PASS_X, cy, 24, fill=K.BLOOM)
+    K.text(sheet, txt("ui.mark.free").upper(), W / 2 + FREE_X, cy, 36, fill=K.MINT)
+    K.text(sheet, txt("ui.mark.pass").upper(), W / 2 + PASS_X, cy, 36, fill=K.BLOOM)
     return y + HEADING_H
 
 
@@ -419,7 +419,9 @@ def rung_card(sheet, y, index, rung, marks, owned):
     # carries all three faces rather than only the two a fresh account would show.
     claimed = reached and (rung["goal"] <= CLAIMED_THROUGH or rung["goal"] in TAKEN)
     free_face = "sealed" if claimed else "ready" if reached else "locked"
-    pass_face = ("locked" if not owned
+    # `Face.Teaser`: a reached pass chest on an account without the pass shines like an open
+    # one and keeps its padlock.
+    pass_face = (("teaser" if reached and not claimed else "locked") if not owned
                  else "sealed" if claimed
                  else "ready" if reached else "locked")
 
@@ -437,16 +439,20 @@ def rung_card(sheet, y, index, rung, marks, owned):
     K.paste(sheet, split, W / 2 + SPLIT_X, cy)
     K.text(sheet, str(index + 1), left + WIDTH / 2 + DISC_X, cy - 2, 40,
            fill=K.CREAM if reached else (214, 205, 186))
-    K.text(sheet, txt("ui.mark.rung_goal", rung["goal"]), left + WIDTH / 2 + GOAL_X, cy, 24,
+    K.text(sheet, txt("ui.mark.rung_goal", rung["goal"]), left + WIDTH / 2 + GOAL_X, cy, 32,
            fill=K.GOLD if reached else (198, 190, 172), outline=2, anchor="l")
 
     for x, tier, face in ((FREE_X, rung["tier"], free_face),
                           (PASS_X, rung["premiumTier"], pass_face)):
         cx = W / 2 + x
-        if face == "ready":
+        if face in ("ready", "teaser"):
+            fan = K.rays(int(CHEST_TALL * 1.6), 14)
+            fan_rgba = Image.new("RGBA", fan.size, (*K.SUN, 0))
+            fan_rgba.putalpha(fan.point(lambda v: int(v * .5)))
+            K.paste(sheet, fan_rgba, cx, cy)
             K.paste(sheet, K.glow(int(CHEST_TALL * 2), 2.0, K.GOLD, .55), cx, cy)
 
-        K.paste(sheet, chest(tier, CHEST_TALL, face), cx, cy)
+        K.paste(sheet, chest(tier, CHEST_TALL, "ready" if face == "teaser" else face), cx, cy)
 
         if face == "sealed":
             seal = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
@@ -455,7 +461,7 @@ def rung_card(sheet, y, index, rung, marks, owned):
             K.paste(sheet, seal, cx + STAMP_X, cy + STAMP_Y)
             K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_check.png").convert("RGBA"),
                                         (38, 38)), (255, 255, 255)), cx + STAMP_X, cy + STAMP_Y)
-        elif face == "locked" and x == PASS_X and not owned:
+        elif face in ("locked", "teaser") and x == PASS_X and not owned:
             K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_lock.png").convert("RGBA"),
                                         (52, 52)), K.CREAM), cx + STAMP_X, cy + STAMP_Y)
 

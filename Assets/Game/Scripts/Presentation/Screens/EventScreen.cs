@@ -556,20 +556,25 @@ namespace GlimmerGrove
         /// pictures are the same four tiers on both tracks. Repeating the words on forty cards
         /// would be eighty labels saying one thing; saying it once above the list is the
         /// arrangement every table in this game already uses.
+        /// <para>
+        /// Grown at the owner's instruction (24 read as tiny over 122-tall chests). The two
+        /// boxes are 280 wide on centres 290 apart, so they cannot touch, and 50 tall inside the
+        /// 62 band.
+        /// </para>
         /// </summary>
         float BuildHeadings(float y)
         {
             float cy = -(y + HeadingH * .5f);
 
             UIKit.Shrinkable(
-                UIKit.Titled("HFree", Safe, Loc.Get("ui.mark.free").Upper(), 24, Pal.Mint,
-                             TextAnchor.MiddleCenter, new Vector2(220f, 34f), Top,
-                             new Vector2(SeasonLadder.FreeX, cy), 3f, 3f), 14);
+                UIKit.Titled("HFree", Safe, Loc.Get("ui.mark.free").Upper(), 36, Pal.Mint,
+                             TextAnchor.MiddleCenter, new Vector2(280f, 50f), Top,
+                             new Vector2(SeasonLadder.FreeX, cy), 3f, 4f), 20);
 
             UIKit.Shrinkable(
-                UIKit.Titled("HPass", Safe, Loc.Get("ui.mark.pass").Upper(), 24, Pal.Bloom,
-                             TextAnchor.MiddleCenter, new Vector2(220f, 34f), Top,
-                             new Vector2(SeasonLadder.PassX, cy), 3f, 3f), 14);
+                UIKit.Titled("HPass", Safe, Loc.Get("ui.mark.pass").Upper(), 36, Pal.Bloom,
+                             TextAnchor.MiddleCenter, new Vector2(280f, 50f), Top,
+                             new Vector2(SeasonLadder.PassX, cy), 3f, 4f), 20);
 
             return y + HeadingH;
         }
@@ -678,6 +683,27 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// The pass offer, raised by a tap on a reached pass chest. The count is every chest
+        /// the paid column pays across the ladder, and the key hands back to
+        /// <see cref="BuyPass"/>, the one place the pass is sold.
+        /// </summary>
+        void OfferPass(string chestIcon)
+        {
+            int chests = 0;
+            foreach (var m in _season.Milestones)
+                if (m.Pays(SeasonTrack.Pass)) chests++;
+
+            Audio.Sfx("collect", .45f);
+            Flow.Modal<SeasonPassOverlay>(v =>
+            {
+                v.ChestIcon = chestIcon;
+                v.Chests = chests;
+                v.Gems = _season.PassGems;
+                v.OnBuy = BuyPass;
+            });
+        }
+
         // ------------------------------------------------------------------ claiming
         /// <summary>
         /// A chest was tapped.
@@ -699,6 +725,15 @@ namespace GlimmerGrove
 
             if (track == SeasonTrack.Pass && !Owned)
             {
+                // A reached pass chest shines like an open one (SeasonLadder's Face.Teaser), so a
+                // tap on it is answered with the offer itself rather than a line about it.
+                if (_progress.Marks >= rung.Goal && !SeasonLedger.IsClaimed(_season, rung, track)
+                    && _season.IsLiveAt(GameClock.NowUnix()))
+                {
+                    OfferPass(rung.TierOn(track)?.Icon);
+                    return;
+                }
+
                 Scenery.Toast(Content, Loc.Get("ui.mark.pass_required"), Pal.Bloom, 2.4f);
                 return;
             }

@@ -4402,6 +4402,10 @@
       "text": "le Passe du Gardien ouvre ce côté"
     },
     {
+      "key": "ui.mark.pass_unlock",
+      "text": "Prends le Passe du Gardien pour débloquer {0} coffres !"
+    },
+    {
       "key": "ui.mark.purchase_hint",
       "text": "Un seul achat, sans abonnement. Les échelons précédents sont inclus."
     },
@@ -8038,14 +8042,6 @@
       "text": "{0} x{1}"
     },
     {
-      "key": "ui.shuffle.taken",
-      "text": "{0} choisie"
-    },
-    {
-      "key": "ui.shuffle.taken_again",
-      "text": "{0} x{1}"
-    },
-    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Tirs Lourds"
     },
@@ -8131,7 +8127,7 @@
     },
     {
       "key": "shuffle.splash_shot.note",
-      "text": "Les tirs touchent aussi les pillards proches pour {0} % des dégâts."
+      "text": "Les tirs éclaboussent les pillards proches pour {0} % des dégâts."
     },
     {
       "key": "shuffle.chain_arc.name",
@@ -8187,7 +8183,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Les tirs chargés font {0} % de dégâts en plus, et les tourelles en stockent 1 de plus."
+      "text": "Les tirs chargés frappent {0} % plus fort. Les tourelles stockent 1 tir chargé de plus."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8235,7 +8231,7 @@
     },
     {
       "key": "shuffle.second_wind.note",
-      "text": "Une tourelle détruite revient une fois avec la moitié de sa vie."
+      "text": "Une tourelle tombée revient une fois avec la moitié de sa vie."
     },
     {
       "key": "shuffle.hourglass_heart.name",
@@ -8251,7 +8247,7 @@
     },
     {
       "key": "shuffle.repelling_wards.note",
-      "text": "{0} % des pillards qui atteignent tes tourelles sont repoussés."
+      "text": "Les tourelles repoussent {0} % des pillards qui les atteignent."
     },
     {
       "key": "shuffle.execution.name",
@@ -8259,7 +8255,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Les tirs achèvent net les pillards sous {0} % de vie."
+      "text": "Les tirs achèvent les pillards sous {0} % de vie."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8267,7 +8263,7 @@
     },
     {
       "key": "shuffle.twin_barrels.note",
-      "text": "{0} % des tirs frappent une 2e fois pour moitié moins de dégâts."
+      "text": "{0} % des tirs frappent encore pour moitié moins de dégâts."
     },
     {
       "key": "shuffle.sure_sight.name",
@@ -8275,7 +8271,7 @@
     },
     {
       "key": "shuffle.sure_sight.note",
-      "text": "Une tourelle sans cible tire sur les autres couleurs pour moitié moins de dégâts."
+      "text": "Les tourelles sans cible tirent sur les autres couleurs à moitié dégâts."
     },
     {
       "key": "shuffle.chain_reaction.name",
@@ -8291,7 +8287,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "{0} % des tirs maudissent un pillard : il subit 20 % de dégâts en plus pendant 3 secondes."
+      "text": "{0} % des tirs maudissent : le pillard subit 20 % de dégâts en plus pendant 3 secondes."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8307,7 +8303,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Quand ta dernière tourelle tombe, toutes reviennent une fois avec toute leur vie."
+      "text": "Si toutes les tourelles tombent, elles reviennent une fois avec toute leur vie."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8315,7 +8311,7 @@
     },
     {
       "key": "shuffle.overdrive.note",
-      "text": "Les tirs font {0} % de dégâts en plus et les tourelles tirent {1} % plus vite."
+      "text": "Les tourelles font {0} % de dégâts en plus et tirent {1} % plus vite."
     },
     {
       "key": "shuffle.rainbow_fuel.name",
@@ -8323,7 +8319,7 @@
     },
     {
       "key": "shuffle.rainbow_fuel.note",
-      "text": "Chaque alignement donne aussi du carburant aux trois autres tourelles."
+      "text": "Chaque alignement alimente aussi les trois autres tourelles."
     },
     {
       "key": "shuffle.last_stand.name",
@@ -8331,7 +8327,7 @@
     },
     {
       "key": "shuffle.last_stand.note",
-      "text": "Sous {0} % de vie, les tourelles font {1} % de dégâts en plus et tirent {1} % plus vite."
+      "text": "Sous {0} % de vie, les tourelles gagnent {1} % de dégâts et de vitesse."
     },
     {
       "key": "shuffle.scatter_shot.name",
@@ -8363,7 +8359,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Un tir sur 5 envoie une onde de choc le long de sa ligne qui repousse les pillards."
+      "text": "Chaque 5e tir lance une onde qui repousse les pillards."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8371,7 +8367,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Les tirs laissent des flaques de poison qui blessent les pillards qui passent."
+      "text": "Les tirs laissent des flaques de poison qui blessent les pillards."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8387,7 +8383,7 @@
     },
     {
       "key": "shuffle.spin_up.note",
-      "text": "Plus les tourelles tirent longtemps, plus elles tirent vite, jusqu'à {0} %."
+      "text": "Les tourelles accélèrent en tirant, jusqu'à {0} % plus vite."
     },
     {
       "key": "shuffle.shatter.name",
@@ -8395,7 +8391,7 @@
     },
     {
       "key": "shuffle.shatter.note",
-      "text": "Les pillards ralentis ou étourdis éclatent en éclats en mourant et blessent leurs voisins."
+      "text": "Les pillards ralentis ou étourdis éclatent en éclats en mourant."
     },
     {
       "key": "shuffle.wildfire.name",
@@ -8403,7 +8399,7 @@
     },
     {
       "key": "shuffle.wildfire.note",
-      "text": "Les pillards en feu propagent les flammes à leurs voisins en mourant."
+      "text": "Les pillards en feu propagent les flammes en mourant."
     },
     {
       "key": "shuffle.meteor_call.name",
@@ -8411,7 +8407,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Toutes les 6 secondes, une météorite frappe le plus gros groupe de pillards."
+      "text": "Toutes les 6 secondes, une météorite frappe le plus gros groupe."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8419,7 +8415,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Toutes les 9 secondes, un vortex rassemble le plus gros groupe de pillards."
+      "text": "Toutes les 9 secondes, un vortex rassemble les pillards."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8443,7 +8439,7 @@
     },
     {
       "key": "shuffle.hydra.note",
-      "text": "Chaque tir se divise en 2, et chaque moitié se divise encore."
+      "text": "Chaque tir se divise en 2, puis encore."
     },
     {
       "key": "shuffle.wild_magic.name",
@@ -8451,7 +8447,7 @@
     },
     {
       "key": "shuffle.wild_magic.note",
-      "text": "Chaque tir devient au hasard feu, poison, glace ou foudre."
+      "text": "Chaque tir est au hasard feu, poison, glace ou foudre."
     },
     {
       "key": "shuffle.bullet_hell.name",
@@ -8459,7 +8455,7 @@
     },
     {
       "key": "shuffle.bullet_hell.note",
-      "text": "Les tourelles tirent deux fois plus vite et les tirs coûtent moitié moins de carburant."
+      "text": "Les tourelles tirent deux fois plus vite pour moitié moins de carburant."
     },
     {
       "key": "shuffle.blast_gems.name",
@@ -8467,7 +8463,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Chaque alignement fait exploser les gemmes autour. Plus de copies, plus grandes explosions."
+      "text": "Les alignements font exploser les gemmes proches. Plus de copies, plus d'explosion."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8475,7 +8471,7 @@
     },
     {
       "key": "shuffle.power_gems.note",
-      "text": "Aligne 4 gemmes pour créer une fusée qui vide sa ligne. Aligne-en 5 ou en coin pour créer une nova qui vide sa couleur."
+      "text": "Aligne 4 : une fusée vide une ligne. Aligne 5 ou en coin : une nova vide une couleur."
     },
     {
       "key": "shuffle.titan_pact.name",
@@ -8483,7 +8479,7 @@
     },
     {
       "key": "shuffle.titan_pact.note",
-      "text": "Les tirs font {0} % de dégâts en plus, mais les tourelles tirent {1} % moins vite."
+      "text": "Les tourelles frappent {0} % plus fort, mais tirent {1} % moins vite."
     },
     {
       "key": "shuffle.miser_pact.name",
@@ -8499,7 +8495,7 @@
     },
     {
       "key": "shuffle.frenzy_pact.note",
-      "text": "Les tourelles tirent {0} % plus vite, mais les tirs font {1} % de dégâts en moins."
+      "text": "Les tourelles tirent {0} % plus vite, mais font {1} % de dégâts en moins."
     },
     {
       "key": "shuffle.blood_pact.name",
@@ -8507,7 +8503,7 @@
     },
     {
       "key": "shuffle.blood_pact.note",
-      "text": "Les tirs font {0} % de dégâts en plus et les tourelles tirent {0} % plus vite, mais elles ont {1} % de vie en moins."
+      "text": "Les tourelles gagnent {0} % de dégâts et de vitesse, mais perdent {1} % de vie."
     },
     {
       "key": "shuffle.reckless_pact.name",
@@ -8515,7 +8511,7 @@
     },
     {
       "key": "shuffle.reckless_pact.note",
-      "text": "Les tirs font {0} % de dégâts en plus et les tourelles tirent {0} % plus vite, mais les pillards marchent {1} % plus vite."
+      "text": "Les tourelles gagnent {0} % de dégâts et de vitesse, mais les pillards marchent {1} % plus vite."
     },
     {
       "key": "shuffle.kinetic_gems.name",
@@ -8523,7 +8519,7 @@
     },
     {
       "key": "shuffle.kinetic_gems.note",
-      "text": "Les gemmes donnent plus de carburant : {0} % de la vitesse en plus de tes tourelles."
+      "text": "{0} % de ta vitesse de tir en plus s'ajoute au carburant des gemmes."
     },
     {
       "key": "shuffle.iron_cannons.name",
@@ -8531,7 +8527,7 @@
     },
     {
       "key": "shuffle.iron_cannons.note",
-      "text": "Les tirs font plus de dégâts : {0} % de la vie en plus de tes tourelles."
+      "text": "{0} % de ta vie en plus s'ajoute aux dégâts."
     },
     {
       "key": "shuffle.overflow.name",
@@ -8539,7 +8535,7 @@
     },
     {
       "key": "shuffle.overflow.note",
-      "text": "Les tourelles tirent plus vite : {0} % du carburant en plus qu'elles stockent."
+      "text": "{0} % de ton carburant en plus s'ajoute à la vitesse de tir."
     },
     {
       "key": "shuffle.chain_fuel.name",
@@ -8547,7 +8543,7 @@
     },
     {
       "key": "shuffle.chain_fuel.note",
-      "text": "Chaque étape d'une réaction en chaîne donne {0} % de carburant en plus que la précédente."
+      "text": "Chaque étape de chaîne donne {0} % de carburant en plus que la précédente."
     },
     {
       "key": "shuffle.grand_hand.name",
@@ -8563,7 +8559,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Une tourelle devient un canon laser, la plus forte d'abord. Ses tirs rebondissent sur 3 pillards de plus pour {0} % des dégâts."
+      "text": "Chaque copie change une tourelle en laser, la meilleure d'abord. Il rebondit sur 3 pillards pour {0} % des dégâts."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8607,7 +8603,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Un nuage d'orage couvre la colline. Toutes les 3 secondes, la foudre frappe les 3 pillards les plus proches."
+      "text": "Toutes les 3 secondes, la foudre frappe les 3 pillards les plus proches."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8615,7 +8611,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "Toutes les 5 secondes, un geyser de vapeur jaillit sous le plus gros groupe. Il gèle et brûle."
+      "text": "Toutes les 5 secondes, un geyser gèle et brûle le plus gros groupe."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8623,7 +8619,7 @@
     },
     {
       "key": "shuffle.secret.blade_orbit.note",
-      "text": "Des lames tournent autour de tes tourelles. Chaque tourelle lance une lame boomerang qui touche 2 pillards."
+      "text": "Chaque tourelle lance une lame boomerang qui touche 2 pillards."
     },
     {
       "key": "shuffle.secret.plague.name",
@@ -8631,7 +8627,7 @@
     },
     {
       "key": "shuffle.secret.plague.note",
-      "text": "Les pillards qui meurent dans le poison éclatent. Le poison se répand tout autour."
+      "text": "Quand un pillard empoisonné meurt, il empoisonne tous ses voisins."
     },
     {
       "key": "shuffle.secret.gem_comets.name",
@@ -8639,7 +8635,7 @@
     },
     {
       "key": "shuffle.secret.gem_comets.note",
-      "text": "Chaque gemme de pouvoir que tu crées ou déclenches lance une comète sur le pillard le plus fort."
+      "text": "Les gemmes de pouvoir lancent une comète sur le pillard le plus fort."
     },
     {
       "key": "shuffle.secret.permafrost.name",
@@ -8647,7 +8643,7 @@
     },
     {
       "key": "shuffle.secret.permafrost.note",
-      "text": "La moitié basse de la colline gèle. Les pillards sur la glace ralentissent et subissent des pics de glace."
+      "text": "La glace couvre le bas de la colline. Elle ralentit et blesse les pillards."
     },
     {
       "key": "shuffle.secret.event_horizon.name",
@@ -8655,7 +8651,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "Toutes les 11 secondes, un trou noir aspire les pillards. En se refermant, il écrase les plus faibles."
+      "text": "Toutes les 11 secondes, un trou noir aspire les pillards et écrase les faibles."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8663,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "Toutes les 9 secondes, un dragon de feu traverse la colline et brûle tous les pillards sur son passage."
+      "text": "Toutes les 9 secondes, un dragon de feu brûle tout sur son passage."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8671,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.golden_dome.note",
-      "text": "Un dôme doré protège tes tourelles. Il bloque les 4 premiers coups de chaque vague."
+      "text": "Un dôme doré bloque les 4 premiers coups sur tes tourelles à chaque vague."
     },
     {
       "key": "shuffle.secret.rainbow_cascade.name",
@@ -8679,7 +8675,7 @@
     },
     {
       "key": "shuffle.secret.rainbow_cascade.note",
-      "text": "Chaque réaction en chaîne de gemmes lance un éclair arc-en-ciel sur la colline. Plus elle est longue, plus il frappe fort."
+      "text": "Les réactions en chaîne tirent des éclairs arc-en-ciel. Plus la chaîne est longue, plus ça frappe fort."
     },
     {
       "key": "shuffle.secret.solar_cannon.name",
@@ -8687,7 +8683,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "Un second soleil se lève. Toutes les 8 secondes, il brûle le couloir le plus rempli avec un rayon géant."
+      "text": "Toutes les 8 secondes, un second soleil brûle le couloir le plus chargé."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8695,7 +8691,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "Toutes les 12 secondes, le ciel devient rouge et 8 météorites s'abattent sur les pillards."
+      "text": "Toutes les 12 secondes, 8 météorites pleuvent sur les pillards."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8703,7 +8699,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "Toutes les 15 secondes, le temps s'arrête 4 secondes. Les pillards se figent et tes tourelles tirent deux fois plus vite."
+      "text": "Toutes les 15 secondes, les pillards gèlent 4 secondes. Les tourelles tirent deux fois plus vite."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8711,7 +8707,7 @@
     },
     {
       "key": "shuffle.evolution.titan_shells.note",
-      "text": "Un tir sur 5 lance aussi un obus géant qui explose sur les pillards autour."
+      "text": "Chaque 5e tir lance un obus géant qui explose."
     },
     {
       "key": "shuffle.evolution.deadeye.name",
@@ -8719,7 +8715,7 @@
     },
     {
       "key": "shuffle.evolution.deadeye.note",
-      "text": "Un tir sur 4 touche aussi le pillard le plus fort avec trois fois plus de dégâts."
+      "text": "Chaque 4e tir frappe le pillard le plus fort pour le triple de dégâts."
     },
     {
       "key": "shuffle.evolution.fortress.name",
@@ -8727,7 +8723,7 @@
     },
     {
       "key": "shuffle.evolution.fortress.note",
-      "text": "Chaque vague soigne un peu tes tourelles. Les pillards qui frappent une tourelle sont frappés en retour."
+      "text": "Les tourelles se soignent à chaque vague et ripostent quand on les frappe."
     },
     {
       "key": "shuffle.evolution.cluster_bombs.name",
@@ -8743,7 +8739,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "Toutes les 4 secondes, chaque tourelle envoie une boule de foudre vers le haut de la colline. Elle électrocute chaque pillard touché."
+      "text": "Toutes les 4 secondes, les tourelles lancent des boules de foudre."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8751,7 +8747,7 @@
     },
     {
       "key": "shuffle.evolution.swarm.note",
-      "text": "Chaque salve de missiles tire aussi 8 petits missiles sur des pillards différents."
+      "text": "Chaque salve de missiles tire aussi 8 mini-missiles."
     },
     {
       "key": "shuffle.evolution.diamond_dust.name",
@@ -8759,7 +8755,7 @@
     },
     {
       "key": "shuffle.evolution.diamond_dust.note",
-      "text": "Tes tirs refroidissent. Un pillard brisé laisse un blizzard qui fige tout autour."
+      "text": "Les tirs refroidissent. Les pillards brisés laissent un blizzard glacial."
     },
     {
       "key": "shuffle.evolution.comet_storm.name",
@@ -8767,7 +8763,7 @@
     },
     {
       "key": "shuffle.evolution.comet_storm.note",
-      "text": "Chaque météorite éclate en 4 éclats brûlants qui pleuvent tout autour."
+      "text": "Chaque météorite éclate en 4 éclats brûlants."
     },
     {
       "key": "shuffle.evolution.prism_lance.name",
@@ -8775,7 +8771,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "Toutes les 6 secondes, tes lasers chargent un prisme. Il tire 6 rayons arc-en-ciel sur les pillards les plus forts."
+      "text": "Toutes les 6 secondes, un prisme tire 6 rayons sur les pillards les plus forts."
     }
   ]
 }
