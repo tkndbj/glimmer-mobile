@@ -7726,6 +7726,10 @@
       "text": "Atteins la vague {0} dans {1}"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Atteins la vague {0} en Mêlée"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Joue {0} combats"
     },

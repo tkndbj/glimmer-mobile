@@ -14,7 +14,7 @@
 
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldPath, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldPath, FieldValue, Firestore, Timestamp } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
@@ -55,7 +55,7 @@ import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
   assertUsableGroveConfig, buildCard, derivedXp, endlessXp, xpBoostXp, groveWorth, keeperLevel,
   optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, rebuildBoards, placeOnBoards,
-  saveRevision, withdrawCard,
+  saveRevision, withdrawCard, CARD_SHAPE_SINCE, REPAIR_BATCH, REPAIR_WORKERS, staleCardCutoff,
 } from "./grove";
 import {
   ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, isDenied, nameKey,
@@ -1956,26 +1956,41 @@ export const sweepVoidedPurchases = onSchedule(
  * see `GrovePublishPolicy` for why that is a client decision and why it is safe to be one.
  * A player who never calls it is simply not on the board.
  */
-export const publishGrove = onCall(callOptions, async (request): Promise<{
+/** What one publish did: the card written (or null when withdrawn) and the save it was built from. */
+interface PublishOutcome {
   card: GroveCardDoc | null;
   withdrawn?: boolean;
   /** The revision of the save the card was built from. See `saveRevision`. */
   revision: number;
-}> => {
-  const uid = requireUid(request);
-  const db = getFirestore();
+}
 
+export const publishGrove = onCall(callOptions, async (request): Promise<PublishOutcome> => {
+  const uid = requireUid(request);
+  const outcome = await publishCardFor(getFirestore(), uid);
+
+  // Nothing to publish and nothing to fix by trying again. Refused rather than failed, so the
+  // client drops it instead of retrying for the life of the account (invariant 13a).
+  if (outcome === null) throw new HttpsError("failed-precondition", "no save to publish");
+  return outcome;
+});
+
+/**
+ * Builds and writes one account's public card from the save and wallet the server holds, and
+ * places it on the boards - **the one path every card is written by**: the player's own
+ * `publishGrove` and the server's `repairGroveCards` alike, so a card the server repairs is
+ * exactly the card the player would have published (the name claimed, the takedowns asked, the
+ * opt-out honoured, the level derived). Null when the account has no save.
+ */
+async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcome | null> {
   const [saveSnapshot, groveSnapshot, walletSnapshot] = await Promise.all([
     db.doc(PATHS.player(uid)).get(),
     db.doc(GROVE_PATHS.groveConfig).get(),
     db.doc(PATHS.wallet(uid)).get(),
   ]);
 
-  if (!saveSnapshot.exists) {
-    // Nothing to publish and nothing to fix by trying again. Refused rather than failed, so
-    // the client drops it instead of retrying for the life of the account (invariant 13a).
-    throw new HttpsError("failed-precondition", "no save to publish");
-  }
+  // Nothing to publish: the caller decides what that means (the callable refuses, the repair
+  // takes the card down).
+  if (!saveSnapshot.exists) return null;
 
   const save = saveSnapshot.data() as Record<string, unknown>;
 
@@ -2115,7 +2130,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // Which save this card was built from, so the client can prove it was the one it pushed.
   // Always present: the client reads a *missing* field as "cannot be checked".
   return { card, revision: saveRevision(save) };
-});
+}
 
 /**
  * Reserves a keeper name, so that no two groves stand on a board under the same one.
@@ -2533,6 +2548,67 @@ export const publishGroveRanks = onSchedule(
   async () => {
     const { ranked, boards } = await rebuildGroveRanks();
     logger.info("grove ranks rebuilt", { ranked, boards });
+  }
+);
+
+/**
+ * Rebuilds, from the save, every public card written before the card's shape last changed
+ * (`CARD_SHAPE_SINCE` in grove.ts) - a bounded batch an hour, oldest first.
+ *
+ * <b>Why the server and not the device.</b> A device republishes only when something on its own
+ * side moves (`GrovePublishPolicy`), so a change to what a card *shows* - a new field such as
+ * `shuffleTop`, a fixed sanitiser - used to reach only the keepers who happened to publish again,
+ * and a device that published to the server before it learned the field remembered its card as
+ * up to date for ever (the owner's own, 2026-10-15). Everything a card is made of is already on
+ * the server, so the server repairs it: through `publishCardFor`, the path the player's own
+ * publish takes, so a repaired card is the card they would have published.
+ *
+ * <b>Cheap at any size.</b> When nothing is stale the run is one indexed query that matches
+ * nothing. After a shape change it rebuilds each card once (a save, a wallet and a card: a few
+ * operations each), `REPAIR_BATCH` an hour, and a rebuilt card's `builtUnix` is past the cutoff,
+ * so it never matches again. A card whose account has no save is taken down.
+ */
+export const repairGroveCards = onSchedule(
+  { region: REGION, schedule: "37 * * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },
+  async () => {
+    const db = getFirestore();
+    const cutoff = staleCardCutoff(Math.floor(Date.now() / 1000));
+    if (cutoff === null) {
+      logger.info("grove card repair waiting for its cutoff", { since: CARD_SHAPE_SINCE });
+      return;
+    }
+
+    const stale = await db.collection(GROVE_PATHS.cards)
+      .where("builtUnix", "<", cutoff)
+      .orderBy("builtUnix")
+      .limit(REPAIR_BATCH)
+      .get();
+
+    let rebuilt = 0, withdrawn = 0, failed = 0;
+
+    // A few at a time: each is a handful of reads and two writes, and the job is not urgent.
+    const queue = stale.docs.map((doc) => doc.id);
+    async function worker(): Promise<void> {
+      for (let uid = queue.shift(); uid !== undefined; uid = queue.shift()) {
+        try {
+          const outcome = await publishCardFor(db, uid);
+          if (outcome === null) {
+            await withdrawCard(uid);
+            withdrawn++;
+          } else if (outcome.withdrawn) {
+            withdrawn++;
+          } else {
+            rebuilt++;
+          }
+        } catch (error) {
+          failed++;
+          logger.warn("grove card repair failed", { uid, error: String(error) });
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: REPAIR_WORKERS }, worker));
+
+    logger.info("grove cards repaired", { stale: stale.size, rebuilt, withdrawn, failed, cutoff });
   }
 );
 

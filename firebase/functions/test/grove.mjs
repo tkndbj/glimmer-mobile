@@ -34,7 +34,7 @@ if (!existsSync(compiled)) {
 
 const {
   groveWorth, keeperLevel, starsFor, bestWave, shuffleWave, figureOf, MAX_WAVE,
-  shuffleTop, compareShuffleRuns, SHUFFLE_TOP,
+  shuffleTop, compareShuffleRuns, SHUFFLE_TOP, CARD_SHAPE_SINCE, staleCardCutoff, REPAIR_BATCH,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
   BOARD_ROWS, rowOf, compareRows, readRows, cutoffOf, qualifies, mergeRow,
@@ -351,6 +351,28 @@ console.log("\nshuffle graded run");
   equal("a graded run reaches the card whole", JSON.stringify(graded.shuffleTop), JSON.stringify(top));
   equal("beside the best wave", graded.shuffle, 150);
   check("a graded card is writable", writable(graded));
+}
+
+// ------------------------------------------------------------------ the card's shape
+//
+// `repairGroveCards` rebuilds every card built before `CARD_SHAPE_SINCE`. The constant is a
+// moment written by hand, so it is held to the newest line of its own history comment: a Unix
+// time a year out (it was, for a minute, 2025 rather than 2026) would repair nothing at all.
+console.log("\ncard shape");
+{
+  const source = readFileSync(join(REPO, "firebase", "functions", "src", "grove.ts"), "utf8");
+  const block = source.slice(source.indexOf("History, newest first:"), source.indexOf("export const CARD_SHAPE_SINCE"));
+  const newest = /- (\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})Z/.exec(block);
+  check("the shape's history names a moment", newest !== null);
+  if (newest) {
+    const [, y, mo, d, h, mi] = newest.map(Number);
+    equal("the constant is the newest moment in its history", CARD_SHAPE_SINCE, Date.UTC(y, mo - 1, d, h, mi) / 1000);
+  }
+
+  equal("the repair waits while the moment is ahead", staleCardCutoff(CARD_SHAPE_SINCE - 1), null);
+  equal("and from the moment on, cards built before it are stale", staleCardCutoff(CARD_SHAPE_SINCE), CARD_SHAPE_SINCE);
+  equal("a rebuilt card is past the cutoff", staleCardCutoff(CARD_SHAPE_SINCE + 3600) < CARD_SHAPE_SINCE + 3600, true);
+  check("a run is bounded", REPAIR_BATCH > 0 && REPAIR_BATCH <= 500);
 }
 
 // ------------------------------------------------------------------ endless XP
@@ -1213,8 +1235,9 @@ console.log("\nranks");
   const saveOf = (c) => ({
     levels: Object.fromEntries((c.levels ?? []).map((r) => [r.level, { stars: r.stars }])),
     endlessBest: c.endless ?? [],
+    shuffleBest: c.shuffle ?? [],
     tasks: { lifetime: c.lifetime ?? [] },
-    ...(c.challenges ? { challenges: { clears: c.challenges } } : {}),
+    ...(c.challenges ?{ challenges: { clears: c.challenges } } : {}),
   });
 
   const levelChapters = {};

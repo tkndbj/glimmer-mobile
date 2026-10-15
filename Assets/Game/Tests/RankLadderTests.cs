@@ -120,7 +120,7 @@ namespace GlimmerGrove.Tests
             var expected = new[]
             {
                 "levels_cleared", "stars", "three_stars", "keeper_level", "best_wave",
-                "runs", "wins", "matches", "raiders", "bosses", "charms", "cogs", "bombs",
+                "shuffle_wave", "runs", "wins", "matches", "raiders", "bosses", "charms", "cogs", "bombs",
                 "utilities", "waves", "streak", "challenge_plays", "challenge_wins", "task_claims",
             };
 

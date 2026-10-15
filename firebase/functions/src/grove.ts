@@ -59,6 +59,7 @@ import { builtInBlocklist } from "./blocklist";
 /** Where the boards and the cards live. Named once so a typo cannot become two collections. */
 export const GROVE_PATHS = {
   card: (uid: string) => `groves/${uid}`,
+  cards: "groves",
   board: (boardId: string) => `leaderboards/${boardId}`,
   groveConfig: "config/grove",
   ranksConfig: "config/groveRanks",
@@ -721,6 +722,35 @@ export function shuffleTop(save: Record<string, unknown>): ShuffleRun | null {
     if (compareShuffleRuns(run, best) > 0) best = run;
   }
   return best;
+}
+
+// ------------------------------------------------------------------ the card's shape
+/**
+ * The moment the public card's shape last changed, as a Unix time: every card built before it
+ * is rebuilt from its save by `repairGroveCards` (index.ts), so a change to what a card shows
+ * reaches every keeper rather than only those who happen to publish again.
+ *
+ * **Raise it in the same change that teaches `buildCard` to write something new** (or to write
+ * something differently), to a moment *after* that deploy will be live - a card built by the old
+ * code between the two would otherwise be counted as current. The job waits while the moment is
+ * in the future (`staleCardCutoff`), so setting it an hour ahead is safe; a moment in the past
+ * that the old code was still running at is the one mistake. History, newest first:
+ *
+ * - 2026-10-15 14:21Z - `shuffleTop`, the best-graded Shuffle run (MODES.md 59o); `publishGrove`
+ *   writing it went live at 14:20:46Z.
+ */
+export const CARD_SHAPE_SINCE = 1792074060;
+
+/** The most cards one repair run rebuilds, and how many at once. */
+export const REPAIR_BATCH = 300;
+export const REPAIR_WORKERS = 4;
+
+/**
+ * The `builtUnix` below which a card is stale, or null while the shape's moment is still ahead
+ * (a card rebuilt before it would still read as stale and be rebuilt again on every run).
+ */
+export function staleCardCutoff(nowUnix: number): number | null {
+  return nowUnix >= CARD_SHAPE_SINCE ? CARD_SHAPE_SINCE : null;
 }
 
 /** The best `wave` in a lane's rows: bounded walk, nameless or over-long ids refused, `MAX_WAVE` ceiling. */

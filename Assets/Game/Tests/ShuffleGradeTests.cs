@@ -349,8 +349,8 @@ namespace GlimmerGrove.Tests
             }, "uid", 6, 1_700_000_000L);
             Assert.IsNull(plain.ShuffleTop);
             Assert.AreNotEqual(plain.Fingerprint(), card.Fingerprint(), "a graded run is not a change a card sees");
-            StringAssert.DoesNotContain("g2:", plain.Fingerprint(), "a card with no graded run moved its fingerprint");
-            StringAssert.Contains("g2:", card.Fingerprint(), "a graded run is not in the card's fingerprint");
+            StringAssert.DoesNotContain("g:", plain.Fingerprint(), "a card with no graded run moved its fingerprint");
+            StringAssert.Contains("g:", card.Fingerprint(), "a graded run is not in the card's fingerprint");
         }
 
         // ------------------------------------------------------------------ the words

@@ -96,13 +96,15 @@ BADGE_INSET = 36.0
 BADGE_DROP = 20.0
 BADGE_TILT = 9.0
 
-#: `ProductCardBadges.Face` / `FaceShift` / `FaceRise` / `TextSize` / `TextFloor` — the flat
-#: field inside the burst, measured off the texture, and what a caption may use of it.
-FACE = .538
+#: `ProductCardBadges.FaceShift` / `FaceRise` and the shop seal's caption (`CaptionWidthOfSeal`,
+#: `CaptionHeightOfSeal`, `CaptionSize`, `CaptionFloor`), scaled from the shop's 164 seal to this
+#: badge exactly as `EventScreen` does: white over a dark outline, so it reads on the rose burst.
 FACE_SHIFT = -.009
 FACE_RISE = .021
-BADGE_TYPE = 20
-BADGE_FLOOR = 10
+SHOP_SEAL = 164.0
+CAPTION_W, CAPTION_H = .70, .62
+BADGE_TYPE = int(round(30 * BADGE / SHOP_SEAL))
+BADGE_FLOOR = max(10, int(round(16 * BADGE / SHOP_SEAL)))
 
 #: The hint's box is two lines tall on purpose — `UIKit.Shrinkable` wraps and then truncates, so
 #: a one-line box shrinks a long sentence instead of widening it.
@@ -387,8 +389,8 @@ def pass_banner(sheet, y, owned):
         K.paste(sheet, burst.rotate(BADGE_TILT, resample=Image.BICUBIC, expand=False), bx, by)
         px = K.shrunk(sheet, txt("ui.mark.pass_value", pct),
                       bx + BADGE * FACE_SHIFT, by - BADGE * FACE_RISE,
-                      BADGE * FACE, BADGE * FACE * .64,
-                      BADGE_TYPE, BADGE_FLOOR, outline=0)
+                      BADGE * CAPTION_W, BADGE * CAPTION_H,
+                      BADGE_TYPE, BADGE_FLOOR, fill=(255, 255, 255), outline=3)
         print("  pass value badge: %d%%, settled at %dpx against a floor of %d"
               % (pct, px, BADGE_FLOOR))
 

@@ -447,16 +447,12 @@ namespace GlimmerGrove.Social
             // the record, because a profile draws every part: a better run that kept the grade
             // and moved the stats is still a change a visitor sees.
             //
-            // **Spelt `g2` and not `g`, and the number is a deploy-order repair.** A part's
-            // spelling is what a device remembers as published, so a device that published a
-            // graded run to a server that did not yet write `shuffleTop` (the owner's own test
-            // devices, 2026-10-15, before `publishGrove` was deployed) remembered the run as on
-            // its card and never sent it again. Re-spelling the part makes every device holding
-            // a graded run publish once more, now to a server that writes it, and touches no other
-            // card. **Bump it again the day the server learns to publish a part of the record a
-            // shipped client already counts as published.**
+            // **A change to what the server publishes is not this method's business**: a part is
+            // what *this device* can change, and a card whose shape the server changed is rebuilt
+            // by the server (`repairGroveCards`, `CARD_SHAPE_SINCE`, invariant 19v), so no part
+            // here is ever re-spelt to force a republish.
             if (ShuffleTop != null)
-                parts.Add("g2:" + ShuffleTop.Fingerprint());
+                parts.Add("g:" + ShuffleTop.Fingerprint());
 
             foreach (var seat in _line)
                 parts.Add("t:" + seat.Colour + "=" + seat.Ward + "/" + StarsOn(seat.Colour));

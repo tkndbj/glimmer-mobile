@@ -21,6 +21,14 @@ namespace GlimmerGrove
     /// rebound as they scroll.
     /// </para>
     /// <para>
+    /// <b>A row keeps its rung for as long as the rung is on screen</b> (rung <c>i</c> is row
+    /// <c>i % pool</c>), so only the row that leaves one edge is rebound, and it is rebound
+    /// out of sight at the other. Mapped as <c>first + slot</c> instead, every visible row
+    /// moved to the next rung each time the list crossed a pitch: a lit chest's light went
+    /// dark on one row and restarted on the next, which read as the shine jumping onto the
+    /// locked cards while scrolling.
+    /// </para>
+    /// <para>
     /// <b>Bind writes everything, and it never animates.</b> A recycled row is a different
     /// rung a frame later, so an entrance played on bind would fire every time the list
     /// moved - <c>CRAFT.md</c>'s rule that <c>Show</c> animates and <c>Refresh</c> does not,
@@ -135,7 +143,6 @@ namespace GlimmerGrove
             public int Index = -1;
             public RectTransform Root;
             public Image Pool;
-            public Image Rim;
             public Text Number;
             public Text Goal;
             public Image Spine;
@@ -161,7 +168,6 @@ namespace GlimmerGrove
 
         RectTransform _band, _list, _lights;
         float _visible, _width;
-        int _first = -1;
 
         public SeasonLadder(Action<int, SeasonTrack> onTap)
         {
@@ -267,12 +273,9 @@ namespace GlimmerGrove
             row.Free = BuildCell(row, FreeX, SeasonTrack.Free);
             row.Pass = BuildCell(row, PassX, SeasonTrack.Pass);
 
-            // The rim, on the card's own edge and over everything on it - the half of the lit
-            // state that has to be a child, because a light behind a plate the kit cuts opaque
-            // is a light with a hole in the middle of it.
-            row.Rim = UIKit.Img("Rim", row.Root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
-            UIKit.StretchTo((RectTransform)row.Rim.transform, 0f, 0f, 0f, 0f);
-
+            // No rim on a lit card: a bright outline over the plate's own edge, breathing,
+            // read as a flickering white border (owner, 2026-10-15). The pool under the card
+            // and the chest's own shine say "open me" without it.
             return row;
         }
 
@@ -400,13 +403,10 @@ namespace GlimmerGrove
             float scrolled = _list.anchoredPosition.y;
             int first = Mathf.Clamp(Mathf.FloorToInt(scrolled / Pitch), 0, Mathf.Max(0, rungs - _rows.Count));
 
-            bool moved = force || first != _first;
-            _first = first;
-
             for (int i = 0; i < _rows.Count; i++)
             {
                 int index = first + i;
-                var row = _rows[i];
+                var row = _rows[index % _rows.Count];
 
                 if (index >= rungs)
                 {
@@ -423,7 +423,7 @@ namespace GlimmerGrove
                 row.Root.anchoredPosition = new Vector2(0f, y);
                 if (row.Pool) ((RectTransform)row.Pool.transform).anchoredPosition = new Vector2(0f, y);
 
-                bool rebound = moved || row.Index != index;
+                bool rebound = force || row.Index != index;
                 row.Index = index;
                 Paint(row, _season.Milestones[index], index, rebound);
             }
@@ -447,13 +447,8 @@ namespace GlimmerGrove
                      | Paint(row.Pass, rung, SeasonTrack.Pass, reached, rebound);
 
             // **On the state changing and never on the rebind**, which is this type's own
-            // rule (see the class note) and was broken here. `rebound` is true for *every*
-            // visible row each time the list crosses a rung, so scrolling re-entered `Shine`
-            // eleven times a pitch: each call kills the loop and starts it again at its
-            // dimmest, so every lit card on the screen dipped and rose together - read as a
-            // flicker, and the faster the scroll the more of them. A light that is already
-            // breathing on a row that is still lit wants nothing done to it, whichever rung
-            // the row is now showing.
+            // rule (see the class note). A light that is already breathing on a row that is
+            // still lit wants nothing done to it, whichever rung the row is now showing.
             if (lit != row.Lit) Shine(row, lit);
             row.Lit = lit;
         }
@@ -494,28 +489,30 @@ namespace GlimmerGrove
                              : face == Face.Sealed ? new Color(.74f, .78f, .84f, 1f)
                              : new Color(.62f, .66f, .74f, .88f);
 
+            // Written, never tinted: bind does not animate (class note). A fade in flight
+            // when a cell went dark kept writing the light back on over the locked chest.
+            cell.Halo.color = shining ? Pal.A(Pal.Gold, .55f) : Pal.A(Pal.Gold, 0f);
+            cell.Rays.color = shining ? Pal.A(Pal.Sun, .5f) : Pal.A(Pal.Sun, 0f);
+
             if (shining)
             {
-                // All on the *change* into a shining face, for the reason above: a rebind that
-                // found the cell already shining restarted the breathe from scale one and
-                // started a second tint toward a colour the halo was already wearing - a jump
-                // on every chest that could be opened, once per rung scrolled.
+                // Started on the *change* into a shining face only, so a cell already shining
+                // keeps its breath. The spin reads the clock rather than its own start, so every
+                // ray on the list turns in step and a restart lands where the last one was.
                 if (!wasShining)
                 {
-                    Tween.Tint(cell.Halo, Pal.A(Pal.Gold, .55f), .35f);
-                    Tween.Tint(cell.Rays, Pal.A(Pal.Sun, .5f), .35f);
                     var rays = cell.Rays;
-                    Tween.Run(12f, Ease.Linear,
-                              t => { if (rays) rays.transform.localRotation = Quaternion.Euler(0f, 0f, -t * 360f); },
-                              rays, "spin").Loop(-1, false);
+                    Tween.Run(3600f, Ease.Linear, _ =>
+                    {
+                        if (rays) rays.transform.localRotation =
+                            Quaternion.Euler(0f, 0f, -(Time.unscaledTime % RaySpin) / RaySpin * 360f);
+                    }, rays, "spin").Loop(-1, false);
                     Tween.KillChannel(cell.Chest.transform, "breathe");
                     Tween.Breathe(cell.Chest.transform, .07f, 1.5f);
                 }
             }
             else
             {
-                cell.Halo.color = Pal.A(Pal.Gold, 0f);
-                cell.Rays.color = Pal.A(Pal.Sun, 0f);
                 Tween.KillChannel(cell.Rays, "spin");
                 Tween.KillChannel(cell.Chest.transform, "breathe");
                 cell.Chest.transform.localScale = Vector3.one;
@@ -526,7 +523,8 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The light a rung with something open stands in: a warm pool that reaches past the
-        /// card and a bright rim on its edge, breathing together on one tween.
+        /// card, breathing on the clock so every lit card on the list rises and falls together
+        /// and a row lit afresh joins the others instead of starting at its dimmest.
         ///
         /// It breathes rather than flashing, for the tasks page's reason and one sharper: a
         /// player who has not opened the game for a week can have a dozen of these on one
@@ -542,15 +540,22 @@ namespace GlimmerGrove
             if (!on)
             {
                 if (row.Pool) row.Pool.color = Pal.A(Pal.Sun, 0f);
-                if (row.Rim) row.Rim.color = Pal.A(Pal.Sun, 0f);
                 return;
             }
 
-            Tween.Run(1.8f, Ease.InOutSine, t =>
+            var pool = row.Pool;
+            Tween.Run(3600f, Ease.Linear, _ =>
             {
-                if (row.Pool) row.Pool.color = Pal.A(Pal.Sun, Mathf.Lerp(.48f, .88f, t));
-                if (row.Rim) row.Rim.color = Pal.A(Pal.Radiance, Mathf.Lerp(.60f, 1f, t));
-            }, row.Pool, "holy").Loop(-1, true);
+                if (!pool) return;
+                float t = .5f - .5f * Mathf.Cos(Time.unscaledTime / PoolBreath * 2f * Mathf.PI);
+                pool.color = Pal.A(Pal.Sun, Mathf.Lerp(.48f, .88f, t));
+            }, pool, "holy").Loop(-1, false);
         }
+
+        /// <summary>Seconds for one turn of a ready chest's rays.</summary>
+        const float RaySpin = 12f;
+
+        /// <summary>Seconds for one full breath of a lit card's pool, in and out.</summary>
+        const float PoolBreath = 3.6f;
     }
 }

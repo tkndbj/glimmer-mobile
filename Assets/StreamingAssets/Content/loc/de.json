@@ -7726,6 +7726,10 @@
       "text": "Erreiche Welle {0} in {1}"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Erreiche Welle {0} im Modus Gemischt"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Spiel {0} Kämpfe"
     },

@@ -4276,7 +4276,8 @@
     "",
     "`rankChapters` is the catalog a case is measured against and `rankLadder` the ladder it",
     "climbs; a case may carry its own `ladder` instead. `levels`, `endless`, `lifetime` and",
-    "(where present) `challenges` - the save's `challenges.clears` rows - are the save's rows",
+    "(where present) `challenges` - the save's `challenges.clears` rows - and `shuffle` - its",
+    "`shuffleBest` rows - are the save's rows",
     "in whichever shape each side stores them, `keeperLevel` and",
     "`lifetimeWaves` are the two figures both sides are handed rather than derive, and `held`",
     "is the rung id both must answer — empty for an account below the first rung.",
@@ -5573,6 +5574,473 @@
             {
               "measure": "wins",
               "target": 1
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "a Shuffle wave at the line takes the rung",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "s_lane",
+          "wave": 70
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 70
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "one Shuffle wave short holds nothing",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "s_lane",
+          "wave": 69
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 70
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "the best of every Shuffle row is the reading",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "s_lane",
+          "wave": 12
+        },
+        {
+          "level": "s_other",
+          "wave": 71
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 70
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "an Infinite wave does not count for the Shuffle line",
+      "levels": [],
+      "endless": [
+        {
+          "level": "two_a",
+          "wave": 900
+        }
+      ],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 900,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 70
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "nor a Shuffle wave for an Infinite line",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "two_a",
+          "wave": 900
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "best_wave",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "a forged Shuffle wave is capped at the published ceiling",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "s_lane",
+          "wave": 1000000000
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 9999
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "a Shuffle row with an over-long level id is refused",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "wave": 900
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 70
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "a refused Shuffle row still spends one of the sixty-four",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "shuffle": [
+        {
+          "level": "",
+          "wave": 1
+        },
+        {
+          "level": "lane00",
+          "wave": 1
+        },
+        {
+          "level": "lane01",
+          "wave": 1
+        },
+        {
+          "level": "lane02",
+          "wave": 1
+        },
+        {
+          "level": "lane03",
+          "wave": 1
+        },
+        {
+          "level": "lane04",
+          "wave": 1
+        },
+        {
+          "level": "lane05",
+          "wave": 1
+        },
+        {
+          "level": "lane06",
+          "wave": 1
+        },
+        {
+          "level": "lane07",
+          "wave": 1
+        },
+        {
+          "level": "lane08",
+          "wave": 1
+        },
+        {
+          "level": "lane09",
+          "wave": 1
+        },
+        {
+          "level": "lane10",
+          "wave": 1
+        },
+        {
+          "level": "lane11",
+          "wave": 1
+        },
+        {
+          "level": "lane12",
+          "wave": 1
+        },
+        {
+          "level": "lane13",
+          "wave": 1
+        },
+        {
+          "level": "lane14",
+          "wave": 1
+        },
+        {
+          "level": "lane15",
+          "wave": 1
+        },
+        {
+          "level": "lane16",
+          "wave": 1
+        },
+        {
+          "level": "lane17",
+          "wave": 1
+        },
+        {
+          "level": "lane18",
+          "wave": 1
+        },
+        {
+          "level": "lane19",
+          "wave": 1
+        },
+        {
+          "level": "lane20",
+          "wave": 1
+        },
+        {
+          "level": "lane21",
+          "wave": 1
+        },
+        {
+          "level": "lane22",
+          "wave": 1
+        },
+        {
+          "level": "lane23",
+          "wave": 1
+        },
+        {
+          "level": "lane24",
+          "wave": 1
+        },
+        {
+          "level": "lane25",
+          "wave": 1
+        },
+        {
+          "level": "lane26",
+          "wave": 1
+        },
+        {
+          "level": "lane27",
+          "wave": 1
+        },
+        {
+          "level": "lane28",
+          "wave": 1
+        },
+        {
+          "level": "lane29",
+          "wave": 1
+        },
+        {
+          "level": "lane30",
+          "wave": 1
+        },
+        {
+          "level": "lane31",
+          "wave": 1
+        },
+        {
+          "level": "lane32",
+          "wave": 1
+        },
+        {
+          "level": "lane33",
+          "wave": 1
+        },
+        {
+          "level": "lane34",
+          "wave": 1
+        },
+        {
+          "level": "lane35",
+          "wave": 1
+        },
+        {
+          "level": "lane36",
+          "wave": 1
+        },
+        {
+          "level": "lane37",
+          "wave": 1
+        },
+        {
+          "level": "lane38",
+          "wave": 1
+        },
+        {
+          "level": "lane39",
+          "wave": 1
+        },
+        {
+          "level": "lane40",
+          "wave": 1
+        },
+        {
+          "level": "lane41",
+          "wave": 1
+        },
+        {
+          "level": "lane42",
+          "wave": 1
+        },
+        {
+          "level": "lane43",
+          "wave": 1
+        },
+        {
+          "level": "lane44",
+          "wave": 1
+        },
+        {
+          "level": "lane45",
+          "wave": 1
+        },
+        {
+          "level": "lane46",
+          "wave": 1
+        },
+        {
+          "level": "lane47",
+          "wave": 1
+        },
+        {
+          "level": "lane48",
+          "wave": 1
+        },
+        {
+          "level": "lane49",
+          "wave": 1
+        },
+        {
+          "level": "lane50",
+          "wave": 1
+        },
+        {
+          "level": "lane51",
+          "wave": 1
+        },
+        {
+          "level": "lane52",
+          "wave": 1
+        },
+        {
+          "level": "lane53",
+          "wave": 1
+        },
+        {
+          "level": "lane54",
+          "wave": 1
+        },
+        {
+          "level": "lane55",
+          "wave": 1
+        },
+        {
+          "level": "lane56",
+          "wave": 1
+        },
+        {
+          "level": "lane57",
+          "wave": 1
+        },
+        {
+          "level": "lane58",
+          "wave": 1
+        },
+        {
+          "level": "lane59",
+          "wave": 1
+        },
+        {
+          "level": "lane60",
+          "wave": 1
+        },
+        {
+          "level": "lane61",
+          "wave": 1
+        },
+        {
+          "level": "lane62",
+          "wave": 1
+        },
+        {
+          "level": "s_lane",
+          "wave": 70
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "shuffle_wave",
+              "target": 70
             }
           ]
         }

@@ -264,6 +264,10 @@ function expectedRung(cleared, keeperLevel) {
       case "best_wave":
         return 0;
 
+      // Nor any Shuffle rows.
+      case "shuffle_wave":
+        return line.scope ? null : 0;
+
       // No tally is written, so a counted verb is exactly its floor — which is the clause this
       // probe was built to prove in the first place. `waves` floors on endless rows (none);
       // everything else floors on nothing.

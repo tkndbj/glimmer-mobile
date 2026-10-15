@@ -7726,6 +7726,10 @@
       "text": "Chegue à onda {0} em {1}"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Chegue à onda {0} no Embaralhado"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Jogue {0} batalhas"
     },

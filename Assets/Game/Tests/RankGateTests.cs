@@ -256,6 +256,7 @@ namespace GlimmerGrove.Tests
             public long Stars(string scope) => _stars;
             public long ThreeStars(string scope) => _stars;
             public long BestWave(string scope) => _stars;
+            public long ShuffleWave => _stars;
             public long Lifetime(Tasks.TaskGoal goal) => _stars;
         }
     }

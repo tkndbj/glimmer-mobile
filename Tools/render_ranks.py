@@ -90,7 +90,8 @@ WELL_INSET, ROW_H, ICON, COUNT_W, BAR_H = BOARD_SIDE + 14.0, 78.0, 58.0, 210.0, 
 #: `RankKit.IconFor` - the measure id to (sprite under Ui/, tint).
 MEASURE_ICON = {
     "stars": ("star_full", None), "three_stars": ("ic_stars", "gold"), "keeper_level": ("ic_xp_boost", None),
-    "best_wave": ("ic_endless", None), "runs": ("ic_battle", None), "raiders": ("Rank/ic_raiders", None),
+    "best_wave": ("ic_endless", None), "shuffle_wave": ("ic_shuffle", None),
+    "runs": ("ic_battle", None), "raiders": ("Rank/ic_raiders", None),
     "bosses": ("crest_gold", None), "charms": ("ic_gem", None), "levels_cleared": ("ic_trophy", "gold"),
     "challenge_plays": ("challenge_pairs", None), "challenge_wins": ("challenge_merge", None),
 }

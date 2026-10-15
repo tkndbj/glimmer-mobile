@@ -227,6 +227,9 @@ wire or rules mistake reaches live accounts.
 19t. **A keeper gate is asked of what is counted, never of what is merely drawn** (`publishedLine` may not
    re-gate a seat). The day a line pays, the gate comes back.
 19u. **A client-readable collection grants `get`, never `list`.**
+19v. **A change to what a card shows is repaired by the server, never by re-spelling the client's
+   fingerprint**: raise `CARD_SHAPE_SINCE` (grove.ts, to a moment after the deploy is live) and
+   `repairGroveCards` rebuilds every older card through `publishCardFor`, the player's own path.
 
 ### Modes — in `Assets/Game/MODES.md`
 
@@ -787,7 +790,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 unaddressed (white rectangle, 7b); deleted art leaves entries that fail `BuildPlayer`. Files written with the
 Editor closed have no `.meta` until it focuses.
 
-**Server drops**, in order: (1) `firestore:rules` only for a new top-level save key or collection, checked
+**Server drops**, in order (a change to `buildCard`'s output also raises `CARD_SHAPE_SINCE`, 19v): (1) `firestore:rules` only for a new top-level save key or collection, checked
 against the *released* ruleset, deployed before the client. (2) Functions **by name, in batches of three or
 four**, then read the deployed artifact back. (3) `seed-config.mjs`, from a HEAD shadow if anything is
 uncommitted; snapshot and diff the config documents. (4) The Editor's three. (5) `smoke-test.mjs`. **A deploy

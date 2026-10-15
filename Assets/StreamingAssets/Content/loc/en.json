@@ -7726,6 +7726,10 @@
       "text": "Reach wave {0} on {1}"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Reach wave {0} on Shuffle mode"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Play {0} battles"
     },

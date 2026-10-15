@@ -7726,6 +7726,10 @@
       "text": "{1} içinde {0}. aşamaya ulaş"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Karışık modunda {0}. aşamaya ulaş"
+    },
+    {
       "key": "rank.req.runs",
       "text": "{0} savaş oyna"
     },

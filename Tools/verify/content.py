@@ -2199,7 +2199,8 @@ def check_tasks(progression, keys, utilities, art, warnings):
 #: Every measure a rung may name: the five derived readings, then every counted verb.
 #: Mirrors `RankMeasures.All()` - held to it by `RankTests.EveryMeasureIsKnownToTheGate`,
 #: because a measure added in C# and not here is a rung this gate waves through.
-RANK_DERIVED = {"levels_cleared", "stars", "three_stars", "keeper_level", "best_wave"}
+RANK_DERIVED = {"levels_cleared", "stars", "three_stars", "keeper_level", "best_wave",
+                "shuffle_wave"}
 RANK_MEASURES = RANK_DERIVED | TASK_GOALS
 
 #: What a scope may name, per measure. Anything absent takes no scope at all - and a scope on

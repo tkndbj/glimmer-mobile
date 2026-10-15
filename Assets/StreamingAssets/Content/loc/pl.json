@@ -7726,6 +7726,10 @@
       "text": "Dotrzyj do fali {0} ({1})"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Dotrzyj do fali {0} w trybie „Losowa”"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Rozegraj bitwy: {0}"
     },

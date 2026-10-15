@@ -115,6 +115,7 @@ namespace GlimmerGrove
                 case "three_stars": return ("ic_stars", true);
                 case "keeper_level": return ("ic_xp_boost", false);
                 case "best_wave": return ("ic_endless", false);
+                case "shuffle_wave": return ("ic_shuffle", false);
                 case "runs": return ("ic_battle", false);
                 case "raiders": return (Raiders, false);
                 case "bosses": return ("crest_gold", false);

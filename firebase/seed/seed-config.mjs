@@ -1685,7 +1685,7 @@ function readRanks(progression, levelChapters, manifest) {
   // here without refusing that, and is deliberately allowed through.
   const SCOPED_TO_CHAPTER = new Set(["levels_cleared", "stars", "three_stars"]);
   const SCOPED_TO_LEVEL = new Set(["best_wave"]);
-  const UNSCOPED = new Set(["keeper_level"]);
+  const UNSCOPED = new Set(["keeper_level", "shuffle_wave"]);
 
   // Mirrors `LifetimeTally.Ceiling`. A target above it could never be met by anybody.
   const CEILING = 999999999;

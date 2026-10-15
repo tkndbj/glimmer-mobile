@@ -164,8 +164,21 @@ namespace GlimmerGrove.Tests
                 };
             }
 
+            // The Shuffle lane's rows. Absent on most cases, which is a save that never played it.
+            var shuffle = map.ContainsKey("shuffle") ? TestJson.Children(map, "shuffle") : new List<object>();
+            save.shuffleBest = new ShuffleBestDto[shuffle.Count];
+            for (int i = 0; i < shuffle.Count; i++)
+            {
+                var row = TestJson.Object(shuffle[i]);
+                save.shuffleBest[i] = new ShuffleBestDto
+                {
+                    level = TestJson.Str(row, "level", string.Empty),
+                    wave = TestJson.Int(row, "wave"),
+                };
+            }
+
             var lifetime = TestJson.Children(map, "lifetime");
-            save.tasks = new TaskStateDto { lifetime = new TaskCountDto[lifetime.Count] };
+            save.tasks =new TaskStateDto { lifetime = new TaskCountDto[lifetime.Count] };
             for (int i = 0; i < lifetime.Count; i++)
             {
                 var row = TestJson.Object(lifetime[i]);
@@ -279,6 +292,10 @@ namespace GlimmerGrove.Tests
                 // endless row does not quietly stop being compared.
                 if (c.Save.endlessBest.Length > 0) continue;
 
+                // The Shuffle lane likewise: its live ledger carries rows the save walk refuses
+                // (an over-long id, a sixty-fifth row), which is `ShuffleBoardTests`' rule.
+                if (c.Save.shuffleBest.Length > 0) continue;
+
                 PlayerProgress.LoadFrom(c.Save);
                 Tasks.LifetimeTally.Reset();
                 Tasks.LifetimeTally.LoadFrom(c.Save.tasks.lifetime);
@@ -316,6 +333,7 @@ namespace GlimmerGrove.Tests
             public long ThreeStars(string scope) => _live.ThreeStars(scope);
             public long KeeperLevel => _level;
             public long BestWave(string scope) => _live.BestWave(scope);
+            public long ShuffleWave => _live.ShuffleWave;
             public long Lifetime(Tasks.TaskGoal goal) => _live.Lifetime(goal);
         }
 

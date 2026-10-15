@@ -7726,6 +7726,10 @@
       "text": "Raggiungi l'ondata {0} in {1}"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Raggiungi l'ondata {0} in modalità Mescolato"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Gioca {0} battaglie"
     },

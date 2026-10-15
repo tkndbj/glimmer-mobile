@@ -58,6 +58,14 @@ namespace GlimmerGrove.Ranks
 
         /// <summary>A <see cref="TaskGoal"/> counted for ever. See <see cref="LifetimeTally"/>.</summary>
         Lifetime = 6,
+
+        /// <summary>
+        /// The furthest wave a Shuffle run ever reached, anywhere on the lane
+        /// (<c>ShuffleLedger.Best</c>). Its own kind rather than a scope on <see cref="BestWave"/>,
+        /// because it is a different save key (<c>shuffleBest</c>) with its own join; monotone for
+        /// the same reason, a <c>max</c>.
+        /// </summary>
+        ShuffleWave = 7,
     }
 
     /// <summary>What a measure's <c>scope</c> is allowed to name.</summary>
@@ -140,6 +148,7 @@ namespace GlimmerGrove.Ranks
         public const string ThreeStars = "three_stars";
         public const string KeeperLevel = "keeper_level";
         public const string BestWave = "best_wave";
+        public const string ShuffleWave = "shuffle_wave";
 
         /// <summary>
         /// Resolves a content id. <see cref="RankMeasure.None"/> for anything this build has
@@ -158,6 +167,7 @@ namespace GlimmerGrove.Ranks
                 case ThreeStars: return new RankMeasure(RankMeasureKind.ThreeStars);
                 case KeeperLevel: return new RankMeasure(RankMeasureKind.KeeperLevel);
                 case BestWave: return new RankMeasure(RankMeasureKind.BestWave);
+                case ShuffleWave: return new RankMeasure(RankMeasureKind.ShuffleWave);
             }
 
             // Everything else is a counted verb, addressable with no entry here. See the
@@ -177,6 +187,7 @@ namespace GlimmerGrove.Ranks
                 case RankMeasureKind.ThreeStars: return ThreeStars;
                 case RankMeasureKind.KeeperLevel: return KeeperLevel;
                 case RankMeasureKind.BestWave: return BestWave;
+                case RankMeasureKind.ShuffleWave: return ShuffleWave;
                 case RankMeasureKind.Lifetime: return TaskGoals.Id(measure.Goal);
                 default: return string.Empty;
             }
@@ -199,6 +210,7 @@ namespace GlimmerGrove.Ranks
                 case RankMeasureKind.ThreeStars: return RankScopeKind.Chapter;
                 case RankMeasureKind.BestWave: return RankScopeKind.Level;
                 case RankMeasureKind.KeeperLevel: return RankScopeKind.None;
+                case RankMeasureKind.ShuffleWave: return RankScopeKind.None;
                 case RankMeasureKind.Lifetime: return RankScopeKind.None;
                 default: return RankScopeKind.None;
             }
@@ -211,9 +223,9 @@ namespace GlimmerGrove.Ranks
         public static string[] All()
         {
             var goals = TaskGoals.All;
-            var list = new System.Collections.Generic.List<string>(goals.Length + 5)
+            var list = new System.Collections.Generic.List<string>(goals.Length + 6)
             {
-                LevelsCleared, Stars, ThreeStars, KeeperLevel, BestWave,
+                LevelsCleared, Stars, ThreeStars, KeeperLevel, BestWave, ShuffleWave,
             };
 
             foreach (var goal in goals)
@@ -265,6 +277,7 @@ namespace GlimmerGrove.Ranks
                 case RankMeasureKind.ThreeStars: return source.ThreeStars(scope);
                 case RankMeasureKind.KeeperLevel: return source.KeeperLevel;
                 case RankMeasureKind.BestWave: return source.BestWave(scope);
+                case RankMeasureKind.ShuffleWave: return source.ShuffleWave;
                 case RankMeasureKind.Lifetime: return source.Lifetime(measure.Goal);
                 default: return 0L;
             }

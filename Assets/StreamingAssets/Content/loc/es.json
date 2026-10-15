@@ -7726,6 +7726,10 @@
       "text": "Llega a la oleada {0} en {1}"
     },
     {
+      "key": "rank.req.shuffle_wave",
+      "text": "Llega a la oleada {0} en Barajado"
+    },
+    {
       "key": "rank.req.runs",
       "text": "Juega {0} batallas"
     },

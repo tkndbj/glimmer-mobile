@@ -164,6 +164,23 @@ def best_wave(case, scope):
     return 0 if best <= 0 else min(best, MAX_WAVE)
 
 
+def shuffle_wave(case):
+    """The furthest wave a Shuffle run reached anywhere on the lane: `ShuffleLedger.BestIn` and
+    `shuffleWave` in `grove.ts`, which is `best_wave`'s walk over the `shuffleBest` rows, unscoped."""
+    best = 0
+
+    for row in (case.get("shuffle") or [])[:MAX_ENDLESS_ROWS]:
+        level = row.get("level") or ""
+        if not level or len(level) > MAX_LEVEL_ID:
+            continue
+
+        wave = int(row.get("wave") or 0)
+        if wave > best:
+            best = wave
+
+    return 0 if best <= 0 else min(best, MAX_WAVE)
+
+
 def challenge_clears(case):
     """`ChallengeLedger.LifetimeClearsIn` / `challengeClears`: every genre's clears, summed.
 
@@ -224,6 +241,8 @@ def read(case, line):
         return int(case.get("keeperLevel") or 1)
     if measure == "best_wave":
         return best_wave(case, scope)
+    if measure == "shuffle_wave":
+        return shuffle_wave(case)
 
     # Everything else is a counted verb read by its own id, which is what makes a future mode's
     # verb a rank requirement with no code on either side.
@@ -248,7 +267,7 @@ def cases():
     out = []
 
     def case(name, levels=None, endless=None, lifetime_rows=None, keeper=1, ladder=None,
-             challenges=None):
+             challenges=None, shuffle=None):
         entry = {
             "name": name,
             "levels": levels or [],
@@ -260,6 +279,8 @@ def cases():
         # Only where a case is about them, so the older cases stay as they were written.
         if challenges:
             entry["challenges"] = challenges
+        if shuffle:
+            entry["shuffle"] = shuffle
 
         # Derived from the case's own rows rather than stated. See `lifetime_waves`.
         entry["lifetimeWaves"] = lifetime_waves(entry)
@@ -417,6 +438,32 @@ def cases():
          challenges=[clears("pairs", 50)],
          ladder=[{"id": "only", "requires": [{"measure": "wins", "target": 1}]}])
 
+    # ------------------------------------------------------------------ the Shuffle lane
+    # Its own save key (`shuffleBest`), read unscoped: the best anywhere on the lane. An Infinite
+    # wave is a different reading and must never stand in for it, nor the other way round.
+    shuffle_ladder = [{"id": "only", "requires": [{"measure": "shuffle_wave", "target": 70}]}]
+    case("a Shuffle wave at the line takes the rung",
+         shuffle=[wave("s_lane", 70)], ladder=shuffle_ladder)
+    case("one Shuffle wave short holds nothing",
+         shuffle=[wave("s_lane", 69)], ladder=shuffle_ladder)
+    case("the best of every Shuffle row is the reading",
+         shuffle=[wave("s_lane", 12), wave("s_other", 71)], ladder=shuffle_ladder)
+    case("an Infinite wave does not count for the Shuffle line",
+         endless=[wave("two_a", 900)], ladder=shuffle_ladder)
+    case("nor a Shuffle wave for an Infinite line",
+         shuffle=[wave("two_a", 900)],
+         ladder=[{"id": "only", "requires": [{"measure": "best_wave", "target": 30}]}])
+    case("a forged Shuffle wave is capped at the published ceiling",
+         shuffle=[wave("s_lane", 10 ** 9)],
+         ladder=[{"id": "only", "requires": [{"measure": "shuffle_wave", "target": MAX_WAVE}]}])
+    case("a Shuffle row with an over-long level id is refused",
+         shuffle=[{"level": "x" * 49, "wave": 900}], ladder=shuffle_ladder)
+    case("a refused Shuffle row still spends one of the sixty-four",
+         shuffle=[{"level": "", "wave": 1}]
+                 + [wave("lane%02d" % i, 1) for i in range(63)]
+                 + [wave("s_lane", 70)],
+         ladder=shuffle_ladder)
+
     # ---------------------------------------------------------------- the tally ceiling
     ceiling_ladder = [{"id": "only",
                        "requires": [{"measure": "raiders", "target": TALLY_CEILING}]}]
@@ -454,7 +501,8 @@ COMMENT = [
     "",
     "`rankChapters` is the catalog a case is measured against and `rankLadder` the ladder it",
     "climbs; a case may carry its own `ladder` instead. `levels`, `endless`, `lifetime` and",
-    "(where present) `challenges` - the save's `challenges.clears` rows - are the save's rows",
+    "(where present) `challenges` - the save's `challenges.clears` rows - and `shuffle` - its",
+    "`shuffleBest` rows - are the save's rows",
     "in whichever shape each side stores them, `keeperLevel` and",
     "`lifetimeWaves` are the two figures both sides are handed rather than derive, and `held`",
     "is the rung id both must answer — empty for an account below the first rung.",

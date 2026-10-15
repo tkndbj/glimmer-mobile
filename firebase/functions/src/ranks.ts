@@ -54,7 +54,7 @@ const MAX_ENDLESS_ROWS = 64;
 const MAX_WAVE = 9999;
 
 /**
- * The five readings that are *not* counted verbs, as content names them. Mirrors
+ * The six readings that are *not* counted verbs, as content names them. Mirrors
  * `RankMeasures`' own constants; anything else a rung names is a lifetime tally read by its own
  * id, which is what makes a future mode's verb a rank requirement with no code on either side.
  */
@@ -63,6 +63,7 @@ const STARS = "stars";
 const THREE_STARS = "three_stars";
 const KEEPER_LEVEL = "keeper_level";
 const BEST_WAVE = "best_wave";
+const SHUFFLE_WAVE = "shuffle_wave";
 
 /**
  * The three counted verbs the rest of the save already proves, and what proves them. Mirrors
@@ -108,6 +109,7 @@ export interface RankRungConfig {
 interface SaveRows {
   levels: unknown;
   endlessBest: unknown;
+  shuffleBest: unknown;
   lifetime: unknown;
   lifetimeWaves: number;
   challengeClears: number;
@@ -143,6 +145,7 @@ export function rungOf(save: Record<string, unknown>, config: ProgressionConfig,
   const rows: SaveRows = {
     levels: save?.levels,
     endlessBest: save?.endlessBest,
+    shuffleBest: save?.shuffleBest,
     lifetime: lifetimeRows(save),
     lifetimeWaves: Math.max(0, Math.floor(Number(readings?.lifetimeWaves ?? 0)) || 0),
     challengeClears: challengeClears(save ?? {}),
@@ -245,6 +248,9 @@ function read(line: RankRequirementConfig, rows: SaveRows, config: ProgressionCo
     case THREE_STARS: return walkLevels(rows.levels, config, scope, (stars) => (stars >= 3 ? 1 : 0));
     case KEEPER_LEVEL: return keeperLevel;
     case BEST_WAVE: return bestWaveIn(rows.endlessBest, scope);
+    // The Shuffle lane's best anywhere on it: the same bounded walk over its own save key, which
+    // is `shuffleWave` in `grove.ts` and `ShuffleLedger.BestIn` on the client.
+    case SHUFFLE_WAVE: return bestWaveIn(rows.shuffleBest, "");
     default: return lifetime(line.measure, rows, config);
   }
 }

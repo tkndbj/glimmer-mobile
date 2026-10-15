@@ -52,6 +52,9 @@ namespace GlimmerGrove.Ranks
         /// <summary>The furthest wave one Infinite level reached, or the best of all of them.</summary>
         long BestWave(string levelScope);
 
+        /// <summary>The furthest wave a Shuffle run reached anywhere on the lane.</summary>
+        long ShuffleWave { get; }
+
         /// <summary>A counted verb, for ever. See <see cref="LifetimeTally"/>.</summary>
         long Lifetime(TaskGoal goal);
     }
@@ -131,6 +134,8 @@ namespace GlimmerGrove.Ranks
 
             return LevelId.TryParse(scope, out var level, out _) ? EndlessLedger.BestFor(level) : 0L;
         }
+
+        public long ShuffleWave => Shuffle.ShuffleLedger.Best;
 
         public long Lifetime(TaskGoal goal) => LifetimeTally.Count(goal);
 
@@ -289,6 +294,12 @@ namespace GlimmerGrove.Ranks
                  : best > EndlessLedger.MaxWave ? EndlessLedger.MaxWave
                  : best;
         }
+
+        /// <summary>
+        /// Read exactly as <c>shuffleWave</c> in <c>functions/src/grove.ts</c> and the rank's own
+        /// copy in <c>ranks.ts</c> read it - the one walk <see cref="Shuffle.ShuffleLedger.BestIn"/>.
+        /// </summary>
+        public long ShuffleWave => Shuffle.ShuffleLedger.BestIn(_save);
 
         public long Lifetime(TaskGoal goal)
         {

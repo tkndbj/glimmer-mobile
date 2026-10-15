@@ -520,25 +520,26 @@ namespace GlimmerGrove
                 _passValue.raycastTarget = false;
                 _passValue.transform.localRotation = Quaternion.Euler(0f, 0f, PassBadgeTilt);
 
-                // Sized against the flat field inside the burst rather than against the sprite,
-                // which is `ProductCardBadges`' measurement and its reason: a caption centred
-                // on the sprite sits low, and one sized to the whole texture says its piece
-                // across the rim. Shrinkable because a translation of "VALUE" is not three
-                // letters everywhere, and the floor is the shop's - below it Best Fit stops
-                // shrinking and the label overflows unclipped and unreported (invariant 19n).
+                // The shop seal's caption (`ProductCard`, `DealCard.BuildSeal`), scaled from
+                // its 164 seal to this one: white over a dark outline in a box .70 by .62 of the
+                // badge. It was cream with no outline at 20 in the round field alone, which on
+                // the rose burst could not be read (owner, 2026-10-15). Shrinkable because a
+                // translation of "VALUE" is not five letters everywhere; the floor never goes
+                // under the shop's ten, below which Best Fit stops shrinking (invariant 19n).
+                float k = PassBadge / ProductCardBadges.SealSize;
                 UIKit.Shrinkable(
                     UIKit.Titled("VT", _passValue.transform,
                                  Loc.Format("ui.mark.pass_value", value),
-                                 ProductCardBadges.TextSize, Pal.Cream, TextAnchor.MiddleCenter,
-                                 new Vector2(PassBadge * ProductCardBadges.Face
-                                             * ProductCardBadges.FaceTextWidth,
-                                             PassBadge * ProductCardBadges.Face
-                                             * ProductCardBadges.FaceTextHeight),
+                                 Mathf.RoundToInt(ProductCardBadges.CaptionSize * k), Color.white,
+                                 TextAnchor.MiddleCenter,
+                                 new Vector2(ProductCardBadges.CaptionWidth * k,
+                                             ProductCardBadges.CaptionHeight * k),
                                  Centre,
-                                 new Vector2(PassBadge * ProductCardBadges.FaceShift,
-                                             PassBadge * ProductCardBadges.FaceRise),
-                                 0f, 0f, wrap: true),
-                    ProductCardBadges.TextFloor);
+                                 new Vector2(ProductCardBadges.TextShift * k,
+                                             ProductCardBadges.TextRise * k),
+                                 3f, 2f, wrap: true),
+                    Mathf.Max(ProductCardBadges.TextFloor,
+                              Mathf.RoundToInt(ProductCardBadges.CaptionFloor * k)));
             }
 
             Sheen.Attach((RectTransform)plate.transform, 4.6f);
