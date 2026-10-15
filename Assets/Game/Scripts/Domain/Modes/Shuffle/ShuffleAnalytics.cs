@@ -19,6 +19,25 @@ namespace GlimmerGrove.Shuffle
     {
         public const string Ended = "shuffle_ended";
 
+        /// <summary>One refresh bought (MODES.md 59p): what it cost and how deep into the run.</summary>
+        public const string Refreshed = "shuffle_refresh";
+
+        /// <summary>
+        /// A refresh was paid for: the price, which refresh of the run it was and at which hand,
+        /// so the doubling can be read against how far players actually climb it.
+        /// </summary>
+        public static void TrackRefresh(LevelId level, ShuffleRun run, long gems)
+        {
+            if (run == null) return;
+
+            Telemetry.Track(Refreshed,
+                "level_id", level.Value,
+                "gems", gems,
+                "refresh", run.Refreshes,
+                "hand", run.Hands,
+                "tuning", run.Tuning.Revision);
+        }
+
         public static void TrackRun(LevelDefinition level, int waves, ShuffleRun run)
         {
             if (level == null || run == null) return;
@@ -46,6 +65,7 @@ namespace GlimmerGrove.Shuffle
                 "level_id", level.Id.Value,
                 "waves", waves,
                 "hands", run.Hands,
+                "refreshes", run.Refreshes,
                 "cards", taken.Count,
                 "build", held.ToString(),
                 "bonds", bonds.ToString(),

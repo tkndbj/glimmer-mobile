@@ -8046,6 +8046,10 @@
       "text": "{0} x{1}"
     },
     {
+      "key": "ui.shuffle.refresh",
+      "text": "Refresh {0}"
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Heavy Bolts"
     },

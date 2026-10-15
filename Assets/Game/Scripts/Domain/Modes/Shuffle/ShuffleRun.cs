@@ -98,6 +98,53 @@ namespace GlimmerGrove.Shuffle
         }
 
         /// <summary>
+        /// Refreshes bought on this run (MODES.md 59p). Never reset by a new hand, only by a new
+        /// run - which is a new <see cref="ShuffleRun"/>.
+        /// </summary>
+        public int Refreshes { get; private set; }
+
+        /// <summary>What the next refresh of this run costs, in gems (<see cref="ShuffleRefresh.PriceFor"/>).</summary>
+        public long RefreshPrice => ShuffleRefresh.PriceFor(Refreshes);
+
+        /// <summary>
+        /// Whether the open hand can be refreshed: a hand is on the table and the deck holds at
+        /// least one card the build can take that the hand does not already offer. A refresh
+        /// that could only deal the same cards back is never sold.
+        /// </summary>
+        public bool CanRefresh => Open != null && ShuffleDeck.HasFresh(Build, Open, Tuning);
+
+        /// <summary>
+        /// Swaps the open hand for a fresh one and counts it, answering the new hand, or null
+        /// (changing nothing) when <see cref="CanRefresh"/> is false. Pays for nothing itself:
+        /// the debit is <see cref="ShuffleRefresh.TryBuy"/>'s.
+        ///
+        /// <para>
+        /// <b>The same hand, dealt again</b>: the same hand number, so the same tier table and
+        /// the same promise on its first slot (a refresh of an epic-promised hand still opens on
+        /// an epic or better), off the run's own stream (59g). The cards just offered are spared
+        /// while anything else is left to deal (<see cref="ShuffleDeck.Deal(ShuffleBuild, int, System.Func{int}, ShuffleTuning, IReadOnlyList{ShuffleCard})"/>),
+        /// and the hand replaces the one it refreshed rather than adding one, so
+        /// <see cref="Owed"/> and <see cref="Hands"/> never see it.
+        /// </para>
+        /// </summary>
+        public IReadOnlyList<ShuffleCard> Refresh()
+        {
+            if (!CanRefresh) return null;
+
+            var hand = ShuffleDeck.Deal(Build, _hands.Count, Build.Boosts.Roll100, Tuning, Open);
+
+            // Unreachable while `HasFresh` holds (a fresh card is a card the first slot can
+            // always fall back to), and guarded anyway: an empty hand would leave a panel with
+            // nothing on it to take.
+            if (hand.Count == 0) return null;
+
+            _hands[_hands.Count - 1] = hand;
+            Open = hand;
+            Refreshes++;
+            return hand;
+        }
+
+        /// <summary>
         /// Takes <paramref name="card"/> off the open hand into the build, and answers whether it
         /// was. A card not on the table is refused, so a stale panel cannot take anything.
         /// </summary>
@@ -116,7 +163,8 @@ namespace GlimmerGrove.Shuffle
         }
 
         /// <summary>
-        /// Every hand dealt so far, for a fixture that asks what a run was offered.
+        /// Every hand dealt so far, for a fixture that asks what a run was offered: a refreshed
+        /// hand as it last stood.
         /// </summary>
         public IReadOnlyList<IReadOnlyList<ShuffleCard>> Dealt => _hands;
 

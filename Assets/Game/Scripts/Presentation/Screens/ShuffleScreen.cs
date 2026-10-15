@@ -182,7 +182,29 @@ namespace GlimmerGrove
                 v.Held = _run.Build;
                 v.Wave = wave;
                 v.OnPick = Take;
+                v.RefreshPrice = RefreshPrice;
+                v.OnRefresh = Refresh;
             });
+        }
+
+        /// <summary>
+        /// What the next refresh of this run costs (MODES.md 59p), or nought when the deck has
+        /// nothing fresh to deal - the panel then draws no key. Read off the run on the panel's
+        /// every build, so the doubled price is the price drawn.
+        /// </summary>
+        long RefreshPrice()
+            => _run != null && !RunOver && _run.CanRefresh ? _run.RefreshPrice : 0L;
+
+        /// <summary>
+        /// Pays for a refresh and deals it onto the table, answering the new hand, or null when
+        /// nothing was bought. The run is held under the panel the whole time, so the hill does
+        /// not walk while the player weighs a second hand.
+        /// </summary>
+        IReadOnlyList<ShuffleCard> Refresh()
+        {
+            if (_run == null || RunOver || Level == null) return null;
+
+            return ShuffleRefresh.TryBuy(_run, Level.Id) ? _run.Open : null;
         }
 
         /// <summary>

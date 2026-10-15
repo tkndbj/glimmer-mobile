@@ -1378,6 +1378,21 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    by the profile only, on no board row, so it is a deploy of `publishGrove` alone. **It pays
    nothing and orders nothing** (19l); the day it does, it needs adjudicating. Analytics:
    `shuffle_ended.grade` and `.score`, so the floors can be read against real players.
+
+59p. **A hand can be refreshed for gems, as often as the player pays, at a price that doubles per
+   run** (2026-10-15, the owner: "start with 5 gems, then double ... it shouldn't reset every offer
+   but it should every run"). `ShuffleRefresh.PriceFor` is 5 x 2^n on `ShuffleRun.Refreshes`, which
+   lives on the run (a continue keeps it; a restart or retry is a new run). **A debit and nothing
+   else** (the continue's shape): `PlayerProgression.TrySpend` under a fresh id, refused by
+   `submitSpends` when unaffordable; it buys a different hand on one run, so no claim, save field,
+   rules release or server change. **The same hand dealt again**: same hand number (tier table and
+   pity floor), the run's own stream (59g), the cards it replaces spared while anything else is
+   left, replacing the hand rather than adding one (`Owed` never sees it). **Never sold when it
+   could only deal the same cards** (`ShuffleRun.CanRefresh`, `ShuffleDeck.HasFresh`), checked
+   before the debit, so gems are never taken for nothing. The key is the kit's violet gem pill under
+   the cards (`ShuffleHandLayout.Refresh*`); short of gems stacks `GemShopOverlay` over the hand.
+   Analytics: `shuffle_refresh` and `shuffle_ended.refreshes`. **Held by** `ShuffleRefreshTests`;
+   `render_shuffle.py --refreshes N` (-1 draws no key).
    **Held by** `ShuffleGradeTests`, `SaveWiringTests`, `functions/test/grove.mjs`, and
    `render_shuffle.py --report all --measure` (every grade, nine languages, Arabic shaped).
 

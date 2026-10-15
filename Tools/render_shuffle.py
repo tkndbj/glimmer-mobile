@@ -90,7 +90,7 @@ def layout():
             "SeatSize", "IconSize", "SeatDown", "NameSize", "NameFloor", "NameHeight", "NameDown",
             "NoteSize", "NoteFloor", "NoteHeight", "NoteDown", "TierHeight", "TierDown",
             "TierSize", "TierFloor", "Foot", "DiamondDown", "DiamondSize", "DiamondGap", "DiamondGlow",
-            "MostDiamonds")
+            "MostDiamonds", "RefreshGap", "RefreshWidth", "RefreshHeight")
     missing = [n for n in need if n not in found]
     if missing:
         sys.exit("ShuffleHandLayout.cs no longer carries %s" % ", ".join(missing))
@@ -222,7 +222,41 @@ def card(sheet, L, cid, tier, cx, top, strings, held, marks=""):
     print("  %-16s tier %-22r at %dpx (floor %d)" % ("", word, px, L["TierFloor"]))
 
 
-def screen(cards, lang, held, wave, marks=None):
+# `UIKit.TextButton`'s figures, as `render_ad_offers.py` names them.
+KEY_LIFT, GLYPH_GAP, LABEL_INSET, GLYPH_K = K.PILL_FACE_LIFT, 18.0, 40.0, .34
+REFRESH_SIZE, REFRESH_FLOOR = 40, 24
+
+
+def compact(n):
+    """`Compact.Number` near enough to measure: whole below a thousand, then tenths of K and M."""
+    if n < 1000:
+        return str(n)
+    if n < 1_000_000:
+        return ("%.1f" % (n // 100 / 10)).rstrip("0").rstrip(".") + "K"
+    return ("%.1f" % (n // 100_000 / 10)).rstrip("0").rstrip(".") + "M"
+
+
+def refresh_key(sheet, cx, cy, L, caption):
+    """`ShuffleChoiceOverlay.RefreshKey`: the violet gem pill, the caption with the gem trailing it
+    (`iconTrails`), shrunk on one line in the room the glyph leaves. Returns the size it landed on."""
+    w, h = L["RefreshWidth"], L["RefreshHeight"]
+    K.paste(sheet, K.skin("btn_violet", w, h), cx, cy)
+    glyph = h * GLYPH_K
+    room = w - LABEL_INSET - glyph - GLYPH_GAP
+    got = REFRESH_SIZE
+    while got > REFRESH_FLOOR and K.font(got).getlength(caption) > room:
+        got -= 1
+    wide = min(room, K.font(got).getlength(caption))
+    face = cy - h * KEY_LIFT
+    left = cx - (wide + GLYPH_GAP + glyph) / 2
+    K.text(sheet, caption, left + wide / 2, face, got, outline=3)
+    K.paste(sheet, K.fit(K.load("ic_gem")[0], (glyph, glyph)), left + wide + GLYPH_GAP + glyph / 2, face)
+    return got
+
+
+def screen(cards, lang, held, wave, marks=None, refreshes=0):
+    """`refreshes` is how many this run has bought (MODES.md 59p); below nought draws no key, as
+    when the deck has nothing fresh."""
     marks = marks or {}
     L = layout()
     strings = table(lang)
@@ -241,7 +275,9 @@ def screen(cards, lang, held, wave, marks=None):
     # hand (`grand_hand` deals five, three over two).
     per = int(L.get("PerRow", 3))
     rows = 1 if len(cards) <= per else (len(cards) + per - 1) // per
-    ph = L["CardsTop"] + rows * L["CardHeight"] + (rows - 1) * L.get("RowGap", 0) + L["Foot"]
+    cards_foot = L["CardsTop"] + rows * L["CardHeight"] + (rows - 1) * L.get("RowGap", 0)
+    keyed = refreshes >= 0
+    ph = cards_foot + (L["RefreshGap"] + L["RefreshHeight"] if keyed else 0) + L["Foot"]
     reach = ph + CREST_REACH
     fit = min(1.0, (H - 20 * 2) / reach)
 
@@ -289,6 +325,13 @@ def screen(cards, lang, held, wave, marks=None):
         cx = bcx - (in_row - 1) * pitch / 2 + at * pitch
         card_top = top + L["CardsTop"] + row * (L["CardHeight"] + L.get("RowGap", 0))
         card(block, L, cid, tiers[cid], cx, card_top, strings, held.get(cid, 0), marks.get(cid, []))
+
+    if keyed:
+        # `ShuffleRefresh.PriceFor`: five, doubled per refresh already bought.
+        price = 5 * 2 ** refreshes
+        caption = upper(strings.get("ui.shuffle.refresh", "Refresh {0}").format(compact(price)), lang)
+        px = refresh_key(block, bcx, top + cards_foot + L["RefreshGap"] + L["RefreshHeight"] / 2, L, caption)
+        print("  key  %-28r at %dpx (floor %d)%s" % (caption, px, REFRESH_FLOOR, "  !!" if px <= REFRESH_FLOOR else ""))
 
     if fit < 1.0:
         block = block.resize((int(bw * fit), int(bh * fit)), Image.LANCZOS)
@@ -617,6 +660,7 @@ def main():
     ap.add_argument("--lang", default="en")
     ap.add_argument("--held", default="", help="card=copies, comma separated")
     ap.add_argument("--wave", type=int, default=3)
+    ap.add_argument("--refreshes", type=int, default=0, help="refreshes this run has bought (the key's price); -1 draws no key")
     ap.add_argument("--marks", default="", help="card=secret+secret+e: a diamond per secret id, e for the evolution's")
     ap.add_argument("--unlock", default="", help="a bond id, or 'all': the unlock panel instead of a hand")
     ap.add_argument("--measure", action="store_true", help="with --unlock all or --report all: every language, fail on a floor")
@@ -678,7 +722,7 @@ def main():
         cid, which = part.split("=")
         marks[cid] = which.split("+")
 
-    out = screen(args.cards.split(","), args.lang, held, args.wave, marks)
+    out = screen(args.cards.split(","), args.lang, held, args.wave, marks, args.refreshes)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Shuffle;
+using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,6 +35,14 @@ namespace GlimmerGrove
     /// than a white rectangle (invariant 7b).
     /// </para>
     /// <para>
+    /// <b>The refresh key under the cards</b> (MODES.md 59p) swaps the hand for a fresh one for
+    /// gems, its price doubling with every refresh the run has bought. It is drawn only while the
+    /// deck has something fresh to deal, says its price on its face, and asks the balance only
+    /// when tapped: short with a shop to hand stacks the gem shelf over the hand (the hand is
+    /// still there when it closes, as the continue panel's is), short with none says how many
+    /// more are needed. The new hand pops in where the old one stood, on the same panel.
+    /// </para>
+    /// <para>
     /// <b>Where things sit is <see cref="Layout.ShuffleHandLayout"/>'s</b> and what it looks
     /// like is <c>Tools/render_shuffle.py</c>'s, which is the only thing that can say whether
     /// three cards of this width still carry a translated name.
@@ -46,7 +55,23 @@ namespace GlimmerGrove
         public int Wave;
         public Action<ShuffleCard> OnPick;
 
+        /// <summary>
+        /// What the next refresh costs in gems, or nought when none can be sold (the deck has
+        /// nothing fresh). A reading rather than a figure, because every refresh doubles it.
+        /// Null offers no refresh at all.
+        /// </summary>
+        public Func<long> RefreshPrice;
+
+        /// <summary>
+        /// Pays for a refresh and deals it (<see cref="ShuffleRefresh.TryBuy"/>), answering the
+        /// new hand, or null when nothing was bought and nothing changed.
+        /// </summary>
+        public Func<IReadOnlyList<ShuffleCard>> OnRefresh;
+
         bool _picked;
+
+        /// <summary>True for the one rebuild that lays a refreshed hand: its cards pop in again.</summary>
+        bool _redealt;
 
         /// <summary>The colour a tier is said in: the word, the halo and the toast.</summary>
         public static Color TintOf(ShuffleTier tier)
@@ -78,7 +103,10 @@ namespace GlimmerGrove
             // Deals sheet says what the free allowance is.
             // **As tall as the hand's rows** (`grand_hand` deals five: three over two), and the
             // frame fits the whole block to the canvas it is drawn on (`VictoryFrame.Fit`).
-            var frame = VictoryFrame.Build(Content, L.PanelHeightFor(cards), Loc.Format("ui.shuffle.wave", Wave).Upper(), L.PanelWidth);
+            long price = RefreshPrice != null ? RefreshPrice() : 0L;
+            bool refresh = price > 0L && OnRefresh != null;
+
+            var frame = VictoryFrame.Build(Content, L.PanelHeightFor(cards, refresh), Loc.Format("ui.shuffle.wave", Wave).Upper(), L.PanelWidth);
             Backing = frame.Backing;
             Panel = frame.Panel;
 
@@ -94,6 +122,8 @@ namespace GlimmerGrove
                 L.Place(i, cards, out float x, out float top);
                 Card(Hand[i], i, new Vector2(x, -(top + L.CardHeight * .5f)), L);
             }
+
+            if (refresh) RefreshKey(price, cards, L);
 
             if (Rebuilding)
             {
@@ -195,10 +225,79 @@ namespace GlimmerGrove
 
             if (card.Tier >= ShuffleTier.Epic) Sheen.Attach((RectTransform)t, 2.8f);
 
-            if (Rebuilding) return;
+            // A rebuild is the same hand in a new state and does not pop; a refreshed hand is a
+            // new hand, and pops at once - the window is already standing.
+            if (Rebuilding && !_redealt) return;
 
             t.localScale = Vector3.zero;
-            Tween.Pop(t, 0f, .5f, CardPopAt + index * CardPopStagger);
+            Tween.Pop(t, 0f, .5f, (_redealt ? 0f : CardPopAt) + index * CardPopStagger);
+        }
+
+        /// <summary>
+        /// The refresh key: the kit's gem pill (violet, as every gem price in the game is) with
+        /// the price on its face and the gem after it. Pops with the cards on the way in.
+        /// </summary>
+        void RefreshKey(long price, int cards, Layout.ShuffleHandLayout L)
+        {
+            var key = UIKit.TextButton("Refresh", Panel, "btn_violet",
+                                       Loc.Format("ui.shuffle.refresh", Compact.Number(price)).Upper(),
+                                       40, new Vector2(L.RefreshWidth, L.RefreshHeight),
+                                       new Vector2(.5f, 1f), new Vector2(0f, -L.RefreshCentre(cards)),
+                                       Refresh, Art.S("Ui/ic_gem"), iconTrails: true);
+            UIKit.Shrinkable(key.Label, 24);
+            UIKit.FitLabel(key);
+
+            if (Rebuilding && !_redealt) return;
+
+            key.transform.localScale = Vector3.zero;
+            Tween.Pop(key.transform, 0f, .5f, (_redealt ? 0f : CardPopAt) + cards * CardPopStagger);
+        }
+
+        /// <summary>Whether a shop is reachable that could sell gems right now (<c>RunContinueFlow.GemsForSale</c>'s reading).</summary>
+        static bool GemsForSale => StoreService.IsAvailable && StoreRules.Catalog.HasGems;
+
+        /// <summary>
+        /// The refresh key was tapped. The balance is asked now rather than when the panel was
+        /// drawn, because a sync or a purchase moves it while the hand stands; the debit itself is
+        /// asked again at its own instant (<see cref="ShuffleRefresh.TryBuy"/>).
+        /// </summary>
+        void Refresh()
+        {
+            if (_picked || _redealt || OnRefresh == null || RefreshPrice == null) return;
+
+            long price = RefreshPrice();
+            if (price <= 0L) return;
+
+            switch (GemPrice.ChoiceFor(Profile.Gems, price, GemsForSale))
+            {
+                case GemChoice.BuyGems:
+                    // Stacked over the hand rather than replacing it, so the hand is still here
+                    // when the shelf closes; the run stays held under both.
+                    Flow.Modal<GemShopOverlay>();
+                    return;
+
+                case GemChoice.Unavailable:
+                    Audio.SfxVaried("back", .5f);
+                    Scenery.Toast(Content, Loc.Format("ui.shop.short_gems",
+                                                      Compact.Number(price - Profile.Gems)), Pal.Gold, 2.2f);
+                    return;
+            }
+
+            var hand = OnRefresh();
+            if (hand == null || hand.Count == 0)
+            {
+                // The balance moved between the tap and the debit, or the deck had nothing fresh
+                // after all: nothing was charged and the hand on the table stands.
+                Audio.SfxVaried("back", .5f);
+                return;
+            }
+
+            Hand = hand;
+            Audio.Sfx("whoosh", .6f);
+
+            _redealt = true;
+            try { Rebuild(); }
+            finally { _redealt = false; }
         }
 
         /// <summary>What every evolution's diamond glows in: its mark's own purple.</summary>

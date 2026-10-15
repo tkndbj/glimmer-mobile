@@ -80,6 +80,17 @@ namespace GlimmerGrove.Shuffle
         /// tables, the same card objects in the same order.
         /// </summary>
         public static List<ShuffleCard> Deal(ShuffleBuild build, int hand, Func<int> roll, ShuffleTuning tuning)
+            => Deal(build, hand, roll, tuning, null);
+
+        /// <summary>
+        /// Deals hand number <paramref name="hand"/> as the overloads above do, <b>sparing</b>
+        /// <paramref name="spare"/>: a refresh (MODES.md 59p) deals round the cards it replaces
+        /// while the deck holds anything else, and tops the hand up from them only when it does
+        /// not - so a refresh is as full a hand as any other and never offers a card it could
+        /// have avoided. With nothing spared it is exactly the deal above, roll for roll.
+        /// </summary>
+        public static List<ShuffleCard> Deal(ShuffleBuild build, int hand, Func<int> roll, ShuffleTuning tuning,
+                                             IReadOnlyList<ShuffleCard> spare)
         {
             var dealt = new List<ShuffleCard>(MostHand);
             if (build == null || roll == null) return dealt;
@@ -102,7 +113,10 @@ namespace GlimmerGrove.Shuffle
                     else if (hand % deck.RarePity == 0 && tier < ShuffleTier.Rare) tier = ShuffleTier.Rare;
                 }
 
-                var card = Pick(tuning.Cards, build, dealt, tier, roll);
+                // A spared card is offered only once nothing else of any tier is left; a pick that
+                // finds nothing draws no roll, so the fallback deals off the stream unmoved.
+                var card = Pick(tuning.Cards, build, dealt, spare, tier, roll)
+                           ?? (spare != null ? Pick(tuning.Cards, build, dealt, null, tier, roll) : null);
                 if (card == null) break;
 
                 dealt.Add(card);
@@ -135,20 +149,20 @@ namespace GlimmerGrove.Shuffle
         /// falling down a tier and then up one when that tier has nothing left.
         /// </summary>
         static ShuffleCard Pick(IReadOnlyList<ShuffleCard> all, ShuffleBuild build, List<ShuffleCard> hand,
-                                ShuffleTier tier, Func<int> roll)
+                                IReadOnlyList<ShuffleCard> spare, ShuffleTier tier, Func<int> roll)
         {
             // Down first, because a lower tier always has more cards left; then up, because a
             // build that has taken every common and rare is a build late enough to be offered
             // the rest of the deck.
             for (int t = (int)tier; t >= 0; t--)
             {
-                var card = From(all, build, hand, (ShuffleTier)t, roll);
+                var card = From(all, build, hand, spare, (ShuffleTier)t, roll);
                 if (card != null) return card;
             }
 
             for (int t = (int)tier + 1; t <= (int)ShuffleTier.Legendary; t++)
             {
-                var card = From(all, build, hand, (ShuffleTier)t, roll);
+                var card = From(all, build, hand, spare, (ShuffleTier)t, roll);
                 if (card != null) return card;
             }
 
@@ -156,7 +170,7 @@ namespace GlimmerGrove.Shuffle
         }
 
         static ShuffleCard From(IReadOnlyList<ShuffleCard> all, ShuffleBuild build, List<ShuffleCard> hand,
-                                ShuffleTier tier, Func<int> roll)
+                                IReadOnlyList<ShuffleCard> spare, ShuffleTier tier, Func<int> roll)
         {
             var pool = new List<ShuffleCard>(16);
 
@@ -165,11 +179,7 @@ namespace GlimmerGrove.Shuffle
                 var card = all[i];
                 if (card.Tier != tier || !build.Takeable(card)) continue;
 
-                bool held = false;
-                for (int h = 0; h < hand.Count; h++)
-                    if (ReferenceEquals(hand[h], card)) { held = true; break; }
-
-                if (!held) pool.Add(card);
+                if (!Holds(hand, card) && !Holds(spare, card)) pool.Add(card);
             }
 
             if (pool.Count == 0) return null;
@@ -178,6 +188,33 @@ namespace GlimmerGrove.Shuffle
             // hundred cards is drawn from evenly rather than off the low end of one roll.
             int pick = (roll() * 100 + roll()) % pool.Count;
             return pool[pick];
+        }
+
+        /// <summary>
+        /// Whether the deck holds a card <paramref name="build"/> can take that
+        /// <paramref name="open"/> does not already offer - whether a refresh (MODES.md 59p) could
+        /// deal anything new. Off <paramref name="tuning"/>'s cards, the run's snapshot.
+        /// </summary>
+        public static bool HasFresh(ShuffleBuild build, IReadOnlyList<ShuffleCard> open, ShuffleTuning tuning)
+        {
+            if (build == null) return false;
+
+            var all = (tuning ?? ShuffleTuning.Shipped).Cards;
+            for (int i = 0; i < all.Count; i++)
+                if (build.Takeable(all[i]) && !Holds(open, all[i])) return true;
+
+            return false;
+        }
+
+        /// <summary>Whether <paramref name="cards"/> holds this very card (cards are compared by reference: a run's tuned card is one object).</summary>
+        static bool Holds(IReadOnlyList<ShuffleCard> cards, ShuffleCard card)
+        {
+            if (cards == null) return false;
+
+            for (int i = 0; i < cards.Count; i++)
+                if (ReferenceEquals(cards[i], card)) return true;
+
+            return false;
         }
     }
 }

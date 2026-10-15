@@ -92,18 +92,35 @@ namespace GlimmerGrove.Layout
         /// <summary>Air between two rows of cards.</summary>
         public float RowGap = 24f;
 
+        /// <summary>
+        /// The refresh key under the cards (MODES.md 59p): the air above it, its width and its
+        /// height. Drawn only while a refresh can be sold, and the panel is only this much taller
+        /// while it is.
+        /// </summary>
+        public float RefreshGap = 26f, RefreshWidth = 520f, RefreshHeight = 108f;
+
         /// <summary>The panel's height for a hand of three or fewer: one row.</summary>
         public float PanelHeight => CardsTop + CardHeight + Foot;
 
         /// <summary>How many rows a hand of <paramref name="cards"/> is laid out in.</summary>
         public int Rows(int cards) => cards <= PerRow ? 1 : (cards + PerRow - 1) / PerRow;
 
-        /// <summary>The panel's height for a hand of <paramref name="cards"/>, every row and the air between.</summary>
-        public float PanelHeightFor(int cards)
+        /// <summary>
+        /// The panel's height for a hand of <paramref name="cards"/>, every row and the air
+        /// between, and the refresh key under them when <paramref name="refresh"/>.
+        /// </summary>
+        public float PanelHeightFor(int cards, bool refresh = false)
+            => CardsFoot(cards) + (refresh ? RefreshGap + RefreshHeight : 0f) + Foot;
+
+        /// <summary>Where the last row of cards ends, down from the panel's top.</summary>
+        public float CardsFoot(int cards)
         {
             int rows = Rows(cards);
-            return CardsTop + rows * CardHeight + (rows - 1) * RowGap + Foot;
+            return CardsTop + rows * CardHeight + (rows - 1) * RowGap;
         }
+
+        /// <summary>The refresh key's centre, down from the panel's top, under a hand of <paramref name="cards"/>.</summary>
+        public float RefreshCentre(int cards) => CardsFoot(cards) + RefreshGap + RefreshHeight * .5f;
 
         /// <summary>The cards' centre line, down from the panel's top (what <c>UIKit.Box</c> pivots on).</summary>
         public float CardsCentre => CardsTop + CardHeight * .5f;
@@ -193,10 +210,23 @@ namespace GlimmerGrove.Layout
             if (tierFoot + Inset > CardHeight) { fault = $"the tier ends {tierFoot} down a card {CardHeight} tall"; return false; }
             if (IconSize >= SeatSize) { fault = "the picture does not fit its seat"; return false; }
 
-            // The whole panel, centred, fits the shortest canvas this game lays out for.
-            if (PanelHeightFor(cards) > PanelStack.TallestPanel)
+            if (RefreshWidth + Inset * 2f > PanelWidth)
             {
-                fault = $"the panel is {PanelHeightFor(cards)} tall against a ceiling of {PanelStack.TallestPanel}";
+                fault = $"the refresh key runs {RefreshWidth} across a {PanelWidth} panel";
+                return false;
+            }
+
+            if (RefreshGap <= 0f || RefreshHeight <= 0f)
+            {
+                fault = "the refresh key touches the cards or has no height";
+                return false;
+            }
+
+            // The whole panel, centred, fits the shortest canvas this game lays out for - with
+            // the refresh key, its tallest state.
+            if (PanelHeightFor(cards, refresh: true) > PanelStack.TallestPanel)
+            {
+                fault = $"the panel is {PanelHeightFor(cards, refresh: true)} tall against a ceiling of {PanelStack.TallestPanel}";
                 return false;
             }
 
