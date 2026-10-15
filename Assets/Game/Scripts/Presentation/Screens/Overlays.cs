@@ -936,19 +936,32 @@ namespace GlimmerGrove
     // ==================================================================== how to
     public sealed class HowToOverlay : ModalView
     {
+        /// <summary>
+        /// One line's pitch, and the panel's height less its lines - the head over the first and
+        /// the key under the last. 424 + 6 x 106 is the 1060 the six-line panel was drawn at.
+        /// </summary>
+        const float HowToPitch = 106f, HowToBase = 424f;
+
         protected override void Build()
         {
-            MakePanel(new Vector2(880f, 1060f), Loc.Get("ui.howto.title"));
-
             // Body copy lives in the string table like everything else the player reads.
+            //
+            // **No sixth line.** It told the player to spend coins on their grove - land, homes,
+            // decor and friends - which was the Grovement, removed 2026-09-21 (invariant 16).
+            // Taken off on 2026-10-15; `ui.howto.line6` stays in the string files unused, for
+            // the colour row's reason below.
             string[] lineKeys =
             {
                 "ui.howto.line1", "ui.howto.line2", "ui.howto.line3",
-                "ui.howto.line4", "ui.howto.line5", "ui.howto.line6",
+                "ui.howto.line4", "ui.howto.line5",
             };
+
+            // Measured to the lines it carries: the lines hang from the top and the key stands
+            // on the bottom, so a panel sized for six with five in it is a hole over the key.
+            MakePanel(new Vector2(880f, HowToBase + lineKeys.Length * HowToPitch), Loc.Get("ui.howto.title"));
             for (int i = 0; i < lineKeys.Length; i++)
             {
-                float y = -212f - i * 106f;
+                float y = -212f - i * HowToPitch;
                 var dot = UIKit.Img("dot" + i, Panel, Art.Disc(64), Pal.EnergyColour(1 + (i % 7)),
                                     new Vector2(26f, 26f), new Vector2(0f, 1f), new Vector2(96f, y + 4f));
                 var t = UIKit.Titled("l" + i, Panel, Loc.Get(lineKeys[i]), 32, new Color(.36f, .25f, .18f),

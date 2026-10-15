@@ -114,11 +114,14 @@ namespace GlimmerGrove
         /// <paramref name="top"/> (negative, from the parent's top). <paramref name="note"/> is the
         /// line under the score - NEW BEST, the best so far, or nothing.
         /// </summary>
+        /// <param name="emblemScale">How large the grade is drawn against the layout's own size - one for the victory panel.</param>
+        /// <param name="captionInk">The score's caption colour; null is the layout's own faded cream.</param>
         public static ShuffleReportView Build(Transform parent, float top, ShuffleRecord record,
-                                              string note, Color noteInk, bool hidden)
+                                              string note, Color noteInk, bool hidden,
+                                              float emblemScale = 1f, Color? captionInk = null)
         {
             var view = new ShuffleReportView();
-            view.Assemble(parent, top, record, note, noteInk, hidden);
+            view.Assemble(parent, top, record, note, noteInk, hidden, emblemScale, captionInk);
             return view;
         }
 
@@ -133,8 +136,14 @@ namespace GlimmerGrove
             return drawn;
         }
 
-        void Assemble(Transform parent, float top, ShuffleRecord record, string note, Color noteInk, bool hidden)
+        void Assemble(Transform parent, float top, ShuffleRecord record, string note, Color noteInk, bool hidden,
+                      float emblemScale, Color? captionInk)
         {
+            // The grade's box at this host's size. Only ever smaller than the layout's, so the
+            // block's height (`HeightFor`) still holds it.
+            float scale = Mathf.Clamp(emblemScale, .3f, 1f);
+            float emblemW = _at.EmblemW * scale, emblemH = _at.EmblemH * scale;
+
             _record = record;
             _shown.AddRange(Drawn(record));
 
@@ -156,7 +165,7 @@ namespace GlimmerGrove
             if (light > 0f)
             {
                 _halo = UIKit.Img("Light", Root, global::GlimmerGrove.Art.Glow(128, 2.1f), Pal.A(ink, light),
-                                  new Vector2(_at.EmblemW * 2.2f, _at.EmblemW * 2.2f), new Vector2(.5f, .5f), emblemPos);
+                                  new Vector2(emblemW * 2.2f, emblemW * 2.2f), new Vector2(.5f, .5f), emblemPos);
                 _halo.raycastTarget = false;
             }
 
@@ -164,13 +173,13 @@ namespace GlimmerGrove
             // `Peek`**: it is in the boot preload, so it is in hand; were it ever not (an Editor run
             // before Sync All Assets), the picture stays off and the letter is set in type in its
             // colour instead - never a white rectangle (7b).
-            var emblem = UIKit.Box("Emblem", Root, new Vector2(_at.EmblemW, _at.EmblemH), new Vector2(.5f, .5f), emblemPos);
+            var emblem = UIKit.Box("Emblem", Root, new Vector2(emblemW, emblemH), new Vector2(.5f, .5f), emblemPos);
             _emblem = emblem;
 
             var sprite = AssetPipeline.AssetLibrary.Peek<Sprite>(
                 AssetPipeline.AssetManifest.ArtRoot + AssetPipeline.AssetManifest.ShuffleGrade(grade));
 
-            var picture = UIKit.Img("Letter", emblem, sprite, Color.white, new Vector2(_at.EmblemW, _at.EmblemH),
+            var picture = UIKit.Img("Letter", emblem, sprite, Color.white, new Vector2(emblemW, emblemH),
                                     new Vector2(.5f, .5f), Vector2.zero);
             picture.preserveAspect = true;
             picture.raycastTarget = false;
@@ -179,15 +188,16 @@ namespace GlimmerGrove
             Text typedLetter = null;
             if (sprite == null)
             {
-                var letter = typedLetter = UIKit.Titled("Type", emblem, ShuffleGradeLook.Letter(grade), _at.LetterSize, ink,
-                                          TextAnchor.MiddleCenter, new Vector2(_at.EmblemW, _at.EmblemH * .7f),
-                                          new Vector2(.5f, .5f), new Vector2(0f, _at.LetterLift), 5f, 4f);
+                var letter = typedLetter = UIKit.Titled("Type", emblem, ShuffleGradeLook.Letter(grade),
+                                          Mathf.RoundToInt(_at.LetterSize * scale), ink,
+                                          TextAnchor.MiddleCenter, new Vector2(emblemW, emblemH * .7f),
+                                          new Vector2(.5f, .5f), new Vector2(0f, _at.LetterLift * scale), 5f, 4f);
                 UIKit.Shrinkable(letter, _at.LetterFloor);
             }
 
             // ------------------------------------------------------------ the score
             _caption = Line("Caption", Loc.Get("ui.shuffle.score").Upper(), _at.CaptionY, _at.CaptionH,
-                            _at.CaptionSize, _at.CaptionFloor, new Color(1f, .95f, .86f, .66f));
+                            _at.CaptionSize, _at.CaptionFloor, captionInk ?? new Color(1f, .95f, .86f, .66f));
 
             string points = (record != null ? record.Points : 0).ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
             _score = Line("Score", points, _at.ScoreY, _at.ScoreH, _at.ScoreSize, _at.ScoreFloor, Pal.Cream);
@@ -199,7 +209,7 @@ namespace GlimmerGrove
             // draw (the owner, 2026-10-15: the score was not centred). The layout's x figures are
             // the envelope the group may use; where it lands inside is measured: the letter's drawn
             // width beside the widest of the three lines, `ReportGap` apart, the pair centred.
-            float letterW = typedLetter != null ? Drawn(typedLetter) : Fitted(sprite, _at.EmblemW, _at.EmblemH);
+            float letterW = typedLetter != null ? Drawn(typedLetter) : Fitted(sprite, emblemW, emblemH);
             float columnW = Mathf.Min(_at.ColumnW, Mathf.Max(Drawn(_caption), Mathf.Max(Drawn(_score), _note ? Drawn(_note) : 0f)));
             var xs = ShuffleReportLayout.CentredPair(_at.GroupGap, letterW, columnW);
 

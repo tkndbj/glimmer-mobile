@@ -55,8 +55,9 @@ WATCH_H, GROVE_H = 214.0, 258.0
 PER_ROW, CELL, STEP, ROW_GAP = 6, 148.0, 156.0, 26.0
 COMPANION_TITLE_ROOM, COMPANION_FOOT = 96.0, 24.0
 
-SEAT_CELL, SEAT_STEP = 196.0, 212.0
-SEAT_TITLE_ROOM, SEAT_CAPTION_H, SEAT_LADDER_H, SEAT_FOOT = 84.0, 34.0, 30.0, 16.0
+SEAT_CELL, SEAT_STEP, SEAT_BODY = 220.0, 232.0, 190.0
+SEAT_TITLE_ROOM, SEAT_CAPTION_H, SEAT_LADDER_H, SEAT_FOOT = 84.0, 42.0, 40.0, 18.0
+SEAT_NAME_PT, SEAT_STAR, SEAT_STAR_STEP = 30, 30, 34
 LINE_H = SEAT_TITLE_ROOM + SEAT_CELL + SEAT_CAPTION_H + SEAT_LADDER_H + SEAT_FOOT
 
 #: `UIKit.Box` pivots at centre (invariant 44d), so a left-aligned label anchored to a card's
@@ -281,21 +282,27 @@ def watch_card(sheet, top, wave):
 
     x = W / 2 - CARD_W / 2 + 104
     played = wave > 0
+    glyph_y = cy + 14                       # GlyphY -14, y down here
     if played:
-        K.paste(sheet, K.glow(150, 2.1, K.SUN, .26), x, cy + 14)
+        K.paste(sheet, K.glow(150, 2.1, K.SUN, .26), x, glyph_y)
 
     mark = K.UI / "ic_battle.png"
     if mark.exists():
-        K.paste(sheet, K.fit(Image.open(mark).convert("RGBA"), (76, 76)), x, cy + 14)
+        K.paste(sheet, K.fit(Image.open(mark).convert("RGBA"), (76, 76)), x, glyph_y)
+
+    # The words centred on the glyph as a block: the wave line alone, or it and the standing.
+    wave_h, standing_h = 50, 36
+    block = wave_h + (standing_h if played else 0)
+    wave_y = glyph_y - block / 2 + wave_h / 2
 
     tx = W / 2 - CARD_W / 2 + WATCH_TEXT_LEFT
     left_text(sheet, say("ui.endless.best", wave) if played else say("ui.endless.unplayed"),
-              tx, cy - 2, WATCH_TEXT_W, 38, 22,
-              fill=K.CREAM if played else (255, 245, 224), outline=3)
+              tx, wave_y, WATCH_TEXT_W, 38, 22,
+              fill=K.CREAM if played else (255, 255, 255), outline=3)
 
     if played:
-        left_text(sheet, say("ui.endless.standing", 12), tx, cy + 44, WATCH_TEXT_W, 26, 18,
-                  fill=K.SUN, outline=3)
+        left_text(sheet, say("ui.endless.standing", 12), tx, wave_y + wave_h / 2 + standing_h / 2,
+                  WATCH_TEXT_W, 26, 18, fill=K.SUN, outline=3)
 
     return top + WATCH_H + GAP
 
@@ -363,11 +370,11 @@ def line_card(sheet, top, line):
 
         body = turret_body(seat[1], colour)
         if body:
-            K.paste(sheet, K.fit(body, (SEAT_CELL - 46, SEAT_CELL - 46)), x, cell_y)
+            K.paste(sheet, K.fit(body, (SEAT_BODY, SEAT_BODY)), x, cell_y)
 
         K.shrunk(sheet, say(f"ward.{seat[1]}.name"), x, caption_y,
-                 SEAT_STEP - 8, SEAT_CAPTION_H, 24, 16, fill=(255, 245, 224), outline=3)
-        stars(sheet, x, ladder_y, 22, 26, seat[2], 5)
+                 SEAT_STEP - 8, SEAT_CAPTION_H, SEAT_NAME_PT, 16, fill=(255, 255, 255), outline=3)
+        stars(sheet, x, ladder_y, SEAT_STAR, SEAT_STAR_STEP, seat[2], 5)
 
     return top + LINE_H + GAP
 

@@ -162,6 +162,15 @@ namespace GlimmerGrove
         /// </summary>
         Vector2 TurretAt => new Vector2(0f, TurretMid + _node.rect.height * .5f);
 
+        /// <summary>
+        /// Where the turret's middle stands, from the stage's centre, in the stage's own units.
+        ///
+        /// <b>Arithmetic, never a transform read</b>, so a ceremony can aim light at the turret
+        /// while the plate holding this stage is still scaled to nothing - a world position read
+        /// off a collapsed parent is the parent's centre, wherever the turret will stand.
+        /// </summary>
+        public Vector2 TurretPoint => _node != null ? TurretAt : Vector2.zero;
+
         /// <summary>The stage's own size in cells, which is what every formation is laid out in.</summary>
         float TallCells => _cell > 0f ? _node.rect.height / _cell : 0f;
         float WideCells => _cell > 0f ? _node.rect.width / _cell : 0f;

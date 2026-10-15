@@ -33,11 +33,20 @@ namespace GlimmerGrove
         /// <summary>True from the tap until the SDK answers. The key is dead for all of it.</summary>
         public bool Watching { get; private set; }
 
-        Image _pill, _coin;
+        Image _pill, _play, _coin;
         Text _price, _off;
+        float _lift;
 
         /// <summary>The burst's size, and how far its centre stands in from the key's right edge.</summary>
         public const float SealSize = 104f, SealInset = -6f;
+
+        /// <summary>
+        /// The play mark, the coin and the figure's box, and the gaps between them. The three are
+        /// one group centred on the key (<see cref="Lay"/>), so these are the only numbers that
+        /// place them.
+        /// </summary>
+        public const float PlaySize = 52f, CoinSize = 46f, PriceW = 250f, PriceH = 62f;
+        public const float PlayGap = 13f, CoinGap = 8f;
 
         public static WardDiscountKey Build(Transform parent, Vector2 size, Vector2 anchor,
                                             Vector2 pos, Action onTap)
@@ -49,22 +58,23 @@ namespace GlimmerGrove
             key._pill = key.Button.GetComponent<Image>();
 
             float lift = size.y * UIKit.PillFaceLift;
+            key._lift = lift;
 
-            // Play mark, coin, figure, left to right: "watch, and pay this". The figure is
-            // left-aligned against the coin so a four-digit price and a six-digit one start in the
-            // same place.
-            UIKit.Img("Play", key.Button.transform, Art.S("Ui/ic_play"), Pal.Cream,
-                      new Vector2(52f, 52f), new Vector2(.5f, .5f), new Vector2(-150f, lift))
-                 .preserveAspect = true;
+            // Play mark, coin, figure, left to right: "watch, and pay this". Placed by `Lay` on
+            // every paint, because where the group starts depends on how wide the figure is.
+            key._play = UIKit.Img("Play", key.Button.transform, Art.S("Ui/ic_play"), Pal.Cream,
+                                  new Vector2(PlaySize, PlaySize), new Vector2(.5f, .5f),
+                                  new Vector2(0f, lift));
+            key._play.preserveAspect = true;
 
             key._coin = UIKit.Img("Coin", key.Button.transform, Art.CoinFace(), Color.white,
-                                  new Vector2(46f, 46f), new Vector2(.5f, .5f),
-                                  new Vector2(-88f, lift));
+                                  new Vector2(CoinSize, CoinSize), new Vector2(.5f, .5f),
+                                  new Vector2(0f, lift));
             key._coin.preserveAspect = true;
 
             key._price = UIKit.Titled("Price", key.Button.transform, string.Empty, 38, Pal.Cream,
-                                      TextAnchor.MiddleLeft, new Vector2(250f, 62f),
-                                      new Vector2(.5f, .5f), new Vector2(65f, lift), 0f, 3f);
+                                      TextAnchor.MiddleLeft, new Vector2(PriceW, PriceH),
+                                      new Vector2(.5f, .5f), new Vector2(0f, lift), 0f, 3f);
             UIKit.Shrinkable(key._price, 22);
 
             // The share off, on the kit's burst - `DealCard`'s seal, at this key's scale. Built last
@@ -108,6 +118,8 @@ namespace GlimmerGrove
             if (Button == null) return;
 
             _price.text = price.ToString("N0");
+            Lay();
+
             _off.text = Loc.Format("ui.loadout.discount_badge", WardDiscount.Percent);
 
             bool live = !Watching && affordable && WardDiscount.State == WardDiscountState.Ready;
@@ -115,6 +127,31 @@ namespace GlimmerGrove
             Button.Interactable = live;
             _pill.sprite = Art.S("Ui/" + (live ? Skins.Alternate : Skins.Shut));
         }
+
+        /// <summary>
+        /// Centres the play mark, the coin and the figure as one group on the key.
+        ///
+        /// <b>Measured off the figure, never placed at fixed offsets.</b> The three used to stand
+        /// at fixed places with the figure left-aligned against the coin, which centres the group
+        /// for exactly one width of price: every shorter figure left the whole row sitting left
+        /// of the middle of the key (owner, 2026-10-15). The figure's box keeps its width and
+        /// left alignment; only where the group starts moves.
+        /// </summary>
+        void Lay()
+        {
+            float text = Mathf.Min(_price.preferredWidth, PriceW);
+            float wide = PlaySize + PlayGap + CoinSize + CoinGap + text;
+            float left = -wide * .5f;
+
+            Place(_play.rectTransform, left + PlaySize * .5f);
+            Place(_coin.rectTransform, left + PlaySize + PlayGap + CoinSize * .5f);
+
+            // The box is centre-pivoted (`UIKit.Box`), so its middle is half its width past where
+            // the left-aligned figure starts.
+            Place(_price.rectTransform, left + PlaySize + PlayGap + CoinSize + CoinGap + PriceW * .5f);
+        }
+
+        void Place(RectTransform rt, float x) => rt.anchoredPosition = new Vector2(x, _lift);
 
         /// <summary>
         /// The sentence the panel's status line carries while this key is the one to read, or

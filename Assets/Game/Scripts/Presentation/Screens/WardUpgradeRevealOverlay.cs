@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Wards;
@@ -47,6 +48,13 @@ namespace GlimmerGrove
     /// <b>And it makes exactly one sound</b>, on the break - see <see cref="Land"/>. What the
     /// player hears across the whole purchase is the coin as the money leaves and the victory as
     /// the star lands.
+    /// </para>
+    /// <para>
+    /// <b>Its verb is an ascension.</b> The star falls as a comet, its power runs down a lightning
+    /// conduit into the turret, and rises back up out of it in rings - the opposite direction to
+    /// the unlock's summoning, where light is pulled into a point and goes nova outward. The light
+    /// is <see cref="CeremonyFx"/>, pooled and additive on its own canvas, and every piece of it is
+    /// generated, so nothing here can arrive as a white rectangle (invariant 7b).
     /// </para>
     /// </summary>
     public sealed class WardUpgradeRevealOverlay : ModalView
@@ -116,18 +124,33 @@ namespace GlimmerGrove
         /// </summary>
         const string UpgradeScope = "ward_upgrade";
 
+        /// <summary>How flat a ring lifting off the turret lies - the hill's own perspective.</summary>
+        const float FloorSquash = .34f;
+
+        /// <summary>How dark the room is held under the charge. Lifted on the landing.</summary>
+        const float HushAlpha = .46f;
+
+        // The light's sprites, generated and cached by key in `Art`; named here so the pool is
+        // warmed with exactly what the ceremony throws.
+        static Sprite GlowArt => Art.Glow(64, 1.6f);
+        static Sprite SparkArt => Art.Spark(64);
+        static Sprite GlintArt => Art.Glint(128, 4);
+        static Sprite WaveArt => Art.Wave(256, 9f);
+        static Sprite RingArt => Art.Ring(256, 5f);
+
         // ----------------------------------------------------------------- timing
         /// <summary>
         /// The sequence, as gaps rather than absolute times - <see cref="Cue"/>'s whole argument.
         ///
-        /// <b>Three movements: the room charges, the star lands, and the numbers climb.</b> The
-        /// charge is the part that cannot be cut: it is the only stretch where nothing has
-        /// happened yet, and taking it out turns the impact from something earned into something
-        /// sudden. The numbers come last because they are the reading a player has to be looking
-        /// at when the noise has stopped.
+        /// <b>The room charges, the star lands, the power runs into the turret, and the numbers
+        /// climb.</b> The charge is the part that cannot be cut: it is the only stretch where
+        /// nothing has happened yet, and taking it out turns the impact from something earned into
+        /// something sudden. The numbers come last because they are the reading a player has to be
+        /// looking at when the noise has stopped.
         /// </summary>
         const float ChargeFor = .58f, RingGap = .13f, FallFor = .30f;
-        const float ToTitle = .40f, ToName = .16f, ToBars = .26f, ToKey = .30f;
+        const float ToConduit = .16f, ToSurge = .22f, ConduitFor = .50f;
+        const float ToTitle = .24f, ToName = .16f, ToBars = .26f, ToKey = .30f;
         const float Climb = 1.10f;
 
         static readonly Color Ink = Pal.Cream;
@@ -143,7 +166,7 @@ namespace GlimmerGrove
         /// </summary>
         static readonly Color GainInk = Pal.Mint;
 
-        Image _sky, _vignette, _fan, _fan2, _glow, _flash, _plate;
+        Image _sky, _vignette, _hush, _fan, _fan2, _glow, _flash, _plate;
         Image[] _aurora;
         RectTransform _plateRt, _fanRt, _fan2Rt, _ladder, _barHost;
         RectTransform _falling;
@@ -155,6 +178,19 @@ namespace GlimmerGrove
 
         WardStatBars _bars;
         WardFiringStage _stage;
+
+        CeremonyFx _fx;
+        bool _ambient;
+
+        /// <summary>The spark riding each bar's leading edge while it climbs.</summary>
+        readonly List<RectTransform> _heads = new List<RectTransform>();
+
+        /// <summary>
+        /// Every one-shot piece of light still alive, so a skip can take them all away at once - a
+        /// flare left burning over a settled screen is the leak <see cref="Skip"/> exists to make
+        /// impossible.
+        /// </summary>
+        readonly List<GameObject> _transient = new List<GameObject>();
 
         Chroma _c;
         Color _tint;
@@ -170,6 +206,13 @@ namespace GlimmerGrove
 
             BuildRoom();
             BuildTurret();
+
+            // Over the plate and under the ladder and captions, so light can burn across the
+            // turret and never across a word or a star. Warmed now, while the room fades in.
+            _fx = CeremonyFx.Attach(Content, "Light",
+                                    (GlowArt, 110), (SparkArt, 160), (GlintArt, 60),
+                                    (WaveArt, 10), (RingArt, 8));
+
             BuildLadder();
             BuildCaptions();
             BuildBars();
@@ -221,6 +264,12 @@ namespace GlimmerGrove
 
             // Last of the ground, so it holds the aurora and the fireflies in too.
             _vignette = CeremonySky.Veil(Content);
+
+            // The hush: dimmed under the charge, uncovered on the landing. In the wash's own ink,
+            // for `CeremonySky.Ink`'s reason. See `Play`.
+            _hush = UIKit.Img("Hush", Content, Art.Pixel, Pal.A(CeremonySky.Ink, 0f));
+            UIKit.StretchTo((RectTransform)_hush.transform, 0, 0, 0, 0);
+            _hush.raycastTarget = false;
 
             _fan = UIKit.Img("Fan", Content, Art.Rays(512, 20), Pal.A(_tint, 0f),
                              Vector2.one * FanSize, new Vector2(.5f, .5f),
@@ -416,6 +465,24 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------- play
+        /// <summary>
+        /// The sequence. Gaps, never absolute times - <see cref="Cue"/>'s whole argument.
+        ///
+        /// <para>
+        /// <b>Five movements, and each one hands the light to the next.</b> The ladder wakes - a
+        /// shimmer runs along the stars already earned to the empty slot, and light is dragged
+        /// into it. The star falls out of the sky as a comet and lands in the slot. Its power runs
+        /// <em>down</em> a lightning conduit into the turret. The turret takes it and the power
+        /// rises back up out of it in rings. And the two readings climb, each with a spark riding
+        /// its leading edge. One continuous path of light from the top of the screen to the
+        /// numbers - which is what makes this a story about the turret getting stronger rather
+        /// than a star and a turret that happened to be on screen together.
+        /// </para>
+        /// <para>
+        /// <b>The room hushes under the charge and is uncovered on the landing</b>, the unlock's
+        /// trick and its reason: additive light on a bright room has nowhere to go.
+        /// </para>
+        /// </summary>
         void Play()
         {
             var cue = new Cue(this);
@@ -425,6 +492,7 @@ namespace GlimmerGrove
             {
                 Tween.Fade(_sky, 1f, .28f);
                 Tween.Fade(_vignette, VignetteAlpha, .38f);
+                Tween.Fade(_hush, HushAlpha, .45f, Ease.OutCubic);
 
                 if (_aurora != null)
                     for (int i = 0; i < _aurora.Length; i++)
@@ -435,10 +503,14 @@ namespace GlimmerGrove
             });
 
             // -- the charge ---------------------------------------------------
-            // Light dragged in out of the dark, and three rings closing on the plate. Anticipation
-            // is the only thing on screen for half a second, which is what makes the landing feel
-            // earned rather than sudden.
-            cue.Then(.12f, () => Charge(14));
+            // The ladder wakes along its earned stars toward the slot, and light is dragged into
+            // the slot out of the dark. Anticipation is the only thing on screen for half a
+            // second, which is what makes the landing feel earned rather than sudden.
+            cue.Then(.12f, () =>
+            {
+                Shimmer();
+                Charge(ChargeFor - .12f);
+            });
 
             cue.Then(.06f, () => Collapse(0));
             cue.Then(RingGap, () => Collapse(1));
@@ -450,13 +522,23 @@ namespace GlimmerGrove
             // -- the landing --------------------------------------------------
             cue.Then(FallFor, Land);
 
+            // -- the conduit --------------------------------------------------
+            cue.Then(ToConduit, Conduit);
+
+            // -- the turret takes it ------------------------------------------
+            cue.Then(ToSurge, Surge);
+
             // -- the title ----------------------------------------------------
             cue.Then(ToTitle, () =>
             {
                 SetAlpha(_title, 1f);
                 _title.transform.localScale = Vector3.one * 2.4f;
                 Tween.Scale(_title.transform, 1f, .26f, Ease.InCubic)
-                     .OnDone(() => Tween.Punch(_title.transform, .18f, .34f));
+                     .OnDone(() =>
+                     {
+                         Tween.Punch(_title.transform, .18f, .34f);
+                         Underline(new Vector2(0f, TitleY - TitleH * .30f), TitleW(), Pal.Lift(Pal.Gold, .25f));
+                     });
             });
 
             cue.Then(ToName, () => Tween.Fade(_name, .92f, .30f));
@@ -466,6 +548,7 @@ namespace GlimmerGrove
             {
                 Tween.Fade(UIKit.Group(_barHost), 1f, .26f);
                 _bars?.Climb(Was, Now, WardLedger.Catalog, Climb);
+                Ride();
             });
 
             cue.Then(Climb, Landed);
@@ -477,66 +560,67 @@ namespace GlimmerGrove
                 _dismiss.blocksRaycasts = true;
 
                 _settled = true;
+                Ambient();
             });
         }
 
         // ------------------------------------------------------------------ parts
         /// <summary>
-        /// Motes dragged in out of the dark, into the slot the star is about to land in.
+        /// A glint running along the stars already held, left to right, ending on the slot - the
+        /// ladder saying where the next one goes before it arrives.
+        /// </summary>
+        void Shimmer()
+        {
+            int held = WardStars.Sane(Was.Stars);
+
+            for (int i = 0; i < held; i++)
+                Twinkle(new Vector2(WardStarRow.XOf(i, StarSize), StarsY), Pal.A(Pal.Lift(Pal.Gold, .45f), .95f),
+                        StarSize * 1.9f, .42f, i * .07f);
+
+            Twinkle(SlotAt, Pal.A(Color.white, .9f), StarSize * 2.4f, .5f, held * .07f);
+        }
+
+        /// <summary>
+        /// Light dragged in out of the dark along spirals, into the slot the star is about to land
+        /// in, and a glow in the slot swelling as it fills.
         ///
         /// <b>Inward rather than outward</b>, which is the one thing that makes this read as a
         /// charge: everything else in this game that throws light throws it away from something.
-        ///
         /// <b>And into the <em>slot</em> rather than into the turret</b>, so the gathering and the
-        /// thing it is gathering for share one place. Split across the two - light into the turret
-        /// and then a star out of the sky - they read as two unrelated events that happened to be
-        /// close together.
+        /// thing it is gathering for share one place.
         /// </summary>
-        void Charge(int count)
+        void Charge(float seconds)
         {
             var to = SlotAt;
+            var golds = new[] { Pal.Lift(Pal.Gold, .3f), Pal.Lift(_tint, .4f), Pal.Lift(_c.Partner, .35f), Color.white };
 
-            for (int i = 0; i < count; i++)
+            _fx.Vortex(GlowArt, to, golds, 70f, seconds, 260f, 620f, 22f, 3f);
+            _fx.Vortex(SparkArt, to, golds, 30f, seconds, 200f, 520f, 15f, 3.6f);
+
+            var well = _fx.Light("Well", Art.Glow(128, 1.8f), Pal.A(Pal.Lift(Pal.Gold, .3f), 0f),
+                                 Vector2.one * 40f, to);
+            _transient.Add(well.gameObject);
+
+            var rt = well.rectTransform;
+            Tween.Run(seconds + FallFor, Ease.Linear, t =>
             {
-                float ang = (i / (float)count) * Mathf.PI * 2f + UnityEngine.Random.Range(-.3f, .3f);
-                float far = UnityEngine.Random.Range(520f, 900f);
-                float size = UnityEngine.Random.Range(16f, 34f);
-                float dur = ChargeFor * UnityEngine.Random.Range(.72f, 1f);
+                if (!well) return;
 
-                var from = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * far + to;
-
-                var mote = UIKit.Img("Mote", Content, Art.Spark(64),
-                                     Pal.A(Pal.Lift(_c.Nth(i), .35f), 0f),
-                                     Vector2.one * size, new Vector2(.5f, .5f), from);
-                mote.raycastTarget = false;
-
-                var rt = (RectTransform)mote.transform;
-
-                Tween.Run(dur, Ease.InCubic, t =>
-                {
-                    if (!rt) return;
-
-                    rt.anchoredPosition = Vector2.Lerp(from, to, t);
-                    rt.localScale = Vector3.one * Mathf.Lerp(1.2f, .25f, t);
-                    mote.color = Pal.A(mote.color, Mathf.Min(1f, t * 3f) * (1f - t * t));
-                }, mote).OnDone(() => { if (mote) Destroy(mote.gameObject); });
-            }
+                // Swelling, and flickering faster the fuller it gets - a light about to give.
+                float pulse = .82f + .18f * Mathf.Sin(t * t * 60f);
+                rt.sizeDelta = Vector2.one * Mathf.Lerp(40f, 230f, t * t) * pulse;
+                well.color = Pal.A(well.color, Mathf.Lerp(.2f, .95f, t));
+            }, well);
         }
 
         /// <summary>A ring closing on the slot, before there is anything there to close on.</summary>
         void Collapse(int index)
         {
-            var ring = UIKit.Img("In" + index, Content, Art.Ring(256, 7f), Pal.A(_c.Nth(index), 0f),
-                                 Vector2.one * 1080f, new Vector2(.5f, .5f), SlotAt);
-            ring.raycastTarget = false;
-
-            Tween.Run(.46f, Ease.InCubic, t =>
+            _fx.Emit(new CeremonyFx.Mote
             {
-                if (!ring) return;
-
-                ring.transform.localScale = Vector3.one * Mathf.Lerp(1f, .16f, t);
-                ring.color = Pal.A(_c.Nth(index), .68f * Mathf.Sin(t * Mathf.PI));
-            }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+                Sprite = WaveArt, Colour = Pal.A(Pal.Lift(_c.Nth(index), .25f), .72f), At = SlotAt,
+                Life = .46f, Size = 1080f, SizeEnd = 170f, Grow = Ease.InCubic, FadeIn = .4f, FadePower = .6f,
+            });
         }
 
         /// <summary>Where in the ladder the star being bought stands, on the canvas.</summary>
@@ -544,7 +628,16 @@ namespace GlimmerGrove
                                       StarsY);
 
         /// <summary>
-        /// The star itself, falling into the slot it was bought for.
+        /// Where the turret's middle stands, read off the stage - which stands its turret low and
+        /// keeps the top for the bolt, so the plate's own centre is air above it.
+        /// </summary>
+        Vector2 TurretAt => new Vector2(0f, PlateY) + (_stage != null ? _stage.TurretPoint : Vector2.zero);
+
+        /// <summary>The turret's feet, where the rings it sends up are born.</summary>
+        Vector2 FootAt => TurretAt + new Vector2(0f, -StageCell * 1.0f);
+
+        /// <summary>
+        /// The star itself, falling into the slot it was bought for - as a comet.
         ///
         /// <b>It arrives from off the top of the canvas</b> rather than fading up in place, so
         /// there is a moment where the thing about to happen is visible and has not happened -
@@ -552,6 +645,9 @@ namespace GlimmerGrove
         /// lands is <see cref="WardStarRow.XOf"/> and never this file's own arithmetic, or the
         /// star would stand beside the one it is supposed to become the day either the size or the
         /// gap moves.
+        ///
+        /// <b>The tail is particles shed where the star <em>is</em></b>, never a picture hung behind
+        /// it: the star turns as it falls, and a tail parented to it would turn with it.
         /// </summary>
         void Drop()
         {
@@ -560,8 +656,7 @@ namespace GlimmerGrove
 
             // **One node carrying both**, rather than a star and a halo moved in step. Two objects
             // are two things a skip has to remember to take away, and the one it forgot would be
-            // left as a gold smear over a ladder that had already relit - which is exactly the
-            // shape of leak this file's own <see cref="Skip"/> exists to make impossible.
+            // left as a gold smear over a ladder that had already relit.
             _falling = UIKit.Box("Falling", Content, Vector2.one * StarSize,
                                  new Vector2(.5f, .5f), from);
 
@@ -569,6 +664,7 @@ namespace GlimmerGrove
                                  Vector2.one * StarSize * 3.4f, new Vector2(.5f, .5f),
                                  Vector2.zero);
             halo.raycastTarget = false;
+            Additive.Lit(halo);
 
             var star = UIKit.Img("Star", _falling, Art.S("Ui/star_full"), Pal.Gold,
                                  Vector2.one * StarSize, new Vector2(.5f, .5f), Vector2.zero);
@@ -576,7 +672,7 @@ namespace GlimmerGrove
 
             var node = _falling;
 
-            Tween.Fade(halo, .55f, FallFor * .5f);
+            Tween.Fade(halo, .75f, FallFor * .5f);
 
             Tween.Run(FallFor, Ease.InQuad, t =>
             {
@@ -590,31 +686,55 @@ namespace GlimmerGrove
                 if (node) Destroy(node.gameObject);
                 if (_falling == node) _falling = null;
             });
+
+            var tail = new[] { Pal.Lift(Pal.Gold, .35f), Pal.Lift(Pal.Gold, .1f), Color.white, Pal.Lift(_tint, .45f) };
+
+            _fx.Run(120f, FallFor, i =>
+            {
+                if (!node) return default;
+
+                bool ember = i % 3 == 0;
+                return new CeremonyFx.Mote
+                {
+                    Sprite = ember ? SparkArt : GlowArt,
+                    Colour = tail[i % tail.Length],
+                    At = node.anchoredPosition + new Vector2(UnityEngine.Random.Range(-14f, 14f), 10f),
+                    Velocity = new Vector2(UnityEngine.Random.Range(-90f, 90f), UnityEngine.Random.Range(80f, 260f)),
+                    Life = ember ? UnityEngine.Random.Range(.35f, .6f) : UnityEngine.Random.Range(.22f, .36f),
+                    Size = ember ? 18f : StarSize * node.localScale.x * .9f,
+                    SizeEnd = ember ? 4f : 12f,
+                    Gravity = ember ? 500f : 0f,
+                    Drag = 2f,
+                    Stretch = ember ? .08f : 0f,
+                    FadePower = 1.3f,
+                };
+            });
         }
 
         /// <summary>
-        /// The impact: the star is in the ladder, the room breaks open, and the turret takes it.
+        /// The impact: the star is in the ladder, the room is uncovered, and the light of the
+        /// landing bursts out of the slot.
         ///
         /// <b>One sound in the whole ceremony, and it is here.</b> It shipped with five - a
         /// whoosh under the charge, a bell on the star, the fanfare on the title, a chime under
         /// the climbing bars and a collect when they landed - each one placed on a beat that
         /// deserved marking, and played back as a pile-up rather than as a celebration. The
-        /// owner's verdict after a device was to keep the victory and nothing else. That is
-        /// <c>WardRevealOverlay</c>'s own note arrived at from the other side: the companion
-        /// reveal shipped ringing on all six of its beats and was cut to one for the same reason,
-        /// and this screen was written knowing that and did it anyway.
-        ///
-        /// <b>On the break rather than on the title.</b> With four sounds gone the one left has to
-        /// land on the loudest thing on the screen; a fanfare four tenths of a second after the
-        /// flash reads as a sound belonging to something else.
+        /// owner's verdict after a device was to keep the victory and nothing else. The conduit
+        /// and the surge after it are silent on purpose: they are the landing's consequence, and
+        /// a second sound would make them a second event.
         /// </summary>
         void Land()
         {
             _flash.color = new Color(1f, .99f, .94f, .90f);
             Tween.Fade(_flash, 0f, .36f, Ease.OutQuad);
 
+            Tween.Fade(_hush, 0f, .34f, Ease.OutQuad);
+
             Tween.Shake((RectTransform)Content, 30f, .46f);
+            Zoom(1.06f, .5f);
             Audio.Sfx("win", .62f);
+
+            ClearTransient();
 
             _fanRt.localScale = Vector3.one * .35f;
             Tween.Scale(_fanRt, 1f, .68f, Ease.OutQuint);
@@ -628,25 +748,173 @@ namespace GlimmerGrove
 
             Tween.Fade(_glow, GlowAlpha, .48f);
 
-            for (int i = 0; i < 4; i++) Shockwave(i * .07f, _c.Nth(i));
+            var at = SlotAt;
+            var gold = Pal.Lift(Pal.Gold, .3f);
 
-            Burst.Confetti(Content, 86);
+            // The flare: a hot core, a turning star of needles, and a streak thrown along the ladder.
+            Flare(Art.Glow(128, 1.6f), at, Pal.A(Color.white, .95f), Vector2.one * 90f,
+                  Vector2.one * 760f, 0f, 0f, .55f, Ease.OutQuint);
+            Flare(GlintArt, at, Pal.A(gold, 1f), Vector2.one * 220f, Vector2.one * 1150f, 0f, 32f,
+                  .72f, Ease.OutCubic);
+            Flare(Art.Glow(64, 1.4f), at, Pal.A(gold, .85f), new Vector2(1500f, 64f),
+                  new Vector2(1900f, 8f), 0f, 0f, .58f, Ease.OutCubic);
+
+            for (int i = 0; i < 4; i++)
+                _fx.Shock(WaveArt, at, Pal.A(Pal.Lift(_c.Nth(i), .25f), .82f), 120f, 1300f + i * 140f,
+                          .74f, i * .07f);
+
+            var bright = new[] { Color.white, gold, Pal.Lift(_tint, .4f), Pal.Lift(_c.Accent, .35f) };
+
+            _fx.Spray(SparkArt, at, bright, 64, 600f, 1500f, 26f, .9f, gravity: 1200f, drag: 2.5f,
+                      stretch: .055f, lift: 220f);
+            _fx.Spray(GlowArt, at, bright, 22, 220f, 600f, 28f, 1.3f, gravity: 280f, drag: 1.6f,
+                      stretch: 0f, lift: 120f);
+
+            Crackle(at, 50f, 380f, 6, gold, 5f, .30f, 3);
+
+            _fx.Starfall(GlintArt, 520f, 1000f, new[] { gold, Pal.Cream, Pal.Lift(_tint, .5f) }, 22f, 2.2f, 44f);
 
             Relight();
-
-            // The turret takes the light rather than arriving in it: `Claim` is the stage's own
-            // overcharge - a halo, rings out of the barrel and a spring - with its white-out off,
-            // because the screen is already white and two flashes a frame apart is one flash with
-            // a seam in it.
-            _stage?.Claim(whiteOut: false);
         }
 
         /// <summary>
-        /// The ladder at its new count, with the star that was just bought punched where it stands.
+        /// The star's power running down into the turret: a bolt from the slot to the turret's
+        /// middle, struck three times and flickering out, with beads of light pouring down it.
         ///
-        /// <b>Rebuilt rather than a sixth star added</b>, because the row is five stars whatever a
-        /// turret has earned (<c>WardStarRow</c>) and what changes is which of them are lit.
+        /// <b>This is the beat the first two cuts were missing.</b> Without it the star landing and
+        /// the turret flaring were two events that happened to be close together - the very
+        /// complaint this file's charge note records about light split across two places. With it
+        /// they are cause and effect, drawn.
         /// </summary>
+        void Conduit()
+        {
+            var from = SlotAt + new Vector2(0f, -StarSize * .45f);
+            var to = TurretAt;
+            var gold = Pal.Lift(Pal.Gold, .2f);
+
+            var bolt = Lightning.Grow("Conduit", _fx.Node, gold, 7f, .55f);
+            _transient.Add(bolt.Host.gameObject);
+
+            int seed = UnityEngine.Random.Range(1, 1 << 30);
+            int struck = 0;
+
+            bolt.Strike(from, to, 100f, .38f, 3, seed);
+            bolt.Reveal = 0f;
+
+            var host = bolt.Host;
+            var group = bolt.Group;
+
+            // The leader opening down the channel, then re-strikes on new seeds, then the decay.
+            Tween.Run(ConduitFor, Ease.Linear, t =>
+            {
+                if (!host) return;
+
+                bolt.Reveal = Mathf.Clamp01(t / .18f);
+
+                int k = Mathf.Min(3, Mathf.FloorToInt(t * 6f));
+                if (k != struck)
+                {
+                    struck = k;
+                    bolt.Strike(from, to, 100f, .38f, 3, seed + k * 7919);
+                    if (t >= .18f) bolt.Reveal = 1f;
+                }
+
+                group.alpha = t < .5f ? 1f : (1f - (t - .5f) / .5f) * (.75f + .25f * Mathf.Sin(t * 80f));
+            }, this).OnDone(() => { if (host) Destroy(host.gameObject); });
+
+            // Beads pouring down the channel, so the power is seen to *travel*.
+            var beads = new[] { Color.white, gold, Pal.Lift(_tint, .5f) };
+            for (int i = 0; i < 14; i++)
+            {
+                float delay = i * .018f;
+                float life = ToSurge - delay + .02f;
+
+                _fx.Emit(new CeremonyFx.Mote
+                {
+                    Sprite = i % 2 == 0 ? GlowArt : SparkArt,
+                    Colour = beads[i % beads.Length],
+                    At = from + new Vector2(UnityEngine.Random.Range(-16f, 16f), 0f),
+                    Velocity = (to - from) / Mathf.Max(.05f, life),
+                    Life = life,
+                    Delay = delay,
+                    Size = i % 2 == 0 ? 34f : 22f,
+                    SizeEnd = 14f,
+                    Stretch = .05f,
+                    FadeIn = .15f,
+                    FadePower = .4f,
+                });
+            }
+        }
+
+        /// <summary>
+        /// The turret takes the power, and it rises back up out of it - rings lifting off its feet
+        /// one after another, a column standing up behind it, sparks streaming upward.
+        ///
+        /// <b>Up, because this is an upgrade.</b> The unlock's light goes <em>out</em>, from a
+        /// point, because something arrived; this goes <em>up</em>, out of a thing that was already
+        /// there, because it became more. The rings are squashed to the floor's perspective, so
+        /// they read as halos lifting off the turret rather than as targets drawn on the screen.
+        /// </summary>
+        void Surge()
+        {
+            var at = TurretAt;
+            var foot = FootAt;
+            var lift = Pal.Lift(_tint, .45f);
+            var gold = Pal.Lift(Pal.Gold, .3f);
+
+            Zoom(1.03f, .36f);
+
+            // The stage's own overcharge - a halo, rings out of the barrel and a spring - with its
+            // white-out off, because a flash here would be a second break.
+            _stage?.Claim(whiteOut: false);
+
+            Flare(GlintArt, at, Pal.A(lift, 1f), Vector2.one * 140f, Vector2.one * 760f, 0f, -30f,
+                  .62f, Ease.OutCubic);
+            Flare(Art.Glow(128, 1.6f), at, Pal.A(Color.white, .8f), Vector2.one * 80f,
+                  Vector2.one * 520f, 0f, 0f, .45f, Ease.OutQuint);
+
+            Column(foot, lift);
+
+            for (int i = 0; i < 5; i++)
+                _fx.Emit(new CeremonyFx.Mote
+                {
+                    Sprite = RingArt,
+                    Colour = Pal.A(i % 2 == 0 ? lift : gold, .95f),
+                    At = foot,
+                    Velocity = new Vector2(0f, 760f),
+                    Drag = 2.4f,
+                    Life = .78f,
+                    Delay = i * .085f,
+                    Size = 150f,
+                    SizeEnd = 380f + i * 30f,
+                    Grow = Ease.OutCubic,
+                    Squash = FloorSquash,
+                    FadeIn = .12f,
+                    FadePower = 1.5f,
+                });
+
+            var up = new[] { Color.white, lift, gold, Pal.Lift(_c.Partner, .4f) };
+
+            _fx.Run(80f, .7f, i => new CeremonyFx.Mote
+            {
+                Sprite = i % 3 == 0 ? GlowArt : SparkArt,
+                Colour = up[i % up.Length],
+                At = foot + new Vector2(UnityEngine.Random.Range(-90f, 90f), UnityEngine.Random.Range(-10f, 30f)),
+                Velocity = new Vector2(UnityEngine.Random.Range(-60f, 60f), UnityEngine.Random.Range(480f, 980f)),
+                Life = UnityEngine.Random.Range(.45f, .8f),
+                Size = UnityEngine.Random.Range(14f, 26f),
+                SizeEnd = 4f,
+                Gravity = -120f,
+                Drag = 1.4f,
+                Stretch = .06f,
+                FadeIn = .1f,
+                FadePower = 1.2f,
+            });
+
+            _fx.Shock(WaveArt, at, Pal.A(lift, .8f), 100f, 900f, .6f);
+        }
+
+        /// <summary>The ladder at its new count, with the star that was just bought punched where it stands.</summary>
         void Relight()
         {
             if (_ladder == null || _relit) return;
@@ -665,35 +933,105 @@ namespace GlimmerGrove
             if (earned == null) return;
 
             Tween.Pop(earned, .30f, .46f);
-            Burst.Sparks(earned, Vector2.zero, Pal.Gold, 20, 320f, 28f, .70f);
-        }
 
-        /// <summary>A ring leaving the ladder, on the break.</summary>
-        void Shockwave(float delay, Color colour)
-        {
-            var ring = UIKit.Img("Wave", Content, Art.Ring(256, 10f), Pal.A(colour, 0f),
-                                 Vector2.one * 380f, new Vector2(.5f, .5f), SlotAt);
-            ring.raycastTarget = false;
-
-            Tween.Run(.74f, Ease.OutQuint, t =>
+            // The stars already held answer the landing, nearest first - a ripple out of the slot.
+            for (int i = 0; i < lit - 1 && i < row.childCount; i++)
             {
-                if (!ring) return;
-
-                ring.transform.localScale = Vector3.one * Mathf.Lerp(.2f, 3.6f, t);
-                ring.color = Pal.A(colour, .78f * (1f - t));
-            }, ring).Delay(delay).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+                var other = row.GetChild(i);
+                Tween.After((lit - 1 - i) * .06f, () => { if (other) Tween.Punch(other, .22f, .36f); }, this);
+            }
         }
 
         /// <summary>
-        /// What the climb was worth, marked on each bar as it settles.
+        /// A spark riding the leading edge of each bar while it climbs, shedding embers behind it,
+        /// and flaring where it stops.
         ///
-        /// <b>The gain is said at the end rather than throughout</b>, because during the climb the
-        /// figure itself is the thing being watched and a second number beside it moving would be
-        /// two readings competing. It rises a little way inside the bar's own row, never out of
-        /// it, so the damage mark can never be drawn across the health bar underneath.
+        /// <b>Parented to the fill's right edge</b>, so it travels with the climb without being
+        /// told where the climb is: the fill grows from the left (<c>WardStatBars.Paint</c>), and
+        /// a child anchored to its right edge is carried along by the layout itself.
+        /// </summary>
+        void Ride()
+        {
+            _heads.Clear();
+
+            Head(_bars?.DamageFill);
+            Head(_bars?.HealthFill);
+
+            if (_heads.Count == 0) return;
+
+            var sparks = new[] { Color.white, Pal.Lift(Pal.Gold, .35f), Pal.Lift(GainInk, .4f) };
+
+            _fx.Run(46f, Climb * .9f, i =>
+            {
+                if (_heads.Count == 0) return default;
+
+                var head = _heads[i % _heads.Count];
+                if (!head) return default;
+
+                Vector2 at = _fx.Node.InverseTransformPoint(head.position);
+
+                return new CeremonyFx.Mote
+                {
+                    Sprite = SparkArt,
+                    Colour = sparks[i % sparks.Length],
+                    At = at,
+                    Velocity = new Vector2(UnityEngine.Random.Range(-260f, -60f), UnityEngine.Random.Range(40f, 260f)),
+                    Life = UnityEngine.Random.Range(.3f, .55f),
+                    Size = UnityEngine.Random.Range(10f, 18f),
+                    SizeEnd = 3f,
+                    Gravity = 700f,
+                    Drag = 1.8f,
+                    Stretch = .05f,
+                    FadePower = 1.2f,
+                };
+            });
+        }
+
+        void Head(RectTransform fill)
+        {
+            if (fill == null) return;
+
+            float tall = fill.rect.height;
+
+            var node = UIKit.Box("Head", fill, Vector2.one * tall, new Vector2(1f, .5f),
+                                 new Vector2(-tall * .5f, 0f));
+
+            var glow = Additive.Lit(UIKit.Img("Glow", node, Art.Glow(64, 1.6f),
+                                              Pal.A(Pal.Lift(Pal.Gold, .4f), .9f),
+                                              Vector2.one * tall * 3.2f, new Vector2(.5f, .5f), Vector2.zero));
+            glow.raycastTarget = false;
+
+            var glint = Additive.Lit(UIKit.Img("Glint", node, GlintArt, Pal.A(Color.white, 1f),
+                                               Vector2.one * tall * 2.6f, new Vector2(.5f, .5f), Vector2.zero));
+            glint.raycastTarget = false;
+
+            var spin = glint.rectTransform;
+            Tween.Run(.6f, Ease.Linear, t =>
+            {
+                if (spin) spin.localRotation = Quaternion.Euler(0f, 0f, t * 90f);
+            }, glint).Loop(-1, false);
+
+            _heads.Add(node);
+            _transient.Add(node.gameObject);
+        }
+
+        /// <summary>
+        /// What the climb was worth: each bar's head flares where it stopped and goes out, and the
+        /// gain is written beside the figure.
         /// </summary>
         void Landed()
         {
+            foreach (var head in _heads)
+            {
+                if (!head) continue;
+
+                Vector2 at = _fx.Node.InverseTransformPoint(head.position);
+                Twinkle(at, Pal.A(Color.white, 1f), 170f, .5f, 0f);
+                Destroy(head.gameObject);
+            }
+
+            _heads.Clear();
+
             Mark(_bars?.DamageRow, SiegeTuning.DamageFine(0, Now.PowerHundredths)
                                  - SiegeTuning.DamageFine(0, Was.PowerHundredths));
 
@@ -720,7 +1058,10 @@ namespace GlimmerGrove
             float y = BarsH * .5f + row.anchoredPosition.y;
 
             Tween.Punch(row, .10f, .34f);
-            Burst.Sparks(_barHost, new Vector2(BarsW * .5f + 40f, y), GainInk, 8, 150f, 16f, .46f);
+
+            var spot = new Vector2(0f, BarsY) + new Vector2(BarsW * .5f + 40f, y);
+            _fx.Spray(SparkArt, spot, new[] { Pal.Lift(GainInk, .3f), Color.white }, 10, 120f, 300f,
+                      16f, .46f, gravity: 500f, stretch: .03f);
 
             var plus = UIKit.Titled("Gain", _barHost, "+" + gain, 40, GainInk,
                                     TextAnchor.MiddleLeft, new Vector2(128f, 60f),
@@ -738,6 +1079,160 @@ namespace GlimmerGrove
                 rt.anchoredPosition = home + new Vector2(0f, 24f * t);
                 SetAlpha(plus, t < .25f ? t / .25f : 1f - (t - .25f) / .75f);
             }, plus).OnDone(() => { if (plus) Destroy(plus.gameObject); });
+        }
+
+        /// <summary>
+        /// What stays alive after the noise: embers lifting off the turret, and the star just
+        /// bought catching the light now and then - so the screen the player reads their numbers
+        /// on is still a lit room, and the eye is drawn back to what changed.
+        /// </summary>
+        void Ambient()
+        {
+            if (_ambient) return;
+            _ambient = true;
+
+            _fx.Rise(GlowArt, FootAt + new Vector2(0f, 30f), 150f,
+                     new[] { Pal.Lift(_tint, .45f), Pal.Lift(Pal.Gold, .35f), Pal.Cream }, 6f, -1f, 18f, 100f);
+
+            var slot = SlotAt;
+            _fx.Run(.5f, -1f, i => new CeremonyFx.Mote
+            {
+                Sprite = GlintArt, Colour = Pal.A(Color.white, .95f), At = slot, Life = .9f,
+                Size = 30f, SizeEnd = StarSize * 1.8f, Grow = Ease.InOutSine, FadeIn = .45f,
+                FadePower = 1.4f, Spin = 40f,
+            });
+
+            if (_glow)
+                Tween.Run(2.8f, Ease.InOutSine, t =>
+                {
+                    if (_glow) SetAlpha(_glow, Mathf.Lerp(GlowAlpha, GlowAlpha * .7f, t));
+                }, _glow, "breath").Loop(-1, true);
+        }
+
+        // ----------------------------------------------------------------- pieces
+        /// <summary>
+        /// One shaped piece of a flare: grows from one size to another, turns, and fades.
+        /// Destroyed when it is done, and listed so a skip can take it away mid-flight.
+        /// </summary>
+        void Flare(Sprite sprite, Vector2 at, Color colour, Vector2 from, Vector2 to, float turnFrom,
+                   float turnTo, float life, Easing ease)
+        {
+            var img = _fx.Light("Flare", sprite, colour, from, at);
+            _transient.Add(img.gameObject);
+
+            var rt = img.rectTransform;
+            float alpha = colour.a;
+
+            Tween.Run(life, Ease.Linear, t =>
+            {
+                if (!img) return;
+
+                float e = ease(t);
+                rt.sizeDelta = Vector2.LerpUnclamped(from, to, e);
+                rt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(turnFrom, turnTo, e));
+
+                var c = img.color;
+                c.a = alpha * (1f - t) * (1f - t);
+                img.color = c;
+            }, this).OnDone(() => { if (img) Destroy(img.gameObject); });
+        }
+
+        /// <summary>A column of light standing up behind the turret and narrowing as it fades.</summary>
+        void Column(Vector2 foot, Color colour)
+        {
+            var img = _fx.Light("Column", Art.Shaft(64, 256, 1.5f, .08f), Pal.A(colour, .8f),
+                                new Vector2(240f, 700f), foot);
+            _transient.Add(img.gameObject);
+
+            var rt = img.rectTransform;
+            rt.pivot = new Vector2(.5f, 0f);
+            rt.anchoredPosition = foot;
+
+            Tween.Run(.9f, Ease.Linear, t =>
+            {
+                if (!img) return;
+
+                float e = Ease.OutCubic(t);
+                rt.sizeDelta = new Vector2(Mathf.Lerp(240f, 30f, e), Mathf.Lerp(560f, 980f, e));
+                img.color = Pal.A(colour, .8f * (1f - t * t));
+            }, this).OnDone(() => { if (img) Destroy(img.gameObject); });
+        }
+
+        /// <summary>
+        /// Lightning off a point, re-struck on a new seed a few times and flickering out - what
+        /// says electricity is that the next frame is unrelated to this one (<c>Lightning</c>).
+        /// </summary>
+        void Crackle(Vector2 at, float inner, float outer, int arms, Color colour, float width,
+                     float life, int strikes)
+        {
+            var bolt = Lightning.Grow("Arc", _fx.Node, colour, width, .45f);
+            _transient.Add(bolt.Host.gameObject);
+
+            int seed = UnityEngine.Random.Range(1, 1 << 30);
+            int struck = 0;
+
+            bolt.Nova(at, inner, outer, arms, 100f, .32f, seed);
+
+            var host = bolt.Host;
+            var group = bolt.Group;
+
+            Tween.Run(life, Ease.Linear, t =>
+            {
+                if (!host) return;
+
+                int k = Mathf.Min(strikes - 1, Mathf.FloorToInt(t * strikes));
+                if (k != struck)
+                {
+                    struck = k;
+                    bolt.Nova(at, inner, outer, arms, 100f, .32f, seed + k * 7919);
+                }
+
+                group.alpha = (1f - t) * (.72f + .28f * Mathf.Sin(t * 70f));
+            }, this).OnDone(() => { if (host) Destroy(host.gameObject); });
+        }
+
+        /// <summary>A four-point glint flaring on a point and gone - the mark of a thing landing.</summary>
+        void Twinkle(Vector2 at, Color colour, float size, float life, float delay)
+        {
+            _fx.Emit(new CeremonyFx.Mote
+            {
+                Sprite = GlintArt, Colour = colour, At = at, Life = life, Delay = delay,
+                Size = size * .3f, SizeEnd = size, Grow = Ease.OutCubic, Spin = 60f, FadePower = 1.8f,
+            });
+        }
+
+        /// <summary>A streak of light drawn under a caption as it lands, and a glint at each end.</summary>
+        void Underline(Vector2 at, float width, Color colour)
+        {
+            Flare(Art.Glow(64, 1.4f), at, Pal.A(colour, .8f), new Vector2(width * .2f, 40f),
+                  new Vector2(width * 1.35f, 10f), 0f, 0f, .70f, Ease.OutCubic);
+
+            Twinkle(at + new Vector2(-width * .5f, 0f), Pal.A(Color.white, .95f), 150f, .55f, 0f);
+            Twinkle(at + new Vector2(width * .5f, 0f), Pal.A(Color.white, .95f), 150f, .55f, 0f);
+        }
+
+        /// <summary>How wide the title is drawn, for the streak under it.</summary>
+        float TitleW() => _title ? Mathf.Clamp(_title.preferredWidth, 240f, 900f) : 600f;
+
+        /// <summary>The whole room leaning in and settling back. Owned by this view, so a skip puts it back.</summary>
+        void Zoom(float from, float life)
+        {
+            var content = Content;
+            content.localScale = Vector3.one * from;
+
+            Tween.Run(life, Ease.OutCubic, t =>
+            {
+                if (content) content.localScale = Vector3.one * Mathf.Lerp(from, 1f, t);
+            }, this);
+        }
+
+        void ClearTransient()
+        {
+            foreach (var go in _transient)
+                if (go) Destroy(go);
+
+            _transient.Clear();
+            _heads.Clear();
         }
 
         void Spin()
@@ -773,8 +1268,16 @@ namespace GlimmerGrove
 
             Tween.KillAll(this);
 
+            // The light first: every mote back in its pool and every flare, bolt and rider gone,
+            // so nothing from a beat that never finished is left burning on the screen.
+            _fx?.Clear();
+            ClearTransient();
+
+            if (Content) Content.localScale = Vector3.one;
+
             if (_sky) _sky.color = Color.white;
             if (_vignette) SetAlpha(_vignette, VignetteAlpha);
+            if (_hush) SetAlpha(_hush, 0f);
             if (_flash) SetAlpha(_flash, 0f);
 
             if (_aurora != null)
@@ -823,6 +1326,10 @@ namespace GlimmerGrove
             if (_dismiss) { _dismiss.alpha = 1f; _dismiss.blocksRaycasts = true; }
 
             _settled = true;
+
+            // Straight into the settled room's own life, so a skip lands on the same screen the
+            // sequence would have ended on rather than a stiller one.
+            Ambient();
         }
 
         static void SetAlpha(Graphic g, float a)

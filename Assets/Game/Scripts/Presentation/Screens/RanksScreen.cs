@@ -133,6 +133,16 @@ namespace GlimmerGrove
         /// </summary>
         public const float StageMost = 1.24f;
 
+        /// <summary>
+        /// How far the hero cluster may shrink when the canvas is too short for it and the whole
+        /// board at once. **The board is never the one that gives way** (owner, 2026-10-15: a
+        /// board that had to be scrolled to read what a rank asks was the complaint), so on a
+        /// short canvas the badge is drawn a little smaller instead. With the six-line rung a
+        /// 16:9 phone draws the cluster at about 0.96; the floor is set by the shortest canvas
+        /// the game allows with the full inset allowance taken, which needs about 0.735.
+        /// </summary>
+        public const float StageLeastScale = .72f;
+
         /// <summary>The rail's band, the seats in it, and the air between two seats.</summary>
         public const float RailH = 150f;
         const float SeatSize = 104f, SeatPitchMost = 140f, SeatFace = .82f, SeatFaceLocked = .64f;
@@ -151,8 +161,10 @@ namespace GlimmerGrove
         /// The head and the foot are the board's own cap and plinth since 2026-09-28
         /// (<see cref="RankKit.BoardCap"/>, <see cref="RankKit.BoardPlinth"/>), plus the ribbon's
         /// rise over the cap, so the lines always start on the cream and end above the plinth.
+        /// Grown again on 2026-10-15 ("make them a bigger font"): sentence 32 -> 38pt, row
+        /// 78 -> 86, pitch 88 -> 96.
         /// </summary>
-        public const float PlateW = 1024f, LineH = 88f;
+        public const float PlateW = 1024f, LineH = 96f;
         public const float PlateHead = TitleRise + RankKit.BoardCap + CapGap;
         public const float PlateFoot = RankKit.BoardPlinth + PlinthGap;
         const float CapGap = 14f, PlinthGap = 10f;
@@ -161,7 +173,7 @@ namespace GlimmerGrove
         public const float PlateGap = 40f, FootPad = 24f;
 
         /// <summary>One line's furniture: the row's inset from the board's edge and its height, the icon, the count's column and the bar.</summary>
-        const float WellInset = RankKit.BoardSide + 14f, RowH = 78f, IconSize = 58f, CountW = 210f, BarH = 14f;
+        const float WellInset = RankKit.BoardSide + 14f, RowH = 86f, IconSize = 62f, CountW = 210f, BarH = 14f;
 
         /// <summary>
         /// The kit's ribbon (<see cref="Skins.Title"/>) laid over the board's cap with the title on
@@ -172,6 +184,9 @@ namespace GlimmerGrove
         const float RibbonW = 440f, RibbonH = RibbonW * 208f / 775f;
         const float TitleRise = RibbonH * .5f - RankKit.BoardCap * .5f + 2f;
         const int TabPt = 30;
+
+        /// <summary>A requirement's sentence, in points.</summary>
+        const int SaidPt = 38;
 
         /// <summary>How much of the shortest canvas the display's insets may take before the plate's band gives way.</summary>
         const float InsetAllowance = 150f;
@@ -279,7 +294,7 @@ namespace GlimmerGrove
                 if (room <= 1f || Mathf.Abs(room - _seen) < .5f) return;
                 _seen = room;
 
-                float k = Mathf.Clamp(room / StageLeast, 1f, StageMost);
+                float k = Mathf.Clamp(room / StageLeast, StageLeastScale, StageMost);
                 _cluster.localScale = new Vector3(k, k, 1f);
 
                 float spare = Mathf.Max(0f, room - StageLeast * k);
@@ -621,8 +636,15 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the plate
         /// <summary>
-        /// The plate's band: as tall as the tallest rung the ladder ships needs, and never so
-        /// tall that the stage is pushed under the header on the shortest canvas.
+        /// The plate's band: as tall as the tallest rung the ladder ships needs.
+        ///
+        /// <b>The stage gives way, never the board.</b> This used to be capped at what the
+        /// shortest canvas could spare with the stage at full size, which on a five-line rung
+        /// was 72 units short - so the board scrolled on every phone, including the ones with
+        /// hundreds of units of air to give (owner, 2026-10-15). Now the band is what the board
+        /// needs and <see cref="StageFit"/> shrinks the hero cluster on a canvas too short for
+        /// both, down to <see cref="StageLeastScale"/>. Only a ladder with more lines than even
+        /// that can hold (<see cref="PlateRoom"/>) scrolls.
         /// </summary>
         float PlateBand()
         {
@@ -630,11 +652,15 @@ namespace GlimmerGrove
             foreach (var rung in RankLedger.Ladder.Rungs)
                 if (rung.Requirements.Count > most) most = rung.Requirements.Count;
 
-            float wanted = PlateHeight(Mathf.Max(1, most));
-            float room = CanvasFit.ShortestCanvas - InsetAllowance
-                       - HeaderH - StageLeast - RailH - PlateGap - FootPad;
-            return Mathf.Min(wanted, room);
+            return Mathf.Min(PlateHeight(Mathf.Max(1, most)), PlateRoom);
         }
+
+        /// <summary>
+        /// The tallest band the shortest canvas, with the full inset allowance taken, can give
+        /// the board with the hero cluster at <see cref="StageLeastScale"/>.
+        /// </summary>
+        public static float PlateRoom => CanvasFit.ShortestCanvas - InsetAllowance - HeaderH
+                                        - StageLeast * StageLeastScale - RailH - PlateGap - FootPad;
 
         public static float PlateHeight(int lines) => PlateHead + lines * LineH + PlateFoot;
 
@@ -729,17 +755,19 @@ namespace GlimmerGrove
                 float saidX = wellLeft + 16f + IconSize + 16f;
                 float saidW = wellW - (saidX - wellLeft) - CountW - 24f;
 
+                // Solid white and large (owner, 2026-10-15): the sentence is what the board is
+                // for, and cream on the kit's navy bar read as a caption rather than the line.
                 line.Said = UIKit.Shrinkable(
-                    UIKit.Titled("L", row.transform, req.Sentence(GameContent.Index), 32, Pal.Cream,
-                                 TextAnchor.MiddleLeft, new Vector2(saidW, 38f), Centre,
-                                 new Vector2(saidX + saidW * .5f, 13f), 0f, 2f), 18);
+                    UIKit.Titled("L", row.transform, req.Sentence(GameContent.Index), SaidPt, Color.white,
+                                 TextAnchor.MiddleLeft, new Vector2(saidW, 46f), Centre,
+                                 new Vector2(saidX + saidW * .5f, 15f), 0f, 2f), 20);
 
                 // The bar under the sentence is the interface kit's trough and fill, as every
                 // bar in the game is: the line's own gauge, so five lines read as five gauges
                 // rather than as five fractions to be subtracted in the head.
                 var trough = UIKit.Img("Trough", row.transform, Art.S("Ui/" + Skins.Trough), Color.white,
                                        new Vector2(saidW, BarH + 8f), Centre,
-                                       new Vector2(saidX + saidW * .5f, -22f));
+                                       new Vector2(saidX + saidW * .5f, -25f));
                 var fill = UIKit.Img("Fill", trough.transform, Art.S("Ui/" + Skins.Fill), BarOrange,
                                      new Vector2(0f, BarH), Left, new Vector2(4f, 0f));
                 line.Fill = (RectTransform)fill.transform;
@@ -1075,7 +1103,7 @@ namespace GlimmerGrove
                 bool done = have >= line.Req.Target;
                 if (done) met++;
 
-                line.Said.color = live ? Pal.Cream : LockedInk;
+                line.Said.color = Color.white;
 
                 // A met line prints its own target rather than the figure that passed it:
                 // "250 / 250" is what finishing looks like, and a lifetime tally that went on

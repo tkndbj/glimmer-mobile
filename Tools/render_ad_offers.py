@@ -94,9 +94,9 @@ S_STATUS_TOP = S_BARS_TOP + BARS_H + 24.0
 S_ACT_TOP = 700.0
 
 # WardDiscountKey
-D_PLAY_X, D_PLAY = -150.0, 52.0
-D_COIN_X, D_COIN = -88.0, 46.0
-D_PRICE_X, D_PRICE_W, D_PRICE_H = 65.0, 250.0, 62.0
+D_PLAY, D_COIN = 52.0, 46.0                  # WardDiscountKey.PlaySize, .CoinSize
+D_PRICE_W, D_PRICE_H = 250.0, 62.0           # .PriceW, .PriceH
+D_PLAY_GAP, D_COIN_GAP = 13.0, 8.0           # .PlayGap, .CoinGap
 D_SEAL, D_SEAL_INSET, D_SEAL_TURN = 104.0, -6.0, -9.0   # WardDiscountKey.SealSize, .SealInset
 D_OFF_W, D_OFF_H, D_OFF_Y = 74.0, 44.0, 2.0
 
@@ -265,10 +265,15 @@ def discount_key(sheet, cx, cy, price, live, s, lang):
     K.paste(sheet, K.skin("btn_blue" if live else "btn_gray", ACT_W, ACT_H), cx, cy)
     face = cy - ACT_H * LIFT
 
-    K.paste(sheet, K.tint(K.fit(K.load("ic_play")[0], (D_PLAY, D_PLAY)), K.CREAM), cx + D_PLAY_X, face)
-    K.paste(sheet, K.fit(coin(), (D_COIN, D_COIN)), cx + D_COIN_X, face)
-    K.shrunk_left(sheet, "{:,}".format(price), cx + D_PRICE_X - D_PRICE_W / 2, face - D_PRICE_H / 2,
-                  D_PRICE_W, D_PRICE_H, 38, 22)
+    # `WardDiscountKey.Lay`: the three as one group centred on the key, measured off the figure.
+    figure = "{:,}".format(price)
+    text = min(K.font(38).getlength(figure), D_PRICE_W)
+    left = cx - (D_PLAY + D_PLAY_GAP + D_COIN + D_COIN_GAP + text) / 2
+
+    K.paste(sheet, K.tint(K.fit(K.load("ic_play")[0], (D_PLAY, D_PLAY)), K.CREAM), left + D_PLAY / 2, face)
+    K.paste(sheet, K.fit(coin(), (D_COIN, D_COIN)), left + D_PLAY + D_PLAY_GAP + D_COIN / 2, face)
+    K.shrunk_left(sheet, figure, left + D_PLAY + D_PLAY_GAP + D_COIN + D_COIN_GAP,
+                  face - D_PRICE_H / 2, D_PRICE_W, D_PRICE_H, 38, 22)
 
     # The burst: straddling the key's right edge at the face's height, its centre `SealInset` in
     # from the edge, turned -9 degrees (Unity's z is anticlockwise-positive, so -9 is clockwise;

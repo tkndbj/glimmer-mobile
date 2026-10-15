@@ -372,38 +372,53 @@ namespace GlimmerGrove
             const float WatchTextLeft = 190f, WatchTextW = 560f;
             const float WatchTextX = WatchTextLeft + WatchTextW * .5f;
 
+            // The words are centred on the glyph's own middle as a block (owner, 2026-10-15:
+            // the line stood 16 units above the icon). One line alone sits on the glyph's
+            // middle; with the standing under it, the pair's middle does.
+            const float GlyphY = -14f, WaveH = 50f, StandingH = 36f;
+
             var card = Section("Watch", 214f, 1);
             CardTitle(card, "ui.board.endless");
 
             bool played = _card.BestWave > 0;
+            int top = played ? GroveRanks.Waves.TopPercent(_card.BestWave) : 0;
+            bool standing = top > 0;
 
             var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_battle"), Color.white,
                                   new Vector2(76f, 76f), new Vector2(0f, .5f),
-                                  new Vector2(104f, -14f));
+                                  new Vector2(104f, GlyphY));
             glyph.preserveAspect = true;
             if (played) UIKit.Halo(glyph.transform, Pal.Sun, 150f, .26f);
 
+            float blockTop = GlyphY + (WaveH + (standing ? StandingH : 0f)) * .5f;
+            float waveY = blockTop - WaveH * .5f;
+
+            // "No run yet" in solid white (owner, 2026-10-15): it was cream at half strength and
+            // read as greyed out, where it is simply a fact about the keeper.
             UIKit.Shrinkable(
                 UIKit.Titled("Wave", card,
                              played ? Loc.Format("ui.endless.best", _card.BestWave)
                                     : Loc.Get("ui.endless.unplayed"),
-                             38, played ? Pal.Cream : new Color(1f, .96f, .88f, .55f),
-                             TextAnchor.MiddleLeft, new Vector2(WatchTextW, 50f),
-                             new Vector2(0f, .5f), new Vector2(WatchTextX, 2f), 3f, 3f), 22);
+                             38, played ? Pal.Cream : Color.white,
+                             TextAnchor.MiddleLeft, new Vector2(WatchTextW, WaveH),
+                             new Vector2(0f, .5f), new Vector2(WatchTextX, waveY), 3f, 3f), 22);
 
-            int top = played ? GroveRanks.Waves.TopPercent(_card.BestWave) : 0;
-            if (top <= 0) return;
+            if (!standing) return;
 
             UIKit.Shrinkable(
                 UIKit.Titled("Standing", card, Loc.Format("ui.endless.standing", top), 26,
-                             Pal.Sun, TextAnchor.MiddleLeft, new Vector2(WatchTextW, 36f),
-                             new Vector2(0f, .5f), new Vector2(WatchTextX, -44f), 3f, 0f), 18);
+                             Pal.Sun, TextAnchor.MiddleLeft, new Vector2(WatchTextW, StandingH),
+                             new Vector2(0f, .5f), new Vector2(WatchTextX, waveY - WaveH * .5f - StandingH * .5f),
+                             3f, 0f), 18);
         }
 
 
         // ------------------------------------------------------------- the Shuffle lane
         /// <summary>The Shuffle box's graded run, repainted when the scope lands. Null without one.</summary>
         ShuffleReportView _shuffleReport;
+
+        /// <summary>How large the grade's letter is drawn on a profile, against the victory panel's.</summary>
+        const float ProfileGradeScale = .70f;
 
         /// <summary>
         /// How far this keeper has taken the Shuffle lane, and their best-graded run there
@@ -452,9 +467,12 @@ namespace GlimmerGrove
 
             if (top == null) return;
 
+            // A smaller grade, the score's caption in amber and the run's wave in green (owner,
+            // 2026-10-15) - the profile's own dress; the victory panel keeps the defaults.
             _shuffleReport = ShuffleReportView.Build(card, -(TitleRoom + WaveRow), top,
                                               Loc.Format("ui.shuffle.run_wave", top.Wave),
-                                              new Color(1f, .95f, .86f, .7f), hidden: false);
+                                              Pal.Mint, hidden: false,
+                                              emblemScale: ProfileGradeScale, captionInk: Pal.Amber);
         }
 
         // ---------------------------------------------------------------- the line
@@ -473,8 +491,14 @@ namespace GlimmerGrove
             // rather than from the middle: the row is a cell, a caption and a five-rung ladder,
             // which is 196 + 34 + 26 of content plus the title's own 76 - at 330 the cell's top
             // edge stood 11 units under the title and the ladder ran out of the plate.
-            const float Cell = 196f, StepX = 212f;
-            const float TitleRoom = 84f, CaptionH = 34f, LadderH = 30f, Foot = 16f;
+            //
+            // Grown on 2026-10-15 at the owner's instruction (bigger turrets, bigger white names,
+            // bigger stars): cell 196 -> 220 with the turret 150 -> 190 inside it, names 24 ->
+            // 30pt, stars 22 -> 30. Four cells at 232 span 916 of the 980 card.
+            const float Cell = 220f, StepX = 232f, Body = 190f;
+            const float TitleRoom = 84f, CaptionH = 42f, LadderH = 40f, Foot = 18f;
+            const int NamePt = 30;
+            const float StarSize = 30f, StarStep = 34f;
 
             float height = TitleRoom + Cell + CaptionH + LadderH + Foot;
 
@@ -506,7 +530,7 @@ namespace GlimmerGrove
                 rim.raycastTarget = false;
 
                 var body = UIKit.Img("Body", cell.transform, null, Color.white,
-                                     new Vector2(Cell - 46f, Cell - 46f));
+                                     new Vector2(Body, Body));
                 body.preserveAspect = true;
                 body.raycastTarget = false;
 
@@ -517,8 +541,8 @@ namespace GlimmerGrove
 
                 UIKit.Shrinkable(
                     UIKit.Titled("Name" + i, card,
-                                 model != null ? Loc.Get(model.NameKey) : string.Empty, 24,
-                                 new Color(1f, .96f, .88f, .82f), TextAnchor.MiddleCenter,
+                                 model != null ? Loc.Get(model.NameKey) : string.Empty, NamePt,
+                                 Color.white, TextAnchor.MiddleCenter,
                                  new Vector2(StepX - 8f, CaptionH), new Vector2(.5f, .5f),
                                  new Vector2(x, captionY), 3f, 0f), 16);
 
@@ -526,7 +550,7 @@ namespace GlimmerGrove
                 // badge over a turret is where the map's own readout puts a kit count and two
                 // different meanings in one corner is how one of them stops being read.
                 StarRow.Create(card, new Vector2(.5f, .5f), new Vector2(x, ladderY),
-                               22f, 26f, _card.StarsOn(colour), false, WardStars.Most);
+                               StarSize, StarStep, _card.StarsOn(colour), false, WardStars.Most);
             }
         }
 

@@ -435,6 +435,9 @@ SAMPLES = {
 VICTORY_W, STARS_BOTTOM, REPORT_GAP, TAIL, BUTTONS = 900.0, 402.0, 18.0, 40.0, 208.0
 #: `PublicProfileScreen.CardWidth` and `BuildShuffleCard`'s rows.
 PROFILE_W, PROFILE_TITLE, PROFILE_WAVE, PROFILE_FOOT = 980.0, 84.0, 60.0, 34.0
+#: `PublicProfileScreen.ProfileGradeScale`, and its caption and note inks (Pal.Amber, Pal.Mint).
+PROFILE_GRADE_SCALE = .70
+AMBER, MINT = (0xFF, 0x8A, 0x2B), (0x7B, 0xD8, 0x6A)
 
 
 def figure(kind, value, strings):
@@ -481,8 +484,10 @@ def left_line(sheet, s, left, cy, room, size, floor, fill, what, floored, outlin
     return size
 
 
-def report_block(sheet, cx, top, grade, strings, note, note_ink, floored, art=True):
-    """`ShuffleReportView.Build` at `top` (pixels, the block's top edge), centred on `cx`."""
+def report_block(sheet, cx, top, grade, strings, note, note_ink, floored, art=True,
+                 emblem_scale=1.0, caption_ink=(255, 242, 219)):
+    """`ShuffleReportView.Build` at `top` (pixels, the block's top edge), centred on `cx`;
+    `emblem_scale` and `caption_ink` are its optional `emblemScale` and `captionInk`."""
     R = figures_of(REPORT)
     points, wave, values = SAMPLES[grade]
     ink, light = GRADE_INK[grade]
@@ -492,7 +497,8 @@ def report_block(sheet, cx, top, grade, strings, note, note_ink, floored, art=Tr
 
     # `ShuffleReportView`: the letter and the score column centred as one pair by drawn widths
     # (`ShuffleReportLayout.CentredPair`), `GroupGap` apart; the column as wide as its widest line.
-    letter = K.fit(K.load("shuffle_grade_" + grade)[0], (R["EmblemW"], R["EmblemH"]))
+    ew, eh = R["EmblemW"] * emblem_scale, R["EmblemH"] * emblem_scale
+    letter = K.fit(K.load("shuffle_grade_" + grade)[0], (int(ew), int(eh)))
     caption = strings["ui.shuffle.score"].upper()
     score = "{:,}".format(points)
 
@@ -508,11 +514,11 @@ def report_block(sheet, cx, top, grade, strings, note, note_ink, floored, art=Tr
 
     ex, ey = at(lx, R["EmblemY"])
     if light > 0:
-        K.paste(sheet, K.glow(int(R["EmblemW"] * 2.2), 2.1, ink, light), ex, ey)
+        K.paste(sheet, K.glow(int(ew * 2.2), 2.1, ink, light), ex, ey)
     K.paste(sheet, letter, ex, ey)
 
     left_line(sheet, caption, left, at(0, R["CaptionY"])[1], R["ColumnW"], int(R["CaptionSize"]),
-              int(R["CaptionFloor"]), (255, 242, 219), "score caption", floored)
+              int(R["CaptionFloor"]), caption_ink, "score caption", floored)
     left_line(sheet, score, left, at(0, R["ScoreY"])[1], R["ColumnW"], int(R["ScoreSize"]),
               int(R["ScoreFloor"]), K.CREAM, "score", floored, outline=4)
     if note:
@@ -598,7 +604,8 @@ def report(grade, lang, art=True):
     left_line(sheet, strings["ui.endless.best"].format(wave + 6), ccx - PROFILE_W / 2 + 190, wave_y - 2,
               560, 38, 22, K.CREAM, "profile wave", floored)
     report_block(sheet, ccx, ctop + PROFILE_TITLE + PROFILE_WAVE, grade, strings,
-                 strings["ui.shuffle.run_wave"].format(wave), (255, 242, 219), floored, art)
+                 strings["ui.shuffle.run_wave"].format(wave), MINT, floored, art,
+                 emblem_scale=PROFILE_GRADE_SCALE, caption_ink=AMBER)
     print("  profile: card %.0fx%.0f" % (PROFILE_W, ch))
 
     return sheet.convert("RGB"), floored

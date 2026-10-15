@@ -202,6 +202,14 @@ namespace GlimmerGrove
         /// <summary>Where the health bar sits.</summary>
         public RectTransform HealthRow => _hold.Node;
 
+        /// <summary>
+        /// Each bar's fill, so a screen can ride its leading edge. It grows from the left, so a
+        /// child anchored to its right edge travels with the climb without being told.
+        /// </summary>
+        public RectTransform DamageFill => _hurt.Fill != null ? _hurt.Fill.rectTransform : null;
+
+        public RectTransform HealthFill => _hold.Fill != null ? _hold.Fill.rectTransform : null;
+
         // ----------------------------------------------------------------- the numbers
         static int Damage(WardBuild build) => SiegeTuning.DamageFine(0, build.PowerHundredths);
 

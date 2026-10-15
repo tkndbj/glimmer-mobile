@@ -67,6 +67,7 @@ RUNGS = (TABLE.get("ranks") or {}).get("rungs") or []
 CHROME, BANNER_H, HEADER_TOP = 92.0, 138.0, 22.0
 HEADER_H = HEADER_TOP + BANNER_H + 10.0
 STAGE_LEAST, STAGE_MOST = 790.0, 1.24
+STAGE_LEAST_SCALE = .72                    # RanksScreen.StageLeastScale
 RAIL_H = 150.0
 SEAT, SEAT_PITCH_MOST, SEAT_FACE, SEAT_FACE_LOCKED, SEAT_CHOSEN = 104.0, 140.0, .82, .64, 1.22
 LINK_THICK, LINK_GAP, LOCK_CHIP = 12.0, 6.0, 34.0
@@ -81,11 +82,12 @@ RIBBON_LIFT, TAB_PT = .103, 30                             # Skins.RibbonLift
 TITLE_RISE = RIBBON_H * .5 - BOARD_CAP * .5 + 2.0
 CAP_GAP, PLINTH_GAP = 14.0, 10.0
 
-PLATE_W, LINE_H = 1024.0, 88.0
+PLATE_W, LINE_H = 1024.0, 96.0
+SAID_PT = 38                               # RanksScreen.SaidPt
 PLATE_HEAD = TITLE_RISE + BOARD_CAP + CAP_GAP
 PLATE_FOOT = BOARD_PLINTH + PLINTH_GAP
 PLATE_GAP, FOOT_PAD = 40.0, 24.0
-WELL_INSET, ROW_H, ICON, COUNT_W, BAR_H = BOARD_SIDE + 14.0, 78.0, 58.0, 210.0, 14.0
+WELL_INSET, ROW_H, ICON, COUNT_W, BAR_H = BOARD_SIDE + 14.0, 86.0, 62.0, 210.0, 14.0
 
 #: `RankKit.IconFor` - the measure id to (sprite under Ui/, tint).
 MEASURE_ICON = {
@@ -271,7 +273,8 @@ def plate_band():
     """`RanksScreen.PlateBand` - the tallest rung's plate, bounded by the shortest canvas."""
     most = max((len(r["requires"]) for r in RUNGS), default=1)
     wanted = PLATE_HEAD + max(1, most) * LINE_H + PLATE_FOOT
-    room = SHORTEST_CANVAS - INSET_ALLOWANCE - HEADER_H - STAGE_LEAST - RAIL_H - PLATE_GAP - FOOT_PAD
+    room = (SHORTEST_CANVAS - INSET_ALLOWANCE - HEADER_H - STAGE_LEAST * STAGE_LEAST_SCALE
+            - RAIL_H - PLATE_GAP - FOOT_PAD)
     return min(wanted, room)
 
 
@@ -298,7 +301,7 @@ def stage(sheet, top, bottom, held, chosen):
     # to the room, so everything from here down to the fireflies is drawn on `layer` at 1:1 and
     # the layer is scaled once, exactly as the canvas scales the node. Captions are therefore
     # measured at the size they are *laid out* at, which is the size Best Fit sees.
-    grow = min(max(sh / STAGE_LEAST, 1.0), STAGE_MOST)
+    grow = min(max(sh / STAGE_LEAST, STAGE_LEAST_SCALE), STAGE_MOST)
     layer = Image.new("RGBA", (W, int(STAGE_LEAST)), (0, 0, 0, 0))
     order = chosen
     rung = RUNGS[order - 1]
@@ -485,16 +488,16 @@ def plate(sheet, band_bottom, band_h, held, chosen):
         said_x = well_left + 16 + ICON + 16
         said_w = well_w - (said_x - well_left) - COUNT_W - 24
         said = sentence(line)
-        px = K.shrunk_left(sheet, said, said_x, line_y - 13 - 19, said_w, 38, 32, 18,
-                           fill=K.CREAM if live else LOCKED_INK, outline=2)
-        MEASURED.append(("line '%s'" % said, px, 18))
+        px = K.shrunk_left(sheet, said, said_x, line_y - 15 - 23, said_w, 46, SAID_PT, 20,
+                           fill=(255, 255, 255), outline=2)
+        MEASURED.append(("line '%s'" % said, px, 20))
 
-        K.paste(sheet, K.skin("Hud/trough", said_w, BAR_H + 8), said_x + said_w / 2, line_y + 22)
+        K.paste(sheet, K.skin("Hud/trough", said_w, BAR_H + 8), said_x + said_w / 2, line_y + 25)
         frac = min(1.0, have / float(line["target"]))
         if frac > 0:
             fw = max(BAR_H, (said_w - 8) * frac)
             K.paste(sheet, K.tint(K.skin("Hud/fill", fw, BAR_H), K.MINT if done else BAR_ORANGE),
-                    said_x + 4 + fw / 2, line_y + 22)
+                    said_x + 4 + fw / 2, line_y + 25)
 
         fraction = txt("ui.ranks.fraction", have, line["target"])
         px = K.shrunk(sheet, fraction, well_left + well_w - 16 - COUNT_W / 2, line_y, COUNT_W, ROW_H - 10,
@@ -520,7 +523,7 @@ def page(held, chosen=None, tall=False):
     # whatever is spare, which lands at the foot of the page.
     floor = FOOT_PAD + band + PLATE_GAP + RAIL_H
     room = height - HEADER_H - floor
-    grow = min(max(room / STAGE_LEAST, 1.0), STAGE_MOST)
+    grow = min(max(room / STAGE_LEAST, STAGE_LEAST_SCALE), STAGE_MOST)
     spare = max(0.0, room - STAGE_LEAST * grow)
     plate_bottom = height - FOOT_PAD - spare
     rail_bottom = plate_bottom - band - PLATE_GAP
@@ -534,7 +537,7 @@ def page(held, chosen=None, tall=False):
     stage_h = stage_bottom - HEADER_H
     print("  stage %.0f tall on a %d canvas (least %.0f); plate band %.0f; %.0f spare at the foot"
           % (stage_h, height, STAGE_LEAST, band, spare))
-    if stage_h < STAGE_LEAST - .5:
+    if stage_h < STAGE_LEAST * STAGE_LEAST_SCALE - .5:
         print("  STAGE SHORTER THAN ITS LEAST - the bands do not fit this canvas")
     return sheet.convert("RGB")
 
