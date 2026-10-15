@@ -8050,6 +8050,30 @@
       "text": "تحديث {0}"
     },
     {
+      "key": "ui.shuffle.odds_title",
+      "text": "الاحتمالات"
+    },
+    {
+      "key": "ui.shuffle.odds_rarity",
+      "text": "الندرة"
+    },
+    {
+      "key": "ui.shuffle.odds_chance",
+      "text": "الفرصة لكل بطاقة"
+    },
+    {
+      "key": "ui.shuffle.odds_left",
+      "text": "المتبقية"
+    },
+    {
+      "key": "ui.shuffle.odds_floor",
+      "text": "البطاقة الأولى: {0} أو أفضل"
+    },
+    {
+      "key": "ui.shuffle.odds_equal",
+      "text": "البطاقات من نفس الندرة لها نفس الفرصة."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "سهام ثقيلة"
     },
@@ -8111,7 +8135,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "الأبراج تستعيد 1 صحة كل 6 ثوان."
+      "text": "الأبراج تستعيد صحتها تدريجيا."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8151,7 +8175,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "كل طلقة ثالثة تصيب كل المهاجمين في مسارها."
+      "text": "بين حين وآخر تخترق طلقة المسار كله."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8167,7 +8191,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "الطلقات تحرق المهاجمين لمدة 3 ثوان."
+      "text": "الطلقات تحرق المهاجمين."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8175,7 +8199,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "{0}% من الطلقات تشل المهاجم لنصف ثانية."
+      "text": "{0}% من الطلقات تشل المهاجمين."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8183,7 +8207,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "كل قتل يعطي البرج 1 وقود."
+      "text": "كل قتل يعطي البرج وقودا."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8191,7 +8215,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "الطلقات المشحونة أقوى بنسبة {0}%. والأبراج تخزن طلقة مشحونة إضافية."
+      "text": "الطلقات المشحونة أقوى بنسبة {0}%. والنسخة الأولى تخزن أيضا طلقة مشحونة إضافية."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8215,7 +8239,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "كل قتل يشفي البرج بمقدار 1 صحة."
+      "text": "كل قتل يشفي البرج."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8247,7 +8271,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "كل موجة جديدة تجمد المهاجمين لمدة 2 ثانية."
+      "text": "يتجمد المهاجمون في بداية كل موجة."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8263,7 +8287,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "الطلقات تقتل المهاجمين الذين صحتهم أقل من {0}%."
+      "text": "الطلقات تقتل فورا المهاجمين الذين صحتهم أقل من {0}%."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8295,7 +8319,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "{0}% من الطلقات تلعن المهاجم: يتلقى ضررا أكثر بنسبة 20% لمدة 3 ثوان."
+      "text": "{0}% من الطلقات تلعن المهاجم: يتلقى ضررا أكثر بنسبة 20%."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8303,7 +8327,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "كل موجة جديدة تعطي برجا طلقة مشحونة مجانية."
+      "text": "كل موجة جديدة تعطي الأبراج طلقات مشحونة مجانية."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8311,7 +8335,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "إذا سقطت كل الأبراج، تعود مرة واحدة بصحة كاملة وتبقى محمية لمدة 8 ثوان."
+      "text": "إذا سقطت كل الأبراج، تعود مرة واحدة بصحة كاملة."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8343,7 +8367,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "كل طلقة تطلق أيضا 2 من الشظايا على المهاجمين القريبين."
+      "text": "الطلقات تطلق أيضا شظايا على المهاجمين القريبين."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8359,7 +8383,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "كل طلقة رابعة تطلق أيضا 2 من الصواريخ الموجهة."
+      "text": "بين حين وآخر تطلق طلقة صواريخ موجهة أيضا."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8367,7 +8391,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "كل طلقة خامسة ترسل موجة صدمة تدفع المهاجمين للخلف."
+      "text": "بين حين وآخر ترسل طلقة موجة صدمة تدفع المهاجمين للخلف."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8375,7 +8399,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "الطلقات تترك برك سم تضر المهاجمين."
+      "text": "الطلقات تترك برك سم."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8383,7 +8407,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "الأبراج تصعق أقرب مهاجم، حتى بدون وقود."
+      "text": "الأبراج تصعق المهاجمين القريبين، حتى بدون وقود."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8415,7 +8439,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "كل 6 ثوان، يضرب نيزك أكبر مجموعة."
+      "text": "النيازك تضرب أكبر مجموعة مرة بعد مرة."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8423,7 +8447,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "كل 9 ثوان، تسحب دوامة المهاجمين معا."
+      "text": "دوامة تسحب المهاجمين معا مرة بعد مرة."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8439,7 +8463,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "كل 10 ثوان، يكتسح ليزر عملاق التل."
+      "text": "ليزر عملاق يكتسح التل مرة بعد مرة."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8471,7 +8495,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "المطابقات تفجر الجواهر القريبة. نسخ أكثر، انفجارات أكبر."
+      "text": "المطابقات تفجر الجواهر القريبة."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8567,7 +8591,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "كل نسخة تحول برجا إلى ليزر، الأفضل أولا. الليزر يرتد إلى 3 مهاجمين بنسبة {0}% من الضرر."
+      "text": "يحول برجا إلى ليزر يرتد بين المهاجمين بنسبة {0}% من الضرر."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8635,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "كل 3 ثوان، يضرب البرق أقرب 3 مهاجمين."
+      "text": "البرق يضرب أقرب المهاجمين مرة بعد مرة."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8643,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "كل 5 ثوان، ينبوع يجمد ويحرق أكبر مجموعة."
+      "text": "ينبوع يجمد ويحرق أكبر مجموعة مرة بعد مرة."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8683,7 +8707,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "كل 11 ثانية، يسحب ثقب أسود المهاجمين ويسحق الضعفاء."
+      "text": "ثقوب سوداء تسحب المهاجمين وتسحق الضعفاء."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8691,7 +8715,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "كل 9 ثوان، يحرق تنين ناري كل شيء في طريقه."
+      "text": "تنين ناري يحرق كل شيء في طريقه."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8715,7 +8739,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "كل 8 ثوان، تحرق شمس ثانية أكثر مسار ازدحاما."
+      "text": "شمس ثانية تحرق أكثر مسار ازدحاما."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8723,7 +8747,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "كل 12 ثانية، تمطر 8 نيازك على المهاجمين."
+      "text": "زخات من النيازك تمطر على المهاجمين."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8731,7 +8755,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "كل 15 ثانية، يتجمد المهاجمون 4 ثوان. والأبراج تطلق أسرع بمرتين."
+      "text": "بين حين وآخر يتوقف الزمن: يتجمد المهاجمون والأبراج تطلق أسرع بمرتين."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8771,7 +8795,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "كل 4 ثوان، تطلق الأبراج كرات برق صاعقة."
+      "text": "الأبراج تطلق كرات برق صاعقة."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8803,7 +8827,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "كل 6 ثوان، يطلق منشور 6 أشعة على أقوى المهاجمين."
+      "text": "منشور يطلق 6 أشعة على أقوى المهاجمين."
     },
     {
       "key": "shuffle.grade.d",

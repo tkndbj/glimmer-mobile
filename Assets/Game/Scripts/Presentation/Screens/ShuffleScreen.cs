@@ -184,6 +184,7 @@ namespace GlimmerGrove
                 v.OnPick = Take;
                 v.RefreshPrice = RefreshPrice;
                 v.OnRefresh = Refresh;
+                v.RefreshOdds = () => ShuffleOdds.ForRefresh(_run);
             });
         }
 

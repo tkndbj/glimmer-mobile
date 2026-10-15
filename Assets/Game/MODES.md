@@ -1399,6 +1399,11 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    could only deal the same cards** (`ShuffleRun.CanRefresh`, `ShuffleDeck.HasFresh`), checked
    before the debit, so gems are never taken for nothing. The key is the kit's violet gem pill under
    the cards (`ShuffleHandLayout.Refresh*`); short of gems stacks `GemShopOverlay` over the hand.
+   **A paid random hand says its odds before it is bought** (Apple 3.1.1): the "i" beside the key
+   opens `ShuffleOddsOverlay` - each card's chance per rarity, the first card's promise when the
+   hand carries one, cards left per rarity, "equally likely within a rarity" - all read by
+   `ShuffleOdds` off the run's own table, promises, cards and build, with the deck's fall to the
+   next rarity; `ShuffleOddsTests` deals thousands of seeded refreshes against the printed figure.
    Analytics: `shuffle_refresh` and `shuffle_ended.refreshes`. **Held by** `ShuffleRefreshTests` and
    `ShuffleRefreshPurchaseTests` (the debit against an in-memory save);
    `render_shuffle.py --refreshes N` (-1 draws no key).

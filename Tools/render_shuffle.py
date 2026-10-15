@@ -134,7 +134,23 @@ def figures():
     return found
 
 
-def note_args(cid, figures):
+# `ShuffleNotes.Total`, which reads the level off the C# fold itself; this mirror cannot, so it
+# copies the arithmetic for the picture only (the C# side is held by ShuffleTuningTests).
+TOTALS = {
+    "keen_eyes": lambda m, e, n: m * n,
+    "stunning_blows": lambda m, e, n: m * n,
+    "twin_barrels": lambda m, e, n: m * n,
+    "cursed_fire": lambda m, e, n: m * n,
+    "repelling_wards": lambda m, e, n: min(m * n, 100),
+    "execution": lambda m, e, n: m + (n - 1) * 10,
+    "splash_shot": lambda m, e, n: (m + (n - 1) * 2) * 10,
+    "frostbite": lambda m, e, n: min(m + (n - 1) * 2, 9) * 10,
+    "rally_cry": lambda m, e, n: m * n * 10,
+    "spin_up": lambda m, e, n: m * n * e,
+}
+
+
+def note_args(cid, figures, held=0):
     """`ShuffleNotes.Args`, read off its table: what fills the card's note slots."""
     text = NOTES.read_text(encoding="utf-8")
     row = re.search(r'\{ "%s", new Note\(([^)]*)\) \}' % re.escape(cid), text)
@@ -142,7 +158,10 @@ def note_args(cid, figures):
         return []
     m, e = figures[cid]
     of = {"M": m, "M10": m * 10, "E": e, "ME": m * e}
-    return [of[part.strip()] for part in row.group(1).split(",")[1:]]
+    parts = [part.strip() for part in row.group(1).split(",")[1:]]
+    if held > 0 and cid in TOTALS and len(parts) == 1:
+        return [TOTALS[cid](m, e, held + 1)]
+    return [of[part] for part in parts]
 
 
 def table(lang):
@@ -193,7 +212,7 @@ def card(sheet, L, cid, tier, cx, top, strings, held, marks=""):
                           K.GOLD, 3, False)
     print("  %-16s name %-34r %2d lines at %dpx (floor %d)" % (cid, name, lines, size, L["NameFloor"]))
 
-    note = strings.get("shuffle.%s.note" % cid, "").format(*note_args(cid, figures()))
+    note = strings.get("shuffle.%s.note" % cid, "").format(*note_args(cid, figures(), held))
     size, lines = wrapped(sheet, note, cx, top + L["NoteDown"] - L["NoteHeight"] / 2,
                           cw - L["Inset"] * 2, L["NoteHeight"], int(L["NoteSize"]), int(L["NoteFloor"]),
                           (255, 255, 255), 2, True)
@@ -346,7 +365,14 @@ def screen(cards, lang, held, wave, marks=None, refreshes=0):
         # `ShuffleRefreshTuning.PriceFor` off the published file's `refresh` section (MODES.md 59p).
         price = refresh_price(refreshes)
         caption = upper(strings.get("ui.shuffle.refresh", "Refresh {0}").format(compact(price)), lang)
-        px = refresh_key(block, bcx, top + cards_foot + L["RefreshGap"] + L["RefreshHeight"] / 2, L, caption)
+        # `ShuffleHandLayout.RefreshX`/`OddsX`: the key and the odds "i" centred as one group.
+        key_y = top + cards_foot + L["RefreshGap"] + L["RefreshHeight"] / 2
+        odds, gap = L.get("OddsSize", 96.0), L.get("OddsGap", 20.0)
+        key_x = bcx - (gap + odds) / 2
+        px = refresh_key(block, key_x, key_y, L, caption)
+        K.paste(block, K.skin("sq_orange", odds, odds),                     # Skins.Aside
+                key_x + L["RefreshWidth"] / 2 + gap + odds / 2, key_y)
+        K.paste(block, K.fit(K.load("ic_info")[0], (odds * .5, odds * .5)), key_x + L["RefreshWidth"] / 2 + gap + odds / 2, key_y)
         print("  key  %-28r at %dpx (floor %d)%s" % (caption, px, REFRESH_FLOOR, "  !!" if px <= REFRESH_FLOOR else ""))
 
     if fit < 1.0:

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Modes;
 
 namespace GlimmerGrove.Shuffle
 {
@@ -80,44 +81,30 @@ namespace GlimmerGrove.Shuffle
             { "iron_posts", new Note(None, M) },
             { "wide_tubes", new Note(None, M) },
             { "brace", new Note(WM) },                      // "1 less damage"
-            { "field_medic", new Note(WM) },                // "1 health every 6 seconds"
             { "keen_eyes", new Note(WE, M) },               // "double damage"
             { "long_rest", new Note(None, M) },
 
             // rare: an ability
             { "splash_shot", new Note(None, M10) },
             { "chain_arc", new Note(WE, M10) },             // "1 more raider"
-            { "pierce_rounds", new Note(WE) },              // "Every 3rd shot"
             { "frostbite", new Note(None, M10) },
-            { "kindling", new Note(WE) },                   // "for 3 seconds"
-            { "stunning_blows", new Note(WE, M) },          // "for half a second"
-            { "siphon", new Note(WM) },                     // "1 fuel"
-            { "charge_master", new Note(WE, M) },           // "store 1 more"
+            { "stunning_blows", new Note(None, M) },
+            { "charge_master", new Note(WE, M) },           // "1 more"
             { "rally_cry", new Note(None, M10) },
-            { "vampire_posts", new Note(WM) },              // "1 health"
             { "slow_march", new Note(None, M) },
             { "giant_slayer", new Note(None, M) },
 
             // rare: a way to attack
-            { "scatter_shot", new Note(WE) },               // "2 pellets"
             { "ricochet", new Note(WE) },                   // "bounces to the nearest raider"
-            { "missile_pod", new Note(WE) },                // "Every 4th shot"
-            { "quake_rounds", new Note(WE) },               // "Every 5th shot"
-            { "tesla_coil", new Note(WE) },                 // "the nearest raider"
 
             // epic
             { "second_wind", new Note(WM) },                // "comes back once"
-            { "hourglass_heart", new Note(WM) },            // "for 2 seconds"
             { "repelling_wards", new Note(None, M) },
             { "execution", new Note(None, M) },
             { "twin_barrels", new Note(WE, M) },            // "half damage"
             { "sure_sight", new Note(WM) },                 // "half damage"
-            { "cursed_fire", new Note(WE, M) },             // "for 3 seconds"
-            { "storm_bank", new Note(WM) },                 // "1 free charged shot"
+            { "cursed_fire", new Note(None, M) },
             { "spin_up", new Note(None, ME) },
-            { "meteor_call", new Note(WE) },                // "Every 6 seconds"
-            { "vortex", new Note(WE) },                     // "Every 9 seconds"
-            { "blast_gems", new Note(WM) },                 // "the gems touching it"
             { "power_gems", new Note(WM) },                 // "Match 4 ... match 5"
 
             // the pacts: the gain, then the cost
@@ -138,12 +125,11 @@ namespace GlimmerGrove.Shuffle
             { "overdrive", new Note(None, M, E) },
             { "last_stand", new Note(None, E, M) },
             { "doomsday", new Note(WE, M) },                // "Every 15 kills"
-            { "death_ray", new Note(WE) },                  // "Every 10 seconds"
             { "hydra", new Note(WB) },                      // "splits in 2 ... half"
             { "wild_magic", new Note(WM) },                 // "Every shot"
             { "bullet_hell", new Note(WB) },                // "twice as fast ... half the fuel"
             { "grand_hand", new Note(WM) },                 // "5 cards instead of 3"
-            { "laser_core", new Note(WE, M10) },            // "through 4 raiders"
+            { "laser_core", new Note(None, M10) },
         };
 
         /// <summary>The figures <paramref name="card"/>'s note prints, slot by slot.</summary>
@@ -158,15 +144,65 @@ namespace GlimmerGrove.Shuffle
         /// What fills <paramref name="card"/>'s note: its own figures, so a tuned card reads its
         /// tuned numbers. Empty for a note with no slot.
         /// </summary>
-        public static object[] Args(ShuffleCard card)
+        public static object[] Args(ShuffleCard card) => Args(card, 0);
+
+        /// <summary>
+        /// What fills <paramref name="card"/>'s note on a hand dealt to a build already holding
+        /// <paramref name="held"/> copies. <b>A note that states a level</b> - a chance, a threshold,
+        /// a ceiling - prints the level the build reaches by taking this copy (a second Execution
+        /// reads 25%, not 15%), read off <see cref="Total"/>; a note that states a gain ("15% more
+        /// damage") prints the gain, which is what another copy adds.
+        /// </summary>
+        public static object[] Args(ShuffleCard card, int held)
         {
             var slots = Slots(card);
             if (slots.Count == 0) return Array.Empty<object>();
 
             var args = new object[slots.Count];
-            for (int i = 0; i < slots.Count; i++) args[i] = Of(card, slots[i]);
+            for (int i = 0; i < slots.Count; i++) args[i] = Total(card, slots[i], held + 1);
 
             return args;
+        }
+
+        /// <summary>
+        /// The figure a note prints at <paramref name="copies"/> copies. A level is not worked out
+        /// here: it is read off the boosts a build holding that many copies folds
+        /// (<c>ShuffleBuild.Fold</c>, the one place a card's stacking is written), so the note
+        /// cannot disagree with the board. Every other figure prints as one copy.
+        /// </summary>
+        public static int Total(ShuffleCard card, ShuffleFigure figure, int copies)
+        {
+            if (copies > 1 && Level(card.Effect) != null)
+            {
+                var build = new ShuffleBuild(0u);
+                for (int i = 0; i < copies; i++) build.Take(card);
+
+                return Level(card.Effect)(build.Boosts);
+            }
+
+            return Of(card, figure);
+        }
+
+        /// <summary>
+        /// The boost a level-stating note reads, in the note's own unit; null for a note that
+        /// states a gain, which each copy adds again and so prints as one copy.
+        /// </summary>
+        static Func<SiegeBoosts, int> Level(ShuffleEffect effect)
+        {
+            switch (effect)
+            {
+                case ShuffleEffect.Crit: return b => b.CritChance;
+                case ShuffleEffect.Stun: return b => b.StunChance;
+                case ShuffleEffect.Twin: return b => b.TwinChance;
+                case ShuffleEffect.Hex: return b => b.HexChance;
+                case ShuffleEffect.Repel: return b => b.RepelChance;
+                case ShuffleEffect.Execute: return b => b.ExecutePercent;
+                case ShuffleEffect.Splash: return b => b.SplashTenths * 10;
+                case ShuffleEffect.Frost: return b => b.FrostTenths * 10;
+                case ShuffleEffect.WaveFuel: return b => b.WaveFuelTenths * 10;
+                case ShuffleEffect.SpinUp: return b => b.SpinStep * b.SpinMost;
+                default: return null;
+            }
         }
 
         static int Of(ShuffleCard card, ShuffleFigure figure)

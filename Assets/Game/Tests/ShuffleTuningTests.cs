@@ -253,8 +253,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AFigureTheCardsTextSaysInWordsCannotMove()
         {
-            // "Every 6 seconds, a meteor ..." - six seconds is a word in Polish and the Arabic dual.
-            StringAssert.Contains("in words", Refused(Card(Doc(), "meteor_call", "extent", "50")));
+            // "Every 15 kills, a nuke ..." - fifteen kills is a word in Polish and the Arabic plural.
+            StringAssert.Contains("in words", Refused(Card(Doc(), "doomsday", "extent", "20")));
             StringAssert.Contains("in words", Refused(Card(Doc(), "brace", "magnitude", "2")));
             StringAssert.Contains("in words", Refused(Card(Doc(), "bullet_hell", "magnitude", "120")));
 
@@ -619,6 +619,31 @@ namespace GlimmerGrove.Tests
                             Note("last_stand", "Turrets under {0}% health deal {1}% more damage and shoot {1}% faster."));
             Assert.AreEqual("Shots deal 40% more damage and turrets shoot 25% faster.",
                             Note("overdrive", "Shots deal {0}% more damage and turrets shoot {1}% faster."));
+        }
+
+        [Test]
+        public void AStackedNotePrintsTheLevelTheBuildReaches()
+        {
+            // What the note prints on a hand dealt to a build already holding `held` copies.
+            int Printed(string id, int held) => (int)ShuffleNotes.Args(ShuffleCards.Find(id), held)[0];
+
+            // A level climbs with the copies: the total this copy reaches.
+            Assert.AreEqual(15, Printed("execution", 0));
+            Assert.AreEqual(25, Printed("execution", 1));
+            Assert.AreEqual(new[] { 12, 24, 36 }, new[] { Printed("stunning_blows", 0), Printed("stunning_blows", 1), Printed("stunning_blows", 2) });
+            Assert.AreEqual(new[] { 40, 60, 80 }, new[] { Printed("splash_shot", 0), Printed("splash_shot", 1), Printed("splash_shot", 2) });
+            Assert.AreEqual(new[] { 30, 50, 70 }, new[] { Printed("frostbite", 0), Printed("frostbite", 1), Printed("frostbite", 2) });
+            Assert.AreEqual(new[] { 35, 70 }, new[] { Printed("repelling_wards", 0), Printed("repelling_wards", 1) });
+            Assert.AreEqual(new[] { 150, 300 }, new[] { Printed("spin_up", 0), Printed("spin_up", 1) });
+
+            // A gain is what each copy adds, so it prints the same every time.
+            Assert.AreEqual(15, Printed("heavy_bolts", 3));
+            Assert.AreEqual(50, Printed("charge_master", 1));
+
+            // The owner's example.
+            Assert.AreEqual("Shots instantly kill raiders below 25% health.",
+                            string.Format("Shots instantly kill raiders below {0}% health.",
+                                          ShuffleNotes.Args(ShuffleCards.Find("execution"), 1)));
         }
 
         [Test]

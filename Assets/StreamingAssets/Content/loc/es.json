@@ -8050,6 +8050,30 @@
       "text": "Renovar {0}"
     },
     {
+      "key": "ui.shuffle.odds_title",
+      "text": "Probabilidades"
+    },
+    {
+      "key": "ui.shuffle.odds_rarity",
+      "text": "Rareza"
+    },
+    {
+      "key": "ui.shuffle.odds_chance",
+      "text": "Probabilidad por carta"
+    },
+    {
+      "key": "ui.shuffle.odds_left",
+      "text": "Restantes"
+    },
+    {
+      "key": "ui.shuffle.odds_floor",
+      "text": "Primera carta: {0} o mejor"
+    },
+    {
+      "key": "ui.shuffle.odds_equal",
+      "text": "Las cartas de la misma rareza tienen la misma probabilidad."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Rayos Pesados"
     },
@@ -8111,7 +8135,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Las torres recuperan 1 de vida cada 6 segundos."
+      "text": "Las torres se curan poco a poco."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8151,7 +8175,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Cada 3.er disparo golpea a todos los invasores de su carril."
+      "text": "Cada pocos disparos, uno atraviesa todo el carril."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8167,7 +8191,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "Los disparos queman a los invasores durante 3 segundos."
+      "text": "Los disparos queman a los invasores."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8175,7 +8199,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "El {0}% de los disparos aturde a un invasor medio segundo."
+      "text": "El {0}% de los disparos aturde a los invasores."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8183,7 +8207,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Cada baja da 1 de combustible a la torre."
+      "text": "Cada baja da combustible a la torre."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8191,7 +8215,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Los disparos cargados pegan un {0}% más fuerte. Las torres guardan 1 disparo cargado más."
+      "text": "Los disparos cargados pegan un {0}% más fuerte. La primera copia también guarda 1 disparo cargado más."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8215,7 +8239,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Cada baja cura 1 de vida a la torre."
+      "text": "Cada baja cura a la torre."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8247,7 +8271,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Cada nueva oleada congela a los invasores 2 segundos."
+      "text": "Los invasores se congelan al empezar cada oleada."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8263,7 +8287,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Los disparos matan a invasores con menos del {0}% de vida."
+      "text": "Los disparos matan al instante a invasores con menos del {0}% de vida."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8295,7 +8319,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "El {0}% de los disparos maldice: el invasor recibe un 20% más de daño durante 3 segundos."
+      "text": "El {0}% de los disparos maldice al invasor: recibe un 20% más de daño."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8303,7 +8327,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Cada nueva oleada da a una torre 1 disparo cargado gratis."
+      "text": "Cada nueva oleada da disparos cargados gratis a las torres."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8311,7 +8335,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Si caen todas las torres, vuelven una vez con la vida llena y protegidas 8 segundos."
+      "text": "Si caen todas las torres, vuelven una vez con la vida llena."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8343,7 +8367,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Cada disparo también lanza 2 perdigones a invasores cercanos."
+      "text": "Los disparos también lanzan perdigones a invasores cercanos."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8359,7 +8383,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Cada 4.º disparo también lanza 2 misiles teledirigidos."
+      "text": "Cada pocos disparos, salen también misiles teledirigidos."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8367,7 +8391,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Cada 5.º disparo lanza una onda que empuja a los invasores."
+      "text": "Cada pocos disparos, una onda empuja a los invasores."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8375,7 +8399,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Los disparos dejan charcos de veneno que dañan a los invasores."
+      "text": "Los disparos dejan charcos de veneno."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8383,7 +8407,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Las torres electrocutan al invasor más cercano, incluso sin combustible."
+      "text": "Las torres electrocutan a los invasores cercanos, incluso sin combustible."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8415,7 +8439,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Cada 6 segundos, un meteorito cae sobre el grupo más grande."
+      "text": "Caen meteoritos una y otra vez sobre el grupo más grande."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8423,7 +8447,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Cada 9 segundos, un vórtice junta a los invasores."
+      "text": "Un vórtice junta a los invasores una y otra vez."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8439,7 +8463,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Cada 10 segundos, un láser gigante barre la colina."
+      "text": "Un láser gigante barre la colina una y otra vez."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8471,7 +8495,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Las combinaciones hacen estallar las gemas cercanas. Más copias, más explosión."
+      "text": "Las combinaciones hacen estallar las gemas cercanas."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8567,7 +8591,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Cada copia vuelve láser una torre, la mejor primero. Rebota a 3 invasores con un {0}% de daño."
+      "text": "Convierte una torre en un láser que rebota entre invasores con un {0}% de daño."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8635,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Cada 3 segundos, un rayo cae sobre los 3 invasores más cercanos."
+      "text": "Los rayos caen una y otra vez sobre los invasores más cercanos."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8643,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "Cada 5 segundos, un géiser congela y quema al grupo más grande."
+      "text": "Un géiser congela y quema al grupo más grande una y otra vez."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8683,7 +8707,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "Cada 11 segundos, un agujero negro atrae invasores y aplasta a los débiles."
+      "text": "Agujeros negros atraen a los invasores y aplastan a los débiles."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8691,7 +8715,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "Cada 9 segundos, un dragón de fuego quema todo a su paso."
+      "text": "Un dragón de fuego quema todo a su paso."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8715,7 +8739,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "Cada 8 segundos, un segundo sol quema el carril más lleno."
+      "text": "Un segundo sol quema el carril más lleno."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8723,7 +8747,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "Cada 12 segundos, caen 8 meteoritos sobre los invasores."
+      "text": "Lluvias de meteoritos caen sobre los invasores."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8731,7 +8755,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "Cada 15 segundos, los invasores se congelan 4 segundos. Las torres disparan el doble de rápido."
+      "text": "A ratos se detiene el tiempo: los invasores se congelan y las torres disparan el doble de rápido."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8771,7 +8795,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "Cada 4 segundos, las torres lanzan bolas de rayos."
+      "text": "Las torres lanzan bolas de rayos."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8803,7 +8827,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "Cada 6 segundos, un prisma dispara 6 rayos a los invasores más fuertes."
+      "text": "Un prisma dispara 6 rayos a los invasores más fuertes."
     },
     {
       "key": "shuffle.grade.d",

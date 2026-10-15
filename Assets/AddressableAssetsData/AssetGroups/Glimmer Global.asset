@@ -15941,6 +15941,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_spark_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f547f8e76852549bde2a9ba849c488f
+    m_Address: Art/Siege/armour
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5f55563885593de479bf697ff53e0adc
     m_Address: Art/Fx/Siege/hit_lance_g/f02
     m_ReadOnly: 0

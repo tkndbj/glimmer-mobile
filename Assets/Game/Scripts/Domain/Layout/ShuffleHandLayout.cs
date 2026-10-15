@@ -99,6 +99,18 @@ namespace GlimmerGrove.Layout
         /// </summary>
         public float RefreshGap = 26f, RefreshWidth = 520f, RefreshHeight = 108f;
 
+        /// <summary>
+        /// The odds key beside it (the kit's round "i"): its size and the air between the two. The
+        /// pair is centred on the panel as one group.
+        /// </summary>
+        public float OddsSize = 96f, OddsGap = 20f;
+
+        /// <summary>The refresh key's centre across the panel: left of the middle by half the odds key and its gap.</summary>
+        public float RefreshX => -(OddsGap + OddsSize) * .5f;
+
+        /// <summary>The odds key's centre across the panel.</summary>
+        public float OddsX => RefreshX + RefreshWidth * .5f + OddsGap + OddsSize * .5f;
+
         /// <summary>The panel's height for a hand of three or fewer: one row.</summary>
         public float PanelHeight => CardsTop + CardHeight + Foot;
 
@@ -210,9 +222,15 @@ namespace GlimmerGrove.Layout
             if (tierFoot + Inset > CardHeight) { fault = $"the tier ends {tierFoot} down a card {CardHeight} tall"; return false; }
             if (IconSize >= SeatSize) { fault = "the picture does not fit its seat"; return false; }
 
-            if (RefreshWidth + Inset * 2f > PanelWidth)
+            if (RefreshWidth + OddsGap + OddsSize + Inset * 2f > PanelWidth)
             {
-                fault = $"the refresh key runs {RefreshWidth} across a {PanelWidth} panel";
+                fault = $"the refresh key and its odds key run {RefreshWidth + OddsGap + OddsSize} across a {PanelWidth} panel";
+                return false;
+            }
+
+            if (OddsSize > RefreshHeight)
+            {
+                fault = $"the odds key ({OddsSize}) is taller than the refresh row ({RefreshHeight})";
                 return false;
             }
 

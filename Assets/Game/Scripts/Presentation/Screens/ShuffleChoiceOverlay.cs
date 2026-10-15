@@ -68,6 +68,12 @@ namespace GlimmerGrove
         /// </summary>
         public Func<IReadOnlyList<ShuffleCard>> OnRefresh;
 
+        /// <summary>
+        /// The odds of what a refresh would deal now (<see cref="ShuffleOdds.ForRefresh"/>), read
+        /// when the "i" is tapped. Null draws no "i".
+        /// </summary>
+        public Func<ShuffleOdds> RefreshOdds;
+
         bool _picked;
 
         /// <summary>True for the one rebuild that lays a refreshed hand: its cards pop in again.</summary>
@@ -191,8 +197,10 @@ namespace GlimmerGrove
             name.raycastTarget = false;
 
             // Filled from the card on the table, which is the run's tuned card (MODES.md 59l), so
-            // a retuned figure is the figure printed. A note with no slot formats to itself.
-            var note = UIKit.Titled("Note", t, Loc.Format(card.NoteKey, ShuffleNotes.Args(card)), L.NoteSize,
+            // a retuned figure is the figure printed, and a level-stating note prints the level
+            // this copy reaches (a second Execution reads 25%). A note with no slot formats to itself.
+            int heldNow = Held != null ? Held.Copies(card) : 0;
+            var note = UIKit.Titled("Note", t, Loc.Format(card.NoteKey, ShuffleNotes.Args(card, heldNow)), L.NoteSize,
                                     Color.white, TextAnchor.UpperCenter,
                                     new Vector2(L.CardWidth - L.Inset * 2f, L.NoteHeight),
                                     new Vector2(.5f, .5f), new Vector2(0f, top - L.NoteDown), 2f, 0f,
@@ -242,15 +250,40 @@ namespace GlimmerGrove
             var key = UIKit.TextButton("Refresh", Panel, "btn_violet",
                                        Loc.Format("ui.shuffle.refresh", Compact.Number(price)).Upper(),
                                        40, new Vector2(L.RefreshWidth, L.RefreshHeight),
-                                       new Vector2(.5f, 1f), new Vector2(0f, -L.RefreshCentre(cards)),
+                                       new Vector2(.5f, 1f), new Vector2(L.RefreshX, -L.RefreshCentre(cards)),
                                        Refresh, Art.S("Ui/ic_gem"), iconTrails: true);
             UIKit.Shrinkable(key.Label, 24);
             UIKit.FitLabel(key);
 
+            // The odds of what the refresh can deal, beside the key that buys it: a random hand
+            // sold for gems says its odds before it is bought (ShuffleOddsOverlay).
+            Btn odds = null;
+            if (RefreshOdds != null)
+                odds = UIKit.IconButton("Odds", Panel, Skins.Aside, "ic_info", Vector2.one * L.OddsSize,
+                                        new Vector2(.5f, 1f), new Vector2(L.OddsX, -L.RefreshCentre(cards)),
+                                        ShowOdds);
+
             if (Rebuilding && !_redealt) return;
 
+            float at = (_redealt ? 0f : CardPopAt) + cards * CardPopStagger;
             key.transform.localScale = Vector3.zero;
-            Tween.Pop(key.transform, 0f, .5f, (_redealt ? 0f : CardPopAt) + cards * CardPopStagger);
+            Tween.Pop(key.transform, 0f, .5f, at);
+
+            if (odds == null) return;
+            odds.transform.localScale = Vector3.zero;
+            Tween.Pop(odds.transform, 0f, .5f, at + CardPopStagger);
+        }
+
+        /// <summary>
+        /// Opens the odds of a refresh over the hand. The hand and the run stand under it, and it
+        /// closes back to them; it buys nothing.
+        /// </summary>
+        void ShowOdds()
+        {
+            if (_picked || _redealt || RefreshOdds == null) return;
+
+            var odds = RefreshOdds();
+            if (odds != null) Flow.Modal<ShuffleOddsOverlay>(v => v.Odds = odds);
         }
 
         /// <summary>Whether a shop is reachable that could sell gems right now (<c>RunContinueFlow.GemsForSale</c>'s reading).</summary>

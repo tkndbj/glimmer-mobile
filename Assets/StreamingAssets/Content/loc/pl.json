@@ -8050,6 +8050,30 @@
       "text": "Odśwież {0}"
     },
     {
+      "key": "ui.shuffle.odds_title",
+      "text": "Szanse"
+    },
+    {
+      "key": "ui.shuffle.odds_rarity",
+      "text": "Rzadkość"
+    },
+    {
+      "key": "ui.shuffle.odds_chance",
+      "text": "Szansa na kartę"
+    },
+    {
+      "key": "ui.shuffle.odds_left",
+      "text": "Pozostałe"
+    },
+    {
+      "key": "ui.shuffle.odds_floor",
+      "text": "Pierwsza karta: {0} lub lepsza"
+    },
+    {
+      "key": "ui.shuffle.odds_equal",
+      "text": "Karty tej samej rzadkości mają równe szanse."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Ciężkie Pociski"
     },
@@ -8111,7 +8135,7 @@
     },
     {
       "key": "shuffle.field_medic.note",
-      "text": "Wieże odzyskują 1 punkt życia co 6 sekund."
+      "text": "Wieże powoli się leczą."
     },
     {
       "key": "shuffle.keen_eyes.name",
@@ -8151,7 +8175,7 @@
     },
     {
       "key": "shuffle.pierce_rounds.note",
-      "text": "Co 3. strzał trafia wszystkich najeźdźców na swoim torze."
+      "text": "Co kilka strzałów jeden przebija cały tor."
     },
     {
       "key": "shuffle.frostbite.name",
@@ -8167,7 +8191,7 @@
     },
     {
       "key": "shuffle.kindling.note",
-      "text": "Strzały podpalają najeźdźców na 3 sekundy."
+      "text": "Strzały podpalają najeźdźców."
     },
     {
       "key": "shuffle.stunning_blows.name",
@@ -8175,7 +8199,7 @@
     },
     {
       "key": "shuffle.stunning_blows.note",
-      "text": "{0}% strzałów ogłusza najeźdźcę na pół sekundy."
+      "text": "{0}% strzałów ogłusza najeźdźców."
     },
     {
       "key": "shuffle.siphon.name",
@@ -8183,7 +8207,7 @@
     },
     {
       "key": "shuffle.siphon.note",
-      "text": "Każde zabójstwo daje wieży 1 paliwa."
+      "text": "Każde zabójstwo daje wieży paliwo."
     },
     {
       "key": "shuffle.charge_master.name",
@@ -8191,7 +8215,7 @@
     },
     {
       "key": "shuffle.charge_master.note",
-      "text": "Naładowane strzały biją o {0}% mocniej. Wieże mieszczą o 1 naładowany strzał więcej."
+      "text": "Naładowane strzały biją o {0}% mocniej. Pierwsza kopia mieści też o 1 naładowany strzał więcej."
     },
     {
       "key": "shuffle.thorns.name",
@@ -8215,7 +8239,7 @@
     },
     {
       "key": "shuffle.vampire_posts.note",
-      "text": "Każde zabójstwo leczy wieżę o 1 punkt życia."
+      "text": "Każde zabójstwo leczy wieżę."
     },
     {
       "key": "shuffle.slow_march.name",
@@ -8247,7 +8271,7 @@
     },
     {
       "key": "shuffle.hourglass_heart.note",
-      "text": "Każda nowa fala zamraża najeźdźców na 2 sekundy."
+      "text": "Najeźdźcy zamarzają na początku każdej fali."
     },
     {
       "key": "shuffle.repelling_wards.name",
@@ -8263,7 +8287,7 @@
     },
     {
       "key": "shuffle.execution.note",
-      "text": "Strzały zabijają najeźdźców poniżej {0}% życia."
+      "text": "Strzały od razu zabijają najeźdźców poniżej {0}% życia."
     },
     {
       "key": "shuffle.twin_barrels.name",
@@ -8295,7 +8319,7 @@
     },
     {
       "key": "shuffle.cursed_fire.note",
-      "text": "{0}% strzałów przeklina: najeźdźca przez 3 sekundy dostaje o 20% więcej obrażeń."
+      "text": "{0}% strzałów przeklina: najeźdźca dostaje o 20% więcej obrażeń."
     },
     {
       "key": "shuffle.storm_bank.name",
@@ -8303,7 +8327,7 @@
     },
     {
       "key": "shuffle.storm_bank.note",
-      "text": "Każda nowa fala daje jednej wieży 1 darmowy naładowany strzał."
+      "text": "Każda nowa fala daje wieżom darmowe naładowane strzały."
     },
     {
       "key": "shuffle.phoenix.name",
@@ -8311,7 +8335,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "Gdy padną wszystkie wieże, wracają raz z pełnym życiem i ochroną na 8 sekund."
+      "text": "Gdy padną wszystkie wieże, wracają raz z pełnym życiem."
     },
     {
       "key": "shuffle.overdrive.name",
@@ -8343,7 +8367,7 @@
     },
     {
       "key": "shuffle.scatter_shot.note",
-      "text": "Każdy strzał wypuszcza też 2 śruciny w pobliskich najeźdźców."
+      "text": "Strzały wypuszczają też śrut w pobliskich najeźdźców."
     },
     {
       "key": "shuffle.ricochet.name",
@@ -8359,7 +8383,7 @@
     },
     {
       "key": "shuffle.missile_pod.note",
-      "text": "Co 4. strzał wypuszcza też 2 samonaprowadzające rakiety."
+      "text": "Co kilka strzałów lecą też samonaprowadzające rakiety."
     },
     {
       "key": "shuffle.quake_rounds.name",
@@ -8367,7 +8391,7 @@
     },
     {
       "key": "shuffle.quake_rounds.note",
-      "text": "Co 5. strzał wysyła falę uderzeniową, która odpycha najeźdźców."
+      "text": "Co kilka strzałów fala uderzeniowa odpycha najeźdźców."
     },
     {
       "key": "shuffle.toxic_rounds.name",
@@ -8375,7 +8399,7 @@
     },
     {
       "key": "shuffle.toxic_rounds.note",
-      "text": "Strzały zostawiają kałuże trucizny, które ranią najeźdźców."
+      "text": "Strzały zostawiają kałuże trucizny."
     },
     {
       "key": "shuffle.tesla_coil.name",
@@ -8383,7 +8407,7 @@
     },
     {
       "key": "shuffle.tesla_coil.note",
-      "text": "Wieże razią najbliższego najeźdźcę, nawet bez paliwa."
+      "text": "Wieże razią pobliskich najeźdźców, nawet bez paliwa."
     },
     {
       "key": "shuffle.spin_up.name",
@@ -8415,7 +8439,7 @@
     },
     {
       "key": "shuffle.meteor_call.note",
-      "text": "Co 6 sekund meteor uderza w największą grupę."
+      "text": "Meteory raz po raz uderzają w największą grupę."
     },
     {
       "key": "shuffle.vortex.name",
@@ -8423,7 +8447,7 @@
     },
     {
       "key": "shuffle.vortex.note",
-      "text": "Co 9 sekund wir ściąga najeźdźców razem."
+      "text": "Wir raz po raz ściąga najeźdźców razem."
     },
     {
       "key": "shuffle.doomsday.name",
@@ -8439,7 +8463,7 @@
     },
     {
       "key": "shuffle.death_ray.note",
-      "text": "Co 10 sekund gigantyczny laser przecina wzgórze."
+      "text": "Gigantyczny laser raz po raz przecina wzgórze."
     },
     {
       "key": "shuffle.hydra.name",
@@ -8471,7 +8495,7 @@
     },
     {
       "key": "shuffle.blast_gems.note",
-      "text": "Dopasowania wysadzają pobliskie klejnoty. Więcej kopii, większe wybuchy."
+      "text": "Dopasowania wysadzają pobliskie klejnoty."
     },
     {
       "key": "shuffle.power_gems.name",
@@ -8567,7 +8591,7 @@
     },
     {
       "key": "shuffle.laser_core.note",
-      "text": "Każda kopia zmienia wieżę w laser, najlepszą pierwszą. Odbija się do 3 najeźdźców za {0}% obrażeń."
+      "text": "Zmienia wieżę w laser, który odbija się między najeźdźcami za {0}% obrażeń."
     },
     {
       "key": "ui.loadout.discount_badge",
@@ -8635,7 +8659,7 @@
     },
     {
       "key": "shuffle.secret.thunderhead.note",
-      "text": "Co 3 sekundy piorun trafia 3 najbliższych najeźdźców."
+      "text": "Pioruny raz po raz trafiają najbliższych najeźdźców."
     },
     {
       "key": "shuffle.secret.frostfire.name",
@@ -8643,7 +8667,7 @@
     },
     {
       "key": "shuffle.secret.frostfire.note",
-      "text": "Co 5 sekund gejzer zamraża i pali największą grupę."
+      "text": "Gejzer raz po raz zamraża i pali największą grupę."
     },
     {
       "key": "shuffle.secret.blade_orbit.name",
@@ -8683,7 +8707,7 @@
     },
     {
       "key": "shuffle.secret.event_horizon.note",
-      "text": "Co 11 sekund czarna dziura wciąga najeźdźców i miażdży słabych."
+      "text": "Czarne dziury wciągają najeźdźców i miażdżą słabych."
     },
     {
       "key": "shuffle.secret.fire_dragon.name",
@@ -8691,7 +8715,7 @@
     },
     {
       "key": "shuffle.secret.fire_dragon.note",
-      "text": "Co 9 sekund ognisty smok pali wszystko na swojej drodze."
+      "text": "Ognisty smok pali wszystko na swojej drodze."
     },
     {
       "key": "shuffle.secret.golden_dome.name",
@@ -8715,7 +8739,7 @@
     },
     {
       "key": "shuffle.secret.solar_cannon.note",
-      "text": "Co 8 sekund drugie słońce pali najbardziej zatłoczony tor."
+      "text": "Drugie słońce pali najbardziej zatłoczony tor."
     },
     {
       "key": "shuffle.secret.armageddon.name",
@@ -8723,7 +8747,7 @@
     },
     {
       "key": "shuffle.secret.armageddon.note",
-      "text": "Co 12 sekund na najeźdźców spada 8 meteorów."
+      "text": "Na najeźdźców spadają deszcze meteorów."
     },
     {
       "key": "shuffle.secret.time_stop.name",
@@ -8731,7 +8755,7 @@
     },
     {
       "key": "shuffle.secret.time_stop.note",
-      "text": "Co 15 sekund najeźdźcy zamarzają na 4 sekundy. Wieże strzelają dwa razy szybciej."
+      "text": "Raz po raz czas staje w miejscu: najeźdźcy zamarzają, a wieże strzelają dwa razy szybciej."
     },
     {
       "key": "shuffle.evolution.titan_shells.name",
@@ -8771,7 +8795,7 @@
     },
     {
       "key": "shuffle.evolution.ball_lightning.note",
-      "text": "Co 4 sekundy wieże wypuszczają kule piorunów."
+      "text": "Wieże wypuszczają kule piorunów."
     },
     {
       "key": "shuffle.evolution.swarm.name",
@@ -8803,7 +8827,7 @@
     },
     {
       "key": "shuffle.evolution.prism_lance.note",
-      "text": "Co 6 sekund pryzmat strzela 6 promieniami w najsilniejszych najeźdźców."
+      "text": "Pryzmat strzela 6 promieniami w najsilniejszych najeźdźców."
     },
     {
       "key": "shuffle.grade.d",

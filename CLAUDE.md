@@ -738,7 +738,7 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 `render_challenges.py` (`--id`, `--list`, `--contact`, `--phone`).
 
 **Shuffle lane** (59): `ShuffleTests` (the identity trace, the ramp's inline pin, the deck, the build, the
-model-player sweep), `ShuffleRefreshTests` (59p), `Tools/make_shuffle_art.py --check`/`--contact`, `render_shuffle.py` (the hand, `--report all --measure` the graded run,
+model-player sweep), `ShuffleRefreshTests` and `ShuffleOddsTests` (59p; `render_shuffle_odds.py --measure`), `Tools/make_shuffle_art.py --check`/`--contact`, `render_shuffle.py` (the hand, `--report all --measure` the graded run,
 `--lang`, `--held`), `render_endless.py --shuffle` (the hub), `Tools/chapters/s13_shufflewatch.py`.
 **Siege**: `SiegeRuleTests` (prints the boss-rung table; `EveryShippedBossRungIsAFight` needs each new chapter
 in `ShippedChapters`), `TutorialTests`, `EndlessCheckpointTests`, `render_siege.py` (`--captions` is the only
