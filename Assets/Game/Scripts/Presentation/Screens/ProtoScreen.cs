@@ -354,6 +354,14 @@ namespace GlimmerGrove
         long _banked;
 
         /// <summary>
+        /// The hook a mode uses to add its own section to the victory panel - what it measured in
+        /// <see cref="Finished"/> and nothing else (the Shuffle lane's graded run, MODES.md 59o).
+        /// Called as the panel is raised, after every field this class sets, so a mode can only add
+        /// to the panel and never change what it says about the run. Nothing on every other board.
+        /// </summary>
+        protected virtual void Dress(WinOverlay panel) { }
+
+        /// <summary>
         /// Called once however the run ended, after the latch and before anything is recorded.
         ///
         /// <para>
@@ -466,6 +474,8 @@ namespace GlimmerGrove
                 // from the stars, which is the half no multiplier on this panel applies to.
                 v.LaneCredits = done.LaneCredits;
                 v.ChapterOpened = done.ChapterOpened;
+
+                Dress(v);
             }));
         }
 

@@ -8796,6 +8796,90 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Ogni 6 secondi, un prisma spara 6 raggi sui predoni più forti."
+    },
+    {
+      "key": "shuffle.grade.d",
+      "text": "D"
+    },
+    {
+      "key": "shuffle.grade.c",
+      "text": "C"
+    },
+    {
+      "key": "shuffle.grade.b",
+      "text": "B"
+    },
+    {
+      "key": "shuffle.grade.a",
+      "text": "A"
+    },
+    {
+      "key": "shuffle.grade.aa",
+      "text": "AA"
+    },
+    {
+      "key": "shuffle.grade.s",
+      "text": "S"
+    },
+    {
+      "key": "shuffle.grade.s_plus",
+      "text": "S+"
+    },
+    {
+      "key": "shuffle.grade.s_plus_plus",
+      "text": "S++"
+    },
+    {
+      "key": "shuffle.stat.damage",
+      "text": "Danni"
+    },
+    {
+      "key": "shuffle.stat.speed",
+      "text": "Vel. d'attacco"
+    },
+    {
+      "key": "shuffle.stat.crit",
+      "text": "Prob. di critico"
+    },
+    {
+      "key": "shuffle.stat.health",
+      "text": "Vita torrette"
+    },
+    {
+      "key": "shuffle.stat.cards",
+      "text": "Carte"
+    },
+    {
+      "key": "shuffle.stat.bonds",
+      "text": "Sblocchi"
+    },
+    {
+      "key": "ui.shuffle.score",
+      "text": "Punteggio"
+    },
+    {
+      "key": "ui.shuffle.new_best",
+      "text": "Nuovo record!"
+    },
+    {
+      "key": "ui.shuffle.best",
+      "text": "Record: {0} - {1}"
+    },
+    {
+      "key": "ui.shuffle.run_wave",
+      "text": "Ondata raggiunta: {0}"
+    },
+    {
+      "key": "ui.shuffle.percent",
+      "text": "{0}%"
+    },
+    {
+      "key": "ui.shuffle.best_run",
+      "text": "Partita migliore"
+    },
+    {
+      "key": "ui.shuffle.no_grade",
+      "text": "Finisci una partita per ottenere il tuo primo voto."
     }
   ]
 }

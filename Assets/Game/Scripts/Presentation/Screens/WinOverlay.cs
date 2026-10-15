@@ -111,6 +111,19 @@ namespace GlimmerGrove
         public ChapterId ChapterOpened = ChapterId.None;
 
         /// <summary>
+        /// The Shuffle run's grade, score and stats (MODES.md 59o), drawn as a section under the
+        /// run line. Null on every board but the Shuffle lane's, and on a Shuffle run that took no
+        /// card - so every other victory panel is built exactly as it was.
+        /// </summary>
+        public Shuffle.ShuffleRecord ShuffleRun;
+
+        /// <summary>Whether <see cref="ShuffleRun"/> is this level's new best-graded run.</summary>
+        public bool ShuffleNewBest;
+
+        /// <summary>The best-graded run before this one, for the line under the score. Null for none.</summary>
+        public Shuffle.ShuffleRecord ShuffleBestBefore;
+
+        /// <summary>
         /// Written out rather than assembled as "ui.win.rank" + stars, so the keys are
         /// visible to the build's string checker. A key that only exists at runtime is
         /// a key nothing can verify.
@@ -161,6 +174,8 @@ namespace GlimmerGrove
         /// as long as nobody edited one of them.
         /// </para>
         /// </summary>
+        const float ReportGap = 18f;
+
         const float HintRow = 54f, LaneHeight = 96f, VerdictRow = 66f,
                     PayoutRow = 148f, GoldenRow = 74f, BonusRow = 152f;
 
@@ -295,6 +310,15 @@ namespace GlimmerGrove
             }
             else y += 60f;
 
+            // The Shuffle run's report: its grade, score and stats, stacked like any other row.
+            bool report = ShuffleRun != null;
+            float reportY = 0f;
+            if (report)
+            {
+                reportY = y + ReportGap;
+                y += ReportGap + ShuffleReportView.HeightFor(ShuffleRun);
+            }
+
             if (paid) { payY = y + 70f; y += PayoutRow; }
             if (goldened) { goldY = y + 34f; y += GoldenRow; }
             if (boosted) { boostY = y + 34f; y += GoldenRow; }
@@ -401,6 +425,9 @@ namespace GlimmerGrove
                     verdict.transform.localScale = Vector3.zero;
                 }
             }
+
+            // ---------------------------------------------------------- the Shuffle report
+            var shuffleReport = report ? BuildShuffleReport(-reportY) : null;
 
             // ---------------------------------------------------------- the payout
             // Two chips rather than one sentence, each number put there by things the player
@@ -614,6 +641,9 @@ namespace GlimmerGrove
                 Reveal(youCap);
                 Reveal(youVal);
             });
+
+            // How far the run got, then what it built: the grade is the answer to the line above.
+            shuffleReport?.Play(cue, this);
 
             if (route)
             {
@@ -1007,6 +1037,31 @@ namespace GlimmerGrove
             UIKit.Shrinkable(t, minSize);
             t.transform.localScale = Vector3.zero;
             return t;
+        }
+
+        /// <summary>
+        /// The Shuffle run's section, built hidden and walked on by its own beats. The line under
+        /// the score says NEW BEST, or what the best still is - never both, and nothing on the
+        /// level's first graded run, which is its best by definition and says so.
+        /// </summary>
+        ShuffleReportView BuildShuffleReport(float top)
+        {
+            string note;
+            Color ink;
+
+            if (ShuffleNewBest || ShuffleBestBefore == null)
+            {
+                note = Loc.Get("ui.shuffle.new_best").Upper();
+                ink = Pal.Gold;
+            }
+            else
+            {
+                note = Loc.Format("ui.shuffle.best", ShuffleGradeLook.Letter(ShuffleBestBefore.Grade),
+                                  ShuffleBestBefore.Points.ToString("N0", System.Globalization.CultureInfo.InvariantCulture));
+                ink = new Color(1f, .95f, .86f, .7f);
+            }
+
+            return ShuffleReportView.Build(Panel, top, ShuffleRun, note, ink, hidden: true);
         }
 
         /// <summary>A bar's caption: small, dim, hard against the track's left edge.</summary>

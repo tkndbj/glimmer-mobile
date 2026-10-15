@@ -143,7 +143,8 @@ LANES = {
     # builds no plaque on a dealt lane and the switcher takes its slot; `EndlessHub.HubLane.Crest`.
     "shuffle": dict(wall="plain_shuffle",
                     marks=["Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_heart"],   # `EndlessHub.ShuffleMarks`
-                    checkpoints=False, standing=False, shelf=True, banner=None, crest="Ui/shuffle_crest"),
+                    checkpoints=False, standing=False, shelf=True, banner=None, crest="Ui/shuffle_crest",
+                    stats=True),
 }
 
 #: Which lane this run of the mirror draws. `--shuffle` sets it.
@@ -557,10 +558,93 @@ def shelf(sheet, h):
 
 
 # --------------------------------------------------------------- the screen
-def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, start=1, first=0):
+
+# --------------------------------------------------------------- the best run (MODES.md 59o)
+#: `EndlessHubLayout.StatsHeight`: the Shuffle lane's slot, the checkpoint bar's made taller.
+STATS_H = 268.0
+STATS_LIFT = .70                 # `EndlessHubLayout.StatsLift`
+STRIP = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Layout" / "ShuffleHubStripLayout.cs"
+
+
+def use_slot(slot):
+    """`EndlessHubLayout.SlotCentre` / `ButtonCentreFor` / `HeightFor`: the stack for a slot this tall."""
+    global CHECK_CENTRE, BUTTON_CENTRE, COLUMN_H
+    CHECK_CENTRE = HERO_H + HERO_GAP + PANEL_H + RECORD_GAP + RECORD_H + CHECK_GAP + slot / 2
+    BUTTON_CENTRE = CHECK_CENTRE + slot / 2 + BUTTON_GAP + BUTTON_H / 2
+    COLUMN_H = BUTTON_CENTRE + BUTTON_H / 2
+
+
+def best_run(sheet, top, grade, lang, floored):
+    """`ShuffleHubStrip`: the plate, a header row (caption, letter, score) centred by drawn
+    widths, and a chip per stat across the plate; or the one line a keeper with no graded run reads."""
+    import render_shuffle as R
+
+    L = R.figures_of(STRIP)
+    strings = R.table(lang)
+    cx, ptop = W / 2, top + CHECK_CENTRE - STATS_H / 2
+    K.paste(sheet, K.skin("Hud/panel", PANEL_W, STATS_H), cx, ptop + STATS_H / 2)
+
+    def at(x, y):
+        return cx + x, ptop - y
+
+    if grade is None:
+        line = strings["ui.shuffle.no_grade"]
+        px = K.shrunk(sheet, line, cx, ptop + STATS_H / 2, L["EmptyW"], L["EmptyH"],
+                      int(L["EmptySize"]), int(L["EmptyFloor"]), outline=3)
+        if px <= L["EmptyFloor"]:
+            floored.append("hub empty line %r at its floor" % line)
+        return
+
+    points, wave, values = R.SAMPLES[grade]
+    ink, light = R.GRADE_INK[grade]
+
+    # The header row: `ShuffleHubStripLayout.Centred` over the three drawn widths.
+    caption = strings["ui.shuffle.best_run"].upper()
+    cap_text, cap_font = R.face(caption, L["CaptionSize"])
+    letter = K.fit(K.load("shuffle_grade_" + grade)[0], (L["LetterW"], L["LetterH"]))
+    score = "{:,}".format(points)
+    widths = [cap_font.getlength(cap_text) + 4, letter.width, K.font(L["ScoreSize"]).getlength(score) + 6]
+    total = sum(widths) + 2 * L["GroupGap"]
+    if total > L["HeaderMost"]:
+        floored.append("hub header %r is %.0f wide in %.0f" % (caption, total, L["HeaderMost"]))
+    x = -total / 2
+    xs = []
+    for w in widths:
+        xs.append(x + w / 2)
+        x += w + L["GroupGap"]
+
+    _, hy = at(0, L["HeaderY"])
+    d = ImageDraw.Draw(sheet)
+    d.text((cx + xs[0] - widths[0] / 2 + 2, hy - L["CaptionSize"] * .62), cap_text, font=cap_font,
+           fill=(255, 242, 219), stroke_width=2, stroke_fill=(23, 36, 51))
+    if light > 0:
+        K.paste(sheet, K.glow(int(L["LetterW"] * 1.5), 2.1, ink, light * .8), cx + xs[1], hy)
+    K.paste(sheet, letter, cx + xs[1], hy)
+    K.text(sheet, score, cx + xs[2], hy, int(L["ScoreSize"]), outline=3)
+
+    for i, (sid, kind, pic) in enumerate(R.STATS):
+        row, col = divmod(i, int(L["Columns"]))
+        grid_left = -(L["Columns"] * L["ChipW"] + (L["Columns"] - 1) * L["Gap"]) / 2
+        x = grid_left + L["ChipW"] / 2 + col * (L["ChipW"] + L["Gap"])
+        y = L["GridTop"] - L["ChipH"] / 2 - row * (L["ChipH"] + L["Gap"])
+        px, py = at(x, y)
+        K.paste(sheet, K.skin("Rank/kit_row", L["ChipW"], L["ChipH"]), px, py)
+        K.paste(sheet, K.fit(K.load(pic)[0], (L["IconSize"], L["IconSize"])), px + L["IconX"], py)
+        tl = px + L["TextX"] - L["TextW"] / 2
+        R.left_line(sheet, R.figure(kind, values[i], strings), tl, py - L["FigureY"], L["TextW"],
+                    int(L["FigureSize"]), int(L["FigureFloor"]), K.CREAM, "hub chip %s figure" % sid, floored)
+        R.left_line(sheet, strings["shuffle.stat." + sid], tl, py - L["LabelY"], L["TextW"],
+                    int(L["LabelSize"]), int(L["LabelFloor"]), (255, 242, 219), "hub chip %s label" % sid,
+                    floored, outline=2)
+
+
+def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, start=1, first=0,
+           grade="s_plus", lang="en", floored=None):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
     row = LANES[LANE]
+    # `EndlessHubLayout.SlotHeight`: the best run's slot on a lane that draws one.
+    use_slot(STATS_H if row.get("stats") else CHECK_H)
     plain(sheet, h, row["wall"])
 
     foot = header_foot(modes)
@@ -568,7 +652,9 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, sta
     # `EndlessHub.Band`: a lane standing no shelf has the foot as well (`HubLane.Shelf`).
     band = h - foot - HEAD_CLEAR - (SHELF if row["shelf"] else 0)
     scale = scale_in(band)
-    top = foot + HEAD_CLEAR + max(0.0, (band - COLUMN_H * scale) * LIFT)
+    # `EndlessHubLayout.LiftFor`: a lane drawing its best run hangs lower (`StatsLift`).
+    lift = STATS_LIFT if row.get("stats") else LIFT
+    top = foot + HEAD_CLEAR + max(0.0, (band - COLUMN_H * scale) * lift)
 
     # The column is drawn whole on its own layer and scaled about its top edge, which is
     # `EndlessHub.Column`'s one node doing the same.
@@ -582,6 +668,8 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, sta
                                    int(100 + RECORD_CENTRE - RECORD_H / 2 - 100 * RECORD_SCALE)))
     if row["checkpoints"]:
         checkpoint(layer, 100, start, first)
+    if row.get("stats"):
+        best_run(layer, 100, grade if played else None, lang, floored if floored is not None else [])
     battle(layer, 100, wall)
     if scale < 1.0:
         layer = layer.resize((int(W * scale), int(layer.height * scale)), Image.LANCZOS)
@@ -595,8 +683,8 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, sta
 
     print("  column drawn at x%.3f (floor %.2f)" % (scale, MIN_SCALE))
     print("  canvas %dx%d   band %.0f   column %.0f   air %.0f above, %.0f below"
-          % (W, h, band, COLUMN_H * scale, (band - COLUMN_H * scale) * LIFT,
-             (band - COLUMN_H * scale) * (1 - LIFT)))
+          % (W, h, band, COLUMN_H * scale, (band - COLUMN_H * scale) * lift,
+             (band - COLUMN_H * scale) * (1 - lift)))
 
     if COLUMN_H * scale > band + .5:
         print("  !! the column is %.0f taller than the band - the button is behind the shelf"
@@ -631,12 +719,33 @@ def main():
     ap.add_argument("--first", type=int, default=0, metavar="BEST",
                     help="draw the shut checkpoint bar: no checkpoint open yet, the first "
                          "opening at this best")
-    ap.add_argument("--out", type=Path, default=Path("endless.png"))
+    ap.add_argument("--grade", default="s_plus",
+                    help="with --shuffle: the best run's grade (d .. s_plus_plus), or 'none' for a "
+                         "keeper with no graded run yet")
+    ap.add_argument("--lang", default="en", help="with --shuffle: the best run's language")
+    ap.add_argument("--measure", action="store_true",
+                    help="with --shuffle: every grade and the empty state in every language; "
+                         "fail on a caption at its floor")
+    ap.add_argument("--out", type=Path, default=Path("Tools/out/endless.png"))
     args = ap.parse_args()
 
     global LANE
     if args.shuffle:
         LANE = "shuffle"
+
+    if args.shuffle and args.measure:
+        import render_shuffle as R
+        floored = []
+        langs = sorted(p.stem for p in R.LOC.glob("*.json"))
+        for lang in langs:
+            for grade in R.GRADE_IDS + ["none"]:
+                screen(K.H, played=grade != "none", grade=None if grade == "none" else grade,
+                       lang=lang, floored=floored)
+        if floored:
+            sys.exit("best run: captions at their floor:" + "".join("\n  " + f for f in floored))
+        print("best run: every caption of %d grade(s) and the empty state in %d language(s) fits"
+              % (len(R.GRADE_IDS), len(langs)))
+        return
 
     # A wall is met by an account that has not run the lane, so the two states arrive together
     # unless the caller says otherwise - drawing a gold medal behind a padlock would be a
@@ -648,7 +757,8 @@ def main():
                  boost=max(0, args.boost),
                  rank=max(0, args.rank),
                  start=0 if args.first > 0 else max(0, args.start),
-                 first=max(0, args.first))
+                 first=max(0, args.first),
+                 grade=None if args.grade == "none" else args.grade, lang=args.lang)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

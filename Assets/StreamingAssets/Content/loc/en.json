@@ -8796,6 +8796,90 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Every 6 seconds, a prism fires 6 beams at the strongest raiders."
+    },
+    {
+      "key": "shuffle.grade.d",
+      "text": "D"
+    },
+    {
+      "key": "shuffle.grade.c",
+      "text": "C"
+    },
+    {
+      "key": "shuffle.grade.b",
+      "text": "B"
+    },
+    {
+      "key": "shuffle.grade.a",
+      "text": "A"
+    },
+    {
+      "key": "shuffle.grade.aa",
+      "text": "AA"
+    },
+    {
+      "key": "shuffle.grade.s",
+      "text": "S"
+    },
+    {
+      "key": "shuffle.grade.s_plus",
+      "text": "S+"
+    },
+    {
+      "key": "shuffle.grade.s_plus_plus",
+      "text": "S++"
+    },
+    {
+      "key": "shuffle.stat.damage",
+      "text": "Damage"
+    },
+    {
+      "key": "shuffle.stat.speed",
+      "text": "Attack speed"
+    },
+    {
+      "key": "shuffle.stat.crit",
+      "text": "Crit chance"
+    },
+    {
+      "key": "shuffle.stat.health",
+      "text": "Turret health"
+    },
+    {
+      "key": "shuffle.stat.cards",
+      "text": "Cards"
+    },
+    {
+      "key": "shuffle.stat.bonds",
+      "text": "Unlocks"
+    },
+    {
+      "key": "ui.shuffle.score",
+      "text": "Build score"
+    },
+    {
+      "key": "ui.shuffle.new_best",
+      "text": "New best!"
+    },
+    {
+      "key": "ui.shuffle.best",
+      "text": "Best: {0} - {1}"
+    },
+    {
+      "key": "ui.shuffle.run_wave",
+      "text": "Reached wave {0}"
+    },
+    {
+      "key": "ui.shuffle.percent",
+      "text": "{0}%"
+    },
+    {
+      "key": "ui.shuffle.best_run",
+      "text": "Best run"
+    },
+    {
+      "key": "ui.shuffle.no_grade",
+      "text": "Finish a run to earn your first grade."
     }
   ]
 }

@@ -8,6 +8,8 @@
     python Tools/render_shuffle.py --marks chain_arc=thunderhead,heavy_bolts=e,kindling=frostfire+fire_dragon+e
     python Tools/render_shuffle.py --unlock fire_dragon --lang de   # the unlock panel, settled
     python Tools/render_shuffle.py --unlock all --measure           # every bond in every language
+    python Tools/render_shuffle.py --report s_plus             # a graded run: victory panel + profile card
+    python Tools/render_shuffle.py --report all --measure      # every grade in every language
     python Tools/render_shuffle.py --out out/hand.png
 
 **Why this exists.** `ShuffleHandLayout.IsClear` proves the four things on a card do not overlap
@@ -66,7 +68,10 @@ def figures_of(path):
         for part in line.split(","):
             if "=" in part:
                 name, value = part.split("=")
-                found[name.strip()] = float(value.strip().rstrip("f"))
+                try:
+                    found[name.strip()] = float(value.strip().rstrip("f"))
+                except ValueError:
+                    pass        # a figure written as another constant; the caller names it
     return found
 
 
@@ -396,6 +401,209 @@ def unlock(bid, lang, art=True):
     return sheet.convert("RGB"), floored
 
 
+
+# ---------------------------------------------------------------------- the graded run (59o)
+REPORT = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Layout" / "ShuffleReportLayout.cs"
+GRADES_CS = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Modes" / "Shuffle" / "ShuffleGrade.cs"
+
+#: `ShuffleGradeLook.Ink` and `.Light`, by grade id, worst first.
+GRADE_INK = {
+    "d": ((255, 178, 30), 0.0), "c": ((63, 169, 255), 0.0), "b": ((179, 92, 255), 0.0),
+    "a": ((255, 90, 174), 0.0), "aa": ((255, 90, 174), 0.0), "s": ((94, 220, 60), .38),
+    "s_plus": ((124, 232, 62), .52), "s_plus_plus": ((178, 242, 58), .68),
+}
+GRADE_IDS = list(GRADE_INK)
+
+#: `ShuffleStats.All`: id, kind, picture (under Art/Ui), in drawing order.
+STATS = [("damage", "times", "Shuffle/heavy_bolts"), ("speed", "times", "Shuffle/quick_barrels"),
+         ("crit", "percent", "Shuffle/keen_eyes"), ("health", "times", "Shuffle/iron_posts"),
+         ("cards", "count", "ic_deck"), ("bonds", "count", "shuffle_evolution")]
+
+#: A deep run's figures per grade, for the picture: points, wave, then the six stats.
+SAMPLES = {
+    "d": (180, 9, [100, 112, 0, 100, 4, 0]),
+    "c": (520, 21, [145, 124, 10, 130, 10, 0]),
+    "b": (1460, 44, [260, 236, 20, 160, 22, 1]),
+    "a": (3150, 78, [560, 410, 30, 220, 38, 3]),
+    "aa": (6050, 118, [1180, 760, 40, 280, 58, 6]),
+    "s": (8240, 164, [2480, 1350, 45, 310, 82, 11]),
+    "s_plus": (10180, 208, [6120, 1940, 50, 410, 104, 16]),
+    "s_plus_plus": (12780, 296, [124000, 2650, 50, 520, 152, 22]),
+}
+
+#: `VictoryFrame.PanelWidth`, `WinOverlay.StarsBottom`, `ReportGap`, `Tail`, `ButtonBlock`.
+VICTORY_W, STARS_BOTTOM, REPORT_GAP, TAIL, BUTTONS = 900.0, 402.0, 18.0, 40.0, 208.0
+#: `PublicProfileScreen.CardWidth` and `BuildShuffleCard`'s rows.
+PROFILE_W, PROFILE_TITLE, PROFILE_WAVE, PROFILE_FOOT = 980.0, 84.0, 60.0, 34.0
+
+
+def figure(kind, value, strings):
+    """`ShuffleStats.Say`: x12.4 under ten, whole above; a chance with its sign; a count."""
+    if kind == "times":
+        if value >= 1000:
+            n = "{:,}".format(value // 100)
+        else:
+            tenths = value // 10
+            n = str(tenths // 10) if tenths % 10 == 0 else "%d.%d" % (tenths // 10, tenths % 10)
+        return strings["ui.shuffle.times"].format(n)
+    if kind == "percent":
+        return strings["ui.shuffle.percent"].format(value)
+    return "{:,}".format(value)
+
+
+ARABIC_FONT = REPO / "Assets" / "Game" / "Fonts" / "GameFontArabic.ttf"
+
+
+def face(s, size):
+    """`GameText`: an Arabic string is shaped and reordered (`arabic_text.visual`, the mirror of
+    `ArabicText`) and drawn in `GameFontArabic`, the face's fallback (6d); anything else in GameFont."""
+    import arabic_text
+    if arabic_text.needs(s):
+        from PIL import ImageFont
+        return arabic_text.visual(s), ImageFont.truetype(str(ARABIC_FONT), int(size))
+    return s, K.font(size)
+
+
+def left_line(sheet, s, left, cy, room, size, floor, fill, what, floored, outline=3):
+    """A one-line `MiddleLeft` caption under `UIKit.Shrinkable` (its box is one line tall)."""
+    while size > floor and face(s, size)[1].getlength(face(s, size)[0]) > room:
+        size -= 1
+    shown, f = face(s, size)
+    draw = ImageDraw.Draw(sheet)
+    y = cy - size * 0.62
+    for dx in range(-outline, outline + 1):
+        for dy in range(-outline, outline + 1):
+            if dx or dy:
+                draw.text((left + dx, y + dy), shown, font=f, fill=(23, 36, 51, 240))
+    draw.text((left, y), shown, font=f, fill=fill)
+    if size <= floor or f.getlength(shown) > room:
+        floored.append("%s: %r at %d (floor %d)" % (what, s, size, floor))
+    return size
+
+
+def report_block(sheet, cx, top, grade, strings, note, note_ink, floored, art=True):
+    """`ShuffleReportView.Build` at `top` (pixels, the block's top edge), centred on `cx`."""
+    R = figures_of(REPORT)
+    points, wave, values = SAMPLES[grade]
+    ink, light = GRADE_INK[grade]
+
+    def at(x, y):
+        return cx + x, top - y          # layout y runs down as negative numbers
+
+    # `ShuffleReportView`: the letter and the score column centred as one pair by drawn widths
+    # (`ShuffleReportLayout.CentredPair`), `GroupGap` apart; the column as wide as its widest line.
+    letter = K.fit(K.load("shuffle_grade_" + grade)[0], (R["EmblemW"], R["EmblemH"]))
+    caption = strings["ui.shuffle.score"].upper()
+    score = "{:,}".format(points)
+
+    def drawn(s, size, outline):
+        shown, f = face(s, size)
+        return f.getlength(shown) + 2 * outline
+
+    column = min(R["ColumnW"], max(drawn(caption, int(R["CaptionSize"]), 3), drawn(score, int(R["ScoreSize"]), 4),
+                                   drawn(note, int(R["NoteSize"]), 3) if note else 0))
+    total = letter.width + R["GroupGap"] + column
+    lx = -total / 2 + letter.width / 2
+    left = cx - total / 2 + letter.width + R["GroupGap"]
+
+    ex, ey = at(lx, R["EmblemY"])
+    if light > 0:
+        K.paste(sheet, K.glow(int(R["EmblemW"] * 2.2), 2.1, ink, light), ex, ey)
+    K.paste(sheet, letter, ex, ey)
+
+    left_line(sheet, caption, left, at(0, R["CaptionY"])[1], R["ColumnW"], int(R["CaptionSize"]),
+              int(R["CaptionFloor"]), (255, 242, 219), "score caption", floored)
+    left_line(sheet, score, left, at(0, R["ScoreY"])[1], R["ColumnW"], int(R["ScoreSize"]),
+              int(R["ScoreFloor"]), K.CREAM, "score", floored, outline=4)
+    if note:
+        left_line(sheet, note, left, at(0, R["NoteY"])[1], R["ColumnW"], int(R["NoteSize"]),
+                  int(R["NoteFloor"]), note_ink, "note", floored)
+
+    n = len(STATS)
+    cols = int(R["Columns"])
+    rows = (n + cols - 1) // cols
+    for i, (sid, kind, pic) in enumerate(STATS):
+        row, col = divmod(i, cols)
+        in_row = n % cols if row == rows - 1 and n % cols else cols
+        span = in_row * R["TileW"] + (in_row - 1) * R["Gap"]
+        tx = -span / 2 + R["TileW"] / 2 + col * (R["TileW"] + R["Gap"])
+        ty = R["GridTop"] - R["TileH"] / 2 - row * (R["TileH"] + R["Gap"])
+        px, py = at(tx, ty)
+
+        K.paste(sheet, K.skin("Rank/kit_row", R["TileW"], R["TileH"]), px, py)
+        if art:
+            K.paste(sheet, K.fit(K.load(pic)[0], (R["IconSize"], R["IconSize"])), px + R["IconX"], py)
+        tl = px + R["TextX"] - R["TextW"] / 2
+        left_line(sheet, figure(kind, values[i], strings), tl, py - R["FigureY"], R["TextW"],
+                  int(R["FigureSize"]), int(R["FigureFloor"]), K.CREAM, "stat %s figure" % sid, floored)
+        left_line(sheet, strings["shuffle.stat." + sid], tl, py - R["LabelY"], R["TextW"],
+                  int(R["LabelSize"]), int(R["LabelFloor"]), (255, 242, 219), "stat %s label" % sid,
+                  floored, outline=2)
+
+    return -R["GridTop"] + rows * R["TileH"] + (rows - 1) * R["Gap"] + R["Tail"]
+
+
+def report_height():
+    R = figures_of(REPORT)
+    rows = (len(STATS) + int(R["Columns"]) - 1) // int(R["Columns"])
+    return -R["GridTop"] + rows * R["TileH"] + (rows - 1) * R["Gap"] + R["Tail"]
+
+
+def report(grade, lang, art=True):
+    """The victory window over the run line, and the profile's Shuffle card, side by side."""
+    strings = table(lang)
+    floored = []
+    points, wave, _ = SAMPLES[grade]
+    sheet = Image.new("RGBA", (W * 2, H), (14, 20, 40, 255))
+
+    # ------------------------------------------------ the victory panel (`WinOverlay`)
+    block_h = report_height()
+    y = STARS_BOTTOM + 60.0                                  # the run line, no route on this lane
+    report_top = y + REPORT_GAP
+    ph = report_top + block_h + TAIL + BUTTONS
+    top = (H - ph) / 2 + 60
+    cx = W / 2
+
+    K.paste(sheet, K.tint(K.skin("Win/window", VICTORY_W, ph), PANEL_INK), cx, top + ph / 2)
+    K.paste(sheet, K.fit(K.load("Win/crown")[0], (180, 162)), cx, top - CROWN_Y)
+    K.paste(sheet, K.fit(K.load("Win/banner")[0], (BANNER_W, BANNER_H)), cx, top - BANNER_Y)
+    stars = 3 if wave >= 24 else 2 if wave >= 12 else 1
+    for i in range(3):
+        star = K.fit(K.load("star_full" if i < stars else "star_empty")[0], (176, 176))
+        K.paste(sheet, star, cx + (i - 1) * 186, top + 268)
+    youcap = strings.get("ui.win.route_you", "You")
+    K.text(sheet, youcap, cx - 360 + 180 - 180, top + y - 60 + 22, 27, fill=(255, 242, 219), anchor="l")
+    K.text(sheet, strings["ui.board.row_wave"].format(wave), cx + 360, top + y - 60 + 22, 36, anchor="r")
+
+    is_new = grade in ("s_plus_plus", "c")
+    note = strings["ui.shuffle.new_best"].upper() if is_new else \
+        strings["ui.shuffle.best"].format(strings["shuffle.grade.s"], "{:,}".format(8240))
+    note_ink = K.GOLD if is_new else (255, 242, 219)
+    report_block(sheet, cx, top + report_top, grade, strings, note, note_ink, floored, art)
+
+    K.paste(sheet, K.skin("btn_green", 330, 140), cx + 180, top + ph - 120)
+    K.paste(sheet, K.skin("btn_blue", 330, 140), cx - 180, top + ph - 120)
+    print("  victory: window %.0fx%.0f, report %.0f tall" % (VICTORY_W, ph, block_h))
+
+    # ------------------------------------------------ the profile card (`PublicProfileScreen`)
+    ch = PROFILE_TITLE + PROFILE_WAVE + block_h + PROFILE_FOOT
+    ccx, ctop = W + W / 2, (H - ch) / 2
+    K.paste(sheet, K.skin("Hud/plate_blue", PROFILE_W, ch), ccx, ctop + ch / 2)
+    title = strings["track.shuffle.name"].upper()
+    left_line(sheet, title, ccx - PROFILE_W / 2 + 40, ctop + 44, PROFILE_W - 80, 30, 30, K.GOLD,
+              "profile title", [], outline=3)
+    wave_y = ctop + PROFILE_TITLE + PROFILE_WAVE / 2 - 14
+    K.paste(sheet, K.glow(150, 2.1, K.SUN, .26), ccx - PROFILE_W / 2 + 104, wave_y)
+    K.paste(sheet, K.fit(K.load("ic_shuffle")[0], (76, 76)), ccx - PROFILE_W / 2 + 104, wave_y)
+    left_line(sheet, strings["ui.endless.best"].format(wave + 6), ccx - PROFILE_W / 2 + 190, wave_y - 2,
+              560, 38, 22, K.CREAM, "profile wave", floored)
+    report_block(sheet, ccx, ctop + PROFILE_TITLE + PROFILE_WAVE, grade, strings,
+                 strings["ui.shuffle.run_wave"].format(wave), (255, 242, 219), floored, art)
+    print("  profile: card %.0fx%.0f" % (PROFILE_W, ch))
+
+    return sheet.convert("RGB"), floored
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--cards", default="heavy_bolts,chain_arc,second_wind")
@@ -404,7 +612,8 @@ def main():
     ap.add_argument("--wave", type=int, default=3)
     ap.add_argument("--marks", default="", help="card=secret+secret+e: a diamond per secret id, e for the evolution's")
     ap.add_argument("--unlock", default="", help="a bond id, or 'all': the unlock panel instead of a hand")
-    ap.add_argument("--measure", action="store_true", help="with --unlock all: every language, fail on a floor")
+    ap.add_argument("--measure", action="store_true", help="with --unlock all or --report all: every language, fail on a floor")
+    ap.add_argument("--report", default="", help="a grade id (d .. s_plus_plus), or 'all': the graded run (MODES.md 59o)")
     ap.add_argument("--out", type=Path, default=REPO / "Tools" / "out" / "shuffle_hand.png")
     args = ap.parse_args()
 
@@ -412,6 +621,28 @@ def main():
     for part in filter(None, args.held.split(",")):
         cid, n = part.split("=")
         held[cid] = int(n)
+
+    if args.report:
+        grades = GRADE_IDS if args.report == "all" else [args.report]
+        langs = sorted(p.stem for p in LOC.glob("*.json")) if args.measure else [args.lang]
+        floored = []
+        for lang in langs:
+            for grade in grades:
+                if grade not in GRADE_INK:
+                    sys.exit("'%s' is not a grade (%s)" % (grade, ", ".join(GRADE_IDS)))
+                print("%s %s" % (grade, lang))
+                out, bad = report(grade, lang, art=not args.measure)
+                floored += ["%s %s %s" % (lang, grade, b) for b in bad]
+        if args.measure:
+            if floored:
+                sys.exit("captions at their floor:\n  " + "\n  ".join(floored))
+            print("graded run: every caption of %d grade(s) in %d language(s) fits" % (len(grades), len(langs)))
+            return
+        target = args.out if args.out.name != "shuffle_hand.png" else args.out.with_name("shuffle_report.png")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        out.save(target)
+        print("  wrote %s  %dx%d  - look at it" % (target, out.width, out.height))
+        return
 
     if args.unlock:
         ids = sorted(bonds()) if args.unlock == "all" else [args.unlock]

@@ -8796,6 +8796,90 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "A cada 6 segundos, um prisma dispara 6 raios nos invasores mais fortes."
+    },
+    {
+      "key": "shuffle.grade.d",
+      "text": "D"
+    },
+    {
+      "key": "shuffle.grade.c",
+      "text": "C"
+    },
+    {
+      "key": "shuffle.grade.b",
+      "text": "B"
+    },
+    {
+      "key": "shuffle.grade.a",
+      "text": "A"
+    },
+    {
+      "key": "shuffle.grade.aa",
+      "text": "AA"
+    },
+    {
+      "key": "shuffle.grade.s",
+      "text": "S"
+    },
+    {
+      "key": "shuffle.grade.s_plus",
+      "text": "S+"
+    },
+    {
+      "key": "shuffle.grade.s_plus_plus",
+      "text": "S++"
+    },
+    {
+      "key": "shuffle.stat.damage",
+      "text": "Dano"
+    },
+    {
+      "key": "shuffle.stat.speed",
+      "text": "Vel. de ataque"
+    },
+    {
+      "key": "shuffle.stat.crit",
+      "text": "Chance crítica"
+    },
+    {
+      "key": "shuffle.stat.health",
+      "text": "Vida das torres"
+    },
+    {
+      "key": "shuffle.stat.cards",
+      "text": "Cartas"
+    },
+    {
+      "key": "shuffle.stat.bonds",
+      "text": "Desbloqueios"
+    },
+    {
+      "key": "ui.shuffle.score",
+      "text": "Pontuação"
+    },
+    {
+      "key": "ui.shuffle.new_best",
+      "text": "Novo recorde!"
+    },
+    {
+      "key": "ui.shuffle.best",
+      "text": "Recorde: {0} - {1}"
+    },
+    {
+      "key": "ui.shuffle.run_wave",
+      "text": "Onda alcançada: {0}"
+    },
+    {
+      "key": "ui.shuffle.percent",
+      "text": "{0}%"
+    },
+    {
+      "key": "ui.shuffle.best_run",
+      "text": "Melhor partida"
+    },
+    {
+      "key": "ui.shuffle.no_grade",
+      "text": "Termine uma partida para ganhar sua primeira nota."
     }
   ]
 }

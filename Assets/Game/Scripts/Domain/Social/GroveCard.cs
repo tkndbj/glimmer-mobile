@@ -117,6 +117,20 @@ namespace GlimmerGrove.Social
         /// </summary>
         public readonly int ShuffleWave;
 
+        /// <summary>
+        /// The keeper's best-graded Shuffle run - grade, build score, its wave and its build's
+        /// figures (MODES.md 59o) - or null for a keeper who has never banked one. What the
+        /// profile's Shuffle box draws under the best wave.
+        ///
+        /// <para>
+        /// <b><see cref="ShuffleWave"/>'s class of figure</b>: read off the save by the server
+        /// (<c>shuffleTop</c> in <c>functions/src/grove.ts</c>), which cannot recompute it and so
+        /// bounds every part of it, and worth nothing (invariants 13 and 19l). Absent on the wire
+        /// for a keeper with no graded run, so a card that never had one is unchanged.
+        /// </para>
+        /// </summary>
+        public readonly Shuffle.ShuffleRecord ShuffleTop;
+
         /// <summary>When the server last rebuilt this card, as a Unix timestamp.</summary>
         public readonly long PublishedUnix;
 
@@ -128,7 +142,8 @@ namespace GlimmerGrove.Social
                          IReadOnlyList<Wards.WardSlot> line = null,
                          IReadOnlyList<int> rungs = null,
                          string rungId = null,
-                         int shuffleWave = 0)
+                         int shuffleWave = 0,
+                         Shuffle.ShuffleRecord shuffleTop = null)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
@@ -140,6 +155,7 @@ namespace GlimmerGrove.Social
             ShuffleWave = shuffleWave < 0 ? 0
                         : shuffleWave > Shuffle.ShuffleLedger.MaxWave ? Shuffle.ShuffleLedger.MaxWave
                         : shuffleWave;
+            ShuffleTop = shuffleTop;
             PublishedUnix = publishedUnix < 0L ? 0L : publishedUnix;
 
             // The seats, in colour order, with a rung beside each. Two lists rather than a pair
@@ -235,7 +251,8 @@ namespace GlimmerGrove.Social
             // rung off the file instead, and the two answer identically for a settled save -
             // which is what stops a publish being asked for on every sync.
             return Build(ownerId, name, keeperLevel, EndlessLedger.Best, nowUnix,
-                         line, rungs, Ranks.RankLedger.Held?.Id, Shuffle.ShuffleLedger.Best);
+                         line, rungs, Ranks.RankLedger.Held?.Id, Shuffle.ShuffleLedger.Best,
+                         Shuffle.ShuffleLedger.Top);
         }
 
         /// <summary>
@@ -314,14 +331,15 @@ namespace GlimmerGrove.Social
                 new Ranks.SaveRankSource(save, Content.GameContent.Index, earnedLevel));
 
             return Build(ownerId, name, keeperLevel, EndlessLedger.BestIn(save), nowUnix,
-                         line, rungs, rung?.Id, Shuffle.ShuffleLedger.BestIn(save));
+                         line, rungs, rung?.Id, Shuffle.ShuffleLedger.BestIn(save),
+                         Shuffle.ShuffleLedger.TopIn(save));
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
         static GroveCard Build(string ownerId, string name, int keeperLevel, int bestWave,
                                long nowUnix,
                                IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs,
-                               string rungId, int shuffleWave)
+                               string rungId, int shuffleWave, Shuffle.ShuffleRecord shuffleTop)
             => new GroveCard(ownerId,
                              GroveNames.Public(name),
                              keeperLevel,
@@ -330,7 +348,8 @@ namespace GlimmerGrove.Social
                              line,
                              rungs,
                              rungId,
-                             shuffleWave);
+                             shuffleWave,
+                             shuffleTop);
 
         /// <summary>
         /// The seats a stored loadout names, and how far each has been taken.
@@ -422,6 +441,22 @@ namespace GlimmerGrove.Social
             // (a part written as nought would have called every card in the game changed at once).
             if (ShuffleWave > 0)
                 parts.Add("s:" + ShuffleWave.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            // The best-graded Shuffle run, whole, for the wave's reason and only once there is
+            // one (so this drop republishes nobody who never banked a graded run). Every part of
+            // the record, because a profile draws every part: a better run that kept the grade
+            // and moved the stats is still a change a visitor sees.
+            //
+            // **Spelt `g2` and not `g`, and the number is a deploy-order repair.** A part's
+            // spelling is what a device remembers as published, so a device that published a
+            // graded run to a server that did not yet write `shuffleTop` (the owner's own test
+            // devices, 2026-10-15, before `publishGrove` was deployed) remembered the run as on
+            // its card and never sent it again. Re-spelling the part makes every device holding
+            // a graded run publish once more, now to a server that writes it, and touches no other
+            // card. **Bump it again the day the server learns to publish a part of the record a
+            // shipped client already counts as published.**
+            if (ShuffleTop != null)
+                parts.Add("g2:" + ShuffleTop.Fingerprint());
 
             foreach (var seat in _line)
                 parts.Add("t:" + seat.Colour + "=" + seat.Ward + "/" + StarsOn(seat.Colour));

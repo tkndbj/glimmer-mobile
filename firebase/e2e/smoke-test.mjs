@@ -279,10 +279,24 @@ const save = {
     // name it in `hasOnly` or this whole write is refused (12a) - which is exactly what this
     // run proves against the deployed ruleset. The high row is the card's `shuffle`.
     shuffleBest: { arrayValue: { values: [
+      // Each row also carries its best-graded run (save v43, MODES.md 59o) inside the row, which
+      // the rules bound by count alone - so this write is also the proof it costs no rules release.
       { mapValue: { fields: { level: { stringValue: "s13_shuffle" },
-                              wave: { integerValue: "17" } } } },
+                              wave: { integerValue: "17" },
+                              top: { mapValue: { fields: {
+                                grade: { integerValue: "6" }, points: { integerValue: "9600" },
+                                wave: { integerValue: "15" },
+                                stats: { mapValue: { fields: {
+                                  damage: { integerValue: "2400" }, speed: { integerValue: "1350" },
+                                  "Bad Id": { integerValue: "5" },
+                                } } },
+                              } } } } } },
       { mapValue: { fields: { level: { stringValue: "s13_lower" },
-                              wave: { integerValue: "6" } } } },
+                              wave: { integerValue: "6" },
+                              top: { mapValue: { fields: {
+                                grade: { integerValue: "2" }, points: { integerValue: "900" },
+                                wave: { integerValue: "6" },
+                              } } } } } },
     ] } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
@@ -1001,6 +1015,18 @@ check(card?.fields?.league === undefined,
 check(Number(card?.fields?.shuffle?.integerValue ?? 0) === 17,
       "the card carries the best Shuffle wave, apart from the endless one",
       JSON.stringify(card?.fields?.shuffle));
+
+// The best-graded run (MODES.md 59o): the S+ row's, never the B row's, its malformed stat id
+// dropped. A `publishGrove` from before the graded run writes no `shuffleTop` at all, which is
+// what makes this check differential.
+const graded = card?.fields?.shuffleTop?.mapValue?.fields;
+const gradedStats = graded?.stats?.mapValue?.fields ?? {};
+check(Number(graded?.grade?.integerValue ?? -1) === 6 && Number(graded?.points?.integerValue ?? 0) === 9600
+        && Number(graded?.wave?.integerValue ?? 0) === 15,
+      "the card carries the best-graded Shuffle run", JSON.stringify(card?.fields?.shuffleTop));
+check(Number(gradedStats.damage?.integerValue ?? 0) === 2400 && Number(gradedStats.speed?.integerValue ?? 0) === 1350
+        && !("Bad Id" in gradedStats),
+      "with its stats, and a malformed stat id dropped", JSON.stringify(gradedStats));
 
 // **The boards are live, and this is the only place that can prove the deployed one is.** The
 // same call that wrote the card merges its row into `leaderboards/endless` — no rebuild, no

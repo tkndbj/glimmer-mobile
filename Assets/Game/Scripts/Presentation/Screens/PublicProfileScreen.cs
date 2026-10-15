@@ -144,6 +144,7 @@ namespace GlimmerGrove
 
             _busy?.Done();
             PaintLine();
+            _shuffleReport?.Repaint();
         });
 
         /// <summary>
@@ -157,13 +158,17 @@ namespace GlimmerGrove
         async Task LoadLineAsync(CancellationToken cancellation)
         {
             var line = _card.Line(WardLedger.Catalog);
-            var wanted = new List<AssetRequest>(WardLine.Colours.Length);
+            var wanted = new List<AssetRequest>(WardLine.Colours.Length + Shuffle.ShuffleStats.All.Length);
 
             for (int i = 0; i < WardLine.Colours.Length; i++)
             {
                 var model = line.At(i);
                 if (model != null) wanted.Add(AssetRequest.Sprite(AssetManifest.WardArt(model, i)));
             }
+
+            // The pictures the Shuffle box's stat tiles wear (the cards that move each figure),
+            // under this screen's scope rather than the lane's, which is not held here (7b).
+            wanted.AddRange(ShuffleReportView.Art(_card.ShuffleTop));
 
             _turrets = _turrets ?? AssetLibrary.Hold(TurretScope);
             await _turrets.LoadAsync(wanted, null, cancellation);
@@ -196,6 +201,7 @@ namespace GlimmerGrove
             }
 
             _bodies.Clear();
+            _shuffleReport = null;
 
             _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, 24f);
@@ -218,6 +224,7 @@ namespace GlimmerGrove
             {
                 BuildKeeperCard();
                 BuildWatchCard();
+                BuildShuffleCard();
                 BuildLineCard();
 
                 // **The grove card is held**, with the feature it was a door into. It carried
@@ -249,6 +256,7 @@ namespace GlimmerGrove
             PaintStatus();
             PaintReport();
             PaintLine();
+            _shuffleReport?.Repaint();
         }
 
         /// <summary>A card at the cursor, which then moves below it. <see cref="ProfileScreen.Section"/>.</summary>
@@ -392,6 +400,62 @@ namespace GlimmerGrove
                              new Vector2(0f, .5f), new Vector2(WatchTextX, -44f), 3f, 0f), 18);
         }
 
+
+        // ------------------------------------------------------------- the Shuffle lane
+        /// <summary>The Shuffle box's graded run, repainted when the scope lands. Null without one.</summary>
+        ShuffleReportView _shuffleReport;
+
+        /// <summary>
+        /// How far this keeper has taken the Shuffle lane, and their best-graded run there
+        /// (MODES.md 59o): the best wave, as the Endless Watch box above says its own, then the
+        /// grade, build score and stats of the best run - the same block the victory panel drew
+        /// when it was banked (<see cref="ShuffleReportView"/>), with the wave that run reached
+        /// under the score.
+        ///
+        /// <para>
+        /// <b>Drawn for everybody, played or not</b>, exactly as the Endless Watch box is: a keeper
+        /// who has never run the lane reads "No run yet" rather than missing a box, so every
+        /// profile has the same shape. A best wave with no graded run (a run that took no card,
+        /// or one banked before grades existed) draws the wave alone.
+        /// </para>
+        /// </summary>
+        void BuildShuffleCard()
+        {
+            const float TextLeft = 190f, TextW = 560f, TextX = TextLeft + TextW * .5f;
+            const float TitleRoom = 84f, WaveRow = 60f, Foot = 34f, Plain = 214f;
+
+            var top = _card.ShuffleTop;
+            float height = top != null ? TitleRoom + WaveRow + ShuffleReportView.HeightFor(top) + Foot : Plain;
+
+            var card = Section("Shuffle", height, 2);
+            CardTitle(card, "track.shuffle.name");
+
+            bool played = _card.ShuffleWave > 0;
+
+            // The wave line sits where the Endless Watch box puts its own on a plain card, and
+            // just under the title on a card carrying a report, measured down from the top edge.
+            float waveY = top != null ? height * .5f - TitleRoom - WaveRow * .5f + 14f : -14f;
+
+            var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_shuffle"), Color.white,
+                                  new Vector2(76f, 76f), new Vector2(0f, .5f),
+                                  new Vector2(104f, waveY));
+            glyph.preserveAspect = true;
+            if (played) UIKit.Halo(glyph.transform, Pal.Sun, 150f, .26f);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Wave", card,
+                             played ? Loc.Format("ui.endless.best", _card.ShuffleWave)
+                                    : Loc.Get("ui.endless.unplayed"),
+                             38, played ? Pal.Cream : new Color(1f, .96f, .88f, .55f),
+                             TextAnchor.MiddleLeft, new Vector2(TextW, 50f),
+                             new Vector2(0f, .5f), new Vector2(TextX, waveY + 2f), 3f, 3f), 22);
+
+            if (top == null) return;
+
+            _shuffleReport = ShuffleReportView.Build(card, -(TitleRoom + WaveRow), top,
+                                              Loc.Format("ui.shuffle.run_wave", top.Wave),
+                                              new Color(1f, .95f, .86f, .7f), hidden: false);
+        }
 
         // ---------------------------------------------------------------- the line
         /// <summary>

@@ -13,7 +13,7 @@ namespace GlimmerGrove.Shuffle
     /// which no other event knows. Card ids are permanent (<c>ShuffleCard.Id</c>), so a
     /// dashboard reads the same card for the life of the lane. <b>The tuning's revision rides
     /// along</b> (MODES.md 59l; nought is the build's own figures), so a dashboard can tell a run
-    /// played before a retune from one played after it.
+    /// played before a retune from one played after it, and so do the run's grade and score (59o).
     /// </summary>
     public static class ShuffleAnalytics
     {
@@ -50,7 +50,12 @@ namespace GlimmerGrove.Shuffle
                 "build", held.ToString(),
                 "bonds", bonds.ToString(),
                 "seed", (long)run.Seed,
-                "tuning", run.Tuning.Revision);
+                "tuning", run.Tuning.Revision,
+
+                // The grade and score (MODES.md 59o), so the floors calibrated on bots
+                // (`ShuffleGradeTests`) can be read against what players actually reach.
+                "grade", ShuffleGrades.Id(ShuffleGrades.Of(run.Build)),
+                "score", ShuffleGrades.Score(run.Build));
         }
     }
 }

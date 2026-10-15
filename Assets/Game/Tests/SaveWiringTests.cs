@@ -358,6 +358,10 @@ namespace GlimmerGrove.Tests
                 // A level record's reader clamps both to what a run can produce (three stars,
                 // a percentile band), and no writer produces anything outside them.
                 case "levels[].stars": return 3;
+
+                // A graded Shuffle run's ordinal is bounded (ShuffleGrades.MaxOrdinal) and a stat
+                // id must be shaped like one (ShuffleStats.WellFormed); every writer stays inside.
+                case "shuffleBest[].top.grade": return 6;
                 case "levels[].bestRank": return 40;
 
                 // A streak's reader pulls a collected night back to the last day played

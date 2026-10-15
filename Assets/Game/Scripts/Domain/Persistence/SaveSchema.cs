@@ -645,7 +645,13 @@ namespace GlimmerGrove.Persistence
         ///      worse one back: a climbing count needs a <c>max</c> join of its own (11b). A new
         ///      top-level key, so the whole of 12a: the rules release goes out before the client.
         ///      Absent is empty, so no migration (the lane shipped in no store build before it).
-        public const int Version = 42;
+        /// v43: the best-graded Shuffle run per level (<see cref="ShuffleBestDto.top"/>,
+        ///      <c>Shuffle.ShuffleRecord</c>, MODES.md 59o): grade, score, wave and the build's
+        ///      figures, joined as a whole by a total order (11b). Inside the existing
+        ///      <c>shuffleBest</c> rows, which the rules bound by count alone, so no rules release
+        ///      (12a); absent reads as no run, so no migration. The version moves because a nested
+        ///      field changes every checksum (12).
+        public const int Version = 43;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1955,6 +1961,40 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>The furthest a single run has ever got. Only ever rises. The board's number.</summary>
         public int wave;
+
+        /// <summary>
+        /// The best-graded run on this level (MODES.md 59o), added in v43: grade, score, how far it
+        /// got and its build's figures. Joined by <c>ShuffleRecord.Better</c> - a total order, so
+        /// the merge is a <c>max</c> (11b) - and never torn: a run survives whole or not at all.
+        /// No points is "none" (what <c>JsonUtility</c> reads an absent object back as). Inside the
+        /// existing row, so no rules release (12a). Not always the run that set <see cref="wave"/>.
+        /// </summary>
+        public ShuffleRunDto top;
+    }
+
+    /// <summary>One graded Shuffle run, as a row carries it. See <c>Shuffle.ShuffleRecord</c>.</summary>
+    [Serializable]
+    public sealed class ShuffleRunDto
+    {
+        /// <summary>The grade's permanent ordinal (<c>ShuffleGrade</c>), as earned. Never re-derived.</summary>
+        public int grade;
+
+        /// <summary>The build's score. Nought means no run.</summary>
+        public int points;
+
+        /// <summary>The waves this run saw off.</summary>
+        public int wave;
+
+        /// <summary>Its build's figures, one row per stat id, sorted by id. Unknown ids are carried.</summary>
+        public ShuffleStatDto[] stats;
+    }
+
+    /// <summary>One figure of a graded run. The id is permanent (<c>Shuffle.ShuffleStats</c>).</summary>
+    [Serializable]
+    public sealed class ShuffleStatDto
+    {
+        public string id;
+        public int value;
     }
 
     /// <summary>

@@ -123,6 +123,18 @@ namespace GlimmerGrove
             public readonly bool Shelf;
 
             /// <summary>
+            /// Whether the hub draws the lane's best-graded run between the medal and the key
+            /// (<see cref="ShuffleHubStrip"/>, MODES.md 59o) - the Shuffle lane's, in a taller slot
+            /// that brings BATTLE down (<see cref="EndlessHubLayout.SlotHeight"/>).
+            /// </summary>
+            public bool Stats => _top != null;
+
+            /// <summary>The level's best-graded run, or null for none or a lane that grades nothing.</summary>
+            public GlimmerGrove.Shuffle.ShuffleRecord TopOf(LevelDefinition level) => level != null && _top != null ? _top(level) : null;
+
+            readonly Func<LevelDefinition, GlimmerGrove.Shuffle.ShuffleRecord> _top;
+
+            /// <summary>
             /// The picture standing where the rank badge stands, or null for the rank itself.
             /// The Shuffle lane's hero is its own crest (the owner's call, 2026-10-09): a rank
             /// is nothing a dealt hand says anything about, and the badge was inherited
@@ -137,8 +149,10 @@ namespace GlimmerGrove
             readonly Func<LevelDefinition, int> _best;
 
             HubLane(GameTrack track, string wall, string[] marks, bool checkpoints, bool standing,
-                    bool shelf, Func<string, string> crest, Func<LevelDefinition, int> best)
+                    bool shelf, Func<string, string> crest, Func<LevelDefinition, int> best,
+                    Func<LevelDefinition, GlimmerGrove.Shuffle.ShuffleRecord> top = null)
             {
+                _top = top;
                 Track = track;
                 Wall = wall;
                 Marks = marks;
@@ -159,7 +173,8 @@ namespace GlimmerGrove
             public static readonly HubLane Shuffle = new HubLane(
                 GameTrack.Shuffle, Scenery.WallShuffle, ShuffleMarks, false, false, true,
                 AssetPipeline.AssetManifest.ShuffleCrest,
-                level => GlimmerGrove.Shuffle.ShuffleLedger.BestFor(level.Id));
+                level => GlimmerGrove.Shuffle.ShuffleLedger.BestFor(level.Id),
+                level => GlimmerGrove.Shuffle.ShuffleLedger.TopFor(level.Id));
 
             /// <summary>The row for a lane. A lane this file has no row for draws as the Infinite one.</summary>
             public static HubLane Of(GameTrack lane) => lane.Dealt ? Shuffle : Infinite;
@@ -235,19 +250,30 @@ namespace GlimmerGrove
             /// <summary>Never null: an open key carries no wall, and none is the empty string.</summary>
             public readonly string Wall;
 
-            public Reading(int best, bool unlocked, string wall)
+            /// <summary>
+            /// The best-graded run the strip draws (<see cref="GlimmerGrove.Shuffle.ShuffleRecord.Fingerprint"/>), empty
+            /// for none: the fourth fact, so a better run synced from another device redraws it.
+            /// </summary>
+            public readonly string Run;
+
+            public Reading(int best, bool unlocked, string wall, string run = null)
             {
                 Best = best;
                 Unlocked = unlocked;
                 Wall = wall ?? string.Empty;
+                Run = run ?? string.Empty;
             }
 
             /// <summary>What the column would draw for this level right now, on this lane.</summary>
             public static Reading Of(GameTrack lane, LevelDefinition level, bool unlocked, string wall)
-                => new Reading(HubLane.Of(lane).BestOf(level), unlocked, wall);
+            {
+                var hub = HubLane.Of(lane);
+                return new Reading(hub.BestOf(level), unlocked, wall, hub.TopOf(level)?.Fingerprint());
+            }
 
             public bool Equals(Reading other)
                 => Best == other.Best && Unlocked == other.Unlocked
+                && string.Equals(Run ?? string.Empty, other.Run ?? string.Empty, StringComparison.Ordinal)
                 && string.Equals(Wall ?? string.Empty, other.Wall ?? string.Empty, StringComparison.Ordinal);
 
             public override bool Equals(object obj) => obj is Reading r && Equals(r);
@@ -258,6 +284,7 @@ namespace GlimmerGrove
                 {
                     int h = Best;
                     h = h * 31 + (Unlocked ? 1 : 0);
+                    h = h * 31 + StringComparer.Ordinal.GetHashCode(Run ?? string.Empty);
                     return h * 31 + StringComparer.Ordinal.GetHashCode(Wall ?? string.Empty);
                 }
             }
@@ -405,8 +432,15 @@ namespace GlimmerGrove
 
             var hub = HubLane.Of(lane);
 
+            // The slot between the medal and the key, and where the column hangs: a lane drawing
+            // its best run has the taller slot and hangs lower (`EndlessHubLayout.SlotHeight`,
+            // `LiftFor`); every other lane reads the numbers it always did.
+            float slot = EndlessHubLayout.SlotHeight(hub.Stats);
+            float lift = EndlessHubLayout.LiftFor(hub.Stats);
+
             float band = Band(headerFoot, hub.Shelf);
-            float top = headerFoot + EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band);
+            float scale = EndlessHubLayout.ScaleIn(band, slot);
+            float top = headerFoot + EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band, slot, lift);
 
             var host = UIKit.Node("Hub", safe);
 
@@ -417,21 +451,21 @@ namespace GlimmerGrove
             var column = UIKit.Node("Column", host);
             column.anchorMin = column.anchorMax = new Vector2(.5f, 1f);
             column.pivot = new Vector2(.5f, 1f);
-            column.sizeDelta = new Vector2(ChapterMap.Width, EndlessHubLayout.Height);
+            column.sizeDelta = new Vector2(ChapterMap.Width, EndlessHubLayout.HeightFor(slot));
             column.anchoredPosition = new Vector2(0f, -top);
-            column.localScale = Vector3.one * EndlessHubLayout.ScaleIn(band);
+            column.localScale = Vector3.one * scale;
 
             // The air between the header's foot and the column's top, in the column's own
             // units, which is what the crest is centred across (`EndlessHubLayout.CrestRoom`).
-            float air = (EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band))
-                      / EndlessHubLayout.ScaleIn(band);
+            float air = (EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band, slot, lift)) / scale;
 
             if (hub.Crest != null) Crest(column, hub, air, arriving);
             else Rank(column, arriving);
             Lines(column, hub, 0f, arriving);
             Record(column, owner, hub, level, arriving);
             if (hub.Checkpoints) Checkpoint(column, level, arriving);
-            Battle(column, unlocked, wall, open, 0f, arriving);
+            if (hub.Stats) ShuffleHubStrip.Build(column, EndlessHubLayout.SlotCentre(slot), hub.TopOf(level), arriving);
+            Battle(column, unlocked, wall, open, EndlessHubLayout.ButtonCentreFor(slot), arriving);
 
             return host;
         }
@@ -981,7 +1015,7 @@ namespace GlimmerGrove
         /// (invariant 16o).
         /// </para>
         /// </summary>
-        static void Battle(RectTransform host, bool unlocked, string wall, Action open, float top,
+        static void Battle(RectTransform host, bool unlocked, string wall, Action open, float centre,
                            bool arriving)
         {
             // **The wall's own sentence is set to fit rather than abbreviated**, because what
@@ -998,7 +1032,7 @@ namespace GlimmerGrove
                                         new Vector2(EndlessHubLayout.ButtonWidth,
                                                     EndlessHubLayout.ButtonHeight),
                                         new Vector2(.5f, 1f),
-                                        new Vector2(0f, -(top + EndlessHubLayout.ButtonCentre)),
+                                        new Vector2(0f, -centre),
                                         () => open?.Invoke(),
                                         unlocked ? "ic_battle" : "ic_padlock");
 

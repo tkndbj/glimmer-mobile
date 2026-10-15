@@ -8796,6 +8796,90 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "كل 6 ثوان، يطلق منشور 6 أشعة على أقوى المهاجمين."
+    },
+    {
+      "key": "shuffle.grade.d",
+      "text": "D"
+    },
+    {
+      "key": "shuffle.grade.c",
+      "text": "C"
+    },
+    {
+      "key": "shuffle.grade.b",
+      "text": "B"
+    },
+    {
+      "key": "shuffle.grade.a",
+      "text": "A"
+    },
+    {
+      "key": "shuffle.grade.aa",
+      "text": "AA"
+    },
+    {
+      "key": "shuffle.grade.s",
+      "text": "S"
+    },
+    {
+      "key": "shuffle.grade.s_plus",
+      "text": "S+"
+    },
+    {
+      "key": "shuffle.grade.s_plus_plus",
+      "text": "S++"
+    },
+    {
+      "key": "shuffle.stat.damage",
+      "text": "الضرر"
+    },
+    {
+      "key": "shuffle.stat.speed",
+      "text": "سرعة الهجوم"
+    },
+    {
+      "key": "shuffle.stat.crit",
+      "text": "الضربة الحرجة"
+    },
+    {
+      "key": "shuffle.stat.health",
+      "text": "صحة الأبراج"
+    },
+    {
+      "key": "shuffle.stat.cards",
+      "text": "البطاقات"
+    },
+    {
+      "key": "shuffle.stat.bonds",
+      "text": "ما تم فتحه"
+    },
+    {
+      "key": "ui.shuffle.score",
+      "text": "النقاط"
+    },
+    {
+      "key": "ui.shuffle.new_best",
+      "text": "رقم قياسي جديد!"
+    },
+    {
+      "key": "ui.shuffle.best",
+      "text": "الأفضل: {0} - {1}"
+    },
+    {
+      "key": "ui.shuffle.run_wave",
+      "text": "الموجة المبلوغة: {0}"
+    },
+    {
+      "key": "ui.shuffle.percent",
+      "text": "{0}%"
+    },
+    {
+      "key": "ui.shuffle.best_run",
+      "text": "أفضل جولة"
+    },
+    {
+      "key": "ui.shuffle.no_grade",
+      "text": "أنه جولة لتحصل على أول تقدير."
     }
   ]
 }

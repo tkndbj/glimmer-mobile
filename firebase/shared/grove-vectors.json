@@ -11529,5 +11529,2312 @@
       },
       "score": 389999710
     }
+  ],
+  "_shuffleTopComment": [
+    "A keeper's best-graded Shuffle run, read off a save twice and pinned here (MODES.md 59o).",
+    "",
+    "`shuffleTopCases` is the record a save's `shuffleBest` rows carry under `top`: the rows with",
+    "a level and a wave above nought, the first `maxRows` of them, ids no longer than `maxLevelId`;",
+    "each `top` read as {grade, points, wave, stats} with no points meaning no run, every figure",
+    "taken toward nought and bounded (a grade to `maxGrade`, carried past the grades a build knows), stat ids lower-case letters, digits and underscores no longer",
+    "than `maxStatId`, values within `maxStat`, and only the first `maxStats` ids in id order kept;",
+    "the best chosen by grade, then points, then wave, then the stats in id order. It runs in C#",
+    "(`ShuffleLedger.TopIn` over `FirestoreSaveMapper`) to decide whether a card owes a publish,",
+    "and in functions/src/grove.ts (`shuffleTop`) to build the card a stranger reads.",
+    "",
+    "Each case is a save as the wire carries it and the record both sides must produce - `null`",
+    "for none. Written by Tools/make_shuffle_top_vectors.py - a third implementation, so a",
+    "passing case has been agreed by three readers that never read each other. Do not hand-edit."
+  ],
+  "shuffleTopConstants": {
+    "maxRows": 64,
+    "maxLevelId": 48,
+    "maxGrade": 63,
+    "maxPoints": 1000000,
+    "maxWave": 9999,
+    "maxStats": 16,
+    "maxStat": 100000000,
+    "maxStatId": 24
+  },
+  "shuffleTopCases": [
+    {
+      "name": "no rows is no run",
+      "save": {
+        "shuffleBest": []
+      },
+      "top": null
+    },
+    {
+      "name": "a row with no top is no run",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 12
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "a top with no points is no run",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 12,
+            "top": {
+              "grade": 5,
+              "points": 0,
+              "wave": 12,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "negative points are no run",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 12,
+            "top": {
+              "grade": 5,
+              "points": -40,
+              "wave": 12,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "a top that is not a map is no run",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 12,
+            "top": "S++"
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "one run is read whole",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 61,
+            "top": {
+              "grade": 3,
+              "points": 2400,
+              "wave": 61,
+              "stats": {
+                "damage": 1240,
+                "speed": 880,
+                "crit": 35,
+                "health": 150,
+                "cards": 30,
+                "bonds": 3
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 3,
+        "points": 2400,
+        "wave": 61,
+        "stats": {
+          "bonds": 3,
+          "cards": 30,
+          "crit": 35,
+          "damage": 1240,
+          "health": 150,
+          "speed": 880
+        }
+      }
+    },
+    {
+      "name": "a run with no stats is still a run",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 9,
+            "top": {
+              "grade": 1,
+              "points": 300,
+              "wave": 9
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 1,
+        "points": 300,
+        "wave": 9,
+        "stats": {}
+      }
+    },
+    {
+      "name": "a row whose wave is nought is not read",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": 0,
+            "top": {
+              "grade": 3,
+              "points": 2400,
+              "wave": 61,
+              "stats": {
+                "damage": 1240,
+                "speed": 880,
+                "crit": 35,
+                "health": 150,
+                "cards": 30,
+                "bonds": 3
+              }
+            }
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "a row with no level is not read",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "",
+            "wave": 61,
+            "top": {
+              "grade": 3,
+              "points": 2400,
+              "wave": 61,
+              "stats": {
+                "damage": 1240,
+                "speed": 880,
+                "crit": 35,
+                "health": 150,
+                "cards": 30,
+                "bonds": 3
+              }
+            }
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "a level id no catalog could ship is not read",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "wave": 61,
+            "top": {
+              "grade": 3,
+              "points": 2400,
+              "wave": 61,
+              "stats": {
+                "damage": 1240,
+                "speed": 880,
+                "crit": 35,
+                "health": 150,
+                "cards": 30,
+                "bonds": 3
+              }
+            }
+          }
+        ]
+      },
+      "top": null
+    },
+    {
+      "name": "a whole-number string wave is a wave",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "s13_shuffle",
+            "wave": "61",
+            "top": {
+              "grade": 3,
+              "points": 2400,
+              "wave": 61,
+              "stats": {
+                "damage": 1240,
+                "speed": 880,
+                "crit": 35,
+                "health": 150,
+                "cards": 30,
+                "bonds": 3
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 3,
+        "points": 2400,
+        "wave": 61,
+        "stats": {
+          "bonds": 3,
+          "cards": 30,
+          "crit": 35,
+          "damage": 1240,
+          "health": 150,
+          "speed": 880
+        }
+      }
+    },
+    {
+      "name": "a grade a newer build appended is carried as written",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 40,
+              "points": 100,
+              "wave": 5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 40,
+        "points": 100,
+        "wave": 5,
+        "stats": {}
+      }
+    },
+    {
+      "name": "an absurd grade is bounded",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 900,
+              "points": 100,
+              "wave": 5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 63,
+        "points": 100,
+        "wave": 5,
+        "stats": {}
+      }
+    },
+    {
+      "name": "a negative grade reads as D",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": -3,
+              "points": 100,
+              "wave": 5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 0,
+        "points": 100,
+        "wave": 5,
+        "stats": {}
+      }
+    },
+    {
+      "name": "points are bounded",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 1000000000000,
+              "wave": 5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 7,
+        "points": 1000000,
+        "wave": 5,
+        "stats": {}
+      }
+    },
+    {
+      "name": "a fractional figure is taken toward nought",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 4.9,
+              "points": 999.99,
+              "wave": 5.5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 4,
+        "points": 999,
+        "wave": 5,
+        "stats": {}
+      }
+    },
+    {
+      "name": "a wave is bounded",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 2,
+              "points": 600,
+              "wave": 1000000000,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 2,
+        "points": 600,
+        "wave": 9999,
+        "stats": {}
+      }
+    },
+    {
+      "name": "a negative wave reads as nought",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 2,
+              "points": 600,
+              "wave": -4,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 2,
+        "points": 600,
+        "wave": 0,
+        "stats": {}
+      }
+    },
+    {
+      "name": "a figure that is not a number is nought",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": "7",
+              "points": 500,
+              "wave": true,
+              "stats": {
+                "damage": "900",
+                "speed": 300
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 0,
+        "points": 500,
+        "wave": 0,
+        "stats": {
+          "damage": 0,
+          "speed": 300
+        }
+      }
+    },
+    {
+      "name": "stats are bounded, malformed ids dropped, unknown ids carried",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 2,
+              "points": 600,
+              "wave": 5,
+              "stats": {
+                "damage": -50,
+                "speed": 1000000000000,
+                "future_stat": 44,
+                "Bad": 3,
+                "with space": 1,
+                "xxxxxxxxxxxxxxxxxxxxxxxxx": 9,
+                "ok_9": 2
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 2,
+        "points": 600,
+        "wave": 5,
+        "stats": {
+          "damage": 0,
+          "future_stat": 44,
+          "ok_9": 2,
+          "speed": 100000000
+        }
+      }
+    },
+    {
+      "name": "only the first sixteen stat ids are kept, in id order",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 5,
+            "top": {
+              "grade": 2,
+              "points": 600,
+              "wave": 5,
+              "stats": {
+                "s30": 30,
+                "s29": 29,
+                "s28": 28,
+                "s27": 27,
+                "s26": 26,
+                "s25": 25,
+                "s24": 24,
+                "s23": 23,
+                "s22": 22,
+                "s21": 21,
+                "s20": 20,
+                "s19": 19,
+                "s18": 18,
+                "s17": 17,
+                "s16": 16,
+                "s15": 15,
+                "s14": 14,
+                "s13": 13,
+                "s12": 12,
+                "s11": 11,
+                "s10": 10,
+                "s09": 9,
+                "s08": 8,
+                "s07": 7,
+                "s06": 6,
+                "s05": 5,
+                "s04": 4,
+                "s03": 3,
+                "s02": 2,
+                "s01": 1
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 2,
+        "points": 600,
+        "wave": 5,
+        "stats": {
+          "s01": 1,
+          "s02": 2,
+          "s03": 3,
+          "s04": 4,
+          "s05": 5,
+          "s06": 6,
+          "s07": 7,
+          "s08": 8,
+          "s09": 9,
+          "s10": 10,
+          "s11": 11,
+          "s12": 12,
+          "s13": 13,
+          "s14": 14,
+          "s15": 15,
+          "s16": 16
+        }
+      }
+    },
+    {
+      "name": "the higher grade wins over more points",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 80,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 80,
+              "stats": {}
+            }
+          },
+          {
+            "level": "b",
+            "wave": 90,
+            "top": {
+              "grade": 5,
+              "points": 7600,
+              "wave": 90,
+              "stats": {
+                "damage": 1
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 5,
+        "points": 7600,
+        "wave": 90,
+        "stats": {
+          "damage": 1
+        }
+      }
+    },
+    {
+      "name": "on one grade the more points win",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 80,
+            "top": {
+              "grade": 4,
+              "points": 4700,
+              "wave": 70,
+              "stats": {}
+            }
+          },
+          {
+            "level": "b",
+            "wave": 90,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 90,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 4,
+        "points": 4700,
+        "wave": 70,
+        "stats": {}
+      }
+    },
+    {
+      "name": "on one score the further wave wins",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 80,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 70,
+              "stats": {}
+            }
+          },
+          {
+            "level": "b",
+            "wave": 90,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 71,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 4,
+        "points": 4600,
+        "wave": 71,
+        "stats": {}
+      }
+    },
+    {
+      "name": "on everything else the stats decide",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 80,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 70,
+              "stats": {
+                "damage": 500
+              }
+            }
+          },
+          {
+            "level": "b",
+            "wave": 90,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 70,
+              "stats": {
+                "damage": 510
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 4,
+        "points": 4600,
+        "wave": 70,
+        "stats": {
+          "damage": 510
+        }
+      }
+    },
+    {
+      "name": "a record carrying a stat the other lacks wins the tie",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 80,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 70,
+              "stats": {
+                "damage": 500,
+                "speed": 1
+              }
+            }
+          },
+          {
+            "level": "b",
+            "wave": 90,
+            "top": {
+              "grade": 4,
+              "points": 4600,
+              "wave": 70,
+              "stats": {
+                "apex": 1,
+                "damage": 500
+              }
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 4,
+        "points": 4600,
+        "wave": 70,
+        "stats": {
+          "apex": 1,
+          "damage": 500
+        }
+      }
+    },
+    {
+      "name": "an invalid row cannot win",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "a",
+            "wave": 0,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 300,
+              "stats": {}
+            }
+          },
+          {
+            "level": "b",
+            "wave": 9,
+            "top": {
+              "grade": 1,
+              "points": 300,
+              "wave": 9,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 1,
+        "points": 300,
+        "wave": 9,
+        "stats": {}
+      }
+    },
+    {
+      "name": "no more rows are read than the rules allow",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "l000",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 100,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l001",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 101,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l002",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 102,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l003",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 103,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l004",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 104,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l005",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 105,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l006",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 106,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l007",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 107,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l008",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 108,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l009",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 109,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l010",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 110,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l011",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 111,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l012",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 112,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l013",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 113,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l014",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 114,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l015",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 115,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l016",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 116,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l017",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 117,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l018",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 118,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l019",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 119,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l020",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 120,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l021",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 121,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l022",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 122,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l023",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 123,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l024",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 124,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l025",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 125,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l026",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 126,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l027",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 127,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l028",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 128,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l029",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 129,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l030",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 130,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l031",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 131,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l032",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 132,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l033",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 133,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l034",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 134,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l035",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 135,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l036",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 136,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l037",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 137,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l038",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 138,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l039",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 139,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l040",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 140,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l041",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 141,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l042",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 142,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l043",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 143,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l044",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 144,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l045",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 145,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l046",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 146,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l047",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 147,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l048",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 148,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l049",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 149,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l050",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 150,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l051",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 151,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l052",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 152,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l053",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 153,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l054",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 154,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l055",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 155,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l056",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 156,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l057",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 157,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l058",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 158,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l059",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 159,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l060",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 160,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l061",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 161,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l062",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 162,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l063",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 163,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l064",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 164,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l065",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 165,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l066",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 166,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l067",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 167,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l068",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 168,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l069",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 169,
+              "wave": 5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 1,
+        "points": 163,
+        "wave": 5,
+        "stats": {}
+      }
+    },
+    {
+      "name": "the walk counts readable rows, not raw ones",
+      "save": {
+        "shuffleBest": [
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "",
+            "wave": 5,
+            "top": {
+              "grade": 7,
+              "points": 99999,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l000",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 100,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l001",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 101,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l002",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 102,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l003",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 103,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l004",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 104,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l005",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 105,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l006",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 106,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l007",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 107,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l008",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 108,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l009",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 109,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l010",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 110,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l011",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 111,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l012",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 112,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l013",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 113,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l014",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 114,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l015",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 115,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l016",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 116,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l017",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 117,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l018",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 118,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l019",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 119,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l020",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 120,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l021",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 121,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l022",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 122,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l023",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 123,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l024",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 124,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l025",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 125,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l026",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 126,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l027",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 127,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l028",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 128,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l029",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 129,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l030",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 130,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l031",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 131,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l032",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 132,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l033",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 133,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l034",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 134,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l035",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 135,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l036",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 136,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l037",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 137,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l038",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 138,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l039",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 139,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l040",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 140,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l041",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 141,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l042",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 142,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l043",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 143,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l044",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 144,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l045",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 145,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l046",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 146,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l047",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 147,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l048",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 148,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l049",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 149,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l050",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 150,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l051",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 151,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l052",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 152,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l053",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 153,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l054",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 154,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l055",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 155,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l056",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 156,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l057",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 157,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l058",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 158,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l059",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 159,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l060",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 160,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l061",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 161,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l062",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 162,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l063",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 163,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l064",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 164,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l065",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 165,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l066",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 166,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l067",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 167,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l068",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 168,
+              "wave": 5,
+              "stats": {}
+            }
+          },
+          {
+            "level": "l069",
+            "wave": 5,
+            "top": {
+              "grade": 1,
+              "points": 169,
+              "wave": 5,
+              "stats": {}
+            }
+          }
+        ]
+      },
+      "top": {
+        "grade": 1,
+        "points": 163,
+        "wave": 5,
+        "stats": {}
+      }
+    }
   ]
 }

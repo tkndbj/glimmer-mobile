@@ -673,6 +673,27 @@ namespace GlimmerGrove.AssetPipeline
             return list;
         }
 
+        /// <summary>
+        /// The picture a Shuffle run grade is drawn with (MODES.md 59o): the owner's letter, cut by
+        /// <c>Tools/make_shuffle_art.py</c>. Derived from the grade's permanent id, never a table,
+        /// so a grade appended later needs its picture and nothing here.
+        /// </summary>
+        public static string ShuffleGrade(Shuffle.ShuffleGrade grade) => "Ui/shuffle_grade_" + Shuffle.ShuffleGrades.Id(grade);
+
+        /// <summary>
+        /// Every grade's picture. <b>Global rather than scoped</b>, for the hub marks' reason: the
+        /// victory panel draws one inside the lane's scope and a stranger's profile draws one
+        /// outside it, and eight 256-pixel letters are not worth a scope's two failure modes (an
+        /// <c>Image</c> with no sprite is a white rectangle, 7b).
+        /// </summary>
+        public static List<AssetRequest> ShuffleGradeAssets()
+        {
+            var list = new List<AssetRequest>(8);
+            foreach (Shuffle.ShuffleGrade grade in System.Enum.GetValues(typeof(Shuffle.ShuffleGrade)))
+                list.Add(AssetRequest.Sprite(ArtRoot + ShuffleGrade(grade)));
+            return list;
+        }
+
         /// <summary>Everything the game needs before the menu appears, in the active language.</summary>
         public static List<AssetRequest> GlobalAssets() => GlobalAssets(Loc.Language);
 
@@ -689,6 +710,9 @@ namespace GlimmerGrove.AssetPipeline
             // Global for the reason the hub's marks are (see `UiSprites`), and only the
             // player's language, because nine 1020-pixel pictures held for one is eight wasted.
             list.Add(AssetRequest.Sprite(ArtRoot + ShuffleCrest(language)));
+
+            // The run grades' letters (59o), off the enum, for the reason `ShuffleGradeAssets` gives.
+            list.AddRange(ShuffleGradeAssets());
 
             for (int i = 1; i <= LevelGridParser.CritterVariants; i++)
                 list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/c{i}"));

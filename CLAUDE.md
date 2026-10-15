@@ -230,7 +230,7 @@ wire or rules mistake reaches live accounts.
 
 ### Modes — in `Assets/Game/MODES.md`
 
-**Invariants 20–26h, 28–36i, 37–43f and 59–59n live in `Assets/Game/MODES.md`** — entry tests, grading, fail
+**Invariants 20–26h, 28–36i, 37–43f and 59–59o live in `Assets/Game/MODES.md`** — entry tests, grading, fail
 states, the withdrawn and hidden modes, and all of Thornwatch (charms, bosses, turrets, utilities, the
 Infinite lane). **Read it before touching a mode, a board, difficulty or the siege.**
 
@@ -726,7 +726,7 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 **Shared-rule vectors** (each `--check`; both sides run offline — never let one become Editor-only):
 `make_rank_vectors.py`, `make_keeper_vectors.py` (beside, not inside, `keeperCases`),
 `make_milestone_vectors.py`, `make_endless_vectors.py`, `make_xpboost_vectors.py` (clamp only),
-`make_challenge_vectors.py`, `make_standing_vectors.py` (62). Chest generators: `make_task_vectors.py`, `make_mark_vectors.py`,
+`make_challenge_vectors.py`, `make_standing_vectors.py` (62), `make_shuffle_top_vectors.py` (59o). Chest generators: `make_task_vectors.py`, `make_mark_vectors.py`,
 `make_streak_vectors.py` — **run in that order** (each splices to end of file). Server half:
 `npm --prefix firebase/functions test`.
 
@@ -735,7 +735,7 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 `render_challenges.py` (`--id`, `--list`, `--contact`, `--phone`).
 
 **Shuffle lane** (59): `ShuffleTests` (the identity trace, the ramp's inline pin, the deck, the build, the
-model-player sweep), `Tools/make_shuffle_art.py --check`/`--contact`, `render_shuffle.py` (the hand,
+model-player sweep), `Tools/make_shuffle_art.py --check`/`--contact`, `render_shuffle.py` (the hand, `--report all --measure` the graded run,
 `--lang`, `--held`), `render_endless.py --shuffle` (the hub), `Tools/chapters/s13_shufflewatch.py`.
 **Siege**: `SiegeRuleTests` (prints the boss-rung table; `EveryShippedBossRungIsAFight` needs each new chapter
 in `ShippedChapters`), `TutorialTests`, `EndlessCheckpointTests`, `render_siege.py` (`--captions` is the only
@@ -862,7 +862,7 @@ gates print the derived totals.
 
 - **Live on the App Store (id `6804516450`) and Google Play.** Ads via LevelPlay (ironSource, AdMob partner
   bidding, Unity Ads); `app-ads.txt` live at `tekoworld.com` (repo root and website `public/` byte-identical).
-- **Save schema v42**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
+- **Save schema v43**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
 - **Cloud**: Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22, `europe-west1`; anonymous by
   default with Apple/Google linking and per-account local archives. `gcloud functions list` is the authority
   on deployed functions. Firebase Unity SDK 13.15.0 as vendored tarballs under `GooglePackages/` (gitignored;

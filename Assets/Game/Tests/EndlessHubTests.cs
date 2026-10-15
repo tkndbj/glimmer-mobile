@@ -390,5 +390,87 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(default(EndlessHub.Reading).GetHashCode(),
                             new EndlessHub.Reading(0, false, null).GetHashCode());
         }
+
+        // ------------------------------------------------------------- the best run (59o)
+        /// <summary>
+        /// The Infinite lane reads exactly the numbers it read before the slot was handed in: the
+        /// stack written out by hand, the way it was before the Shuffle hub drew its best run.
+        /// </summary>
+        [Test]
+        public void TheInfiniteLanesColumnIsUnchanged()
+        {
+            float check = EndlessHubLayout.RecordCentre + EndlessHubLayout.RecordHeight * .5f + 22f
+                        + EndlessHubLayout.CheckpointHeight * .5f;
+            float key = check + EndlessHubLayout.CheckpointHeight * .5f + 14f + EndlessHubLayout.ButtonHeight * .5f;
+
+            Assert.AreEqual(check, EndlessHubLayout.CheckpointCentre, .001f);
+            Assert.AreEqual(key, EndlessHubLayout.ButtonCentre, .001f);
+            Assert.AreEqual(key + EndlessHubLayout.ButtonHeight * .5f, EndlessHubLayout.Height, .001f);
+            Assert.AreEqual(EndlessHubLayout.CheckpointHeight, EndlessHubLayout.SlotHeight(false));
+            Assert.AreEqual(EndlessHubLayout.Lift, EndlessHubLayout.LiftFor(false));
+
+            for (float band = 600f; band < 2400f; band += 37f)
+            {
+                Assert.AreEqual(EndlessHubLayout.ScaleIn(band), EndlessHubLayout.ScaleIn(band, EndlessHubLayout.CheckpointHeight));
+                Assert.AreEqual(EndlessHubLayout.TopIn(band),
+                                EndlessHubLayout.TopIn(band, EndlessHubLayout.CheckpointHeight, EndlessHubLayout.Lift));
+            }
+
+            Assert.IsFalse(EndlessHub.HubLane.Infinite.Stats, "the Infinite lane draws a best run");
+            Assert.IsTrue(EndlessHub.HubLane.Shuffle.Stats, "the Shuffle lane draws no best run");
+        }
+
+        /// <summary>
+        /// The Shuffle hub's taller column - the best run in the slot, BATTLE under it - fits the
+        /// shortest canvas at its floor scale, and the key comes down: lower in the column, and the
+        /// column hung lower in any band with room.
+        /// </summary>
+        [Test]
+        public void TheShuffleColumnFitsAndItsKeyComesDown()
+        {
+            float slot = EndlessHubLayout.SlotHeight(true);
+            // The header this lane is drawn under: no plaque (a dealt lane), and both switchers -
+            // the tightest header it can meet, which a catalog with a second mode would draw.
+            float band = CanvasFit.ShortestCanvas - LevelsScreen.HeaderFootOver(plaque: false, modes: true)
+                       - EndlessHubLayout.HeadClear - LoadoutBar.Bare - LoadoutBar.Overhang;
+
+            Assert.IsTrue(EndlessHubLayout.Fits(band, slot),
+                          $"the Shuffle column is {EndlessHubLayout.HeightFor(slot)} tall and the shortest band is {band}");
+            Assert.GreaterOrEqual(band, EndlessHubLayout.HeightFor(slot) * EndlessHubLayout.ScaleIn(band, slot) - .001f);
+
+            Assert.Greater(EndlessHubLayout.ButtonCentreFor(slot), EndlessHubLayout.ButtonCentre, "the key did not move down the column");
+            Assert.Greater(EndlessHubLayout.StatsLift, EndlessHubLayout.Lift, "the column does not hang lower");
+
+            float roomy = EndlessHubLayout.HeightFor(slot) + 400f;
+            float keyFoot = EndlessHubLayout.TopIn(roomy, slot, EndlessHubLayout.StatsLift)
+                          + EndlessHubLayout.ButtonCentreFor(slot) + EndlessHubLayout.ButtonHeight * .5f;
+            Assert.LessOrEqual(keyFoot, roomy + .001f, "the key leaves its band");
+        }
+
+        /// <summary>Every piece of the best run's plate is inside it and clear, for every count of stats a run can carry.</summary>
+        [Test]
+        public void TheBestRunFitsItsPlate()
+        {
+            var at = ShuffleHubStripLayout.Default;
+            Assert.AreEqual(EndlessHubLayout.StatsHeight, at.Height);
+            Assert.AreEqual(EndlessHubLayout.PanelWidth, at.Width);
+
+            for (int n = 0; n <= Shuffle.ShuffleStats.All.Length; n++)
+                Assert.IsTrue(at.IsClear(n, out string fault), $"{n} stat(s): {fault}");
+        }
+
+        /// <summary>A better run arriving from another device is a redraw; the same run is not.</summary>
+        [Test]
+        public void ANewBestRunForcesARedraw()
+        {
+            var drawn = new EndlessHub.Reading(40, true, null, "5/8000/90");
+
+            Assert.IsFalse(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(40, true, null, "5/8000/90")));
+            Assert.IsTrue(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(40, true, null, "6/9600/120")),
+                          "a better run was not redrawn");
+            Assert.IsTrue(EndlessHub.Redraws(true, new EndlessHub.Reading(40, true, null), drawn),
+                          "a first run was not redrawn");
+            Assert.AreEqual(new EndlessHub.Reading(4, true, null, null), new EndlessHub.Reading(4, true, null, string.Empty));
+        }
     }
 }

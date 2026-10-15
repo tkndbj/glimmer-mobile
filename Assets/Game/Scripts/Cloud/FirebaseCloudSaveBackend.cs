@@ -1499,7 +1499,12 @@ namespace GlimmerGrove.Cloud
                 Text(document, "rung"),
 
                 // The Shuffle best, absent for a keeper who has never run the lane.
-                (int)ReadLong(document, "shuffle"));
+                (int)ReadLong(document, "shuffle"),
+
+                // The best-graded Shuffle run (MODES.md 59o), absent for a keeper with none. Read
+                // through the one parser the save's rows use, so a card and a save cannot come to
+                // disagree about what a run is, and every figure is bounded again on the way in.
+                Shuffle.ShuffleRecord.FromWire(document.TryGetValue("shuffleTop", out object top) ? top : null));
         }
 
         static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)

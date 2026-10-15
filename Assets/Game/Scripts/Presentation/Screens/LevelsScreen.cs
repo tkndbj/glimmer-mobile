@@ -1209,7 +1209,7 @@ namespace GlimmerGrove
             // (`HeaderMenu.Build`), so the header never carries a dead pill and never leaves a
             // gap where one would have been - which is why the offset is asked of what was
             // actually drawn rather than assumed.
-            float laneY = _modes != null ? head - ModeSwitch.PillHeight - ModesGap : head;
+            float laneY = LaneY(head, _modes != null);
 
             _tracks = TrackSwitch.Build(Safe, _index, Mode, Lane, SwitchLane, laneY);
 
@@ -1218,8 +1218,7 @@ namespace GlimmerGrove
             // drawn under it when both are shown, 136 units further down. A map never noticed,
             // because a map scrolls under its own header - the hub's column is placed against it
             // and would be drawn through the pill on any catalog carrying two modes.
-            _headerFoot = _tracks != null ? -laneY + TrackSwitch.PillHeight * .5f
-                                          : HeaderUnderside;
+            _headerFoot = _tracks != null ? TrackFoot(laneY) : HeaderUnderside;
 
             // **The line, reachable from the map and from nowhere else.** It is set once and used
             // by every rung (`WardLoadout`), so it does not belong on a board - and the map is
@@ -1460,6 +1459,20 @@ namespace GlimmerGrove
         /// control in every chapter of every mode with no file naming a wrong coordinate.
         /// </remarks>
         public const float HeaderUnderside = -ModesY + ModeSwitch.PillHeight * .5f;
+
+        /// <summary>Where the track switcher sits under a header column headed at <paramref name="head"/>.</summary>
+        static float LaneY(float head, bool modes) => modes ? head - ModeSwitch.PillHeight - ModesGap : head;
+
+        /// <summary>The header's foot with the track switcher drawn at <paramref name="laneY"/>.</summary>
+        static float TrackFoot(float laneY) => -laneY + TrackSwitch.PillHeight * .5f;
+
+        /// <summary>
+        /// The header's foot on a lane with both its switchers and, on a dealt lane, no plaque -
+        /// the arithmetic <c>BuildHeader</c> runs, for the hub's fit tests (the Shuffle hub's
+        /// column is measured against the header it is actually drawn under).
+        /// </summary>
+        public static float HeaderFootOver(bool plaque, bool modes)
+            => TrackFoot(LaneY(plaque ? ModesY : BannerY, modes));
 
         /// <summary>
         /// The ink the chapter chevrons are cut in. White, at the owner's direction: the

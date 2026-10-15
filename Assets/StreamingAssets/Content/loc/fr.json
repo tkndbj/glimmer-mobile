@@ -8796,6 +8796,90 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Toutes les 6 secondes, un prisme tire 6 rayons sur les pillards les plus forts."
+    },
+    {
+      "key": "shuffle.grade.d",
+      "text": "D"
+    },
+    {
+      "key": "shuffle.grade.c",
+      "text": "C"
+    },
+    {
+      "key": "shuffle.grade.b",
+      "text": "B"
+    },
+    {
+      "key": "shuffle.grade.a",
+      "text": "A"
+    },
+    {
+      "key": "shuffle.grade.aa",
+      "text": "AA"
+    },
+    {
+      "key": "shuffle.grade.s",
+      "text": "S"
+    },
+    {
+      "key": "shuffle.grade.s_plus",
+      "text": "S+"
+    },
+    {
+      "key": "shuffle.grade.s_plus_plus",
+      "text": "S++"
+    },
+    {
+      "key": "shuffle.stat.damage",
+      "text": "Dégâts"
+    },
+    {
+      "key": "shuffle.stat.speed",
+      "text": "Vit. d'attaque"
+    },
+    {
+      "key": "shuffle.stat.crit",
+      "text": "Chance critique"
+    },
+    {
+      "key": "shuffle.stat.health",
+      "text": "Vie tourelles"
+    },
+    {
+      "key": "shuffle.stat.cards",
+      "text": "Cartes"
+    },
+    {
+      "key": "shuffle.stat.bonds",
+      "text": "Déblocages"
+    },
+    {
+      "key": "ui.shuffle.score",
+      "text": "Score"
+    },
+    {
+      "key": "ui.shuffle.new_best",
+      "text": "Nouveau record !"
+    },
+    {
+      "key": "ui.shuffle.best",
+      "text": "Record : {0} - {1}"
+    },
+    {
+      "key": "ui.shuffle.run_wave",
+      "text": "Vague atteinte : {0}"
+    },
+    {
+      "key": "ui.shuffle.percent",
+      "text": "{0} %"
+    },
+    {
+      "key": "ui.shuffle.best_run",
+      "text": "Meilleure partie"
+    },
+    {
+      "key": "ui.shuffle.no_grade",
+      "text": "Termine une partie pour obtenir ta première note."
     }
   ]
 }

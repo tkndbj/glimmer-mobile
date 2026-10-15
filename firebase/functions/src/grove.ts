@@ -591,6 +591,138 @@ export function shuffleWave(save: Record<string, unknown>): number {
   return bestRowWave(save.shuffleBest);
 }
 
+// ------------------------------------------------------------------ the graded Shuffle run
+/**
+ * The bounds a graded Shuffle run is read within (MODES.md 59o). Mirrors `ShuffleLedger.MaxRows`,
+ * `ShuffleGrades.MaxOrdinal` and `.MaxPoints`, `ShuffleStats.MaxRows`, `.MaxValue` and
+ * `.MaxIdLength`; pinned by `shuffleTopConstants` in firebase/shared/grove-vectors.json.
+ */
+export const SHUFFLE_TOP = {
+  maxRows: 64,
+  maxGrade: 63,
+  maxPoints: 1_000_000,
+  maxStats: 16,
+  maxStat: 100_000_000,
+  maxStatId: 24,
+} as const;
+
+/** One graded Shuffle run, as a save row carries it under `top` and a card publishes it as `shuffleTop`. */
+export interface ShuffleRun {
+  /** The grade's permanent ordinal (`ShuffleGrade`), carried as written up to `maxGrade`. */
+  grade: number;
+  points: number;
+  wave: number;
+  /** Stat id to figure, at most `maxStats` of them, the first in id order. */
+  stats: Record<string, number>;
+}
+
+const STAT_ID = /^[a-z0-9_]+$/;
+
+/** A wire figure toward nought, NaN as nought, saturating at 32 bits; anything not a number is nought. */
+function runFigure(value: unknown): number {
+  if (typeof value !== "number" || Number.isNaN(value)) return 0;
+  if (value === Infinity) return 2 ** 31 - 1;
+  if (value === -Infinity) return -(2 ** 31);
+  return Math.max(-(2 ** 31), Math.min(2 ** 31 - 1, Math.trunc(value)));
+}
+
+/** A row's wave as the save mapper reads it: a number toward nought, or a whole-number string. */
+function rowWave(value: unknown): number {
+  if (typeof value === "string") return /^-?\d+$/.test(value) ? parseInt(value, 10) : 0;
+  if (typeof value !== "number" || Number.isNaN(value)) return 0;
+  return Math.trunc(value);
+}
+
+/**
+ * One record off the wire, or null for none: no points is no run, every figure taken toward
+ * nought and bounded, stat ids shaped like ids, and only the first `maxStats` ids in id order -
+ * never the first that arrived, because object key order is V8's business and the client's
+ * `ShuffleRecord.Create` keeps exactly these.
+ */
+export function readShuffleRun(raw: unknown): ShuffleRun | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const run = raw as Record<string, unknown>;
+
+  const points = runFigure(run.points);
+  if (points <= 0) return null;
+
+  const read: Record<string, number> = {};
+  const rawStats = run.stats;
+  if (rawStats && typeof rawStats === "object" && !Array.isArray(rawStats)) {
+    for (const [id, value] of Object.entries(rawStats as Record<string, unknown>)) {
+      if (id.length === 0 || id.length > SHUFFLE_TOP.maxStatId || !STAT_ID.test(id)) continue;
+      const figure = Math.max(0, Math.min(SHUFFLE_TOP.maxStat, runFigure(value)));
+      read[id] = Math.max(read[id] ?? 0, figure);
+    }
+  }
+
+  const stats: Record<string, number> = {};
+  for (const id of Object.keys(read).sort(ordinal).slice(0, SHUFFLE_TOP.maxStats)) stats[id] = read[id];
+
+  return {
+    grade: Math.max(0, Math.min(SHUFFLE_TOP.maxGrade, runFigure(run.grade))),
+    points: Math.min(points, SHUFFLE_TOP.maxPoints),
+    wave: Math.max(0, Math.min(MAX_WAVE, runFigure(run.wave))),
+    stats,
+  };
+}
+
+/** Code-unit order, which is `StringComparer.Ordinal` for the ASCII ids a stat may have. */
+function ordinal(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * The total order the best run is kept on, `ShuffleRecord.Compare`'s: grade, points, wave, then
+ * the stats in id order (a record carrying an id the other lacks at the same place is the richer).
+ */
+export function compareShuffleRuns(a: ShuffleRun | null, b: ShuffleRun | null): number {
+  if (a === b) return 0;
+  if (!a) return -1;
+  if (!b) return 1;
+  if (a.grade !== b.grade) return a.grade < b.grade ? -1 : 1;
+  if (a.points !== b.points) return a.points < b.points ? -1 : 1;
+  if (a.wave !== b.wave) return a.wave < b.wave ? -1 : 1;
+
+  const xs = Object.keys(a.stats).sort(ordinal);
+  const ys = Object.keys(b.stats).sort(ordinal);
+  for (let i = 0; i < Math.min(xs.length, ys.length); i++) {
+    if (xs[i] !== ys[i]) return xs[i] < ys[i] ? 1 : -1;
+    const x = a.stats[xs[i]], y = b.stats[ys[i]];
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return xs.length === ys.length ? 0 : xs.length < ys.length ? -1 : 1;
+}
+
+/**
+ * The keeper's best-graded Shuffle run (MODES.md 59o) - what a public profile's Shuffle box draws
+ * under the best wave. Mirrors `ShuffleLedger.TopIn` read through `FirestoreSaveMapper`: the rows
+ * with a level and a wave above nought, the first `maxRows` of them, level ids within
+ * `MAX_LEVEL_ID_LENGTH`, the best by `compareShuffleRuns`. Held by `shuffleTopCases`.
+ *
+ * **`shuffleWave`'s class of figure**: a reading of a run no record here implies, so it is
+ * bounded in every part and **buys nothing** (invariants 13 and 19l). It decides no board and no
+ * standing; the day it pays or orders anything, it stops being defensible.
+ */
+export function shuffleTop(save: Record<string, unknown>): ShuffleRun | null {
+  const rows = save.shuffleBest;
+  if (!Array.isArray(rows)) return null;
+
+  const readable = rows.filter((raw) => {
+    const row = raw as { level?: unknown; wave?: unknown } | null;
+    return !!row && typeof row === "object" && typeof row.level === "string" && row.level.length > 0
+      && rowWave(row.wave) > 0;
+  }) as { level: string; top?: unknown }[];
+
+  let best: ShuffleRun | null = null;
+  for (const row of readable.slice(0, SHUFFLE_TOP.maxRows)) {
+    if (row.level.length > MAX_LEVEL_ID_LENGTH) continue;
+    const run = readShuffleRun(row.top);
+    if (compareShuffleRuns(run, best) > 0) best = run;
+  }
+  return best;
+}
+
 /** The best `wave` in a lane's rows: bounded walk, nameless or over-long ids refused, `MAX_WAVE` ceiling. */
 function bestRowWave(rows: unknown): number {
   if (!Array.isArray(rows)) return 0;
@@ -1229,6 +1361,14 @@ export interface GroveCardDoc {
   shuffle?: number;
 
   /**
+   * The keeper's best-graded Shuffle run (MODES.md 59o): grade, build score, the wave that run
+   * reached and its build's figures. See `shuffleTop`. **Absent for a keeper with none**, which is
+   * what every card written before this deployment says, and drawn by no board - only the public
+   * profile reads it, so it is on the card and never on a row.
+   */
+  shuffleTop?: ShuffleRun;
+
+  /**
    * The priced companions this keeper owns, as permanent ids — what a public profile draws.
    *
    * <b>Exactly the set `groveWorth` counted</b> (`heldCompanions`), so the portraits and the
@@ -1389,6 +1529,7 @@ export function buildCard(
   // board's index — see `GroveCardDoc.wave`.
   const wave = bestWave(save);
   const shuffle = shuffleWave(save);
+  const graded = shuffleTop(save);
 
   // Both spread for Firestore's reason and omitted when empty for the document's: a card with
   // no companions and no line is what every card written before this deployment is, and absent
@@ -1419,6 +1560,7 @@ export function buildCard(
     ...hallSeat(save),
     ...(wave > 0 ? { wave } : {}),
     ...(shuffle > 0 ? { shuffle } : {}),
+    ...(graded ? { shuffleTop: graded } : {}),
     ...(rung.length > 0 ? { rung } : {}),
     ...(companions.length > 0 ? { companions } : {}),
     ...(line.length > 0 ? { line } : {}),

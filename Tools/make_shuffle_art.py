@@ -23,6 +23,10 @@
   game loads only the player's. The picture is painted on a dark glowing backdrop, so it is
   cut off it here by its keyline (see `crest`). Each is cut only when its source is on this
   machine; the PNGs are committed.
+* `Art/Ui/shuffle_grade_<id>.png` - the run grades' letters, D to S++ (MODES.md 59o), the owner's
+  own pictures (2026-10-15), trimmed and drawn down (see `grade`). Global, because the victory
+  panel and a stranger's profile both draw them (`AssetManifest.ShuffleGrade`). Each is cut only
+  when its source is on this machine; the PNGs are committed.
 * `Art/Bg/plain_shuffle.png` - the ranked lane's purple brick wall turned to a deep teal-blue:
   a hue rotation first (CLAUDE.md 44g: hue-rotate in the tool) and a shade on top, so the wall
   keeps every brick and its highlights. Dark, because a bright wall fought the crest; coloured,
@@ -108,6 +112,40 @@ CREST_SOURCES = {
     "ar": DOWNLOADS / "Glossy Arabic Shuffle Game Emblem.png",
 }
 CREST_W, CREST_H = 1020, 680
+
+
+#: The run grades' letters (MODES.md 59o), the owner's own pictures (2026-10-15), by grade id
+#: (`ShuffleGrades.Id`). Already cut out on transparency, so each is only trimmed to its ink and
+#: drawn down to `GRADE_H` tall, its own width (the S++ and AA run wide), padded to a multiple of
+#: four as block compression wants. `ShuffleGradeTests.EveryGradeHasItsPictureOnDisk` holds the
+#: files to the enum.
+GRADE_SOURCES = {
+    "d": DOWNLOADS / "Glossy Golden Letter D.png",
+    "c": DOWNLOADS / "Matte Cyan 3D Letter C.png",
+    "b": DOWNLOADS / "Glossy Purple 3D Letter B.png",
+    "a": DOWNLOADS / "Streamlined Glossy Pink 3D Letter A.png",
+    "aa": DOWNLOADS / "Glossy Pink Bubble A’s.png",
+    "s": DOWNLOADS / "Glossy Green 3D Letter S.png",
+    "s_plus": DOWNLOADS / "Slim Glossy Green S+ Symbol.png",
+    "s_plus_plus": DOWNLOADS / "Sleek Lime Green S++ Logo.png",
+}
+GRADE_H, GRADE_PAD = 256, 4
+
+
+def grade(source):
+    """One grade's letter: trimmed to its ink, drawn `GRADE_H` tall, padded to fours."""
+    im = Image.open(source).convert("RGBA")
+    box = im.split()[3].point(lambda v: 255 if v > 8 else 0).getbbox()
+    im = im.crop(box)
+
+    inner = GRADE_H - 2 * GRADE_PAD
+    w = max(1, int(round(im.width * inner / im.height)))
+    im = im.resize((w, inner), Image.LANCZOS)
+
+    width = (w + 2 * GRADE_PAD + 3) // 4 * 4
+    out = Image.new("RGBA", (width, GRADE_H), (0, 0, 0, 0))
+    out.alpha_composite(im, ((width - w) // 2, GRADE_PAD))
+    return out
 
 
 def crest_name(code):
@@ -287,6 +325,11 @@ def cut():
             name = crest_name(code)
             made[UI / (name + ".png")] = (raw(crest(source)), meta_for(ICON_TEMPLATE, name, "glimmer.ui.shuffle."))
 
+    for gid, source in GRADE_SOURCES.items():
+        if source.exists():
+            name = "shuffle_grade_" + gid
+            made[UI / (name + ".png")] = (raw(grade(source)), meta_for(ICON_TEMPLATE, name, "glimmer.ui.shuffle."))
+
     return made
 
 
@@ -328,6 +371,11 @@ def main():
                 print("shuffle art: the '%s' crest's source is absent, so it is not checked" % code)
             if not (UI / (crest_name(code) + ".png")).exists():
                 bad.append("the '%s' crest is not on disk" % code)
+        for gid, source in GRADE_SOURCES.items():
+            if not source.exists():
+                print("shuffle art: the '%s' grade's source is absent, so it is not checked" % gid)
+            if not (UI / ("shuffle_grade_%s.png" % gid)).exists():
+                bad.append("the '%s' grade's letter is not on disk" % gid)
         for p, (png, meta) in made.items():
             if not p.exists():
                 bad.append("%s is missing" % p.relative_to(REPO))

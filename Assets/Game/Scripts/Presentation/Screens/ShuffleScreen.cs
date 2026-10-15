@@ -240,10 +240,39 @@ namespace GlimmerGrove
         /// </summary>
         protected override void Finished(int count)
         {
+            _graded = null;
+            _gradedBest = false;
+            _bestBefore = null;
+
             var board = Siege != null ? Siege.Siege : null;
             if (board == null || Level == null) return;
 
             ShuffleLedger.Record(Level.Id, board.WavesCleared);
+
+            // **The run's grade, banked beside its wave** (MODES.md 59o): what the build ended on,
+            // graded on this build's floors, kept as the level's best-graded run when it is one.
+            // Read before it is banked, so the panel can say what the best was.
+            if (_run == null) return;
+
+            _graded = ShuffleRecord.Of(_run.Build, board.WavesCleared);
+            if (_graded == null) return;
+
+            _bestBefore = ShuffleLedger.TopFor(Level.Id);
+            _gradedBest = ShuffleLedger.RecordRun(Level.Id, _graded);
+        }
+
+        /// <summary>This run's graded record, and what the level's best was before it. Null when no card was taken.</summary>
+        ShuffleRecord _graded, _bestBefore;
+        bool _gradedBest;
+
+        /// <summary>The victory panel carries the graded run as its own section (MODES.md 59o).</summary>
+        protected override void Dress(WinOverlay panel)
+        {
+            if (panel == null || _graded == null) return;
+
+            panel.ShuffleRun = _graded;
+            panel.ShuffleNewBest = _gradedBest;
+            panel.ShuffleBestBefore = _bestBefore;
         }
 
         /// <summary>

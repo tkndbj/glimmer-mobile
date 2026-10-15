@@ -34,6 +34,7 @@ if (!existsSync(compiled)) {
 
 const {
   groveWorth, keeperLevel, starsFor, bestWave, shuffleWave, figureOf, MAX_WAVE,
+  shuffleTop, compareShuffleRuns, SHUFFLE_TOP,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
   BOARD_ROWS, rowOf, compareRows, readRows, cutoffOf, qualifies, mergeRow,
@@ -306,6 +307,50 @@ console.log("\nshuffle best");
         shuffleWave({ endlessBest: [{ level: "s02_endlesswatch", wave: 40 }] }), 0);
   equal("a Shuffle row pays no Infinite XP",
         endlessXp({ shuffleBest: [{ level: "s13_shuffle", wave: 40 }] }, {}), 0);
+}
+
+// ------------------------------------------------------------------ the graded Shuffle run
+//
+// MODES.md 59o. The best-graded run is read off a save twice - by ShuffleLedger.TopIn on the
+// handset, to decide whether a card owes a publish, and here, to build the card a stranger reads.
+// Both run `shuffleTopCases` (Tools/make_shuffle_top_vectors.py); ShuffleGradeTests is the other half.
+console.log("\nshuffle graded run");
+{
+  const c = vectors.shuffleTopConstants ?? {};
+  equal("the row walk is the rules' cap", SHUFFLE_TOP.maxRows, c.maxRows);
+  equal("the grade ceiling agrees", SHUFFLE_TOP.maxGrade, c.maxGrade);
+  equal("the points ceiling agrees", SHUFFLE_TOP.maxPoints, c.maxPoints);
+  equal("the wave ceiling agrees", MAX_WAVE, c.maxWave);
+  equal("the stat count agrees", SHUFFLE_TOP.maxStats, c.maxStats);
+  equal("the stat ceiling agrees", SHUFFLE_TOP.maxStat, c.maxStat);
+  equal("the stat id length agrees", SHUFFLE_TOP.maxStatId, c.maxStatId);
+
+  const cases = vectors.shuffleTopCases ?? [];
+  check("the vector file has shuffle top cases", cases.length > 0);
+  for (const v of cases) {
+    const read = shuffleTop(v.save);
+    check(v.name, JSON.stringify(read) === JSON.stringify(v.top),
+          `expected ${JSON.stringify(v.top)}, got ${JSON.stringify(read)}`);
+  }
+
+  // The order is a total order, so the best of several never depends on which row came first.
+  const runs = cases.map((v) => v.top).filter(Boolean);
+  let antisymmetric = true;
+  for (const a of runs) for (const b of runs)
+    if (Math.sign(compareShuffleRuns(a, b)) !== -Math.sign(compareShuffleRuns(b, a))) antisymmetric = false;
+  check("the order is antisymmetric over every case", antisymmetric);
+
+  // On the card only when there is one, so a keeper with no graded run is the card it was.
+  const plain = buildCard("uid-5", { shuffleBest: [{ level: "s13_shuffle", wave: 21 }] },
+                          groveConfig(), NO_RANKS, { score: 0, stars: 0 }, 6, 1_700_000_000, null);
+  check("a keeper with no graded run carries none", !("shuffleTop" in plain));
+
+  const top = { grade: 5, points: 7800, wave: 140, stats: { damage: 2400, speed: 1800 } };
+  const graded = buildCard("uid-6", { shuffleBest: [{ level: "s13_shuffle", wave: 150, top }] },
+                           groveConfig(), NO_RANKS, { score: 0, stars: 0 }, 6, 1_700_000_000, null);
+  equal("a graded run reaches the card whole", JSON.stringify(graded.shuffleTop), JSON.stringify(top));
+  equal("beside the best wave", graded.shuffle, 150);
+  check("a graded card is writable", writable(graded));
 }
 
 // ------------------------------------------------------------------ endless XP

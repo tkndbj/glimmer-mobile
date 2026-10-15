@@ -1342,6 +1342,45 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    layout), `TheIdentityBoostChangesNothing` and `ThePlainLineNeverDrawsTheArsenal`;
    `render_shuffle.py --marks` and `--unlock` (`--unlock all --measure` fails on a caption at its floor).
 
+59o. **A finished run is graded on its build, and the best-graded run is public** (2026-10-15, the
+   owner: "the total stats of that run ... a score D,C,B,A,AA,S,S+,S++ ... S, S+, S++ genuinely really
+   hard ... only if they got the best combination and amount of upgrades ... on the public profile ...
+   scale with Shuffle mode ... cheap on scale"). **The score is points by tier, never by card**
+   (`ShuffleGrades`): a copy pays its tier (10/25/60/150), a bond pays more than its parts (secrets
+   150/300/700, evolutions 80/200/500), so a card or bond added later is scored with nothing authored,
+   and because a hand deals tiers off weights the catalog size does not move, a grade keeps meaning
+   the same depth of run as the deck grows. **The grade has two floors**: points for every grade
+   (`Floors`), and bond points alone for S, S+ and S++ (`BondFloors` 1500/3000/5000) - the shipped
+   lane lets a strong line outlast the whole deck (a bot at a match every 0.9 s held wave 527 after
+   four simulated hours, every card at its most), so points alone would make S++ a prize for
+   patience; the bond floor makes the top three a matter of *which* cards were chosen.
+   **Calibrated, not tuned by feel**: `ShuffleGradeTests.TheGradeTableIsPrinted` deals 600 seeded
+   runs per chooser through the real deck; a run taking the first card of every hand is C by about
+   wave 20, B by 40, A by 80, AA by 120 and S not before 160; an expert chasing bonds reaches S by
+   about wave 100 and S++ by about 200. `TheTopGradesStayRare` holds that shape, so a new bond or deck
+   table that inflates the scale goes red. Floors are code and not `config/shuffle`: a grade is
+   stored as earned (`ShuffleRecord.Ordinal`, never re-derived), so a retune is a build.
+   **The stats are the figures the board reads** (`ShuffleStats`: damage, speed, crit, health, cards,
+   unlocks - `EffectiveFirePercent` and kin, pacts multiplied in), each drawn with the picture of the
+   card that moves it; a stat is a row there and a `shuffle.stat.{id}` key, and travels as id/value
+   rows, so the save, wire, merge and server carry a new one unchanged and an unknown one is carried
+   and not drawn. **Banked beside the wave** (`ShuffleLedger.RecordRun`, save v43): the row's `top`,
+   inside the existing `shuffleBest` rows (no rules release, 12a), joined by a total order (grade,
+   points, wave, stats in id order) so the merge is a `max` and a run is never torn; a grade ordinal a
+   newer build appended is carried as written up to `MaxOrdinal` 63 (11f). **Drawn by one view**
+   (`ShuffleReportView`, laid out by `ShuffleReportLayout`; each grade is the owner's letter picture, `Ui/shuffle_grade_{id}`, cut by `make_shuffle_art.py`, global and derived from the id, glowing in its own colour on S and up): a section of the victory panel
+   (`ProtoScreen.Dress`, raised by `ShuffleScreen` only), and the public profile's Shuffle box under
+   Endless Watch; **and on the Shuffle hub** as a compact plate (`ShuffleHubStrip`, `ShuffleHubStripLayout`)
+   in the checkpoint bar's slot made taller (`EndlessHubLayout.StatsHeight`, the column hung lower by
+   `StatsLift`), so BATTLE comes down; the hub's redraw reading carries the record's fingerprint, so a
+   better run synced from another device redraws it (`EndlessHub.Reading.Run`). **Published as the card's `shuffleTop`** (`shuffleTop` in grove.ts, mirror of
+   `ShuffleLedger.TopIn`, pinned by `shuffleTopCases` from `Tools/make_shuffle_top_vectors.py`): read
+   by the profile only, on no board row, so it is a deploy of `publishGrove` alone. **It pays
+   nothing and orders nothing** (19l); the day it does, it needs adjudicating. Analytics:
+   `shuffle_ended.grade` and `.score`, so the floors can be read against real players.
+   **Held by** `ShuffleGradeTests`, `SaveWiringTests`, `functions/test/grove.mjs`, and
+   `render_shuffle.py --report all --measure` (every grade, nine languages, Arabic shaped).
+
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the
 site that reads it (an attack card: `SiegeBoard.Arsenal`, a `SiegeVia`, its drawing in

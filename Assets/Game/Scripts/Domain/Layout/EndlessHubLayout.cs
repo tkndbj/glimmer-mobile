@@ -225,6 +225,32 @@ namespace GlimmerGrove.Layout
         /// </summary>
         public const float CheckpointWidth = ButtonWidth, CheckpointHeight = 88f;
 
+        // ------------------------------------------------------------------ the best run
+        /// <summary>
+        /// The Shuffle lane's best run (MODES.md 59o), drawn in the slot the Infinite lane spends
+        /// on its checkpoint bar, made taller - which is what moves BATTLE down on that hub and
+        /// nowhere else. Laid out inside by <see cref="ShuffleHubStripLayout"/>.
+        /// </summary>
+        public const float StatsHeight = 268f;
+
+        /// <summary>
+        /// The slot between the medal and the key for a lane: the best run's on a lane that draws
+        /// one, the checkpoint bar's otherwise (which a lane with neither keeps as air, so its key
+        /// stands where it always stood).
+        /// </summary>
+        public static float SlotHeight(bool stats) => stats ? StatsHeight : CheckpointHeight;
+
+        /// <summary>
+        /// Where a column drawing the best run sits in a band with room to spare: lower than
+        /// <see cref="Lift"/>, so on a tall phone the key comes down towards the shelf (the owner,
+        /// 2026-10-15: BATTLE a little further down) and the crest is given the air above.
+        /// A band with no slack is the same either way.
+        /// </summary>
+        public const float StatsLift = .70f;
+
+        /// <summary>The lift for a lane: <see cref="StatsLift"/> on one drawing its best run.</summary>
+        public static float LiftFor(bool stats) => stats ? StatsLift : Lift;
+
         // ------------------------------------------------------------------ the air
         /// <summary>
         /// The gaps: under the rank, under the lines, under the medal, and between the checkpoint
@@ -281,15 +307,13 @@ namespace GlimmerGrove.Layout
         public static float RowCentre(int index, int count)
             => RowCentre(index) + (Points - count) * (RowHeight + RowGap) * .5f;
 
-        public static float CheckpointCentre
-            => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight + CheckpointGap
-             + CheckpointHeight * .5f;
+        /// <summary>The checkpoint bar's centre: the slot at the bar's height.</summary>
+        public static float CheckpointCentre => SlotCentre(CheckpointHeight);
 
-        public static float ButtonCentre
-            => CheckpointCentre + CheckpointHeight * .5f + ButtonGap + ButtonHeight * .5f;
+        public static float ButtonCentre => ButtonCentreFor(CheckpointHeight);
 
         /// <summary>How tall the whole column is. Derived, never typed.</summary>
-        public static float Height => ButtonCentre + ButtonHeight * .5f;
+        public static float Height => HeightFor(CheckpointHeight);
 
         /// <summary>
         /// The scale the column is drawn at in a band <paramref name="band"/> tall: whole where it
@@ -297,29 +321,49 @@ namespace GlimmerGrove.Layout
         /// <see cref="MinScale"/>. The screen scales the column about its top edge, so every
         /// centre above is multiplied by this and nothing else moves.
         /// </summary>
-        public static float ScaleIn(float band)
-        {
-            if (band >= Height) return 1f;
-            float s = band / Height;
-            return s > MinScale ? s : MinScale;
-        }
+        public static float ScaleIn(float band) => ScaleIn(band, CheckpointHeight);
 
         /// <summary>
         /// Where the column's top edge sits inside a band <paramref name="band"/> tall, measured
-        /// down from the band's own top, once it is drawn at <see cref="ScaleIn"/>.
+        /// down from the band's own top, once it is drawn at <see cref="ScaleIn(float)"/>.
         ///
         /// Never negative: a band too short to hold the column even at its floor starts it at the
         /// top and lets it run past the bottom, which is a composition somebody can see is wrong
         /// rather than one hanging off the top of the screen where nobody can.
         /// </summary>
-        public static float TopIn(float band)
-        {
-            float slack = band - Height * ScaleIn(band);
-            return slack > 0f ? slack * Lift : 0f;
-        }
+        public static float TopIn(float band) => TopIn(band, CheckpointHeight, Lift);
 
         /// <summary>Whether a band this tall holds the column at its floor scale or better.</summary>
-        public static bool Fits(float band) => band >= Height * MinScale;
+        public static bool Fits(float band) => Fits(band, CheckpointHeight);
+
+        // **The same stack with the slot's height handed in** (`SlotHeight`). The members above
+        // are these at the checkpoint bar's height, so the Infinite lane reads exactly the numbers
+        // it always did and only a lane drawing its best run reads a taller column.
+
+        /// <summary>The slot's centre, for a slot <paramref name="slot"/> tall.</summary>
+        public static float SlotCentre(float slot)
+            => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight + CheckpointGap + slot * .5f;
+
+        public static float ButtonCentreFor(float slot)
+            => SlotCentre(slot) + slot * .5f + ButtonGap + ButtonHeight * .5f;
+
+        public static float HeightFor(float slot) => ButtonCentreFor(slot) + ButtonHeight * .5f;
+
+        public static float ScaleIn(float band, float slot)
+        {
+            float height = HeightFor(slot);
+            if (band >= height) return 1f;
+            float s = band / height;
+            return s > MinScale ? s : MinScale;
+        }
+
+        public static float TopIn(float band, float slot, float lift)
+        {
+            float slack = band - HeightFor(slot) * ScaleIn(band, slot);
+            return slack > 0f ? slack * lift : 0f;
+        }
+
+        public static bool Fits(float band, float slot) => band >= HeightFor(slot) * MinScale;
 
         /// <summary>
         /// Whether the column leaves clear air everywhere and fits inside the reference width.
@@ -399,6 +443,14 @@ namespace GlimmerGrove.Layout
             if (IconSize >= SlotSize)
             {
                 fault = $"a {IconSize} mark does not fit a {SlotSize} seat";
+                return false;
+            }
+
+            // The best run's slot stacks the same way; it only makes the column taller.
+            if (SlotCentre(StatsHeight) - StatsHeight * .5f < RecordCentre + RecordHeight * .5f
+                || ButtonCentreFor(StatsHeight) - ButtonHeight * .5f < SlotCentre(StatsHeight) + StatsHeight * .5f)
+            {
+                fault = "the best run's plate overlaps the medal or the key";
                 return false;
             }
 

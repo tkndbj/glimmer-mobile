@@ -403,6 +403,12 @@ namespace GlimmerGrove.Persistence
                 var x = a[i]; var y = b[i];
                 if (x == null || y == null) return x == y;
                 if (!Same(x.level, y.level) || x.wave != y.wave) return false;
+
+                // The best-graded run (v43), compared as the record it reads back as, so two
+                // spellings of the same run (an unsorted stat list, a nought row) are not a change.
+                if (!GlimmerGrove.Shuffle.ShuffleRecord.Same(GlimmerGrove.Shuffle.ShuffleRecord.FromDto(x.top),
+                                                            GlimmerGrove.Shuffle.ShuffleRecord.FromDto(y.top)))
+                    return false;
             }
 
             return true;

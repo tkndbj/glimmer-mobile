@@ -746,11 +746,18 @@ namespace GlimmerGrove.Cloud
             {
                 if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
 
-                list.Add(new Dictionary<string, object>
+                var written = new Dictionary<string, object>
                 {
                     { "level", row.level },
                     { "wave", (long)row.wave },
-                });
+                };
+
+                // The best-graded run (v43, MODES.md 59o), only when there is one: inside the row,
+                // which the rules bound by count alone, so it costs no rules release (12a).
+                var top = Shuffle.ShuffleRecord.ToWire(Shuffle.ShuffleRecord.FromDto(row.top));
+                if (top != null) written["top"] = top;
+
+                list.Add(written);
             }
 
             return list;
@@ -772,7 +779,13 @@ namespace GlimmerGrove.Cloud
                 long wave = Long(map, "wave", 0L);
                 if (string.IsNullOrEmpty(level) || wave <= 0L) continue;
 
-                rows.Add(new ShuffleBestDto { level = level, wave = Cap(wave) });
+                rows.Add(new ShuffleBestDto
+                {
+                    level = level,
+                    wave = Cap(wave),
+                    top = Shuffle.ShuffleRecord.ToDto(
+                        Shuffle.ShuffleRecord.FromWire(map.TryGetValue("top", out object top) ? top : null)),
+                });
             }
 
             return rows.ToArray();
