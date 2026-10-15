@@ -126,11 +126,11 @@ namespace GlimmerGrove
         public Action Collected;
 
         /// <summary>
-        /// The pill snapshot taken before the reward was redeemed, handed over by the wheel.
+        /// The flight the reward was redeemed inside, handed over by the wheel.
         ///
         /// May be null - a panel raised with nothing to fly to still celebrates and still
-        /// closes. See <see cref="RewardFlight"/> for why it has to be taken before the grant
-        /// rather than derived at collect time.
+        /// closes. See <see cref="RewardFlight"/> for why it has to measure the grant rather
+        /// than derive the amount at collect time.
         /// </summary>
         public RewardFlight Flight { get; set; }
 

@@ -8,16 +8,16 @@ using UnityEngine;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// What one rewarded video came to: the prize, the snapshot the payout needs, and - where
+    /// What one rewarded video came to: the prize, the flight that measured it, and - where
     /// nothing was paid - why.
     ///
     /// <para>
-    /// <see cref="Flight"/> is opened <em>before</em> the reward is redeemed and is therefore
-    /// never null, including on the paths that paid nothing. That costs three reads on a
-    /// refusal, which is the cheapest thing on any screen this appears on, and it is what makes
-    /// the snapshot honest: deriving it afterwards by subtracting the offer is wrong in exactly
-    /// the case that matters, since a heart reward landing at the ceiling grants nothing and the
-    /// subtraction would rewind a pill below where it ever stood.
+    /// <see cref="Flight"/> is opened <em>before</em> the reward is redeemed and the redeem runs
+    /// inside it, so it is never null, including on the paths that paid nothing. That costs a few
+    /// reads on a refusal, which is the cheapest thing on any screen this appears on, and it is
+    /// what makes the amount honest: deriving it afterwards from the offer is wrong in exactly the
+    /// case that matters, since a heart reward landing at the ceiling grants nothing and owing it
+    /// would rewind a pill below where it ever stood.
     /// </para>
     /// </summary>
     public readonly struct VideoPayment
@@ -25,7 +25,7 @@ namespace GlimmerGrove
         /// <summary>What the video paid, or an invalid drop.</summary>
         public readonly ChestDrop Drop;
 
-        /// <summary>What the pills underneath read before the grant. See <see cref="RewardFlight"/>.</summary>
+        /// <summary>The flight the reward was redeemed inside, holding what it put on each pill. See <see cref="RewardFlight"/>.</summary>
         public readonly RewardFlight Flight;
 
         /// <summary>How the show attempt ended, in the SDK's terms.</summary>
@@ -56,11 +56,11 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It was written three times before it was written here.</b> <c>AdOfferOverlay</c>, the
     /// bonus wheel and the defeat panel's heart refill each need the same five steps in the same
-    /// order - mint an impression, show it, snapshot the pills, redeem, read the refusal - and
-    /// the order is the substance rather than the steps. The impression is minted before the SDK
-    /// is asked for anything because the nonce inside it has to reach the network as a custom
-    /// parameter (<see cref="AdImpression"/>); the snapshot is taken before the redeem because
-    /// the redeem is what moves the pills. A copy per panel is three places for one of those two
+    /// order - mint an impression, show it, open the flight, redeem inside it, read the refusal -
+    /// and the order is the substance rather than the steps. The impression is minted before the
+    /// SDK is asked for anything because the nonce inside it has to reach the network as a custom
+    /// parameter (<see cref="AdImpression"/>); the flight is opened before the redeem because the
+    /// redeem is what moves the pills, and the flight has to measure it. A copy per panel is three places for one of those two
     /// orderings to be got wrong, and neither failure is visible in a compile, a validator or a
     /// screenshot - the first pays nobody and the second rewinds a readout to a figure it never
     /// held. Invariant 9a at the smallest scale it appears at, which is the argument
@@ -96,13 +96,19 @@ namespace GlimmerGrove
         {
             var result = await Show(placementId);
 
-            // Before the redeem, always. See the class remarks. On a fault it is still opened, so
-            // a caller never has to test it for null: it holds a snapshot of pills nothing has
-            // moved, so playing it would be a no-op and adding an invalid drop to it is refused.
+            // Opened before the redeem and the redeem run inside it, always. See the class remarks.
+            // On a fault it is still opened, so a caller never has to test it for null: it has
+            // banked nothing, so playing it would be a no-op and adding an invalid drop to it is
+            // refused.
             var flight = RewardFlight.Begin();
+            var drop = flight.Bank(() => RewardedAds.Redeem(result));
+
+            // What the device banked (hearts, a boost) the flight has measured; a currency prize is
+            // paid by the server a few seconds from now (invariant 10d), so it is owed as it arrives.
+            flight.Expect(drop);
 
             bool faulted = result.Outcome == AdOutcome.Error;
-            return new VideoPayment(RewardedAds.Redeem(result), flight, result.Outcome, faulted);
+            return new VideoPayment(drop, flight, result.Outcome, faulted);
         }
 
         /// <summary>

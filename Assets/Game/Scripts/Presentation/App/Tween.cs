@@ -115,6 +115,21 @@ namespace GlimmerGrove
     public sealed class Tween : MonoBehaviour
     {
         static Tween _inst;
+
+        /// <summary>
+        /// Seconds of unscaled time this engine has advanced its tweens by, step for step.
+        ///
+        /// <para>
+        /// The clock to schedule against when something has to agree with a tween about when it
+        /// ends. <c>Time.unscaledTime</c> does not: every step here is trimmed to
+        /// <see cref="TweenCycle.MaxStep"/>, so after a hitch or a resume the wall clock is
+        /// seconds ahead of every animation on screen. A deadline set on this clock passes within a
+        /// frame of an <see cref="After"/> of the same delay (a delay keeps its overshoot), so a
+        /// readout settled by deadline and the animation that reports it cannot drift apart.
+        /// </para>
+        /// </summary>
+        public static double Clock { get; private set; }
+
         readonly List<Tw> _live = new List<Tw>(256);
         readonly List<Tw> _add = new List<Tw>(32);
         bool _iterating;
@@ -280,6 +295,7 @@ namespace GlimmerGrove
         {
             float dt = unscaledStep;
             float sdt = scaledStep;
+            Clock += dt;
             _iterating = true;
             for (int i = 0; i < _live.Count; i++)
             {

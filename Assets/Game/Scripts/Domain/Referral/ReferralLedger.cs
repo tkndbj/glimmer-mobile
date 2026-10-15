@@ -20,9 +20,9 @@ namespace GlimmerGrove.Referral
     /// <para>
     /// The server has already moved the currency by the time one of these exists; what is
     /// still to do is bank the rest of the drops and adopt the balances, and that happens in
-    /// <see cref="Land"/> - inside the chest overlay's claim, so the payout's snapshot of the
-    /// pills is taken before the grant lands (<c>RewardFlight.Begin</c>'s rule) and the
-    /// ceremony reports a chest being opened rather than one that was opened a moment ago.
+    /// <see cref="Land"/> - inside the chest overlay's claim, so the payout measures the pills on
+    /// either side of the grant (<c>RewardFlight.Bank</c>'s rule) and the ceremony reports a
+    /// chest being opened rather than one that was opened a moment ago.
     /// </para>
     /// </summary>
     public sealed class ReferralPayout

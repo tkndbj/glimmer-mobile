@@ -526,6 +526,10 @@ namespace GlimmerGrove
             var slice = _wheel.SliceAt(_landing);
             var prize = new ChestDrop(drop.Kind, slice.Pays(_offer.Amount));
 
+            // The server pays the slice's prize, not the bare offer the video's flight expected,
+            // so the pill is told to owe up to the larger figure as it arrives.
+            flight?.Expect(prize);
+
             // Raised before this panel is asked whether it still exists, because the prize does
             // not depend on it: a player who backgrounded the app during the video may be
             // standing somewhere else entirely by now, and the celebration is the only thing

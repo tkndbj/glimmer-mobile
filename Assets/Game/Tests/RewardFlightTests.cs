@@ -1,3 +1,4 @@
+using System;
 using GlimmerGrove.Daily;
 using NUnit.Framework;
 
@@ -68,15 +69,36 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------- the readout
-        // What a pill reads is the live balance less what is still in the air, kept per reward
-        // (ResourceSlots.Payout) so several can land in one pill at once - the page no longer
-        // waits for one cascade to finish before it takes the tap that starts the next.
+        // What a pill reads is the live balance less what is still in the air, owed per reward
+        // (ReadoutLedger) so several can land in one pill at once - the page no longer waits for
+        // one cascade to finish before it takes the tap that starts the next. Each reward owes
+        // the amount it banked; the server's half is a ceiling owed only as it arrives.
 
-        static ResourceSlots.Payout Pay(long sequence, long before, int landed, int tokens)
-            => new ResourceSlots.Payout(sequence, before) { Landed = landed, Tokens = tokens };
+        const double Before = 10.0, After = 1_000.0;
 
-        static long Read(long live, params ResourceSlots.Payout[] payouts)
-            => ResourceSlots.Owed(live, payouts);
+        static ReadoutLedger.Entry Played(long sequence, long banked, int landed, int tokens)
+        {
+            var entry = new ReadoutLedger.Entry(sequence, 0L);
+            entry.Bank(banked, 0L);
+            entry.Play(tokens, After);
+            entry.Land(landed);
+            return entry;
+        }
+
+        static ReadoutLedger.Entry Held(long sequence, long banked, long balance, Func<bool> holder = null)
+        {
+            var entry = new ReadoutLedger.Entry(sequence, balance);
+            entry.Bank(banked, balance);
+            entry.Holder = holder;
+            return entry;
+        }
+
+        static ReadoutLedger Of(params ReadoutLedger.Entry[] entries)
+        {
+            var ledger = new ReadoutLedger();
+            foreach (var entry in entries) ledger.Add(entry);
+            return ledger;
+        }
 
         /// <summary>
         /// The last token writes the balance itself rather than an interpolation. Without
@@ -87,21 +109,24 @@ namespace GlimmerGrove.Tests
         public void TheLastTokenWritesTheBalanceRatherThanTheInterpolation()
         {
             const int Tokens = 7;
-            Assert.AreEqual(1_000L, Read(1_000L, Pay(1, 0L, Tokens, Tokens)));
+            Assert.AreEqual(1_000L, Of(Played(1, 1_000L, Tokens, Tokens)).Shown(1_000L, Before));
 
             // And the step before it is genuinely short of the total, or the last landing
             // would have nothing left to say.
-            Assert.Less(Read(1_000L, Pay(1, 0L, Tokens - 1, Tokens)), 1_000L);
+            Assert.Less(Of(Played(1, 1_000L, Tokens - 1, Tokens)).Shown(1_000L, Before), 1_000L);
         }
 
         [Test]
         public void TheReadoutClimbsWithTheLandings()
         {
+            var entry = Played(1, 700L, 0, 7);
+            var ledger = Of(entry);
             long previous = long.MinValue;
 
             for (int landed = 0; landed <= 7; landed++)
             {
-                long shown = Read(800L, Pay(1, 100L, landed, 7));
+                entry.Land(landed);
+                long shown = ledger.Shown(800L, Before);
                 Assert.GreaterOrEqual(shown, previous, "landing " + landed + " went backwards");
                 Assert.GreaterOrEqual(shown, 100L);
                 Assert.LessOrEqual(shown, 800L);
@@ -111,38 +136,200 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(800L, previous);
         }
 
-        /// <summary>A held panel that has not paid yet owes its whole prize: the pill stands at the snapshot.</summary>
+        /// <summary>A held panel owes its whole prize: the pill stands where it was before the grant.</summary>
         [Test]
-        public void AHeldPayoutShowsTheSnapshot()
+        public void AHeldRewardKeepsItsWholePrizeOffThePill()
         {
-            Assert.AreEqual(4_000L, Read(5_000L, Pay(1, 4_000L, 0, 0)));
+            Assert.AreEqual(4_000L, Of(Held(1, 1_000L, 5_000L)).Shown(5_000L, Before));
         }
 
         /// <summary>
-        /// A rewarded ad's credits are granted by the server, so the balance can move
-        /// <em>during</em> the cascade - the tokens start flying against an unchanged figure
-        /// and the sync lands two landings in. The reading must not fall back to where it
-        /// started when that happens: it walks from wherever it had got to.
+        /// A gift panel holds its pills from the moment it opens and grants only on the key. Until
+        /// then it has banked nothing, so it keeps nothing off the pill - but it is still held,
+        /// because the grant may come.
         /// </summary>
         [Test]
-        public void ABalanceThatArrivesMidCascadeIsPickedUpWithoutGoingBackwards()
+        public void AHoldWithNothingBankedYetOwesNothingButIsStillHeld()
         {
-            const long Before = 4_000L;
-            const int Tokens = 7;
+            var ledger = Of(Held(1, 0L, 5_000L));
+            Assert.AreEqual(5_000L, ledger.Shown(5_000L, Before));
+            Assert.IsTrue(ledger.Busy(Before));
+        }
 
-            long previous = Before;
+        /// <summary>
+        /// A held entry is owed only while its panel stands, asked on every read - so a panel
+        /// destroyed without any callback running (edit mode sends no OnDestroy) still lets the
+        /// pill go, and the entry is dropped.
+        /// </summary>
+        [Test]
+        public void AHoldEndsWithItsPanelWhetherOrNotAnythingSaysSo()
+        {
+            bool standing = true;
+            var ledger = Of(Held(1, 1_000L, 5_000L, () => standing));
+            Assert.AreEqual(4_000L, ledger.Shown(5_000L, Before));
 
-            for (int landed = 1; landed <= Tokens; landed++)
+            standing = false;
+            Assert.AreEqual(5_000L, ledger.Shown(5_000L, Before));
+            Assert.IsFalse(ledger.Busy(Before));
+
+            ledger.Prune(5_000L, Before);
+            Assert.AreEqual(0, ledger.Count);
+        }
+
+        /// <summary>
+        /// The deadline is in the entry, not only in a timer: once it passes, a cascade whose
+        /// tokens all died owes nothing, and any repaint at all writes the balance.
+        /// </summary>
+        [Test]
+        public void TheDeadlineEndsAnEntryWhateverBecameOfItsTokens()
+        {
+            var ledger = Of(Played(1, 700L, 0, 7));
+            Assert.AreEqual(100L, ledger.Shown(800L, Before));
+            Assert.IsTrue(ledger.Busy(Before));
+
+            Assert.AreEqual(800L, ledger.Shown(800L, After));
+            Assert.IsFalse(ledger.Busy(After));
+
+            ledger.Prune(800L, After);
+            Assert.AreEqual(0, ledger.Count);
+        }
+
+        [Test]
+        public void APillWithNothingInTheAirReadsTheBalance()
+        {
+            Assert.AreEqual(730L, new ReadoutLedger().Shown(730L, Before));
+
+            var closed = Played(1, 500L, 0, 7);
+            closed.Close();
+            Assert.AreEqual(730L, Of(closed).Shown(730L, Before));
+        }
+
+        /// <summary>
+        /// Two chests opened back to back: the first is still landing when the second is
+        /// granted. Each owes only what it banked, so the pill climbs by the first's tokens and
+        /// then the second's, is never shown the sum early, never walked backwards, and ends
+        /// exactly on the balance.
+        /// </summary>
+        [Test]
+        public void TwoRewardsLandingInOnePillEachOweOnlyTheirOwn()
+        {
+            // 100 before the first chest (+50), 150 before the second (+30), 180 now.
+            var first = Played(1, 50L, 3, 7);
+            var second = Held(2, 30L, 180L);    // its panel is up, nothing thrown yet
+            var ledger = Of(first, second);
+
+            Assert.AreEqual(180L - (50L - 50L * 3 / 7) - 30L, ledger.Shown(180L, Before),
+                            "the first walks; the second is all owed");
+
+            first.Land(7);
+            Assert.AreEqual(150L, ledger.Shown(180L, Before), "the first is paid in full, the second still held");
+
+            second.Play(7, After);
+            second.Land(7);
+            Assert.AreEqual(180L, ledger.Shown(180L, Before));
+        }
+
+        /// <summary>
+        /// The newer reward can finish first - a small prize thrown after a large one. Amounts
+        /// add, so the order they finish in changes nothing about what either owes.
+        /// </summary>
+        [Test]
+        public void TheNewerRewardCanFinishFirst()
+        {
+            var first = Played(1, 50L, 0, 7);
+            var second = Played(2, 30L, 7, 7);
+            var ledger = Of(first, second);
+
+            Assert.AreEqual(180L - 50L, ledger.Shown(180L, Before));
+
+            second.Close();
+            ledger.Prune(180L, Before);
+            Assert.AreEqual(180L - 50L, ledger.Shown(180L, Before), "closing changes nothing it had not already paid");
+
+            first.Land(7);
+            Assert.AreEqual(180L, ledger.Shown(180L, Before));
+        }
+
+        /// <summary>
+        /// Money that is no reward's - a purchase landing, a heart refilling - shows at once, while
+        /// the cascade under way goes on owing exactly its own. The snapshot ledger handed it to
+        /// whichever reward was newest, which walked a purchase in with a chest's tokens.
+        /// </summary>
+        [Test]
+        public void MoneyThatIsNoRewardsShowsAtOnce()
+        {
+            var ledger = Of(Played(1, 50L, 0, 7));
+            Assert.AreEqual(100L, ledger.Shown(150L, Before));
+            Assert.AreEqual(600L, ledger.Shown(650L, Before), "a 500 purchase shows in full, the chest still owes 50");
+        }
+
+        /// <summary>
+        /// The case the snapshot ledger got wrong: a receipt's flight is made after its grant (it
+        /// is raised by it), so its snapshot had to be derived, and a chest opened a moment
+        /// earlier sorted ahead of it with a segment that ended below where it began - owing
+        /// nothing, while the receipt owed the chest's coins as well as its own. With amounts each
+        /// owes its own, whatever order they were opened in.
+        /// </summary>
+        [Test]
+        public void AReceiptOpenedAfterAChestOwesOnlyThePurchase()
+        {
+            // 100, then a 500 purchase (600), then a chest +50 (650), then the receipt's flight.
+            var chest = Held(1, 50L, 650L);
+            var receipt = Held(2, 500L, 650L);
+            var ledger = Of(chest, receipt);
+
+            Assert.AreEqual(100L, ledger.Shown(650L, Before));
+
+            receipt.Play(7, After);
+            receipt.Land(7);
+            Assert.AreEqual(600L, ledger.Shown(650L, Before), "the receipt paid its own 500 and none of the chest's 50");
+        }
+
+        /// <summary>A spend landing mid-cascade shows at once, and the cascade still owes what it owed.</summary>
+        [Test]
+        public void ASpendMidCascadeShowsAtOnce()
+        {
+            var ledger = Of(Played(1, 70L, 0, 7));
+            Assert.AreEqual(500L, ledger.Shown(570L, Before));
+            Assert.AreEqual(480L, ledger.Shown(550L, Before));
+        }
+
+        /// <summary>A balance spent below what is still owed reads nought, never a negative figure.</summary>
+        [Test]
+        public void TheReadoutNeverGoesBelowNought()
+        {
+            Assert.AreEqual(0L, Of(Played(1, 900L, 0, 7)).Shown(500L, Before));
+        }
+
+        [Test]
+        public void TheArithmeticIsExactForAnyBalanceAPlayerCanHold()
+        {
+            const long Big = 9_000_000_000_000L;
+            var entry = Played(1, Big, 0, 7);
+            var ledger = Of(entry);
+
+            long previous = -1L;
+            for (int landed = 0; landed <= 7; landed++)
             {
-                // Nothing from the server for the first three landings, then the grant lands.
-                long live = landed < 4 ? Before : Before + 1_000L;
-
-                long shown = Read(live, Pay(1, Before, landed, Tokens));
-                Assert.GreaterOrEqual(shown, previous, "landing " + landed + " went backwards");
+                entry.Land(landed);
+                long shown = ledger.Shown(Big, Before);
+                Assert.Greater(shown, previous);
                 previous = shown;
             }
 
-            Assert.AreEqual(Before + 1_000L, previous);
+            Assert.AreEqual(Big, previous);
+        }
+
+        // ------------------------------------------------------------- the server's half
+        // An ad's coins are paid by the server a few seconds after the video (invariant 10d), so
+        // its entry carries a ceiling and owes only what has arrived of it.
+
+        static ReadoutLedger.Entry Awaiting(long sequence, long ceiling, long balance)
+        {
+            var entry = new ReadoutLedger.Entry(sequence, balance);
+            entry.Bank(0L, balance);
+            entry.Await(ceiling);
+            return entry;
         }
 
         /// <summary>
@@ -151,94 +338,141 @@ namespace GlimmerGrove.Tests
         /// it must never do is drift off the balance in either direction.
         /// </summary>
         [Test]
-        public void AGrantThatHasNotLandedLeavesTheReadoutExactlyWhereItWas()
+        public void CoinsTheServerHasNotPaidLeaveThePillWhereItWas()
         {
+            var entry = Awaiting(1, 1_000L, 4_000L);
+            var ledger = Of(entry);
+            Assert.AreEqual(4_000L, ledger.Shown(4_000L, Before), "held, nothing arrived: no dip");
+
+            entry.Play(7, After);
             for (int landed = 0; landed <= 7; landed++)
-                Assert.AreEqual(4_000L, Read(4_000L, Pay(1, 4_000L, landed, 7)));
+            {
+                entry.Land(landed);
+                Assert.AreEqual(4_000L, ledger.Shown(4_000L, Before));
+            }
         }
 
         /// <summary>
-        /// A balance below the snapshot (a spend landing mid-cascade) owes nothing, so the pill
-        /// reads the balance - never above it, and never a figure walked down to it.
+        /// The coins arriving while the panel stands are kept off the pill until they fly - the
+        /// up, down and up of 2026-09-28 was this money showing behind the scrim and being rewound.
         /// </summary>
         [Test]
-        public void AFallenBalanceReadsTheBalance()
+        public void CoinsArrivingBehindThePanelWaitForTheirTokens()
         {
-            for (int landed = 0; landed <= 5; landed++)
-                Assert.AreEqual(500L, Read(500L, Pay(1, 900L, landed, 5)));
-        }
-
-        [Test]
-        public void APillWithNothingInTheAirReadsTheBalance()
-        {
-            Assert.AreEqual(730L, Read(730L));
-            Assert.AreEqual(730L, Read(730L, new ResourceSlots.Payout(1, 0L) { Done = true }));
+            var ledger = Of(Awaiting(1, 1_000L, 4_000L));
+            Assert.AreEqual(4_000L, ledger.Shown(5_000L, Before));
         }
 
         /// <summary>
-        /// Two chests opened back to back: the first is still landing when the second is
-        /// granted. Each owes only its own prize - the gap from its snapshot to the next - so
-        /// the pill climbs by the first's tokens and then the second's, and is never shown the
-        /// sum early, never walked backwards, and ends exactly on the balance.
+        /// The sync can land part way through the cascade. The reading must not fall back to where
+        /// it started when that happens: it walks from wherever it had got to.
         /// </summary>
         [Test]
-        public void TwoRewardsLandingInOnePillEachOweOnlyTheirOwn()
+        public void ABalanceThatArrivesMidCascadeIsPickedUpWithoutGoingBackwards()
         {
-            // 100 before the first chest (+50), 150 before the second (+30), 180 now.
-            var first = Pay(1, 100L, 3, 7);
-            var second = Pay(2, 150L, 0, 0);    // held: its panel is up, nothing thrown yet
+            const int Tokens = 7;
+            var entry = Awaiting(1, 1_000L, 4_000L);
+            entry.Play(Tokens, After);
+            var ledger = Of(entry);
 
-            Assert.AreEqual(100L + 50L * 3 / 7, Read(180L, first, second),
-                            "the first walks; the second is all owed");
+            long previous = 4_000L;
+            for (int landed = 1; landed <= Tokens; landed++)
+            {
+                entry.Land(landed);
 
-            first.Landed = 7;
-            Assert.AreEqual(150L, Read(180L, first, second), "the first is paid in full, the second still held");
+                // Nothing from the server for the first three landings, then the grant lands.
+                long live = landed < 4 ? 4_000L : 5_000L;
 
-            second.Tokens = 7;
-            second.Landed = 7;
-            Assert.AreEqual(180L, Read(180L, first, second));
+                long shown = ledger.Shown(live, Before);
+                Assert.GreaterOrEqual(shown, previous, "landing " + landed + " went backwards");
+                previous = shown;
+            }
+
+            Assert.AreEqual(5_000L, previous);
+        }
+
+        /// <summary>The ceiling is a ceiling: money beyond it is someone else's and shows at once.</summary>
+        [Test]
+        public void NoMoreThanTheCeilingIsEverHeldBack()
+        {
+            var ledger = Of(Awaiting(1, 100L, 4_000L));
+            Assert.AreEqual(4_400L, ledger.Shown(4_500L, Before));
         }
 
         /// <summary>
-        /// The newer reward can finish first - a small prize thrown after a large one. The
-        /// older one still owes exactly its own segment, which ends where the newer one's
-        /// snapshot was taken, so the newer one's prize is shown once and not walked again.
+        /// The bonus wheel states a larger prize after the video's flight stated the bare offer. The
+        /// larger ceiling stands; the two do not add.
         /// </summary>
         [Test]
-        public void TheNewerRewardCanFinishFirst()
+        public void TheLargestCeilingStatedStands()
         {
-            var first = Pay(1, 100L, 0, 7);
-            var second = Pay(2, 150L, 7, 7);
-
-            Assert.AreEqual(180L - 50L, Read(180L, first, second));
-
-            second.Done = true;
-            Assert.AreEqual(180L - 50L, Read(180L, first, second), "done changes nothing it had not already paid");
-
-            first.Landed = 7;
-            Assert.AreEqual(180L, Read(180L, first, second));
+            var entry = Awaiting(1, 100L, 4_000L);
+            entry.Await(300L);
+            entry.Await(200L);
+            Assert.AreEqual(300L, entry.Awaited);
         }
 
         /// <summary>
-        /// Through the real readouts: entries are ordered by snapshot, a finished entry that an
-        /// older one still measures to is kept, and once everything is released the readout is
-        /// free and reads the balance. Release is idempotent.
+        /// A chest opened while an ad's coins are still owed banks its own coins on the same pill.
+        /// Those are explained by the chest and must not be taken for the server's payment - and
+        /// stay explained once the chest has finished and been dropped from the ledger.
         /// </summary>
         [Test]
-        public void ReleasingEveryPayoutFreesTheReadout()
+        public void ANewerRewardsCoinsAreNeverMistakenForTheServers()
+        {
+            var ad = Awaiting(1, 100L, 4_000L);
+            var chest = Played(2, 50L, 0, 7);
+            var ledger = Of(ad, chest);
+
+            Assert.AreEqual(4_000L, ledger.Shown(4_050L, Before), "the chest's 50 is the chest's");
+
+            chest.Land(7);
+            chest.Close();
+            ledger.Prune(4_050L, Before);
+            Assert.AreEqual(1, ledger.Count);
+            Assert.AreEqual(4_050L, ledger.Shown(4_050L, Before), "and still the chest's once it has gone");
+
+            Assert.AreEqual(4_050L, ledger.Shown(4_150L, Before), "the server's 100 arrives and waits for its tokens");
+        }
+
+        /// <summary>Entries are kept oldest first whatever order they are entered in, and entering one twice is a no-op.</summary>
+        [Test]
+        public void EnteringIsOrderedAndIdempotent()
+        {
+            var older = Held(1, 10L, 100L);
+            var newer = Held(2, 20L, 100L);
+            var ledger = Of(newer, older, newer);
+
+            Assert.AreEqual(2, ledger.Count);
+            Assert.AreEqual(70L, ledger.Shown(100L, Before));
+        }
+
+        // ------------------------------------------------------------- the readouts
+        /// <summary>
+        /// Through the real readouts: an entry entered is paying until it is closed, and once
+        /// everything is closed the readout is free and reads the balance. Closing is idempotent.
+        /// </summary>
+        [Test]
+        public void ClosingEveryEntryFreesTheReadout()
         {
             const ResourceSlots.Kind Kind = ResourceSlots.Kind.Gems;
             try
             {
-                var newer = ResourceSlots.Claim(Kind, 20, 150L);
-                var older = ResourceSlots.Claim(Kind, 10, 100L);
+                long balance = ResourceSlots.Balance(Kind);
+                var older = new ReadoutLedger.Entry(10, balance);
+                var newer = new ReadoutLedger.Entry(20, balance);
+
+                ResourceSlots.Enter(Kind, newer);
+                ResourceSlots.Enter(Kind, older);
                 Assert.IsTrue(ResourceSlots.IsPaying(Kind));
 
-                ResourceSlots.Release(Kind, newer);
-                Assert.IsTrue(ResourceSlots.IsPaying(Kind), "the older one still owes, measured to the newer one's snapshot");
+                newer.Close();
+                ResourceSlots.Settle(Kind);
+                Assert.IsTrue(ResourceSlots.IsPaying(Kind), "the older one is still held");
 
-                ResourceSlots.Release(Kind, older);
-                ResourceSlots.Release(Kind, older);
+                older.Close();
+                older.Close();
+                ResourceSlots.Settle(Kind);
                 Assert.IsFalse(ResourceSlots.IsPaying(Kind));
                 Assert.AreEqual(ResourceSlots.Balance(Kind), ResourceSlots.Walked(Kind));
             }
@@ -282,12 +516,11 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------- the hold
-        // A panel freezes the pills from the moment it opens, so a balance landing behind it
-        // (an ad's coins arriving from the server) cannot count up twice. What must never
-        // happen is a pill left frozen, so every ending releases all three.
+        // A panel keeps its reward off the pills from the moment it opens, so its coins cannot
+        // count up twice. What must never happen is a pill left held, so every ending lets go.
 
         [Test]
-        public void AHeldPanelFreezesEveryPillUntilItPays()
+        public void AHeldPanelHoldsEveryPillUntilItPays()
         {
             var owner = new UnityEngine.GameObject("prize");
             try
@@ -313,7 +546,7 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void AFlightThatIsNeverHeldClaimsNothingUntilItPlays()
+        public void AFlightThatIsNeverHeldEntersNothingUntilItPlays()
         {
             RewardFlight.Begin();
             for (int k = 0; k < 3; k++)

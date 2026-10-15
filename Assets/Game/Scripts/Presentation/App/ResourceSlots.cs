@@ -87,11 +87,6 @@ namespace GlimmerGrove
             public Slot Slot;
         }
 
-        /// <summary>
-        /// The payouts walking each readout, oldest snapshot first. See <see cref="Claim"/>.
-        /// </summary>
-        static readonly List<Payout>[] Paying = { new List<Payout>(), new List<Payout>(), new List<Payout>() };
-
         public static void Register(Kind kind, RectTransform icon, Text number, Image glow,
                                     Color tint, Func<long, string> format)
         {
@@ -101,12 +96,12 @@ namespace GlimmerGrove
                 Rest = glow ? glow.color : Pal.A(tint, .30f)
             };
 
-            // A row rebuilt while a payout is walking it - the page redrawing itself under a
+            // A row rebuilt while a reward is walking it - the page redrawing itself under a
             // cascade, now that a cascade no longer holds the page still - starts on the walked
-            // figure, not on the balance the screen just printed into it. Payouts are no longer
-            // forgotten here: every one is released by its own flight (a lease on whatever draws
-            // it, and an unowned deadline), so a row rebuilt mid-flight keeps being paid into.
-            if (Paying[(int)kind].Count > 0) Show(kind, Walked(kind));
+            // figure, not on the balance the screen just printed into it. Nothing is forgotten
+            // here: every entry ends by itself (ReadoutLedger), so a row rebuilt mid-flight keeps
+            // being paid into.
+            if (Ledgers[(int)kind].Count > 0) Show(kind, Walked(kind));
         }
 
         /// <summary>
@@ -127,161 +122,80 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One reward's share of one readout: what the balance stood at when its snapshot was
-        /// taken, and how much of it has landed.
+        /// The rewards each readout is still walking in - see <see cref="ReadoutLedger"/> for the
+        /// rule, and <see cref="RewardFlight"/> for who enters them.
         ///
         /// <para>
-        /// <b>Why a readout holds a list of these rather than a flag.</b> A payout rewinds a
-        /// pill to what it read before the reward was granted and walks it forward one token at
-        /// a time, so for a second or two the number on screen is deliberately behind the
-        /// balance. While a chest panel stayed up until its last token landed, only one payout
-        /// could ever be walking a pill and a flag said enough. Now the page answers the next
-        /// tap while tokens are still in the air (<see cref="Flow.Depart"/>), so a second chest
-        /// can be granted and held while the first is still landing - and a flag released by
-        /// the first to finish would hand the readout back with the second's prize still
-        /// owed, which is a pill jumping to the total and then being walked up to it again.
-        /// </para>
-        /// <para>
-        /// <b>Each payout owes the gap between its snapshot and the next one.</b> Snapshots are
-        /// taken in the order the grants happen, and each is the true balance at that instant,
-        /// so consecutive snapshots partition what the readout has still to show into one
-        /// segment per reward - whatever order they finish in, and with no payout having to
-        /// know what any other is worth. The newest owes up to the live balance, which is how a
-        /// grant that only lands later (an ad's coins from the server, invariant 10d) is still
-        /// walked in rather than jumped to. See <see cref="Owed"/>.
+        /// <b>A ledger rather than a flag.</b> While a chest panel stayed up until its last token
+        /// landed, only one reward could ever be walking a pill. Now a paying panel steps out of
+        /// the player's way (<see cref="Flow.Depart"/>), so a second chest can be granted while the
+        /// first is still landing - and each owes exactly what it banked, so the pill climbs by the
+        /// first's tokens and then the second's, never jumping to the total or being walked back.
         /// </para>
         /// </summary>
-        public sealed class Payout
-        {
-            /// <summary>Orders snapshots by when they were taken, not when they were claimed.</summary>
-            public readonly long Sequence;
-
-            /// <summary>The balance at the snapshot - or, for a grant already applied, derived from it.</summary>
-            public readonly long Before;
-
-            /// <summary>Tokens that have landed out of <see cref="Tokens"/>. Nought tokens is a held panel: all of it owed.</summary>
-            public int Landed, Tokens;
-
-            /// <summary>Paid in full, or abandoned. Kept only while an older payout still measures to it.</summary>
-            public bool Done;
-
-            public Payout(long sequence, long before)
-            {
-                Sequence = sequence;
-                Before = before;
-            }
-
-            /// <summary>
-            /// What this payout has still to show, given where its segment ends. Integer
-            /// arithmetic (no float may decide a figure) and exact at the ends: nothing landed
-            /// owes the whole segment, the last token owes nothing.
-            /// </summary>
-            public long Outstanding(long end)
-            {
-                long segment = end - Before;
-                if (Done || segment <= 0) return 0L;
-                if (Tokens <= 0) return segment;
-                if (Landed >= Tokens) return 0L;
-                return segment - segment * Math.Max(0, Landed) / Tokens;
-            }
-        }
+        static readonly ReadoutLedger[] Ledgers = { new ReadoutLedger(), new ReadoutLedger(), new ReadoutLedger() };
 
         /// <summary>
-        /// What a readout shows while <paramref name="payouts"/> (oldest snapshot first) are
-        /// walking it: the live balance less everything still in the air. The pure half of
-        /// <see cref="Walked"/>, public so the arithmetic is pinned without a screen.
+        /// The clock every deadline in a ledger is set on: the tween engine's, so a deadline and the
+        /// tokens it stands behind cannot drift apart (see <see cref="Tween.Clock"/>).
         /// </summary>
-        public static long Owed(long live, IList<Payout> payouts)
-        {
-            long owed = 0L;
-            for (int i = 0; i < payouts.Count; i++)
-            {
-                long end = i + 1 < payouts.Count ? payouts[i + 1].Before : live;
-                owed += payouts[i].Outstanding(end);
-            }
-
-            return Math.Max(0L, live - owed);
-        }
+        public static double Now => Tween.Clock;
 
         /// <summary>What this readout should say right now: the balance, less what is still flying into it.</summary>
-        public static long Walked(Kind kind) => Owed(Balance(kind), Paying[(int)kind]);
+        public static long Walked(Kind kind) => Ledgers[(int)kind].Shown(Balance(kind), Now);
 
         /// <summary>
-        /// Enters a payout on a readout, which from now on shows the balance less what that
-        /// payout has still to land, until <see cref="Release"/>.
+        /// Enters a reward on a readout, which from now on shows the balance less what that reward
+        /// has still to land, and repaints it.
         ///
         /// <para>
-        /// The hub repaints on every wallet change and a payout's figure must not be written
-        /// over from underneath, so every writer goes through <see cref="Walked"/>: the screen's
-        /// <see cref="Repaint"/> and the payout's landings alike. That is what lets a balance
-        /// move mid-cascade - an ad's credits arriving, a second chest granted - without a pill
+        /// The hub repaints on every wallet change and a reward's figure must not be written over
+        /// from underneath, so every writer goes through <see cref="Walked"/>: the screen's
+        /// <see cref="Repaint"/> and the landings alike. That is what lets a balance move
+        /// mid-cascade - an ad's credits arriving, a second chest granted, a spend - without a pill
         /// ever jumping ahead of its tokens or being dragged back behind them.
         /// </para>
         /// </summary>
-        public static Payout Claim(Kind kind, long sequence, long before)
+        public static void Enter(Kind kind, ReadoutLedger.Entry entry)
         {
-            var list = Paying[(int)kind];
-            var payout = new Payout(sequence, before);
-
-            // In snapshot order, which is the order the grants happened in - a panel can hold
-            // its pills a moment after a later reward has already claimed them.
-            int at = list.Count;
-            while (at > 0 && list[at - 1].Sequence > sequence) at--;
-            list.Insert(at, payout);
-
-            Show(kind, Walked(kind));
-            return payout;
+            Ledgers[(int)kind].Add(entry);
+            Settle(kind);
         }
 
         /// <summary>
-        /// The payout has finished with this readout, paid or abandoned; the readout is
-        /// repainted with whatever is still owed to anything else. Idempotent.
+        /// Drops whatever can no longer owe and repaints the readout with what is left. Called
+        /// whenever an entry changes; harmless at any other time.
         /// </summary>
-        public static void Release(Kind kind, Payout payout)
+        public static void Settle(Kind kind)
         {
-            if (payout == null) return;
-            payout.Done = true;
-            Prune(Paying[(int)kind]);
+            Ledgers[(int)kind].Prune(Balance(kind), Now);
             Show(kind, Walked(kind));
         }
 
         /// <summary>
-        /// Drops finished payouts nothing measures to any more. A finished payout is kept only
-        /// while an older one still owes - its snapshot is where the older one's segment ends,
-        /// and removing it would hand the older one this payout's prize to walk in a second time.
-        /// </summary>
-        static void Prune(List<Payout> list)
-        {
-            for (int i = list.Count - 1; i >= 0; i--)
-                if (list[i].Done && (i == 0 || list[i - 1].Done)) list.RemoveAt(i);
-
-            // Every survivor finished means nothing measures to anything.
-            for (int i = 0; i < list.Count; i++) if (!list[i].Done) return;
-            list.Clear();
-        }
-
-        /// <summary>
-        /// Forgets every payout on every readout. For a fixture's teardown only: in the game
-        /// each payout is released by its own flight.
+        /// Forgets every reward on every readout. For a fixture's teardown only: in the game each
+        /// entry ends by itself.
         /// </summary>
         public static void ResetPayouts()
         {
-            for (int k = 0; k < Paying.Length; k++) Paying[k].Clear();
+            for (int k = 0; k < Ledgers.Length; k++) Ledgers[k].Clear();
         }
 
-        /// <summary>True while any payout is walking this readout - see <see cref="Claim"/>.</summary>
-        public static bool IsPaying(Kind kind) => Paying[(int)kind].Count > 0;
+        /// <summary>True while any reward still owes this readout, or is held over it.</summary>
+        public static bool IsPaying(Kind kind) => Ledgers[(int)kind].Busy(Now);
 
         /// <summary>
-        /// The screen's own repaint. With nothing in the air this writes the balance; with a
-        /// payout walking the readout it writes the walked figure instead, so a wallet change
-        /// landing mid-cascade moves the pill by exactly what is no longer owed and never past
-        /// the tokens. <paramref name="value"/> is the balance the screen read, and is what is
-        /// written when nothing is paying.
+        /// The screen's own repaint. With nothing in the air this writes the balance; with a reward
+        /// walking the readout it writes the walked figure instead, so a wallet change landing
+        /// mid-cascade moves the pill by exactly what is no longer owed and never past the tokens.
+        /// <paramref name="value"/> is the balance the screen read, and is what is written when
+        /// nothing is paying.
         /// </summary>
         public static void Repaint(Kind kind, long value)
         {
-            Show(kind, Paying[(int)kind].Count > 0 ? Walked(kind) : value);
+            var ledger = Ledgers[(int)kind];
+            if (ledger.Count > 0) ledger.Prune(Balance(kind), Now);
+            Show(kind, ledger.Count > 0 ? Walked(kind) : value);
         }
 
         /// <summary>
@@ -300,7 +214,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Taken down by the owner's own destruction</b> (a lease component), however the panel
         /// ends - closed, dismissed, or swept away by a screen change - and the row underneath is
-        /// repainted with the live balance then, unless a payout owns it (<see cref="Claim"/>).
+        /// repainted then, with whatever a reward still in the air leaves it (<see cref="Walked"/>).
         /// </para>
         /// </summary>
         public static void RegisterOver(Component owner, Kind kind, RectTransform icon, Text number, Image glow,

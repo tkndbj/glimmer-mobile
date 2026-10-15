@@ -20,12 +20,13 @@ namespace GlimmerGrove
     /// per gift however the panel adds them up.
     /// </para>
     /// <para>
-    /// <b>The payout is the chest's</b> (<c>ChestOverlay.Collect</c>): the flight snapshots the
-    /// readouts <em>before</em> the grant and holds them while the panel stands
-    /// (<see cref="RewardFlight.Hold"/>), the key grants, the chrome fades, and the cards empty into
-    /// the pills. The grant is what matters and it happens first: a process killed mid-cascade has
-    /// still claimed the gift, and the hub repaints to the new balance on its own. A hub with no
-    /// readout to fly into closes instead - the gift is banked either way.
+    /// <b>The payout is the chest's</b> (<c>ChestOverlay.Collect</c>): the flight is opened and held
+    /// while the panel stands (<see cref="RewardFlight.Hold"/>), the key grants inside it so it
+    /// measures what the gifts put on each pill (<see cref="RewardFlight.Bank{T}"/>), the chrome
+    /// fades, the panel steps out of the player's way, and the cards empty into the pills. The
+    /// grant is what matters and it happens first: a process killed mid-cascade has still claimed
+    /// the gift, and the hub repaints to the new balance on its own. A hub with no readout to fly
+    /// into closes instead - the gift is banked either way.
     /// </para>
     /// <para>
     /// <b>No way out but the key and the back key.</b> The scrim does not dismiss (a stray tap must
@@ -86,8 +87,8 @@ namespace GlimmerGrove
             long credits = 0L, gems = 0L;
             foreach (var gift in _gifts) { credits += gift.Credits; gems += gift.Gems; }
 
-            // What each pill reads before the grant, captured rather than derived, and held while
-            // the panel stands so nothing moves behind it (`ChestOverlay.Build`'s two lines).
+            // Opened and held while the panel stands, so the gifts do not show on the pills behind
+            // it before they fly (`ChestOverlay.Build`'s two lines); the key grants inside it.
             _flight = RewardFlight.Begin();
             _flight.Hold(this);
 
@@ -232,7 +233,8 @@ namespace GlimmerGrove
             _claiming = true;
             if (_key) _key.Interactable = false;
 
-            var claim = GiftLedger.Claim(_gifts);
+            // Granted inside the flight, so it knows what the gifts measurably put on each pill.
+            var claim = _flight.Bank(() => GiftLedger.Claim(_gifts));
 
             // Beaten to it - another phone claimed it since the panel opened, or the awards were
             // already queued. Nothing to show and nothing lost: the hold is released as the panel goes.
@@ -253,7 +255,11 @@ namespace GlimmerGrove
 
             _leaving = true;
             FadeChrome();
-            _flight.Play(Content, () => Flow.Dismiss(this));
+
+            // Out of the player's way from this instant, as a chest is: the gifts are banked and
+            // what is left is a report, and nothing waits on this panel's ending (GiftMoment asks
+            // Flow.Covered, which still counts it until its tokens have landed).
+            PayAndStepAside(_flight);
         }
 
         /// <summary>

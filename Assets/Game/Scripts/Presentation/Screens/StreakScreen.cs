@@ -1545,12 +1545,12 @@ namespace GlimmerGrove
         /// </summary>
         void TakeCurrency(NightTile tile, int night, StreakRung rung)
         {
-            // Snapshotted *before* the grant, which is what `Begin` insists on: a snapshot
-            // taken afterwards would have to be derived, and deriving it is wrong the moment a
-            // rule can clamp what was granted.
+            // Granted inside the flight, which measures what the night put on each pill: an amount
+            // derived from the prizes would be wrong the moment a rule can clamp what was granted.
             var flight = RewardFlight.Begin();
 
-            if (!DailyStreak.TryCollect(night, out var drops))
+            List<ChestDrop> drops = null;
+            if (!flight.Bank(() => DailyStreak.TryCollect(night, out drops)))
             {
                 _collecting = false;
                 Settle();
@@ -1589,7 +1589,7 @@ namespace GlimmerGrove
             // fly. The airspace is outside Content, so the settle below - which redraws the
             // whole board when this night rolls the lap over - cannot take the tokens with it,
             // and the flight remembers where each one leaves from if the tile it was printed on
-            // goes. The readouts are a ledger of payouts (ResourceSlots.Payout), so a second
+            // goes. The readouts are a ledger of rewards (ReadoutLedger), so a second
             // night taken mid-flight is walked in on top of this one rather than over it.
             if (flying) flight.Play(Airspace, null);
 

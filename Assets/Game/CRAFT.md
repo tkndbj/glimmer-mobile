@@ -740,16 +740,18 @@ Presentation and are invisible in a compile, a validator and a screenshot of the
   `CompanionLedger.Changed`, `CloudSaveService.IdentityChanged`, `GameSettings.Changed`.
 - **A reward that lands somewhere is worth more than one that is merely granted, and the cascade that does it
   exists once.** `RewardFlight` - the chest's collect, lifted out when the rewarded ad and then the shop's
-  receipt needed the same thing. Two rules keep it honest. A readout has **one answer**: the payout rewinds a
-  pill to what it said before the grant and walks it forward a token at a time, so it enters a
-  `ResourceSlots.Payout` on the slot and every writer (`Repaint` and the landings alike) writes `Walked` -
-  the balance less what every reward still has in the air, each owing the gap from its snapshot to the next.
-  A flag would do for one cascade; it fails the moment two overlap, and they do, because **a paying panel
-  steps out of the player's way** (`Flow.Depart`) and a page takes its next tap while tokens fly (a streak
-  night's go in `View.Airspace`, which a redraw does not empty). And the target is **read live at every
-  landing, never captured**, because an ad's currency is granted by the server (10d), so the figure is walked
-  towards whatever the balance says when a token arrives and a grant that has not arrived leaves the number
-  where it was rather than anywhere invented. A prize with no pill adds nothing and simply closes: a reward
+  receipt needed the same thing. Three rules keep it honest. A readout has **one answer**: every writer
+  (`Repaint` and the landings alike) writes `ResourceSlots.Walked`, the balance less what every reward still
+  has in the air (`ReadoutLedger`, pure and pinned offline). **Each reward owes the amount it banked,
+  measured across the grant** (`RewardFlight.Bank`), never derived from its prizes or from balance
+  snapshots, so rewards overlapping in one pill add and cannot take each other's money - and they do
+  overlap, because **a chest or gift steps out of the player's way at COLLECT**
+  (`ModalView.PayAndStepAside`, which takes no continuation: a panel something waits on still holds the
+  screen) and a page takes its next tap while tokens fly (a streak night's go in `View.Airspace`, which a
+  redraw does not empty). The server's half is a ceiling, never a figure: an ad's currency is granted by
+  the server (10d), so it is entered with `RewardFlight.Expect` and owed only as it actually arrives. And
+  **every entry ends by itself**: a held one only while its panel stands, a playing one at its last landing
+  or at its deadline on `Tween.Clock`, so no lost callback can leave a pill below the balance. A prize with no pill adds nothing and simply closes: a reward
   already banked must never depend on an animation being able to run.
 - **A panel that explains a resource is the answer to a question, never a toll on the way to playing - and
   what a video pays is a panel of its own.** `AdOfferOverlay` is right behind the `+` beside the heart pill,

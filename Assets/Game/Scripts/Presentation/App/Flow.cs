@@ -438,7 +438,8 @@ namespace GlimmerGrove
                 _modals.Clear();
 
                 // A departing panel belongs to the screen it was paying into, and goes with it.
-                // Its flight's lease lets the readouts go (RewardFlight.TieTo).
+                // Its flight's lease lets the readouts go at once (RewardFlight.TieTo); its
+                // entries would stop owing at their deadline regardless (ReadoutLedger).
                 foreach (var m in _departing) if (m) UnityEngine.Object.Destroy(m.gameObject);
                 _departing.Clear();
                 if (Current) UnityEngine.Object.Destroy(Current.gameObject);
@@ -716,7 +717,7 @@ namespace GlimmerGrove
         /// pressed what is left is tokens flying into the readouts - and a panel that stayed in
         /// the stack for that made the player wait out every coin before they could open the
         /// next chest or go back. Nothing the page can do next can disturb the report: the
-        /// readouts are a ledger of payouts, not a lock (<c>ResourceSlots.Payout</c>), and the
+        /// readouts are a ledger of rewards, not a lock (<c>ReadoutLedger</c>), and the
         /// flight ends itself whichever way the panel goes.
         /// </para>
         /// <para>

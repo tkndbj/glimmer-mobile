@@ -23,26 +23,25 @@ namespace GlimmerGrove
     /// are lower than their balance, with no button to press.
     /// </para>
     /// <para>
-    /// <b>The snapshot is why this is instantiated rather than static.</b> <see cref="Begin"/>
-    /// has to run <em>before</em> the reward is granted and <see cref="Play"/> long after -
-    /// the chest snapshots as it is built and pays when the button is pressed, the ad
-    /// snapshots before <c>RewardedAds.Redeem</c> and pays when the player taps COLLECT.
-    /// Deriving "what the pill said before" at collect time by subtracting the prize is wrong
-    /// in the case that matters: a heart drop landing at the ceiling grants nothing, so the
-    /// subtraction would rewind the pill below where it ever stood and then count it up to a
-    /// gain nobody received.
+    /// <b>The grant is measured, which is why this is instantiated rather than static.</b> The
+    /// flight is opened before the reward is granted (<see cref="Begin"/>), the grant runs
+    /// inside it (<see cref="Bank{T}"/>), and <see cref="Play"/> comes long after - the chest is
+    /// granted as it is built and pays when the button is pressed. What each pill owes is what
+    /// the grant measurably added to its balance, read on either side of the grant in the same
+    /// call. Deriving it from the prize is wrong in the case that matters: a heart drop landing
+    /// at the ceiling grants nothing, so the pill would be rewound below where it ever stood and
+    /// counted up to a gain nobody received.
     /// </para>
     /// <para>
-    /// <b>The target is read live, at every landing, and that is what makes it safe for
-    /// currency.</b> A chest's credits are in the local ledger before the animation starts;
-    /// an ad's are not and must not be - invariant 10d, the client credits hearts only and
-    /// asks the server for the rest. So the number is never walked towards a figure this code
-    /// invented. It is walked towards whatever the balance says at the instant a token
-    /// arrives: hearts climb immediately, credits climb the moment the sync lands - usually
-    /// mid-cascade, because <c>Redeem</c> starts that sync a beat before the player finds the
-    /// COLLECT button - and if the server has not answered yet the tokens still arrive, still
-    /// flash, and the figure catches up when it does. Nothing here can tell a player they
-    /// were paid something they were not.
+    /// <b>The one amount that cannot be measured is the server's, and it is never invented.</b>
+    /// A chest's credits are in the local ledger before the animation starts; an ad's are not and
+    /// must not be - invariant 10d, the client credits hearts only and asks the server for the
+    /// rest. So an ad's coins are entered as a ceiling (<see cref="Expect"/>) and count only as
+    /// they actually arrive (<see cref="ReadoutLedger"/>): credits climb the moment the sync
+    /// lands - usually mid-cascade, because <c>Redeem</c> starts that sync a beat before the
+    /// player finds the COLLECT button - and if the server has not answered yet the tokens still
+    /// arrive, still flash, and the figure catches up when it does. Nothing here can tell a
+    /// player they were paid something they were not.
     /// </para>
     /// </summary>
     public sealed class RewardFlight
@@ -71,12 +70,14 @@ namespace GlimmerGrove
         const float FinishBeat = 0.42f;
 
         /// <summary>
-        /// How long past the scheduled end the safety net waits before finishing anyway.
+        /// How long past the scheduled end a cascade is given before it counts as landed.
         ///
-        /// A landing callback that never arrives - a token whose tween was interrupted, a
-        /// pill destroyed at the wrong instant - would otherwise leave the player looking at
-        /// a panel with no button on it. The reward is already banked, so there is never a
-        /// reason to keep them there.
+        /// It is the deadline written into every readout entry this flight plays
+        /// (<see cref="ReadoutLedger.Entry.Deadline"/>), so a landing callback that never arrives -
+        /// a token whose tween was interrupted, a pill destroyed at the wrong instant - cannot
+        /// leave a pill standing below the balance: the entry stops owing at the deadline whatever
+        /// happened. The same moment finishes the flight for its caller, so a panel waiting on it
+        /// is let go too.
         /// </summary>
         const float Safety = 1.4f;
 
@@ -95,24 +96,21 @@ namespace GlimmerGrove
         }
 
         readonly List<Item> _items = new List<Item>();
-        readonly long[] _before = new long[3];
         readonly int[] _tokens = new int[3];
         readonly int[] _landed = new int[3];
 
         /// <summary>
-        /// This flight's entry on each readout, null where it has none. See
-        /// <see cref="ResourceSlots.Payout"/> for why a readout keeps one per reward.
+        /// This flight's share of each readout: what its grant banked there, and how much of it
+        /// has landed. Created with the flight; entered on a readout when the panel holds it or
+        /// the tokens leave, and closed when this flight is done with that readout.
         /// </summary>
-        readonly ResourceSlots.Payout[] _payouts = new ResourceSlots.Payout[3];
+        readonly ReadoutLedger.Entry[] _entries = new ReadoutLedger.Entry[3];
+        readonly bool[] _entered = new bool[3];
 
         /// <summary>Where each prize's tokens last left from - see <see cref="Throw"/>.</summary>
         Vector2[] _from;
 
-        /// <summary>
-        /// When the snapshot was taken, relative to every other flight's. Readouts order their
-        /// payouts by it, because that is the order the grants were made in.
-        /// </summary>
-        readonly long _sequence;
+        /// <summary>Numbers every flight in the order it was begun - see <see cref="ReadoutLedger.Entry.Sequence"/>.</summary>
         static long _sequences;
 
         int _thrown, _arrived;
@@ -120,83 +118,140 @@ namespace GlimmerGrove
         Action _done;
         readonly List<Lease> _leases = new List<Lease>();
 
-        RewardFlight() { _sequence = ++_sequences; }
-
-        /// <summary>
-        /// Snapshots what every pill reads right now. Call this <em>before</em> granting the
-        /// reward - see the class remarks.
-        ///
-        /// <para>
-        /// The balance itself, not what the pill happens to be drawing: with another reward
-        /// still landing the pill reads less than the balance, and a snapshot of the drawing
-        /// would make this reward owe the other one's tokens as well.
-        /// </para>
-        /// </summary>
-        public static RewardFlight Begin()
+        RewardFlight()
         {
-            var flight = new RewardFlight();
+            long sequence = ++_sequences;
             for (int k = 0; k < 3; k++)
-                flight._before[k] = ResourceSlots.Balance((ResourceSlots.Kind)k);
-            return flight;
+                _entries[k] = new ReadoutLedger.Entry(sequence, ResourceSlots.Balance((ResourceSlots.Kind)k));
         }
 
         /// <summary>
-        /// The same, for a reward that has <em>already</em> been applied: the snapshot is
-        /// today's balance with the grant taken back off it.
+        /// Opens a flight for a reward about to be granted. Grant it through <see cref="Bank{T}"/>,
+        /// so the flight knows what it put on each balance - see the class remarks.
+        /// </summary>
+        public static RewardFlight Begin() => new RewardFlight();
+
+        /// <summary>
+        /// Runs <paramref name="grant"/> and records what it put on each balance, read on either
+        /// side of it in this one call, so nothing else can land in between. Returns what the
+        /// grant returned.
+        ///
+        /// <para>
+        /// The balance itself is read, never what a pill happens to be drawing: with another
+        /// reward still landing a pill reads less than the balance, and measuring the drawing
+        /// would make this reward owe the other one's tokens as well. Measured in a
+        /// <c>finally</c>, so a grant that throws part way still owes exactly what it did bank,
+        /// and the exception still reaches the caller. Banking twice adds both.
+        /// </para>
+        /// </summary>
+        public T Bank<T>(Func<T> grant)
+        {
+            if (grant == null) throw new ArgumentNullException(nameof(grant));
+
+            var before = new long[3];
+            for (int k = 0; k < 3; k++) before[k] = ResourceSlots.Balance((ResourceSlots.Kind)k);
+
+            try
+            {
+                return grant();
+            }
+            finally
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    var kind = (ResourceSlots.Kind)k;
+                    long after = ResourceSlots.Balance(kind);
+                    _entries[k].Bank(after - before[k], after);
+                    if (_entered[k]) ResourceSlots.Settle(kind);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The reward also pays <paramref name="drop"/> through the server, so its pill owes what
+        /// arrives of it, up to its amount (<see cref="ReadoutLedger.Entry.Await"/>). Call it
+        /// after <see cref="Bank{T}"/>.
+        ///
+        /// <para>
+        /// Only credits and gems can be owed this way, and only what the grant did not already
+        /// put on the balance. Those two are the only things in this game that nothing clamps, so
+        /// the part of the prize that did not land on the device is exactly the part the server
+        /// owes. Hearts are always credited on the device and are never awaited: a heart drop at
+        /// the ceiling is a heart nobody received, not one still on its way.
+        /// </para>
+        /// </summary>
+        public void Expect(ChestDrop drop)
+        {
+            if (_finished || !drop.IsValid) return;
+            if (drop.Kind != ChestDropKind.Credits && drop.Kind != ChestDropKind.Gems) return;
+            if (!RewardArt.Slot(drop.Kind, out var kind)) return;
+
+            int k = (int)kind;
+            _entries[k].Await(drop.Amount - _entries[k].Banked);
+            if (_entered[k]) ResourceSlots.Settle(kind);
+        }
+
+        /// <summary>
+        /// The same, for a reward that has <em>already</em> been applied: the flight is told what
+        /// the grant was worth instead of measuring it.
         ///
         /// <para>
         /// This exists for the shop, and only for the shop. Every other payout here is opened
-        /// before its grant, which is the shape <see cref="Begin"/> insists on because a
-        /// snapshot taken afterwards has to be <em>derived</em>, and deriving it is wrong the
-        /// moment a rule can clamp what was granted - a heart drop landing at the ceiling
-        /// grants nothing, so subtracting its amount would rewind the pill below where it ever
-        /// stood and count it up to a gain nobody received. A real-money purchase cannot be
-        /// opened before its grant: <c>StoreService.Granted</c> is raised <em>by</em> the
-        /// grant, from a receipt that may have been validated while the app was not even
-        /// running.
+        /// before its grant and measures it (<see cref="Bank{T}"/>), because an amount taken from
+        /// anywhere else has to be <em>derived</em>, and deriving it is wrong the moment a rule
+        /// can clamp what was granted - a heart drop landing at the ceiling grants nothing, so
+        /// owing its amount would rewind the pill below where it ever stood and count it up to a
+        /// gain nobody received. A real-money purchase cannot be opened before its grant:
+        /// <c>StoreService.Granted</c> is raised <em>by</em> the grant, from a receipt that may
+        /// have been validated while the app was not even running.
         /// </para>
         /// <para>
         /// So the parameters are two currency amounts rather than a set of drops, and that is
         /// the constraint expressed as a type. Credits and gems are the only two things in
         /// this game that nothing clamps - no ceiling, no cap, no rule between the server's
-        /// figure and the balance - so subtracting them is exact. Hearts are not, which is why
-        /// there is no way to pass one in here.
+        /// figure and the balance - so the amount granted is the amount added. Hearts are not,
+        /// which is why there is no way to pass one in here.
         /// </para>
         /// </summary>
         public static RewardFlight AfterGrant(long credits, long gems)
         {
             var flight = Begin();
 
-            int c = (int)ResourceSlots.Kind.Credits, g = (int)ResourceSlots.Kind.Gems;
-
-            // Clamped, because the balance is read now and the grant was applied a moment ago
-            // - a spend landing in between would make the subtraction overshoot, and a pill
-            // rewound below zero would count up from a figure that has never been true.
-            flight._before[c] = Math.Max(0L, flight._before[c] - Math.Max(0L, credits));
-            flight._before[g] = Math.Max(0L, flight._before[g] - Math.Max(0L, gems));
-
+            // Held to the balance, because the balance is read now and the grant was applied a
+            // moment ago - a spend landing in between would leave the pill owing more than it
+            // holds, and a pill rewound below nought would count up from a figure never true.
+            flight.Owe(ResourceSlots.Kind.Credits, credits);
+            flight.Owe(ResourceSlots.Kind.Gems, gems);
             return flight;
         }
 
+        void Owe(ResourceSlots.Kind kind, long amount)
+        {
+            long balance = ResourceSlots.Balance(kind);
+            _entries[(int)kind].Bank(Math.Min(Math.Max(0L, amount), Math.Max(0L, balance)), balance);
+        }
+
         /// <summary>
-        /// Freezes every pill at the snapshot from now until the payout plays, so nothing moves
-        /// behind the panel while it is up. Call it the moment the panel that will pay exists.
+        /// Keeps this reward off every pill from now until the payout plays, so its prize does not
+        /// show behind the panel announcing it. Call it the moment the panel that will pay exists.
         ///
         /// <para>
-        /// Without this the pills were claimed only when COLLECT was pressed, and a balance that
-        /// moved while the panel stood - a rewarded video's coins arriving from the server a few
-        /// seconds after it closed, or a shop grant raised before its panel - repainted the pill
-        /// to the new total behind the scrim; COLLECT then rewound it and counted it up again, so
-        /// the player watched the number go up, down and up (reported on 2026-09-28).
+        /// Without this the pills were claimed only when COLLECT was pressed, and a reward that
+        /// reached the balance while the panel stood - a rewarded video's coins arriving from the
+        /// server a few seconds after it closed, or a shop grant raised before its panel -
+        /// repainted the pill to the new total behind the scrim; COLLECT then rewound it and
+        /// counted it up again, so the player watched the number go up, down and up (reported on
+        /// 2026-09-28).
         /// </para>
         /// <para>
-        /// The hold is released when the cascade finishes - or, through a lease on
-        /// <paramref name="owner"/>, whenever that panel is destroyed without playing, which is
-        /// what keeps a pill from ever standing frozen below the balance. Idempotent.
+        /// Held only while <paramref name="owner"/> stands: each entry asks on every read
+        /// (<see cref="ReadoutLedger.Entry.Holder"/>), so a panel destroyed without playing lets
+        /// its pills go even if no callback runs, and a lease repaints them the moment it goes.
+        /// Idempotent.
         /// </para>
         /// <para>
-        /// "Frozen" is this reward's share only: a pill another reward is still landing in goes
-        /// on climbing by that one's tokens, and stops short of this one's prize.
+        /// This reward's share only: anything else reaching the balance shows at once, and a pill
+        /// another reward is still landing in goes on climbing by that one's tokens.
         /// </para>
         /// </summary>
         public void Hold(Component owner)
@@ -205,9 +260,27 @@ namespace GlimmerGrove
             _held = true;
 
             for (int k = 0; k < 3; k++)
-                _payouts[k] = ResourceSlots.Claim((ResourceSlots.Kind)k, _sequence, _before[k]);
+            {
+                _entries[k].Holder = () => owner;
+                Enter(k);
+            }
 
             TieTo(owner);
+        }
+
+        void Enter(int k)
+        {
+            if (_entered[k]) return;
+            _entered[k] = true;
+            ResourceSlots.Enter((ResourceSlots.Kind)k, _entries[k]);
+        }
+
+        /// <summary>Closes this flight's entry on one readout and repaints it with what is left. Idempotent.</summary>
+        void Close(int k)
+        {
+            if (_entries[k].Closed) return;
+            _entries[k].Close();
+            if (_entered[k]) ResourceSlots.Settle((ResourceSlots.Kind)k);
         }
 
         /// <summary>
@@ -223,8 +296,9 @@ namespace GlimmerGrove
             _leases.Add(lease);
         }
 
-        /// <summary>Releases a flight whose panel or space went away before it finished. The
-        /// reward is banked either way; this only puts the pills back on the live balance.</summary>
+        /// <summary>Ends a flight whose panel or space went away before it finished. The reward is
+        /// banked either way; this only puts the pills back on the live balance at once rather than
+        /// at the deadline.</summary>
         void Abandon()
         {
             _done = null;
@@ -316,11 +390,11 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Nothing the player does next has to wait for this.</b> The reward is banked
         /// before the first token leaves, the readouts are a ledger rather than a lock (see
-        /// <see cref="ResourceSlots.Payout"/>), and every way the cascade can end - the last
-        /// landing, the space being destroyed, the deadline - lets the readouts go exactly once.
-        /// So a panel paying through this can step out of the player's way the moment it starts
-        /// (<see cref="Flow.Depart"/>), and a page can take its next tap while tokens are still
-        /// in the air.
+        /// <see cref="ReadoutLedger"/>), and every entry this plays carries its own deadline, so
+        /// no ending the cascade could have - the last landing, the space being destroyed, a
+        /// callback lost - can leave a pill behind the balance. So a panel paying through this can
+        /// step out of the player's way the moment it starts (<see cref="ModalView.PayAndStepAside"/>),
+        /// and a page can take its next tap while tokens are still in the air.
         /// </para>
         /// </summary>
         public void Play(RectTransform space, Action done)
@@ -329,7 +403,7 @@ namespace GlimmerGrove
             _played = true;
 
             // A hold already released by its panel going away: the pills are back on the live
-            // balance and must not be claimed again with nothing left to release them.
+            // balance and must not be entered again with nothing left to close them.
             if (_finished) { done?.Invoke(); return; }
 
             _done = done;
@@ -339,33 +413,30 @@ namespace GlimmerGrove
             for (int i = 0; i < _items.Count; i++)
                 _tokens[(int)_items[i].Kind] += TokenCount(_items[i].Drop);
 
-            // Rewound to what the pills said before the grant, and entered on the readouts
-            // while they are there. The grant already happened - deliberately, so a player who
-            // kills the app has still opened the chest and has still been paid for the video -
-            // and the hub repaints the instant the wallet moves, so by now the pills already
-            // read the new totals. The player has been looking at a scrim this whole time and
-            // has seen neither figure, so nothing is being faked: the report simply arrives in
-            // the order the events were experienced.
+            // Rewound to what the pills said before the grant, by keeping what this reward banked
+            // off them. The grant already happened - deliberately, so a player who kills the app
+            // has still opened the chest and has still been paid for the video - and the hub
+            // repaints the instant the wallet moves, so without the entry the pills would already
+            // read the new totals. The player has been looking at a scrim this whole time and has
+            // seen neither figure, so nothing is being faked: the report simply arrives in the
+            // order the events were experienced.
             //
             // The entry is what stops the hub writing over the rewind from underneath: every
             // writer asks the readout's ledger, so a wallet change landing mid-cascade moves the
             // pill only by what is no longer owed. A pill this reward pays nothing into is let
             // go now rather than at the end, so it does not stand still for the whole cascade.
+            //
+            // The deadline is written into each entry rather than kept only in a timer: past it
+            // the entry owes nothing, so the pill reads the balance at the next repaint whatever
+            // became of the tokens and of every callback below.
+            double deadline = ResourceSlots.Now + Duration + Safety;
             for (int k = 0; k < 3; k++)
             {
-                var kind = (ResourceSlots.Kind)k;
+                if (_tokens[k] <= 0) { Close(k); continue; }
 
-                if (_tokens[k] <= 0)
-                {
-                    ResourceSlots.Release(kind, _payouts[k]);
-                    _payouts[k] = null;
-                    continue;
-                }
-
-                if (_payouts[k] == null) _payouts[k] = ResourceSlots.Claim(kind, _sequence, _before[k]);
-                _payouts[k].Tokens = _tokens[k];
-                _payouts[k].Landed = 0;
-                ResourceSlots.Show(kind, ResourceSlots.Walked(kind));
+                _entries[k].Play(_tokens[k], deadline);
+                Enter(k);
+                ResourceSlots.Settle((ResourceSlots.Kind)k);
             }
 
             // Where each prize leaves from, read now while every card is certainly there. A
@@ -376,7 +447,7 @@ namespace GlimmerGrove
             for (int i = 0; i < _items.Count; i++) _from[i] = SourceIn(space, _items[i].Source);
 
             // Ended by the space as well as by the panel: tokens drawn in a node that is
-            // destroyed never land, and their readouts must not wait on them.
+            // destroyed never land, and their readouts should not wait for the deadline.
             TieTo(space);
 
             for (int i = 0; i < _items.Count; i++) _thrown += Throw(space, i);
@@ -387,9 +458,10 @@ namespace GlimmerGrove
             // sound, and the cascade starts a quarter-second later as its own event - see
             // Btn.ClickSfx for why a tap does not get to make two noises.
             //
-            // Unowned on purpose: this is the net under every other ending, so it may not die
-            // with the space whose loss it exists to survive. Finish is latched, so a cascade
-            // that ended properly makes it a no-op.
+            // At the entries' deadline: repaints the pills as they stop owing, and lets the caller
+            // go if the last landing never came. Unowned on purpose, so it may not die with the
+            // space whose loss it exists to survive. Finish is latched, so a cascade that ended
+            // properly makes it a no-op.
             Tween.After(Duration + Safety, () => Finish(0f));
         }
 
@@ -488,19 +560,11 @@ namespace GlimmerGrove
             // The ledger's figure, read now rather than captured at Play. See the class
             // remarks: for currency the balance may only have moved a moment ago, and it may not
             // have moved yet at all - and another reward may be landing in this pill too. The
-            // last token of a pill lets this flight's entry go, so what it writes owes this
+            // last token of a pill closes this flight's entry, so what it writes owes this
             // reward nothing: exactly the balance, less only what other rewards still have in
             // the air.
-            var payout = _payouts[slot];
-            if (payout != null)
-            {
-                payout.Landed = _landed[slot];
-                if (lastOfPill)
-                {
-                    _payouts[slot] = null;
-                    ResourceSlots.Release(kind, payout);
-                }
-            }
+            _entries[slot].Land(_landed[slot]);
+            if (lastOfPill) Close(slot);
 
             ResourceSlots.Land(kind, ResourceSlots.Walked(kind), lastOfPill);
 
@@ -526,26 +590,19 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Settles every pill on the live balance, hands the readouts back to the hub, and
-        /// tells the caller. Latched, because two of the ways in here can both happen: the
-        /// last landing and the safety net.
+        /// tells the caller. Latched, because several of the ways in here can all happen: the
+        /// last landing, a lease, and the deadline.
         /// </summary>
         void Finish(float beat)
         {
             if (_finished) return;
             _finished = true;
 
-            // Settled before letting go. The pills stand at rewound figures until the tokens
-            // walk them forward, so a cascade that did not finish would leave the hub reading
-            // less than the truth until something happened to repaint it - which, on a screen
-            // the player may now just sit on, could be a long time.
-            // Only this flight's own entries: another reward still landing keeps its share.
-            for (int k = 0; k < 3; k++)
-            {
-                var payout = _payouts[k];
-                if (payout == null) continue;
-                _payouts[k] = null;
-                ResourceSlots.Release((ResourceSlots.Kind)k, payout);
-            }
+            // Settled before letting go. The entries would stop owing at their deadline anyway,
+            // but a pill is only redrawn when something writes it, and on a screen the player may
+            // now just sit on that could be a long time. Only this flight's own entries: another
+            // reward still landing keeps its share.
+            for (int k = 0; k < 3; k++) Close(k);
 
             // Disarmed rather than left to fire into a finished flight, and taken off a page
             // that lives on (a screen paying several nights in a visit) so they do not pile up.

@@ -352,8 +352,8 @@ namespace GlimmerGrove
         bool _collecting;
 
         /// <summary>
-        /// The payout, opened before the chest is granted so it can snapshot what each pill
-        /// read at the time. See <see cref="RewardFlight.Begin"/>.
+        /// The payout, opened before the chest is granted so the grant runs inside it and it
+        /// measures what each pill gained. See <see cref="RewardFlight.Bank{T}"/>.
         /// </summary>
         RewardFlight _flight;
 
@@ -383,14 +383,18 @@ namespace GlimmerGrove
             // than the refill cap: a chest opened at a full bar keeps its hearts.
             _heartsWereWasted = Profile.HeartState.IsAtCeiling;
 
-            // What each pill reads before the chest is granted, captured rather than derived.
-            // A heart drop that lands at the ceiling grants nothing, so subtracting its
-            // amount at collect time would rewind the pill below where it ever was. Reading
-            // the balance before the grant cannot be wrong about it.
+            // What the chest puts on each pill, measured across the grant rather than derived
+            // from its prizes. A heart drop that lands at the ceiling grants nothing, so owing
+            // its amount would rewind the pill below where it ever was. Measuring the balance
+            // on either side of the grant cannot be wrong about it.
             _flight = RewardFlight.Begin();
             _flight.Hold(this);
 
-            if (!Claim.TryClaim(out _drops))
+            List<ChestDrop> drops = null;
+            bool claimed = _flight.Bank(() => Claim.TryClaim(out drops));
+            _drops = drops;
+
+            if (!claimed)
             {
                 // Beaten to it - another device synced the claim in, or the period rolled
                 // over between the tap and this frame. Nothing to show and nothing lost.
@@ -718,13 +722,12 @@ namespace GlimmerGrove
             _flight.Fallback = _rewardRow;
 
             FadeChrome();
-            _flight.Play(Content, () => { if (this) Flow.Dismiss(this); });
 
             // Out of the player's way from this instant: the chest is banked and what is left
             // is a report. The page under it takes the next tap - another chest, the back key -
             // while the tokens land, and this panel dismisses itself when they have (or goes
-            // with the screen, which ends the flight through its lease). See Flow.Depart.
-            Flow.Depart(this);
+            // with the screen, which ends the flight through its lease).
+            PayAndStepAside(_flight);
         }
 
         /// <summary>
@@ -763,7 +766,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Swallowed once the payout has started - which in practice never reaches here, since
-        /// a paying panel has left the stack (<see cref="Flow.Depart"/>) and the back key goes
+        /// a paying panel has left the stack (<see cref="ModalView.PayAndStepAside"/>) and the back key goes
         /// to the page. Kept for the frame between COLLECT and the departure:
         /// <see cref="ModalView.Close"/> fades the whole content group, and the tokens are in it.
         /// </summary>

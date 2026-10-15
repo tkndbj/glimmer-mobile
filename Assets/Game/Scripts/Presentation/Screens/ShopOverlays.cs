@@ -273,8 +273,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>What keeps it from becoming an obstacle by the fourth purchase.</b> There is a way
     /// out about half a second in - the button appears when the tokens start flying, not when
-    /// they land, and tapping it early is safe because the flight's snapshot was taken at
-    /// build time and owes nothing to the ceremony. The confetti and the single haptic are on
+    /// they land, and tapping it early is safe because the flight was told what the purchase
+    /// was worth at build time and owes nothing to the ceremony. The confetti and the single haptic are on
     /// the last landing and nowhere else: <c>Handheld.Vibrate</c> is one fixed-length pulse on
     /// Android, so several inside a second overlap into a rumble rather than reading as
     /// several taps, which is the mistake the chest made eight times over. One buzz, at the

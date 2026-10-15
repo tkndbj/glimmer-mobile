@@ -117,9 +117,9 @@ namespace GlimmerGrove
         ChestDrop _drop;
 
         /// <summary>
-        /// The payout, opened immediately before the reward is redeemed so it can snapshot
-        /// what each pill read at the time. Null until then, and null for a panel that was
-        /// dismissed without paying. See <see cref="RewardFlight.Begin"/>.
+        /// The payout, opened immediately before the reward is redeemed and redeemed inside, so
+        /// it knows what each pill gained. Null until then, and null for a panel that was
+        /// dismissed without paying. See <see cref="RewardFlight.Bank{T}"/>.
         /// </summary>
         RewardFlight _flight;
 
@@ -635,8 +635,8 @@ namespace GlimmerGrove
         /// <para>
         /// The five steps and their order live in <see cref="RewardedVideo.Watch"/>, which is
         /// where the two orderings that matter are stated once - the impression is minted before
-        /// the SDK is asked for anything, and the pills are snapshotted before the reward is
-        /// redeemed. What is left here is the part only a panel can do: deciding whether it is
+        /// the SDK is asked for anything, and the reward is redeemed inside the flight that
+        /// measures it. What is left here is the part only a panel can do: deciding whether it is
         /// still standing, and what to say if nothing was paid.
         /// </para>
         /// </summary>

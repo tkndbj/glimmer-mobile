@@ -90,6 +90,32 @@ namespace GlimmerGrove
         /// </summary>
         public override bool IsLeaving => _closing;
 
+        /// <summary>
+        /// Plays <paramref name="flight"/> out of this panel and steps out of the player's way at
+        /// once: the panel leaves the modal stack and stops taking taps (<see cref="Flow.Depart"/>),
+        /// keeps drawing its tokens, and dismisses itself when they have landed, or goes with the
+        /// screen if the player leaves first.
+        ///
+        /// <para>
+        /// <b>Only for a panel whose ending nothing waits on.</b> Once this runs, the screen
+        /// underneath takes the next tap while the tokens are still in the air, so anything
+        /// chained to the panel's ending would run after whatever the player did next, against a
+        /// screen that may have moved on. That is why there is no continuation to pass: a panel
+        /// that hands the player onward when it closes - the ad's prize over a lost run, a shop
+        /// receipt that the receipt queue and the gem shelf wait on - pays through
+        /// <see cref="RewardFlight.Play"/> and holds the screen until it has finished. The reward
+        /// is banked before either is called, so the difference is only ever when the player may
+        /// tap again.
+        /// </para>
+        /// </summary>
+        protected void PayAndStepAside(RewardFlight flight)
+        {
+            if (flight == null) { Close(); return; }
+
+            flight.Play(Content, () => { if (this) Flow.Dismiss(this); });
+            Flow.Depart(this);
+        }
+
         protected RectTransform MakePanel(Vector2 size, string title, Vector2 offset = default,
                                           bool dismissOnScrim = true)
         {
