@@ -1156,7 +1156,11 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `Spread`, `Arc`, `Lance`, `Freeze`, `Kindle`, `Stagger`, `Hex`), so it is drawn as the thing it
    is and can never reduce the primary hit (42). A revival is the one thing no turret does, and it
    is reported beside the fall (`SiegeReport.Revived`) so the view draws the post coming down and
-   then standing up (`SiegeView.Boosts`, `Rallied` a beat later).
+   then standing up (`SiegeView.Boosts`, `Rallied` a beat later). **The phoenix's rise also
+   pushes the hill off the line and covers it for eight seconds** (`SiegeBoard.Mantle`:
+   `PhoenixPush`, `PhoenixMantle`, worded in the card's note, so not tunable): every door a hit
+   comes through asks `Turned` before touching a post, and `Bear`/`Topple` refuse as the backstop.
+   Drawn by `SiegeView.Mantle`; held by `ShuffleTests.ThePhoenixRisesPushesTheHillAndCoversTheLine`.
 59c. **The ramp is pure raiders, and the validator holds it to that** (`ShuffleRamp : SiegeRamp`,
    `SendsBosses` false): a body more every wave to twenty-four, three twentieths more health a wave,
    a tenth more blow every other wave, brutes from two, bulwarks from four, **never a bomber and
@@ -1381,7 +1385,11 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
 
 59p. **A hand can be refreshed for gems, as often as the player pays, at a price that doubles per
    run** (2026-10-15, the owner: "start with 5 gems, then double ... it shouldn't reset every offer
-   but it should every run"). `ShuffleRefresh.PriceFor` is 5 x 2^n on `ShuffleRun.Refreshes`, which
+   but it should every run"). The price is `config/shuffle`'s `refresh` section (59l, the one place
+   this lane retunes without a build): `firstGems` 5, times `factorHundredths` 200 per refresh already
+   bought (`ShuffleRefreshTuning`, saturating at `ShuffleRefresh.MostGems`; `firstGems` 0 withdraws
+   it), read off the run's snapshot. Required of the publisher, optional on the device: a document
+   from before the section plays the build's own price. The count is `ShuffleRun.Refreshes`, which
    lives on the run (a continue keeps it; a restart or retry is a new run). **A debit and nothing
    else** (the continue's shape): `PlayerProgression.TrySpend` under a fresh id, refused by
    `submitSpends` when unaffordable; it buys a different hand on one run, so no claim, save field,
@@ -1391,7 +1399,8 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    could only deal the same cards** (`ShuffleRun.CanRefresh`, `ShuffleDeck.HasFresh`), checked
    before the debit, so gems are never taken for nothing. The key is the kit's violet gem pill under
    the cards (`ShuffleHandLayout.Refresh*`); short of gems stacks `GemShopOverlay` over the hand.
-   Analytics: `shuffle_refresh` and `shuffle_ended.refreshes`. **Held by** `ShuffleRefreshTests`;
+   Analytics: `shuffle_refresh` and `shuffle_ended.refreshes`. **Held by** `ShuffleRefreshTests` and
+   `ShuffleRefreshPurchaseTests` (the debit against an in-memory save);
    `render_shuffle.py --refreshes N` (-1 draws no key).
    **Held by** `ShuffleGradeTests`, `SaveWiringTests`, `functions/test/grove.mjs`, and
    `render_shuffle.py --report all --measure` (every grade, nine languages, Arabic shaped).

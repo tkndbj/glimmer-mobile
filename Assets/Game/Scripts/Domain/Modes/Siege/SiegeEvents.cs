@@ -557,6 +557,28 @@ namespace GlimmerGrove.Modes
         public readonly List<int> Revived = new List<int>(4);
 
         /// <summary>
+        /// Seconds of the phoenix's mantle put on this step (<c>SiegeBoard.Mantle</c>), or nought.
+        ///
+        /// <b>The edge, not the state</b>, for <see cref="Stilled"/>'s reason: the view reads
+        /// <c>SiegeBoard.MantleLeft</c> every frame to draw the mantle standing, and what it wants
+        /// here is the frame it went up, which is when the rise and the push are drawn.
+        /// </summary>
+        public float Mantled;
+
+        /// <summary>
+        /// How many bodies the phoenix's rise pushed back up the hill. Read beside
+        /// <see cref="Mantled"/>; a rise over a hill holding only a boss pushes none, and the
+        /// push is still drawn so the player sees it reach the boss and stop.
+        /// </summary>
+        public int Repelled;
+
+        /// <summary>
+        /// Posts whose hit the phoenix's mantle turned away this step: a blow, a spell, a roar's
+        /// share or a seal running out. One entry per hit, so a post struck twice is listed twice.
+        /// </summary>
+        public readonly List<int> Turned = new List<int>(8);
+
+        /// <summary>
         /// Places a build set something off this step (<see cref="SiegeVolley"/>): empty on every
         /// board but the Shuffle lane's, because only <c>SiegeBoard.Arsenal</c> writes it and it
         /// is shut on the plain line.
@@ -569,6 +591,9 @@ namespace GlimmerGrove.Modes
         public void Clear()
         {
             Revived.Clear();
+            Mantled = 0f;
+            Repelled = 0;
+            Turned.Clear();
             Volleys.Clear();
             Bolts.Clear();
             Burns.Clear();
@@ -604,6 +629,7 @@ namespace GlimmerGrove.Modes
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
                         || Stoned.Count > 0 || Redeemed.Count > 0 || Withers.Count > 0
                         || Revived.Count > 0 || Volleys.Count > 0
+                        || Mantled > 0f || Turned.Count > 0
                         || Stilled > 0f || Heaved > 0f || Hex > 0f || Beamed || Wave >= 0;
     }
 

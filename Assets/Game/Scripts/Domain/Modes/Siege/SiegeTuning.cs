@@ -942,6 +942,24 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float AnvilFor = AnvilHeave / AnvilPace;
 
+        // ------------------------------------------------------------------ the phoenix's rise
+        /// <summary>
+        /// How far the phoenix's rise pushes the hill back off a line it has just raised, as a
+        /// share of the hill (<c>SiegeBoard.Mantle</c>). <b>"A little"</b> (the owner,
+        /// 2026-10-15): three fifths of an anvil, enough to take every body off the line so its
+        /// blow is reset. Worked off at <see cref="AnvilPace"/>, so the push is over in
+        /// .15 s, and the view follows it for free.
+        /// </summary>
+        public const float PhoenixPush = .12f;
+
+        /// <summary>
+        /// Seconds the phoenix's mantle covers the line after the rise (the owner, 2026-10-15).
+        /// The card's note states it in words in nine languages (<c>shuffle.phoenix.note</c>),
+        /// so it is a constant here and not a card figure <c>config/shuffle</c> could retune.
+        /// Moving it means rewriting the note.
+        /// </summary>
+        public const float PhoenixMantle = 8f;
+
         // ------------------------------------------------------------------ the gravity well
         /// <summary>
         /// How many places on the hill a gravity well may be opened: one to each quarter.

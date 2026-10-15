@@ -1022,6 +1022,9 @@ namespace GlimmerGrove
             Heat(dt);
             Lasers(dt);
 
+            // The phoenix's shields over the line while its mantle holds (`SiegeView.Mantle`).
+            Mantling(dt);
+
             // And what an unlocked secret or evolution leaves standing (`SiegeView.Secrets`).
             Secrets(dt);
         }

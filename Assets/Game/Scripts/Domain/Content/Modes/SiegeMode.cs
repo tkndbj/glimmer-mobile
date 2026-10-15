@@ -254,6 +254,12 @@ namespace GlimmerGrove.Content
             // furniture rather than scoped, because every siege can bank one.
             AssetRequest.Sprite(AssetManifest.SiegeArt("charge")),
 
+            // The shield an armoured raider wears beside its health bar (`SiegeView.Armoured`).
+            // Resident with the cast rather than scoped to a chapter, because every track - the
+            // ladder, the Infinite lane and the Shuffle lane - sends brutes and bulwarks, and a
+            // mark missing on the frame one walks on is a white rectangle (invariant 7b).
+            AssetRequest.Sprite(AssetManifest.SiegeArt("armour")),
+
             // **The ward line: five tiers times four colours, and the rank badge.** A ward carries
             // its rank in its silhouette and its colour in its hue, so both are baked (see
             // `Tools/make_siege_art.py`) and nothing here is tinted - which is the correction

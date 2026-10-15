@@ -236,6 +236,22 @@ def compact(n):
     return ("%.1f" % (n // 100_000 / 10)).rstrip("0").rstrip(".") + "M"
 
 
+def refresh_price(taken):
+    """`ShuffleRefreshTuning.PriceFor` over `firebase/seed/shuffle.json`'s `refresh` figures."""
+    tuning = json.loads(TUNING.read_text(encoding="utf-8")).get("refresh") or {}
+    price, factor = int(tuning.get("firstGems", 5)), int(tuning.get("factorHundredths", 200))
+    if price <= 0:
+        sys.exit("shuffle.json's refresh.firstGems is 0: no key is sold (draw with --refreshes -1)")
+    for _ in range(taken):
+        nxt = price * factor // 100
+        if nxt >= 1_000_000_000:
+            return 1_000_000_000
+        if nxt <= price:
+            return price
+        price = nxt
+    return price
+
+
 def refresh_key(sheet, cx, cy, L, caption):
     """`ShuffleChoiceOverlay.RefreshKey`: the violet gem pill, the caption with the gem trailing it
     (`iconTrails`), shrunk on one line in the room the glyph leaves. Returns the size it landed on."""
@@ -327,8 +343,8 @@ def screen(cards, lang, held, wave, marks=None, refreshes=0):
         card(block, L, cid, tiers[cid], cx, card_top, strings, held.get(cid, 0), marks.get(cid, []))
 
     if keyed:
-        # `ShuffleRefresh.PriceFor`: five, doubled per refresh already bought.
-        price = 5 * 2 ** refreshes
+        # `ShuffleRefreshTuning.PriceFor` off the published file's `refresh` section (MODES.md 59p).
+        price = refresh_price(refreshes)
         caption = upper(strings.get("ui.shuffle.refresh", "Refresh {0}").format(compact(price)), lang)
         px = refresh_key(block, bcx, top + cards_foot + L["RefreshGap"] + L["RefreshHeight"] / 2, L, caption)
         print("  key  %-28r at %dpx (floor %d)%s" % (caption, px, REFRESH_FLOOR, "  !!" if px <= REFRESH_FLOOR else ""))

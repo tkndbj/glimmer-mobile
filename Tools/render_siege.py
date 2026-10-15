@@ -2483,6 +2483,15 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         cx, cy = at(lx - tall * 0.46, ly + tall * 0.58)
         put(sheet, sprite(GEM_ART[siege.LETTERS[colour]]), cx, cy, cell * 0.34, cell * 0.34)
 
+        # And the shield an armoured raider wears at the bar's other end (`SiegeView.Armoured`,
+        # cut by `Tools/make_armour_art.py`), mirroring the gem, at its own aspect.
+        if brute or bulwark:
+            mark = sprite("armour")
+            cx, cy = at(lx + tall * 0.46, ly + tall * 0.58)
+            side = cell * 0.34
+            k = side / max(mark.size)
+            put(sheet, mark, cx, cy, mark.width * k, mark.height * k)
+
         # The health bar.
         cx, cy = at(lx, ly + tall * 0.58)
         draw_on.rounded_rectangle([cx - tall * 0.36, cy - cell * 0.065,

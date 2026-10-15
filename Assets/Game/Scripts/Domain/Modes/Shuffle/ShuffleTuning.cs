@@ -290,18 +290,19 @@ namespace GlimmerGrove.Shuffle
 
         public static readonly ShuffleTuning Shipped =
             new ShuffleTuning(0, ShuffleRampTuning.Shipped, ShuffleDeckTuning.Shipped,
-                              SiegeArsenalTuning.Shipped, ShuffleCards.All);
+                              SiegeArsenalTuning.Shipped, ShuffleCards.All, ShuffleRefreshTuning.Shipped);
 
         readonly ShuffleCard[] _cards;
         readonly Dictionary<string, ShuffleCard> _byId;
 
         ShuffleTuning(int revision, ShuffleRampTuning ramp, ShuffleDeckTuning deck,
-                      SiegeArsenalTuning arsenal, ShuffleCard[] cards)
+                      SiegeArsenalTuning arsenal, ShuffleCard[] cards, ShuffleRefreshTuning refresh)
         {
             Revision = revision;
             Ramp = ramp;
             Deck = deck;
             Arsenal = arsenal;
+            Refresh = refresh ?? ShuffleRefreshTuning.Shipped;
             _cards = cards;
 
             _byId = new Dictionary<string, ShuffleCard>(StringComparer.Ordinal);
@@ -316,6 +317,9 @@ namespace GlimmerGrove.Shuffle
         public ShuffleDeckTuning Deck { get; }
 
         public SiegeArsenalTuning Arsenal { get; }
+
+        /// <summary>What a refresh of a hand costs (MODES.md 59p).</summary>
+        public ShuffleRefreshTuning Refresh { get; }
 
         /// <summary>Every card a hand may deal, in catalog order: the switched-off ones are not here.</summary>
         public IReadOnlyList<ShuffleCard> Cards => _cards;
@@ -360,7 +364,7 @@ namespace GlimmerGrove.Shuffle
 
             var doc = new Doc(strict);
 
-            if (!doc.Keys(root, "", "schema", "revision", "ramp", "deck", "arsenal", "cards")) { fault = doc.Fault; return null; }
+            if (!doc.Keys(root, "", "schema", "revision", "ramp", "deck", "arsenal", "refresh", "cards")) { fault = doc.Fault; return null; }
 
             if (!doc.Int(root, "schema", out int schema)) { fault = doc.Fault; return null; }
             if (schema != Schema) { fault = $"the document is schema {schema}; this build reads schema {Schema}"; return null; }
@@ -420,6 +424,28 @@ namespace GlimmerGrove.Shuffle
 
             var arsenal = SiegeArsenalTuning.FromWritten(arsenalWritten, out fault);
             if (arsenal == null) return null;
+
+            // ------------------------------------------------------------- the refresh price
+            // Required of the publisher; a device reads a document published before the section
+            // existed with the build's own price rather than refusing the whole tuning (59p).
+            var refresh = ShuffleRefreshTuning.Shipped;
+            if (strict || root.ContainsKey("refresh"))
+            {
+                if (!doc.Object(root, "refresh", out var refreshDoc)) { fault = doc.Fault; return null; }
+
+                var refreshFigures = ShuffleRefreshTuning.Figures;
+                var refreshKeys = new string[refreshFigures.Count];
+                for (int i = 0; i < refreshKeys.Length; i++) refreshKeys[i] = refreshFigures[i].Key;
+
+                if (!doc.Keys(refreshDoc, "refresh.", refreshKeys)) { fault = doc.Fault; return null; }
+
+                var refreshWritten = new int[refreshKeys.Length];
+                for (int i = 0; i < refreshKeys.Length; i++)
+                    if (!doc.Int(refreshDoc, refreshKeys[i], out refreshWritten[i], "refresh.")) { fault = doc.Fault; return null; }
+
+                refresh = ShuffleRefreshTuning.FromWritten(refreshWritten, out fault);
+                if (refresh == null) return null;
+            }
 
             // ------------------------------------------------------------- the cards
             if (!root.TryGetValue("cards", out object rawCards) || !(rawCards is List<object> rows))
@@ -511,7 +537,7 @@ namespace GlimmerGrove.Shuffle
             }
 
             var catalog = sameCards ? ShuffleCards.All : cards.ToArray();
-            return new ShuffleTuning(revision, ramp, deck, arsenal, catalog);
+            return new ShuffleTuning(revision, ramp, deck, arsenal, catalog, refresh);
         }
 
         /// <summary>
@@ -728,6 +754,14 @@ namespace GlimmerGrove.Shuffle
             for (int i = 0; i < arsenalFigures.Count; i++)
                 o.Append("    \"").Append(arsenalFigures[i].Key).Append("\": ").Append(arsenalWritten[i])
                  .Append(i + 1 < arsenalFigures.Count ? ",\n" : "\n");
+            o.Append("  },\n");
+
+            o.Append("  \"refresh\": {\n");
+            var refreshFigures = ShuffleRefreshTuning.Figures;
+            var refreshWritten = Refresh.Written();
+            for (int i = 0; i < refreshFigures.Count; i++)
+                o.Append("    \"").Append(refreshFigures[i].Key).Append("\": ").Append(refreshWritten[i])
+                 .Append(i + 1 < refreshFigures.Count ? ",\n" : "\n");
             o.Append("  },\n");
 
             o.Append("  \"cards\": [\n");

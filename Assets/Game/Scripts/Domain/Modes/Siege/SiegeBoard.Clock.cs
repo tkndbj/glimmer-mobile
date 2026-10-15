@@ -41,6 +41,11 @@ namespace GlimmerGrove.Modes
             // rather than the wall clock a backgrounded app came back holding.
             Attention.Tick(dt);
 
+            // **The phoenix's mantle runs down before anything can raise it** (`SiegeBoard.Mantle`),
+            // so a rise this step keeps all of its seconds. Nought on every board but a Shuffle
+            // run that has just risen.
+            Wear(dt);
+
             Land(dt);
             Muster(dt);
             Walk(dt);
@@ -177,6 +182,9 @@ namespace GlimmerGrove.Modes
                         var shaken = _wards[w];
                         if (!shaken.Alive) continue;
 
+                        // A post under the phoenix's mantle takes none of it (`SiegeBoard.Mantle`).
+                        if (Turned(w)) continue;
+
                         bool down = Bear(shaken, shook);
 
                         // One record per ward, so the view draws a hit on each of them from the
@@ -217,6 +225,10 @@ namespace GlimmerGrove.Modes
                         // caption.
                         if (worked) continue;
 
+                        // After the window is closed, so a covered post's seconds are still
+                        // billed once (`SiegeBoard.Mantle`).
+                        if (Turned(w)) continue;
+
                         bool down = Bear(post, bite);
 
                         _report.Spells.Add(
@@ -238,6 +250,13 @@ namespace GlimmerGrove.Modes
 
                 var ward = _wards[spell.Ward];
                 if (!ward.Alive) continue;
+
+                // **A post under the phoenix's mantle takes neither half**, the verb or the
+                // health (`SiegeBoard.Mantle`). Asked here, before the verb, so a covered post
+                // is never doused, chained, sealed or sundered either. The hill half of a devour
+                // or a raise above has already happened, because that half is aimed at the
+                // hill, not at the post.
+                if (Turned(spell.Ward)) continue;
 
                 // **The verb first, then the health, so one record carries both.** A douse empties
                 // the tube, a bind chains the ward and takes nothing off the tube, a sunder takes a
@@ -809,6 +828,10 @@ namespace GlimmerGrove.Modes
                                 new SiegeSpellLanded(-1, w, SiegeSpell.Doom, 0, true));
                             continue;
                         }
+
+                        // A seal that runs out under the phoenix's mantle is lifted without
+                        // taking the post, and the view draws it breaking on the mantle.
+                        Turned(w);
                     }
                 }
 
@@ -1323,7 +1346,9 @@ namespace GlimmerGrove.Modes
         /// </summary>
         bool Bear(SiegeWard ward, int damage)
         {
-            if (Sheltered) return false;
+            // The phoenix's mantle as well, as a backstop: every door that hurts the line asks
+            // `Turned` first, and this covers one added later that forgets (`SiegeBoard.Mantle`).
+            if (Sheltered || Mantled) return false;
 
             ward.Health -= damage;
             return ward.Health <= 0 && Topple(ward);
@@ -1339,7 +1364,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         bool Topple(SiegeWard ward)
         {
-            if (Sheltered) return false;
+            if (Sheltered || Mantled) return false;
 
             ward.Health = 0;
             ward.Alive = false;
@@ -1372,9 +1397,9 @@ namespace GlimmerGrove.Modes
 
             if (WardsStanding > 0 || !_boosts.TakePhoenix()) return;
 
-            // The whole line, at full, exactly as a continue raises it (`Rally`).
-            Rally(_wards.Length);
-            for (int w = 0; w < _wards.Length; w++) _report.Revived.Add(w);
+            // The whole line at full, the hill thrown back off it and the mantle put on
+            // (`SiegeBoard.Mantle`).
+            Rise();
         }
 
         void Swing(float dt)
@@ -1403,6 +1428,11 @@ namespace GlimmerGrove.Modes
 
                 int w = Nearest(raider.Column);
                 if (w < 0) continue;
+
+                // **The phoenix's mantle takes it first** (`SiegeBoard.Mantle`), ahead of the
+                // dome, so a covered line does not spend the dome's blocks. The swing is spent
+                // and nothing reaches the post: no damage, no thorns, no reflection.
+                if (Turned(w)) continue;
 
                 // **A build's golden dome may take the blow instead** (`SiegeBoard.Secrets`): the
                 // swing is spent and nothing reaches the post. False on every build without it.

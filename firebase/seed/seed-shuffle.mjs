@@ -85,7 +85,7 @@ if (!passed) {
 }
 
 // The fixture prints what the file moves away from this build's own figures.
-const report = said.split("\n").filter((l) => /^firebase\/seed\/shuffle\.json|^\s{2}(ramp|deck|arsenal|cards)\./.test(l));
+const report = said.split("\n").filter((l) => /^firebase\/seed\/shuffle\.json|^\s{2}(ramp|deck|arsenal|refresh|cards)\./.test(l));
 for (const line of report) console.log(line);
 
 // ------------------------------------------------------------------- the live one

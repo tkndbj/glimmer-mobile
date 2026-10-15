@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using GlimmerGrove.Content;
+using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using GlimmerGrove.Shuffle;
 using NUnit.Framework;
 
@@ -20,7 +24,7 @@ namespace GlimmerGrove.Tests
             for (int taken = 0; taken < ladder.Length; taken++)
                 Assert.AreEqual(ladder[taken], ShuffleRefresh.PriceFor(taken), $"refresh {taken + 1}");
 
-            Assert.AreEqual(ShuffleRefresh.FirstGems, ShuffleRefresh.PriceFor(-3), "a negative count is no refresh bought");
+            Assert.AreEqual(ShuffleRefreshTuning.Shipped.FirstGems, ShuffleRefresh.PriceFor(-3), "a negative count is no refresh bought");
         }
 
         [Test]
@@ -112,7 +116,7 @@ namespace GlimmerGrove.Tests
 
             var next = new ShuffleRun(77u);
             Assert.AreEqual(0, next.Refreshes);
-            Assert.AreEqual(ShuffleRefresh.FirstGems, next.RefreshPrice, "a new run did not start the price again");
+            Assert.AreEqual(ShuffleRefreshTuning.Shipped.FirstGems, next.RefreshPrice, "a new run did not start the price again");
         }
 
         [Test]
@@ -188,6 +192,94 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(reached, "the deck ran out without ever reaching a hand that held all it had left");
         }
 
+        // ------------------------------------------------------------------ the published price
+        /// <summary>The build's own figures, as a document, with one refresh figure replaced.</summary>
+        static string Tuned(string figure, int value)
+        {
+            var doc = ShuffleTuning.Shipped.ToJson(2);
+            string shipped = figure == "firstGems" ? "\"firstGems\": 5" : "\"factorHundredths\": 200";
+            StringAssert.Contains(shipped, doc, "the document no longer writes the shipped refresh figure");
+            return doc.Replace(shipped, $"\"{figure}\": {value}");
+        }
+
+        static ShuffleTuning Read(string json, bool strict = false)
+        {
+            Assert.IsTrue(ShuffleTuning.TryRead(json, strict, out var tuning, out string fault), fault);
+            return tuning;
+        }
+
+        static void Refused(string json, bool strict = false)
+            => Assert.IsFalse(ShuffleTuning.TryRead(json, strict, out _, out _), "a bad refresh section was read");
+
+        [Test]
+        public void TheShippedPriceIsFiveDoublingAndRoundTripsToItself()
+        {
+            var shipped = ShuffleRefreshTuning.Shipped;
+            Assert.AreEqual(5, shipped.FirstGems);
+            Assert.AreEqual(200, shipped.FactorHundredths);
+            Assert.AreSame(shipped, ShuffleTuning.Shipped.Refresh);
+
+            var back = Read(ShuffleTuning.Shipped.ToJson(2), strict: true);
+            Assert.AreSame(shipped, back.Refresh, "the build's own figures, published, are not the build's own object");
+        }
+
+        [Test]
+        public void ThePublishedFileCarriesTheRefreshPrice()
+        {
+            var path = System.IO.Path.Combine(TestJson.RepoRoot(), "firebase", "seed", "shuffle.json");
+            var published = Read(System.IO.File.ReadAllText(path), strict: true);
+            Assert.IsTrue(published.Refresh.Enabled, "the published file withdraws the refresh");
+            Console.WriteLine($"published refresh: {published.Refresh.FirstGems} gems, x{published.Refresh.FactorHundredths / 100f} per refresh");
+        }
+
+        [Test]
+        public void ADocumentWrittenBeforeTheSectionKeepsTheBuildsPriceOnTheDevice()
+        {
+            var doc = ShuffleTuning.Shipped.ToJson(2);
+            int at = doc.IndexOf("  \"refresh\": {", StringComparison.Ordinal);
+            const string close = "  },\n";
+            int end = doc.IndexOf(close, at, StringComparison.Ordinal) + close.Length;
+            var older = doc.Remove(at, end - at);
+
+            Assert.AreSame(ShuffleRefreshTuning.Shipped, Read(older).Refresh,
+                           "a live document without the section was not read with the build's price");
+            Refused(older, strict: true);
+        }
+
+        [Test]
+        public void ARefreshFigureOutsideItsRangeIsRefused()
+        {
+            Refused(Tuned("firstGems", -1));
+            Refused(Tuned("firstGems", 1_001));
+            Refused(Tuned("factorHundredths", 99));
+            Refused(Tuned("factorHundredths", 1_001));
+        }
+
+        [Test]
+        public void ATunedPriceIsTheRunsAndNoughtWithdrawsIt()
+        {
+            var tuned = Read(Tuned("factorHundredths", 150)).Refresh;
+            long[] ladder = { 5, 7, 10, 15, 22 };
+            for (int taken = 0; taken < ladder.Length; taken++)
+                Assert.AreEqual(ladder[taken], tuned.PriceFor(taken), $"refresh {taken + 1} at x1.5");
+
+            var flat = Read(Tuned("factorHundredths", 100)).Refresh;
+            Assert.AreEqual(5L, flat.PriceFor(50), "a factor of a hundred did not hold the price");
+
+            var run = new ShuffleRun(3u, Read(Tuned("firstGems", 12)));
+            run.Deal();
+            Assert.AreEqual(12L, run.RefreshPrice, "the run did not price off the figures it opened on");
+            run.Refresh();
+            Assert.AreEqual(24L, run.RefreshPrice);
+
+            var off = new ShuffleRun(3u, Read(Tuned("firstGems", 0)));
+            off.Deal();
+            Assert.IsFalse(off.CanRefresh, "a withdrawn refresh was offered");
+            Assert.AreEqual(0L, off.RefreshPrice);
+            Assert.IsNull(off.Refresh());
+            Assert.AreEqual(0, off.Refreshes);
+        }
+
         // ------------------------------------------------------------------ the panel
         [Test]
         public void TheRefreshKeySitsUnderTheCardsInsideThePanel()
@@ -214,6 +306,102 @@ namespace GlimmerGrove.Tests
             for (int i = 0; i < cards.Count; i++)
                 if (ReferenceEquals(cards[i], card)) return true;
             return false;
+        }
+    }
+    /// <summary>
+    /// The purchase itself (MODES.md 59p): <c>ShuffleRefresh.TryBuy</c> against a save that never
+    /// reaches a disk (<c>UtilityPurchaseTests</c>' seam) - the debit, its price ladder, its reason,
+    /// and every case that must charge nothing.
+    /// </summary>
+    [TestFixture]
+    public sealed class ShuffleRefreshPurchaseTests
+    {
+        static readonly LevelId Lane = LevelId.Parse("s13_shuffle");
+
+        [SetUp]
+        public void Open()
+        {
+            SaveService.Unload();
+            EndlessCoins.UseStore(new EndlessCoins.MemoryStore());
+            SaveService.LoadWith(new AccountSwitchTests.MemoryStore());
+            ProgressionRules.Reset();
+        }
+
+        [TearDown]
+        public void Restore()
+        {
+            SaveService.Unload();
+            EndlessCoins.UseStore(null);
+            ProgressionRules.Reset();
+        }
+
+        /// <summary>Exactly <paramref name="gems"/> in the wallet: the account seed's door, as <c>UtilityPurchaseTests.Hold</c> uses it.</summary>
+        static void Hold(long gems)
+        {
+            long already = PlayerProgression.Gems;
+            if (gems > already) Wallet.Ledger(Currency.Gems).GrantLocally(gems - already);
+            else if (gems < already) Assert.IsTrue(PlayerProgression.TrySpend(Currency.Gems, already - gems, "fixture"));
+
+            Assert.AreEqual(gems, PlayerProgression.Gems, "the fixture did not take");
+        }
+
+        static int Debits(string reason)
+        {
+            int n = 0;
+            foreach (var spend in Wallet.Ledger(Currency.Gems).PendingSpends)
+                if (spend.Reason == reason) n++;
+            return n;
+        }
+
+        [Test]
+        public void ARefreshChargesItsPriceAndTheNextCostsDouble()
+        {
+            Hold(15);
+            var run = new ShuffleRun(17u);
+            var first = run.Deal();
+
+            Assert.IsTrue(ShuffleRefresh.TryBuy(run, Lane));
+            Assert.AreEqual(10L, PlayerProgression.Gems, "the first refresh did not cost five");
+            Assert.AreNotSame(first, run.Open);
+
+            Assert.IsTrue(ShuffleRefresh.TryBuy(run, Lane));
+            Assert.AreEqual(0L, PlayerProgression.Gems, "the second refresh did not cost ten");
+            Assert.AreEqual(2, run.Refreshes);
+
+            Assert.AreEqual(2, Debits(ShuffleRefresh.SpendReason + Lane.Value),
+                            "each refresh is not one debit owed to the server under its reason");
+        }
+
+        [Test]
+        public void AnUnaffordableRefreshChargesNothingAndKeepsTheHand()
+        {
+            Hold(4);
+            var run = new ShuffleRun(17u);
+            var hand = run.Deal();
+
+            Assert.IsFalse(ShuffleRefresh.TryBuy(run, Lane));
+            Assert.AreEqual(4L, PlayerProgression.Gems);
+            Assert.AreSame(hand, run.Open);
+            Assert.AreEqual(0, run.Refreshes, "a refused refresh raised the price");
+        }
+
+        [Test]
+        public void NothingIsChargedWithoutAHandOrWhenWithdrawn()
+        {
+            Hold(100);
+
+            var empty = new ShuffleRun(17u);
+            Assert.IsFalse(ShuffleRefresh.TryBuy(empty, Lane), "a refresh was sold with no hand on the table");
+            Assert.IsFalse(ShuffleRefresh.TryBuy(null, Lane));
+
+            var doc = ShuffleTuning.Shipped.ToJson(2).Replace("\"firstGems\": 5", "\"firstGems\": 0");
+            Assert.IsTrue(ShuffleTuning.TryRead(doc, false, out var off, out string fault), fault);
+            var withdrawn = new ShuffleRun(17u, off);
+            withdrawn.Deal();
+            Assert.IsFalse(ShuffleRefresh.TryBuy(withdrawn, Lane), "a withdrawn refresh was sold");
+
+            Assert.AreEqual(100L, PlayerProgression.Gems, "gems were taken for a refresh that was not dealt");
+            Assert.AreEqual(0, Debits(ShuffleRefresh.SpendReason + Lane.Value));
         }
     }
 }

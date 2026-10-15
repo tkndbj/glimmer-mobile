@@ -24,7 +24,10 @@
     "",
     "Cannot be tuned here: a hand's size and how often one is owed (written into the lane's own",
     "text in nine languages), the star waves (they pay coins), and anything outside Shuffle.",
-    "To return every device to its build's own figures: delete config/shuffle."
+    "To return every device to its build's own figures: delete config/shuffle.",
+    "",
+    "The refresh price (refresh.*, MODES.md 59p): the first refresh of a run costs firstGems (0 sells",
+    "none), and each one bought multiplies the next by factorHundredths (200 doubles, 100 holds it)."
   ],
 
   "schema": 1,
@@ -91,6 +94,11 @@
     "wildBurnForHundredths": 200,
     "wildVenomForHundredths": 300,
     "wildChillForHundredths": 200
+  },
+
+  "refresh": {
+    "firstGems": 5,
+    "factorHundredths": 200
   },
 
   "cards": [

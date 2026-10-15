@@ -304,6 +304,22 @@ namespace GlimmerGrove
                     new Vector2(-tall * .46f, tall * ReadoutAt(raider));
             }
 
+            // **An armoured raider wears a shield at the other end of its bar**, mirroring the
+            // gem, so the two readouts frame the bar and never overlap. It says "this one takes
+            // more than its size suggests" at a glance, where the bar's length alone cannot:
+            // a full bar on a creeper and a full bar on a brute are the same picture.
+            if (Armoured(raider.Kind))
+            {
+                float mark = Cell * .34f;
+
+                var shield = UIKit.Img("Armour", perch, Piece("armour"), Color.white,
+                                       new Vector2(mark, mark));
+                shield.raycastTarget = false;
+                shield.preserveAspect = true;
+                shield.rectTransform.anchoredPosition =
+                    new Vector2(tall * .46f, tall * ReadoutAt(raider));
+            }
+
             mob.Node.localScale = Vector3.one * .5f;
             Tween.Scale(mob.Node, 1f, raider.Boss ? .6f : .3f, Ease.OutBack);
 
@@ -314,6 +330,16 @@ namespace GlimmerGrove
             _mob.Add(mob);
             return mob;
         }
+
+        /// <summary>
+        /// Whether a raider of this kind wears the shield mark beside its health bar: a brute
+        /// (arrives armoured, <c>SiegeTuning.BruteHealth</c>) and a bulwark (carries a shield,
+        /// <c>SiegeTuning.ShieldSoakTenths</c>). Every boss answers false: its bar is the crown's.
+        /// Written as a comparison rather than a <c>switch</c> with a <c>default</c>, so a new
+        /// armoured kind is a line added here and not a case nobody looked at (invariant 44e).
+        /// </summary>
+        static bool Armoured(SiegeKind kind)
+            => kind == SiegeKind.Brute || kind == SiegeKind.Bulwark;
 
         /// <summary>The reel a boss throws in, and null for everything that never throws.</summary>
         static Sprite[] CastReel(SiegeKind kind)

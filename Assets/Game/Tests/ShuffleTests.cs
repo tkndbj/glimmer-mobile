@@ -705,6 +705,92 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// <b>The phoenix rises, pushes and covers</b> (<c>SiegeBoard.Mantle</c>): a line left to
+        /// fall on the shipped lane with the card held stands back up whole on the frame its last
+        /// post falls. Every body on the hill is pushed off the line on that frame, and for
+        /// <see cref="SiegeTuning.PhoenixMantle"/> seconds nothing takes a point off any post,
+        /// although the hill comes back and swings at it (the mantle is seen turning hits away,
+        /// so this cannot pass on a hill that simply never reached the line). Once the clock
+        /// runs out the line can be hurt again, and the phoenix is spent.
+        /// </summary>
+        [Test]
+        public void ThePhoenixRisesPushesTheHillAndCoversTheLine()
+        {
+            const float Frame = 1f / 60f;
+
+            var boosts = new SiegeBoosts(5u);
+            boosts.AddPhoenix(1);
+
+            var board = SiegeBoard.Build(Lane(), Breakers());
+            board.Boosts = boosts;
+            board.Refit();
+
+            // No match is ever made, so the line has no fuel, never fires and falls.
+            SiegeReport rose = null;
+            for (int i = 0; i < 60 * 600 && rose == null; i++)
+            {
+                var report = board.Advance(Frame);
+                if (report.Mantled > 0f) rose = report;
+            }
+
+            Assert.IsNotNull(rose, "the line never fell, so the phoenix was never asked");
+            Assert.AreEqual(board.Wards.Count, rose.Revived.Count, "the rise did not raise the whole line");
+            Assert.AreEqual(SiegeTuning.PhoenixMantle, rose.Mantled, 1e-6f);
+            Assert.AreEqual(SiegeTuning.PhoenixMantle, board.MantleLeft, 1e-6f, "the rise's own step spent the mantle");
+            Assert.IsTrue(board.Mantled);
+            Assert.Greater(rose.Repelled, 0, "the rise pushed nothing off a line it had just lost");
+
+            foreach (var ward in board.Wards)
+            {
+                Assert.IsTrue(ward.Alive);
+                Assert.AreEqual(ward.Full, ward.Health, "a post rose short of full health");
+            }
+
+            var pushed = new List<SiegeRaider>();
+            foreach (var raider in board.Raiders)
+            {
+                if (!raider.Alive || raider.Boss || !raider.OnTheHill) continue;
+                Assert.IsTrue(raider.Shoved || raider.March <= 0f, $"raider {raider.Id} was not pushed");
+                if (raider.Shoved) pushed.Add(raider);
+            }
+
+            // The push is a debt worked off as the hill walks (`SiegeRaider.Heave`), so a body
+            // is off the line from the next step, and stays off while it walks back.
+            var next = board.Advance(Frame);
+            float covered = Frame;
+            int turned = next.Turned.Count;
+            foreach (var raider in pushed)
+                Assert.IsFalse(raider.AtTheLine, $"raider {raider.Id} was still at the line a step after the push");
+
+            // The rest of the mantle's window, less a frame: nothing reaches a post, and something tries.
+            while (covered + Frame < SiegeTuning.PhoenixMantle && !board.IsFinished)
+            {
+                var report = board.Advance(Frame);
+                covered += Frame;
+                turned += report.Turned.Count;
+
+                Assert.AreEqual(0, report.Blows.Count, "a blow landed through the mantle");
+                Assert.AreEqual(0, report.Spells.Count, "a spell landed through the mantle");
+                foreach (var ward in board.Wards)
+                    Assert.AreEqual(ward.Full, ward.Health, $"a post was hurt under the mantle at {covered:0.00}s");
+            }
+
+            Assert.Greater(turned, 0, "the hill never came back to the line, so the mantle was never tested");
+
+            // And once it is off, the line can be hurt again, and a second fall is final.
+            bool hurt = false;
+            for (int i = 0; i < 60 * 30 && !hurt && !board.IsFinished; i++)
+            {
+                var report = board.Advance(Frame);
+                Assert.AreEqual(0f, report.Mantled, "the phoenix rose twice");
+                hurt = report.Blows.Count > 0;
+            }
+
+            Assert.IsFalse(board.Mantled, "the mantle outlived its seconds");
+            Assert.IsTrue(hurt, "no blow landed after the mantle came off");
+        }
+
+        /// <summary>
         /// <b>The plain line never reaches the arsenal</b>: a shipped rung played through with
         /// <see cref="SiegeBoosts.None"/> reports no hit drawn by a build, no wild element, no
         /// volley, no pool, no spin, no vortex and no ray, on any frame. The other half of

@@ -596,6 +596,94 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// The shell of an energy shield: an upright ellipse almost clear at its heart, brighter
+        /// toward its edge, with a bright rim and a crescent of reflected light at the upper left.
+        /// Drawn white for tinting and meant for the additive material, where clear means it adds
+        /// nothing to whatever is behind it.
+        ///
+        /// <para>
+        /// <b>The brightness rising toward the edge is what makes it read as a sphere</b>
+        /// rather than a disc: a thin skin is seen edge-on at its rim, so more of it is in the
+        /// line of sight there. A flat ring would read as a hoop.
+        /// </para>
+        /// <para>
+        /// <b>An ellipse baked to its aspect</b>, not a circle stretched by the image, so the
+        /// rim keeps one width all the way round. <see cref="MantleComb"/> is cut to the same
+        /// outline so the two layers sit exactly over each other.
+        /// </para>
+        /// </summary>
+        public static Sprite MantleShell(int width = 184, int height = 256)
+        {
+            float a = width * .5f - 1.5f, b = height * .5f - 1.5f;
+
+            return Make($"mantleshell{width}x{height}", width, height, (x, y) =>
+            {
+                float ux = (x - width * .5f) / a, uy = (y - height * .5f) / b;
+                float r = Mathf.Sqrt(ux * ux + uy * uy);
+                if (r >= 1.04f) return 0f;
+
+                // The skin: faint in the middle, rising steeply toward the edge.
+                float skin = .10f + .55f * Mathf.Pow(Mathf.Clamp01(r), 3.4f);
+
+                // The rim: a bright band just inside the outline, a pixel and a half wide.
+                float px = (1f - r) * b;
+                float rim = Mathf.Exp(-(px - 2.2f) * (px - 2.2f) / 5.5f);
+
+                // The crescent: the upper left of the shell catching a light.
+                float ang = Mathf.Atan2(uy, ux) * Mathf.Rad2Deg;
+                float toward = Mathf.Clamp01(1f - Mathf.Abs(Mathf.DeltaAngle(ang, 128f)) / 42f);
+                float band = Mathf.Clamp01(1f - Mathf.Abs(r - .80f) / .07f);
+                float shine = .55f * toward * toward * band;
+
+                float edge = Mathf.Clamp01((1.0f - r) * b * .7f + .5f);
+                return Mathf.Clamp01(skin + rim + shine) * edge;
+            });
+        }
+
+        /// <summary>
+        /// The honeycomb across an energy shield, cut to <see cref="MantleShell"/>'s outline.
+        /// The lattice is laid over a sphere, not a plane, so its cells crowd toward the rim
+        /// the way the cells on a ball's surface do when seen from the front. The lines are
+        /// brighter toward the rim for the shell's reason. Drawn white, for the additive material.
+        /// </summary>
+        public static Sprite MantleComb(int width = 184, int height = 256, float cells = 6.5f)
+        {
+            float a = width * .5f - 1.5f, b = height * .5f - 1.5f;
+
+            // A cell's width in the lattice's own units, chosen so `cells` of them span the height.
+            float pitch = height / cells;
+            const float RowRise = 1.7320508f;     // the lattice's row spacing for a cell one wide
+            const float Line = 1.5f;              // a lattice line's half-width, in pixels
+
+            return Make($"mantlecomb{width}x{height}_{cells}", width, height, (x, y) =>
+            {
+                float ux = (x - width * .5f) / a, uy = (y - height * .5f) / b;
+                float r = Mathf.Sqrt(ux * ux + uy * uy);
+                if (r >= 1f) return 0f;
+
+                // The front of a sphere: the surface distance from the middle is asin(r), so a
+                // point near the edge stands for more lattice than one near the centre.
+                float bend = r > 1e-4f ? Mathf.Asin(Mathf.Min(r, .999f)) / r : 1f;
+                float px = ux * a * bend / pitch, py = uy * b * bend / pitch;
+
+                // The nearer of the two offset hex lattices' centres.
+                float ax = Mathf.Repeat(px, 1f) - .5f, ay = Mathf.Repeat(py, RowRise) - RowRise * .5f;
+                float bx = Mathf.Repeat(px - .5f, 1f) - .5f, by = Mathf.Repeat(py - RowRise * .5f, RowRise) - RowRise * .5f;
+                bool first = ax * ax + ay * ay < bx * bx + by * by;
+                float gx = Mathf.Abs(first ? ax : bx), gy = Mathf.Abs(first ? ay : by);
+
+                // Distance to the cell's edge, in pixels of this sprite (pointy-topped hexagon).
+                float hex = Mathf.Max(gx * .5f + gy * .8660254f, gx);
+                float edgePx = (.5f - hex) * pitch / bend;
+
+                float line = Mathf.Clamp01(Line + .5f - edgePx);
+                float fall = .30f + .70f * r * r;
+                float cut = Mathf.Clamp01((1f - r) * b * .6f);
+                return line * fall * cut;
+            });
+        }
+
         /// <summary>Soft radial falloff. Higher power = tighter core.</summary>
         public static Sprite Glow(int size = 128, float power = 2.2f)
         {

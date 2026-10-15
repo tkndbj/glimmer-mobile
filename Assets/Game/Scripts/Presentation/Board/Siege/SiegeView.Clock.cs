@@ -229,6 +229,12 @@ namespace GlimmerGrove
             // **A post a build stood back up**, drawn after the fall above (`SiegeView.Boosts`).
             if (report.Revived.Count > 0) Revived();
 
+            // **The phoenix's rise and its mantle** (`SiegeView.Mantle`): the burst and the push
+            // on the frame the mantle went up, then each hit it turned away. Empty on every
+            // board but a Shuffle run that has risen.
+            if (report.Mantled > 0f) Mantled(report.Repelled);
+            for (int i = 0; i < report.Turned.Count; i++) Turned(report.Turned[i]);
+
             // **The places a build set something off** - a quake's row, a meteor's shadow and its
             // landing, a vortex opening, a nuke, the ray, a corpse bursting (`SiegeView.Arsenal`).
             // Empty on every board but the Shuffle lane's.

@@ -103,15 +103,20 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public int Refreshes { get; private set; }
 
-        /// <summary>What the next refresh of this run costs, in gems (<see cref="ShuffleRefresh.PriceFor"/>).</summary>
-        public long RefreshPrice => ShuffleRefresh.PriceFor(Refreshes);
+        /// <summary>
+        /// What the next refresh of this run costs, in gems, off the figures the run opened on
+        /// (<see cref="ShuffleRefreshTuning.PriceFor"/>); nought when refreshes are withdrawn.
+        /// </summary>
+        public long RefreshPrice => Tuning.Refresh.PriceFor(Refreshes);
 
         /// <summary>
-        /// Whether the open hand can be refreshed: a hand is on the table and the deck holds at
-        /// least one card the build can take that the hand does not already offer. A refresh
-        /// that could only deal the same cards back is never sold.
+        /// Whether the open hand can be refreshed: refreshes are sold on this run's figures, a
+        /// hand is on the table, and the deck holds at least one card the build can take that the
+        /// hand does not already offer. A refresh that could only deal the same cards back is
+        /// never sold.
         /// </summary>
-        public bool CanRefresh => Open != null && ShuffleDeck.HasFresh(Build, Open, Tuning);
+        public bool CanRefresh
+            => Tuning.Refresh.Enabled && Open != null && ShuffleDeck.HasFresh(Build, Open, Tuning);
 
         /// <summary>
         /// Swaps the open hand for a fresh one and counts it, answering the new hand, or null

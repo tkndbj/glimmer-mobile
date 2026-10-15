@@ -8311,7 +8311,7 @@
     },
     {
       "key": "shuffle.phoenix.note",
-      "text": "If all turrets fall, they return once at full health."
+      "text": "If all turrets fall, they return once at full health and are shielded for 8 seconds."
     },
     {
       "key": "shuffle.overdrive.name",
