@@ -61,6 +61,11 @@ namespace GlimmerGrove.Persistence
         /// grove, and then watches it fill in a second later, has been given exactly the fright
         /// this whole flow was rewritten to stop giving.
         /// </para>
+        /// <para>
+        /// <b>Never a rank or a lifetime floor.</b> It counts records of withdrawn and hidden
+        /// chapters too, which every server reading refuses; anything compared against the server
+        /// asks <see cref="ClearedIn"/>.
+        /// </para>
         /// </summary>
         public static int ClearedCount
         {
@@ -83,6 +88,21 @@ namespace GlimmerGrove.Persistence
         // player is up to need only to know which glades exist and in what order. None
         // of them needs a grid or a backdrop, so none of them should be able to cause a
         // chapter body to be read - least of all on the boot path, where all three run.
+
+        /// <summary>
+        /// Glades cleared across the levels currently in the catalog - the bound `walkLevels`
+        /// applies on the server (`ranks.ts`), so a record of a withdrawn or disabled chapter
+        /// counts on neither side. Nought before the index has loaded.
+        /// </summary>
+        public static int ClearedIn(CatalogIndex index)
+        {
+            if (index == null) return 0;
+
+            int cleared = 0;
+            foreach (var pair in _records)
+                if (pair.Value.IsCleared && index.Contains(pair.Key)) cleared++;
+            return cleared;
+        }
 
         /// <summary>Stars earned across the levels currently in the catalog.</summary>
         public static int TotalStars(CatalogIndex index)

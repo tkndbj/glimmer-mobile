@@ -426,7 +426,7 @@ def points(sheet, top):
             print("  !! line %d is %.0f wide in %.0f of room"
                   % (i + 1, K.font(34).getlength(say), room))
 
-        K.text(sheet, say, x, cy, 34, fill=K.CREAM, outline=3, anchor="l")
+        K.text(sheet, say, x, cy, 34, fill=(255, 255, 255), outline=3, anchor="l")
 
 
 def battle(sheet, top, wall=0):

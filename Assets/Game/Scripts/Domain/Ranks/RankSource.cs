@@ -78,7 +78,10 @@ namespace GlimmerGrove.Ranks
 
         public long Cleared(string scope)
         {
-            if (string.IsNullOrEmpty(scope)) return PlayerProgress.ClearedCount;
+            // Catalog-bounded, as `SaveRankSource.Walk` and the server are: `ClearedCount`
+            // also counts withdrawn glades, which held a badge on the map the server never
+            // published (an account with 88 retired clears read Silver here, Bronze in public).
+            if (string.IsNullOrEmpty(scope)) return PlayerProgress.ClearedIn(_index);
 
             var chapter = ChapterOf(scope);
             if (chapter == null) return 0L;
@@ -137,7 +140,9 @@ namespace GlimmerGrove.Ranks
 
         public long ShuffleWave => Shuffle.ShuffleLedger.Best;
 
-        public long Lifetime(TaskGoal goal) => LifetimeTally.Count(goal);
+        // Floored against this source's own catalog, so the floor and the readings above it
+        // are bounded by the same index.
+        public long Lifetime(TaskGoal goal) => LifetimeTally.Count(goal, _index);
 
         ChapterIndexEntry ChapterOf(string scope)
         {
@@ -151,13 +156,13 @@ namespace GlimmerGrove.Ranks
     /// published and the shape the shared vectors drive.
     ///
     /// <para>
-    /// <b>Bounded by the shipped catalog, deliberately, and that is the one place this may
-    /// legitimately answer less than the ledger does.</b> A record naming a level no longer in
-    /// the manifest is not counted here, exactly as <c>derivedXp</c> refuses to pay for one on
-    /// the server: an unrecognised level must never mint anything, and a rank is now something
-    /// strangers read. For a real save the two readings are identical, because every record a
-    /// device holds is of a glade it was dealt; the difference can only ever make this side
-    /// answer <em>lower</em>, which is invariant 19a's safe direction.
+    /// <b>Bounded by the shipped catalog, deliberately, and so is the ledger reading.</b> A
+    /// record naming a level no longer in the manifest is not counted here, exactly as
+    /// <c>derivedXp</c> refuses to pay for one on the server: an unrecognised level must never
+    /// mint anything, and a rank is now something strangers read. A real save <em>does</em>
+    /// hold such records - every glade of a withdrawn or disabled chapter a player cleared - so
+    /// <see cref="LedgerRankSource"/> takes the same bound (<c>PlayerProgress.ClearedIn</c>),
+    /// and the vectors carry withdrawn rows to hold the two together.
     /// </para>
     /// <para>
     /// <b>The keeper level is handed in rather than derived.</b> It is the one reading whose

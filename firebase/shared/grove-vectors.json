@@ -4447,6 +4447,154 @@
       "held": ""
     },
     {
+      "name": "a withdrawn glade's clear is not a run",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 1
+        },
+        {
+          "level": "ghost_level",
+          "stars": 3
+        },
+        {
+          "level": "ghost_two",
+          "stars": 2
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "runs",
+              "target": 3
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "three shipped clears are three of a run beside any number of withdrawn ones",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 1
+        },
+        {
+          "level": "two_a",
+          "stars": 1
+        },
+        {
+          "level": "ghost_level",
+          "stars": 3
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "runs",
+              "target": 3
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "a withdrawn glade's clear is not a cleared level",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 1
+        },
+        {
+          "level": "ghost_level",
+          "stars": 3
+        },
+        {
+          "level": "ghost_two",
+          "stars": 2
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "levels_cleared",
+              "target": 3
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "three shipped clears are three of a cleared level beside any number of withdrawn ones",
+      "levels": [
+        {
+          "level": "one_a",
+          "stars": 3
+        },
+        {
+          "level": "one_b",
+          "stars": 1
+        },
+        {
+          "level": "two_a",
+          "stars": 1
+        },
+        {
+          "level": "ghost_level",
+          "stars": 3
+        }
+      ],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "levels_cleared",
+              "target": 3
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
       "name": "a forged star count is worth three",
       "levels": [
         {

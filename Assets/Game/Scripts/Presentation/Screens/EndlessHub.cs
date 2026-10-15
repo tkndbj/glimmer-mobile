@@ -843,7 +843,7 @@ namespace GlimmerGrove
                 var says = UIKit.Titled("Says" + i, plate,
                                         Loc.Format(lane.PointKey(i + 1), Worth("xp", Pal.Mint),
                                                    Worth("coins", Pal.Amber)), 34,
-                                        Pal.Cream, TextAnchor.MiddleLeft,
+                                        Color.white, TextAnchor.MiddleLeft,
                                         new Vector2(room, EndlessHubLayout.RowHeight),
                                         new Vector2(.5f, .5f),
                                         new Vector2(textX + room * .5f, y), 3f, 3f, rich: true);

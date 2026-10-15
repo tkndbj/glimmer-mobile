@@ -91,12 +91,19 @@ namespace GlimmerGrove.Tasks
         /// rather than as a payment).
         /// </para>
         /// </summary>
-        public static long Count(TaskGoal goal)
+        public static long Count(TaskGoal goal) => Count(goal, Content.GameContent.Index);
+
+        /// <summary>
+        /// The same reading with the floor bounded by <paramref name="index"/> - the catalog the
+        /// caller's other readings are bounded by, which is how a rank source keeps its floor and
+        /// its level walks on one catalog.
+        /// </summary>
+        public static long Count(TaskGoal goal, Content.CatalogIndex index)
         {
             if (goal == TaskGoal.None) return 0L;
 
             long counted = _counts.TryGetValue(goal, out int n) && n > 0 ? n : 0L;
-            long proved = FloorFor(goal);
+            long proved = FloorFor(goal, index);
             return counted > proved ? counted : proved;
         }
 
@@ -117,18 +124,21 @@ namespace GlimmerGrove.Tasks
         /// provable.
         /// </para>
         /// </summary>
-        static long FloorFor(TaskGoal goal)
+        static long FloorFor(TaskGoal goal, Content.CatalogIndex index)
         {
             switch (goal)
             {
-                // A cleared glade is a run that happened and a run that was won.
+                // A cleared glade is a run that happened and a run that was won. Only glades
+                // the catalog ships: the server's floor (`lifetime` in `ranks.ts`) walks the same
+                // bound, and a withdrawn chapter's clears counted here alone held a badge on the
+                // device that no board ever showed.
                 case TaskGoal.Runs:
                 case TaskGoal.Wins:
-                    return PlayerProgress.ClearedCount;
+                    return PlayerProgress.ClearedIn(index);
 
                 // The stars a ledger holds were earned at least once.
                 case TaskGoal.Stars:
-                    return PlayerProgress.TotalStars(Content.GameContent.Index);
+                    return PlayerProgress.TotalStars(index);
 
                 // Every wave in the Infinite lane's lifetime tally was seen off. It is a floor
                 // rather than the answer because the goal also counts waves on the laddered

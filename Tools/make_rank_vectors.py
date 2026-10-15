@@ -314,6 +314,20 @@ def cases():
     case("a record naming a level no chapter ships counts for nothing",
          levels=[lvl("one_a", 3), lvl("ghost_level", 3)])
 
+    # And it is no run either. The device's floor once counted every record it held, so an
+    # account with clears of withdrawn chapters wore a rung on its own map that no board showed;
+    # `TheTwoSourcesAgree` drives these through the live ledger too.
+    # One line per ladder, so a fault in either reading is caught alone and not hidden behind
+    # the other line staying unmet.
+    for measure, noun in (("runs", "run"), ("levels_cleared", "cleared level")):
+        ladder = [{"id": "only", "requires": [{"measure": measure, "target": 3}]}]
+        case(f"a withdrawn glade's clear is not a {noun}",
+             levels=[lvl("one_a", 3), lvl("one_b", 1), lvl("ghost_level", 3), lvl("ghost_two", 2)],
+             ladder=ladder)
+        case(f"three shipped clears are three of a {noun} beside any number of withdrawn ones",
+             levels=[lvl("one_a", 3), lvl("one_b", 1), lvl("two_a", 1), lvl("ghost_level", 3)],
+             ladder=ladder)
+
     # --------------------------------------------------------------- the star clamp
     case("a forged star count is worth three",
          levels=[lvl("one_a", 99), lvl("one_b", 99)], keeper=9)

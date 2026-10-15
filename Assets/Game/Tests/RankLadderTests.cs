@@ -212,11 +212,11 @@ namespace GlimmerGrove.Tests
             // Nothing has been counted - this is an account older than the feature - and three
             // cleared glades are three runs that happened and three that were won.
             Assert.AreEqual(0, LifetimeTally.Counted(TaskGoal.Runs), "nothing counted");
-            Assert.AreEqual(3L, LifetimeTally.Count(TaskGoal.Runs), "three clears are three runs");
-            Assert.AreEqual(3L, LifetimeTally.Count(TaskGoal.Wins));
+            Assert.AreEqual(3L, LifetimeTally.Count(TaskGoal.Runs, index), "three clears are three runs");
+            Assert.AreEqual(3L, LifetimeTally.Count(TaskGoal.Wins, index));
 
             // A verb with nothing to prove it answers what it counted and no more.
-            Assert.AreEqual(0L, LifetimeTally.Count(TaskGoal.Raiders));
+            Assert.AreEqual(0L, LifetimeTally.Count(TaskGoal.Raiders, index));
         }
 
         [Test]
@@ -227,15 +227,58 @@ namespace GlimmerGrove.Tests
 
             TaskLedger.Note(TaskGoal.Runs, 9);
 
-            Assert.AreEqual(9L, LifetimeTally.Count(TaskGoal.Runs),
+            Assert.AreEqual(9L, LifetimeTally.Count(TaskGoal.Runs, index),
                             "nine played beats one proved");
 
             // And the floor still wins when it is the bigger of the two, which is the case an
             // account restored onto a fresh device lands in.
             Holding(("one_a", 3), ("one_b", 3), ("two_a", 3), ("two_b", 3), ("endless_a", 3),
                     ("one_c", 3), ("endless_a", 3));
-            Assert.IsTrue(LifetimeTally.Count(TaskGoal.Runs) >= 6,
+            Assert.IsTrue(LifetimeTally.Count(TaskGoal.Runs, index) >= 6,
                           "the proved floor wins when it is the larger");
+        }
+
+        /// <summary>
+        /// A clear of a glade the catalog no longer ships is neither a cleared level nor a run,
+        /// on the map's reading exactly as on the save's and the server's. The device once
+        /// counted every record, so an account holding 88 clears of withdrawn chapters read
+        /// Silver on its own map and Bronze on every board.
+        /// </summary>
+        [Test]
+        public void AClearOfALevelNoLongerShippedIsNotARun()
+        {
+            var index = Catalog();
+            Holding(("one_a", 3), ("one_b", 2), ("b01_firstburst", 3), ("c01_first_light", 3));
+
+            Assert.AreEqual(4, PlayerProgress.ClearedCount, "the account panel still counts every record");
+            Assert.AreEqual(2, PlayerProgress.ClearedIn(index));
+            Assert.AreEqual(2L, RankMeasures.Read(RankMeasures.Parse("levels_cleared"), string.Empty, index));
+            Assert.AreEqual(2L, LifetimeTally.Count(TaskGoal.Runs, index), "a withdrawn clear is no run");
+            Assert.AreEqual(2L, LifetimeTally.Count(TaskGoal.Wins, index));
+
+            var save = new SaveFileDto
+            {
+                levels = new[]
+                {
+                    new LevelRecordDto { levelId = "one_a", stars = 3, bestMoves = 10, clears = 1 },
+                    new LevelRecordDto { levelId = "one_b", stars = 2, bestMoves = 10, clears = 1 },
+                    new LevelRecordDto { levelId = "b01_firstburst", stars = 3, bestMoves = 10, clears = 1 },
+                    new LevelRecordDto { levelId = "c01_first_light", stars = 3, bestMoves = 10, clears = 1 },
+                },
+            };
+            var fromSave = new SaveRankSource(save, index, 1);
+            var live = new LedgerRankSource(index);
+
+            Assert.AreEqual(fromSave.Cleared(string.Empty), live.Cleared(string.Empty));
+            Assert.AreEqual(fromSave.Lifetime(TaskGoal.Runs), live.Lifetime(TaskGoal.Runs));
+        }
+
+        /// <summary>Nothing is cleared before the index has loaded, rather than everything.</summary>
+        [Test]
+        public void NoIndexClearsNothing()
+        {
+            Holding(("one_a", 3));
+            Assert.AreEqual(0, PlayerProgress.ClearedIn(null));
         }
 
         [Test]
