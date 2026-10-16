@@ -5,8 +5,8 @@ using GlimmerGrove.Persistence;
 namespace GlimmerGrove.Progression
 {
     /// <summary>
-    /// The XP an account can prove: the star ledger, the Infinite lane, the daily challenges and
-    /// the boost clamped against those three - the sum <c>publishGrove</c> derives before it
+    /// The XP an account can derive: the star ledger, both wave lanes, the daily challenges and
+    /// the boost clamped against their sum - the sum <c>publishGrove</c> derives before it
     /// reads a keeper level off the curve, and the sum <see cref="PlayerProgression"/> derives
     /// before it applies the device's high-water floors.
     ///
@@ -30,36 +30,39 @@ namespace GlimmerGrove.Progression
     {
         public readonly long Stars;
         public readonly long Endless;
+        public readonly long Shuffle;
         public readonly long Challenges;
         public readonly long Boost;
 
-        ProvableXp(long stars, long endless, long challenges, long boost)
+        ProvableXp(long stars, long endless, long shuffle, long challenges, long boost)
         {
             Stars = stars;
             Endless = endless;
+            Shuffle = shuffle;
             Challenges = challenges;
             Boost = boost;
         }
 
-        public long Total => Stars + Endless + Challenges + Boost;
+        public long Total => Stars + Endless + Shuffle + Challenges + Boost;
 
         /// <summary>
-        /// The rule. The boost is clamped against the three sources it could have been a
+        /// The rule. The boost is clamped against the sources it could have been a
         /// percentage of, exactly as <c>xpBoostXp</c> clamps it on the server.
         /// </summary>
         public static ProvableXp Of(long starXp, long lifetimeWaves, long lifetimeClears,
                                     long boostHeld, ProgressionTable table,
-                                    ChallengeRewardRule challengeRewards)
+                                    ChallengeRewardRule challengeRewards, long shuffleWaves = 0L)
         {
             table ??= ProgressionTable.Default;
 
             long stars = starXp > 0L ? starXp : 0L;
             long endless = table.Endless.XpFor(lifetimeWaves);
+            long shuffle = GlimmerGrove.Shuffle.ShuffleRewards.XpFor(shuffleWaves);
             long challenges = challengeRewards != null ? challengeRewards.XpFor(lifetimeClears) : 0L;
-            long boost = XpBoost.BonusFrom(stars + endless + challenges, boostHeld,
+            long boost = XpBoost.BonusFrom(stars + endless + shuffle + challenges, boostHeld,
                                            table.XpBoost.MaxPercent);
 
-            return new ProvableXp(stars, endless, challenges, boost);
+            return new ProvableXp(stars, endless, shuffle, challenges, boost);
         }
 
         /// <summary>
@@ -96,7 +99,7 @@ namespace GlimmerGrove.Progression
                       EndlessLedger.LifetimeWavesIn(save),
                       ChallengeLedger.LifetimeClearsIn(save),
                       save?.wallet?.xpBoostEarned ?? 0L,
-                      table, challengeRewards);
+                      table, challengeRewards, GlimmerGrove.Shuffle.ShuffleRewards.WavesIn(save));
         }
     }
 

@@ -24,10 +24,9 @@ actually be defended:
 | A player's public grove card | `groves/{uid}` | any player reads, none write |
 | The published boards | `leaderboards/{boardId}` | any player reads, none write |
 
-The interesting consequence: a player who forges their save can change what their own
-progress screen says and **cannot mint a single credit**. Earned currency is re-derived
-server-side from the level records, and `functions/src/progression.ts` ignores any
-record naming a glade the catalog has never heard of.
+Star rewards are re-derived from catalog-known level records. Shuffle also pays repeatable
+wave rewards from client-reported counters, described below; validating that arithmetic
+does not independently attest that the player cleared those waves.
 
 That only works because XP and credits are derived rather than accumulated. An
 accumulated balance could only be believed or disbelieved; a derived one can be
@@ -60,6 +59,26 @@ forget — `earnedFloor` on the wallet only ever ratchets up — but the new cha
 pay until the server knows it exists.
 
 ## The ledger is a map, not an array
+
+Shuffle's wave rewards pay **10 XP and 10 credits per cleared wave on every run**, in
+addition to existing star rewards. The fixed contract is `functions/src/shuffle-rewards.ts`
+and `ShuffleRewards.cs`, pinned by `shared/shuffle-reward-vectors.json`. Run
+`python Tools/make_shuffle_reward_vectors.py --check` and the client/server test suites.
+Rates are fixed because changing a multiplier over a lifetime tally re-prices old progress.
+
+Save v44 adds `shuffleBest[].rewards`, per-installation cleared-wave counters joined by max
+per installation and summed. Old saves have no counters and receive no retroactive wave
+payment. The best wave and grade never contribute; reward-only rows from forfeits travel
+without publishing a new best. Credits additionally require a catalog-known level. These
+are client-reported gameplay counts, with structural bounds and idempotent merge arithmetic,
+and **no daily payout cap**. A modified client can forge counts on known levels; this design
+does not offer gameplay attestation. Infinite's existing daily claim limits are unchanged.
+
+Deploy the updated functions before distributing a v44 client: `getWallet`, `submitSpends`,
+`claimAwards`, `publishGrove`, `repairGroveCards`, `adminListPlayers`, `adminFindPlayers`,
+and `adminGetPlayer`, in the normal small batches. They share the new balance/keeper reading.
+No top-level save key or private wallet field changes, so the existing Firestore rules accept
+the nested counters. No reward config changes or re-seed is needed for this fixed contract.
 
 `players/{uid}.levels` is keyed by level id. Two things follow, and both matter at scale:
 a duplicated record is unrepresentable rather than something the server has to filter,

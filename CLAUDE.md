@@ -111,11 +111,14 @@ wire or rules mistake reaches live accounts.
    multiplier: sources are totalled first, boosted once. Three windows, each a monotonic deadline joined by
    `max` — watched (cooldown derived from its deadline), bought, and surge (one deadline per strength) — they
    add, capped at `maxPercent` (350). The banked total is clamped on read to `(star XP + endless XP + challenge
-   XP) x maxPercent%`. Mirrored by `xpBoostXp`, held by `xpBoostCases`.
+   XP + Shuffle XP) x maxPercent%`. Mirrored by `xpBoostXp`, held by `xpBoostCases`.
 9f. **Infinite-lane credits are bounded per day, enforced on the wallet**: 30 a wave, 10,000 a day
    (`endless.ts`). The claim id carries the day's running total (`endless:{day}:{paidBefore}:{currency}`); the
    server's figure folds back via `ApplyServerState`, upward only, so a second device never offers money the
    day already spent (45d).
+9g. **Shuffle waves pay 10 XP and 10 credits per clear, on every run** (MODES.md 59q). Separate
+   per-installation counters join by max and sum; best waves and grades never pay. These are
+   client-reported counts, not server proof of gameplay; no daily cap is shared with Infinite.
 10. **The client never raises `grantedBaseline`.** Receipt validation is idempotent on the store transaction id.
 10a. **An award reaches the player as a claim with an id derived from what earned it**; the server recomputes
    the amount. Never `GrantLocally` except for the account seed.

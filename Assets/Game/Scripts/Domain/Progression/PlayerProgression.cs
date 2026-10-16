@@ -21,6 +21,7 @@ namespace GlimmerGrove.Progression
     {
         static ProgressionTotals _totals = ProgressionTotals.Zero;
         static long _endlessXp;
+        static long _shuffleXp, _shuffleCredits;
         static long _challengeXp;
         static long _boostXp;
         static PlayerLevel _level;
@@ -70,6 +71,7 @@ namespace GlimmerGrove.Progression
             // beat the best still added waves - and because a merge that arrives from the cloud
             // moves the tally without anybody playing, which the hub's badge has to repaint for.
             EndlessLedger.Changed += Invalidate;
+            GlimmerGrove.Shuffle.ShuffleLedger.Changed += Invalidate;
 
             // The second source of XP that is not a star (see `XpBoost`). A window opening moves
             // nothing on its own, but the bonus it banks does - and a merge can move the banked
@@ -122,7 +124,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>Exposed because a run has to be able to say what it just earned</b>, and it is
         /// measured either side of the fold rather than handed along - <c>ProtoScreen.Solve</c>
-        /// reads this before and after <c>Finished</c>, which is exactly how
+        /// reads <see cref="WaveXp"/> before and after <c>Finished</c>, which is exactly how
         /// <c>WinRecord.ChapterOpened</c> is answered and for the same reason: by the time a panel
         /// is built the transition is over.
         /// </para>
@@ -135,6 +137,12 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static long EndlessXp { get { EnsureFresh(); return _endlessXp; } }
+
+        public static long ShuffleXp { get { EnsureFresh(); return _shuffleXp; } }
+        public static long ShuffleCredits { get { EnsureFresh(); return _shuffleCredits; } }
+
+        /// <summary>Wave XP, measured around a mode's banking hook for the run's result.</summary>
+        public static long WaveXp { get { EnsureFresh(); return _endlessXp + _shuffleXp; } }
 
         /// <summary>
         /// What the daily challenges have paid this account in XP: a rate over the lifetime
@@ -174,7 +182,7 @@ namespace GlimmerGrove.Progression
         public static PlayerLevel EarnedLevel { get { EnsureFresh(); return _earned; } }
 
         /// <summary>Credits earned from play, before grants and spends.</summary>
-        public static long EarnedCredits { get { EnsureFresh(); return _totals.EarnedCredits; } }
+        public static long EarnedCredits { get { EnsureFresh(); return _totals.EarnedCredits + _shuffleCredits; } }
 
         public static int ClearedGlades { get { EnsureFresh(); return _totals.ClearedGlades; } }
 
@@ -312,7 +320,7 @@ namespace GlimmerGrove.Progression
         /// entirely grants minus spends.
         /// </summary>
         static long DerivedEarnedFor(string currency)
-            => currency == Currency.Credits ? _totals.EarnedCredits : 0L;
+            => currency == Currency.Credits ? _totals.EarnedCredits + _shuffleCredits : 0L;
 
         static void EnsureFresh()
         {
@@ -351,8 +359,11 @@ namespace GlimmerGrove.Progression
             var provable = ProvableXp.Of(_totals.Xp, EndlessLedger.LifetimeWaves,
                                          Challenges.ChallengeLedger.LifetimeClears,
                                          Wallet.XpBoostEarned, table,
-                                         Challenges.ChallengeRules.Table.Rewards);
+                                         Challenges.ChallengeRules.Table.Rewards,
+                                         GlimmerGrove.Shuffle.ShuffleLedger.LifetimeWaves);
             _endlessXp = provable.Endless;
+            _shuffleXp = provable.Shuffle;
+            _shuffleCredits = GlimmerGrove.Shuffle.ShuffleLedger.CreditsIn(GameContent.Index);
             _challengeXp = provable.Challenges;
             _boostXp = provable.Boost;
 
@@ -387,11 +398,12 @@ namespace GlimmerGrove.Progression
         {
             bool moved = ProgressionStore.RaiseXp(effectiveXp);
             moved |= ProgressionStore.RaiseLevel(_earned.Level);
-            moved |= Wallet.Ledger(Currency.Credits).RaiseEarnedHighWater(_totals.EarnedCredits);
+            long credits = _totals.EarnedCredits + _shuffleCredits;
+            moved |= Wallet.Ledger(Currency.Credits).RaiseEarnedHighWater(credits);
 
             // Keeps the retired v1 balance fields meaningful for a rolled-back client.
             Wallet.MirrorLegacyBalance(Currency.Credits,
-                                       Wallet.Ledger(Currency.Credits).BalanceFrom(_totals.EarnedCredits));
+                                       Wallet.Ledger(Currency.Credits).BalanceFrom(credits));
             Wallet.MirrorLegacyBalance(Currency.Gems, Wallet.Ledger(Currency.Gems).BalanceFrom(0L));
 
             if (moved) SaveService.MarkDirty();

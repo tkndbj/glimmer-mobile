@@ -316,13 +316,13 @@ namespace GlimmerGrove
         /// and its lifetime tally, both floors rather than grades, with nowhere else to live.
         ///
         /// <b>A mode may pay XP from in here</b>, and it does not have to say so: <see cref="Solve"/>
-        /// reads <c>PlayerProgression.EndlessXp</c> either side of this call and hands the
+        /// reads <c>PlayerProgression.WaveXp</c> either side of this call and hands the
         /// difference to the ledger. That keeps this class mode-blind - it never learns what was
         /// banked, only that the derived total moved.
         ///
         /// <b>A mode may also pay credits from in here, and that one it has to say</b>, through
         /// <see cref="Banked"/>. XP is derived, so a total read either side of this call is the
-        /// whole answer; credits from a lane are a granted <em>claim</em> (<c>EndlessCoins</c>)
+        /// whole answer; credits from a lane may be a granted claim or a derived payout
         /// landing in a balance that has other writers, so there is no total whose movement means
         /// "this run". Saying it is the only version that cannot quietly pay a chest's coins into
         /// a run's panel.
@@ -427,7 +427,7 @@ namespace GlimmerGrove
             // reasoning over: by the time a panel is built the transition is over, and a derived
             // total read afterwards cannot say how much of it this run put there. `Finished` is
             // where a mode banks anything it keeps, so the window is exactly that one call.
-            long bonusBefore = PlayerProgression.EndlessXp;
+            long bonusBefore = PlayerProgression.WaveXp;
 
             // Cleared rather than trusted to be nought. `_finished` makes this call single for
             // the life of a screen today, but a field read once and never reset is the shape that
@@ -436,7 +436,7 @@ namespace GlimmerGrove
 
             Finished(moves);
 
-            long bonusXp = PlayerProgression.EndlessXp - bonusBefore;
+            long bonusXp = PlayerProgression.WaveXp - bonusBefore;
             long bonusCredits = _banked;
 
             // No route, deliberately, and it is the weave's argument: the victory panel's route

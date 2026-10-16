@@ -1138,9 +1138,9 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    siege screen unsealed and given two seams - `Ruled` and `LineToLoad` - rather than copied, 20b;
    it overrides `Ruled` only, to refuse the Infinite lane's checkpoint, and stands the player's
    loadout like every other lane, 2026-10-10),
-   one panel (`ShuffleChoiceOverlay`), one ramp and one deck. **It pays nothing the Infinite lane
-   pays**: the stars pay once through the star ledger, nothing reaches `EndlessLedger`, and the
-   best wave is banked in its own ledger (59k). A heart is bought at the gate and every ending is free (43e, by
+   one panel (`ShuffleChoiceOverlay`), one ramp and one deck. Stars pay once through the star ledger;
+   every cleared wave also pays 10 XP and 10 credits on every run (59q). Nothing reaches
+   `EndlessLedger`, and the best wave is banked in its own ledger (59k). A heart is bought at the gate and every ending is free (43e, by
    `Laddered`); the loadout shelf stands on this lane's hub as on the Infinite lane's.
 59a. **The build reaches the board through one seam, and the seam is an identity everywhere
    else.** `SiegeBoosts` is read live at every site a card can change - the bolt, the cadence, the
@@ -1409,6 +1409,19 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `render_shuffle.py --refreshes N` (-1 draws no key).
    **Held by** `ShuffleGradeTests`, `SaveWiringTests`, `functions/test/grove.mjs`, and
    `render_shuffle.py --report all --measure` (every grade, nine languages, Arabic shaped).
+
+59q. **Every cleared Shuffle wave pays 10 XP and 10 credits on every run**, including replays and
+   waves cleared before a forfeit. Existing star rewards remain separate. `ShuffleRewards` is a
+   fixed payout contract mirrored by `shuffle-rewards.ts`; changing its rate re-prices lifetime
+   progress and needs an explicit economy migration. No daily allowance is shared with Infinite.
+   `ShuffleLedger.Bank` keeps per-installation counters inside `shuffleBest[].rewards` (save v44),
+   joined by max per installation and summed so concurrent offline runs survive without duplicate
+   payments on retry. The best and grade never seed a counter: old saves start at zero reward waves.
+   The screen banks once per ending; continues keep the same run. `Banked` carries coins to the
+   result, `PlayerProgression.WaveXp` carries XP, and the existing boost applies once. Credits
+   require a catalog-known level on both sides. Counts remain client-reported gameplay: neither
+   arithmetic validation nor a merge proves that a wave was played. Held by `ShuffleRewardTests`,
+   `SaveWiringTests`, and `functions/test/shuffle-rewards.mjs` over the same generated vectors.
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the

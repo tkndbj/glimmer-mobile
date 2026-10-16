@@ -11,7 +11,7 @@ import { getFirestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { CURRENCIES, CurrencyId, PATHS } from "./config";
 import { NameHolding, heldName } from "./names";
 import { todayKey } from "./daily";
-import { assertUsableConfig, earnedCredits, ProgressionConfig } from "./progression";
+import { assertUsableConfig, earnedCreditsForSave, ProgressionConfig } from "./progression";
 import { readFloor, StreakFloor } from "./streak";
 import { readWheelPosition } from "./wheel";
 import { readTaskPaid, TaskPaid } from "./tasks";
@@ -527,8 +527,7 @@ export async function deriveEarned(
   config: ProgressionConfig
 ): Promise<Record<CurrencyId, number>> {
   const save = await transaction.get(getFirestore().doc(PATHS.player(uid)));
-  const data = save.exists ? (save.data() as { levels?: unknown }) : undefined;
-  const levels = data?.levels ?? {};
+  const data = save.exists ? (save.data() as Record<string, unknown>) : undefined;
 
   // The uid is passed because it seeds the golden multiplier — a glade's credits are a
   // function of (account, level), not of the level alone. See `goldenPercent`. Omitting
@@ -539,7 +538,7 @@ export async function deriveEarned(
   // credits the game had already shown as banked. A rung pays a chest now, and a chest is a
   // claim with its own grant document (`season.ts`) — so a season contributes nothing here,
   // and reading the section would be reading a number nothing spends.
-  const derived = earnedCredits(levels, config, uid).credits;
+  const derived = earnedCreditsForSave(data ?? {}, config, uid).credits;
 
   if (derived > wallet.credits.earnedFloor) wallet.credits.earnedFloor = derived;
 

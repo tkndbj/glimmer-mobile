@@ -1,0 +1,1063 @@
+{
+  "constants": {
+    "xpPerWave": 10,
+    "creditsPerWave": 10,
+    "maxRows": 64,
+    "maxDevices": 64,
+    "maxDeviceIdLength": 64,
+    "maxWavesPerDevice": 1000000000
+  },
+  "cases": [
+    {
+      "name": "no runs",
+      "rows": [],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "a pre-reward best never pays retroactively",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 80
+        }
+      ],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "one cleared wave",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 1,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 1
+            }
+          ]
+        }
+      ],
+      "waves": 1,
+      "xp": 10,
+      "credits": 10
+    },
+    {
+      "name": "a replay tally pays even below the best",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 100,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 31
+            }
+          ]
+        }
+      ],
+      "waves": 31,
+      "xp": 310,
+      "credits": 310
+    },
+    {
+      "name": "a forfeit pays its clears without publishing a best",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 7
+            }
+          ]
+        }
+      ],
+      "waves": 7,
+      "xp": 70,
+      "credits": 70
+    },
+    {
+      "name": "two offline devices each pay",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 12
+            },
+            {
+              "device": "b",
+              "waves": 3
+            }
+          ]
+        }
+      ],
+      "waves": 15,
+      "xp": 150,
+      "credits": 150
+    },
+    {
+      "name": "duplicate counters take max rather than summing",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 12
+            },
+            {
+              "device": "a",
+              "waves": 5
+            },
+            {
+              "device": "b",
+              "waves": 3
+            }
+          ]
+        }
+      ],
+      "waves": 15,
+      "xp": 150,
+      "credits": 150
+    },
+    {
+      "name": "duplicate level rows merge counters",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 12
+            }
+          ]
+        },
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 5
+            },
+            {
+              "device": "b",
+              "waves": 3
+            }
+          ]
+        }
+      ],
+      "waves": 15,
+      "xp": 150,
+      "credits": 150
+    },
+    {
+      "name": "negative counts never subtract",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": -12
+            },
+            {
+              "device": "b",
+              "waves": 3
+            }
+          ]
+        }
+      ],
+      "waves": 3,
+      "xp": 30,
+      "credits": 30
+    },
+    {
+      "name": "an empty or invalid device contributes nothing",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "",
+              "waves": 99
+            },
+            {
+              "device": "bad.device",
+              "waves": 99
+            },
+            {
+              "device": "ok",
+              "waves": 2
+            }
+          ]
+        }
+      ],
+      "waves": 2,
+      "xp": 20,
+      "credits": 20
+    },
+    {
+      "name": "an oversized device id contributes nothing",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "waves": 99
+            }
+          ]
+        }
+      ],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "the longest device id is accepted",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "waves": 2
+            }
+          ]
+        }
+      ],
+      "waves": 2,
+      "xp": 20,
+      "credits": 20
+    },
+    {
+      "name": "a row naming no level contributes nothing",
+      "rows": [
+        {
+          "level": "",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 99
+            }
+          ]
+        }
+      ],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "an impossible level id contributes nothing",
+      "rows": [
+        {
+          "level": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 99
+            }
+          ]
+        }
+      ],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "null entries do not change the total",
+      "rows": [
+        null,
+        {
+          "level": "s13_shuffle",
+          "rewards": [
+            null,
+            {
+              "device": "a",
+              "waves": 3
+            }
+          ]
+        }
+      ],
+      "waves": 3,
+      "xp": 30,
+      "credits": 30
+    },
+    {
+      "name": "separate levels sum",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 4
+            }
+          ]
+        },
+        {
+          "level": "second_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 6
+            }
+          ]
+        }
+      ],
+      "waves": 10,
+      "xp": 100,
+      "credits": 100
+    },
+    {
+      "name": "the per-device structural guard saturates",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 1000000000000
+            }
+          ]
+        }
+      ],
+      "waves": 1000000000,
+      "xp": 10000000000,
+      "credits": 10000000000
+    },
+    {
+      "name": "the row bound limits the walk including malformed entries",
+      "rows": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 100
+            }
+          ]
+        }
+      ],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "the device bound limits the walk including malformed entries",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "rewards": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+              "device": "a",
+              "waves": 100
+            }
+          ]
+        }
+      ],
+      "waves": 0,
+      "xp": 0,
+      "credits": 0
+    },
+    {
+      "name": "merged device lists are bounded in ordinal order",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "b00",
+              "waves": 2
+            },
+            {
+              "device": "b01",
+              "waves": 2
+            },
+            {
+              "device": "b02",
+              "waves": 2
+            },
+            {
+              "device": "b03",
+              "waves": 2
+            },
+            {
+              "device": "b04",
+              "waves": 2
+            },
+            {
+              "device": "b05",
+              "waves": 2
+            },
+            {
+              "device": "b06",
+              "waves": 2
+            },
+            {
+              "device": "b07",
+              "waves": 2
+            },
+            {
+              "device": "b08",
+              "waves": 2
+            },
+            {
+              "device": "b09",
+              "waves": 2
+            },
+            {
+              "device": "b10",
+              "waves": 2
+            },
+            {
+              "device": "b11",
+              "waves": 2
+            },
+            {
+              "device": "b12",
+              "waves": 2
+            },
+            {
+              "device": "b13",
+              "waves": 2
+            },
+            {
+              "device": "b14",
+              "waves": 2
+            },
+            {
+              "device": "b15",
+              "waves": 2
+            },
+            {
+              "device": "b16",
+              "waves": 2
+            },
+            {
+              "device": "b17",
+              "waves": 2
+            },
+            {
+              "device": "b18",
+              "waves": 2
+            },
+            {
+              "device": "b19",
+              "waves": 2
+            },
+            {
+              "device": "b20",
+              "waves": 2
+            },
+            {
+              "device": "b21",
+              "waves": 2
+            },
+            {
+              "device": "b22",
+              "waves": 2
+            },
+            {
+              "device": "b23",
+              "waves": 2
+            },
+            {
+              "device": "b24",
+              "waves": 2
+            },
+            {
+              "device": "b25",
+              "waves": 2
+            },
+            {
+              "device": "b26",
+              "waves": 2
+            },
+            {
+              "device": "b27",
+              "waves": 2
+            },
+            {
+              "device": "b28",
+              "waves": 2
+            },
+            {
+              "device": "b29",
+              "waves": 2
+            },
+            {
+              "device": "b30",
+              "waves": 2
+            },
+            {
+              "device": "b31",
+              "waves": 2
+            },
+            {
+              "device": "b32",
+              "waves": 2
+            },
+            {
+              "device": "b33",
+              "waves": 2
+            },
+            {
+              "device": "b34",
+              "waves": 2
+            },
+            {
+              "device": "b35",
+              "waves": 2
+            },
+            {
+              "device": "b36",
+              "waves": 2
+            },
+            {
+              "device": "b37",
+              "waves": 2
+            },
+            {
+              "device": "b38",
+              "waves": 2
+            },
+            {
+              "device": "b39",
+              "waves": 2
+            },
+            {
+              "device": "b40",
+              "waves": 2
+            },
+            {
+              "device": "b41",
+              "waves": 2
+            },
+            {
+              "device": "b42",
+              "waves": 2
+            },
+            {
+              "device": "b43",
+              "waves": 2
+            },
+            {
+              "device": "b44",
+              "waves": 2
+            },
+            {
+              "device": "b45",
+              "waves": 2
+            },
+            {
+              "device": "b46",
+              "waves": 2
+            },
+            {
+              "device": "b47",
+              "waves": 2
+            },
+            {
+              "device": "b48",
+              "waves": 2
+            },
+            {
+              "device": "b49",
+              "waves": 2
+            },
+            {
+              "device": "b50",
+              "waves": 2
+            },
+            {
+              "device": "b51",
+              "waves": 2
+            },
+            {
+              "device": "b52",
+              "waves": 2
+            },
+            {
+              "device": "b53",
+              "waves": 2
+            },
+            {
+              "device": "b54",
+              "waves": 2
+            },
+            {
+              "device": "b55",
+              "waves": 2
+            },
+            {
+              "device": "b56",
+              "waves": 2
+            },
+            {
+              "device": "b57",
+              "waves": 2
+            },
+            {
+              "device": "b58",
+              "waves": 2
+            },
+            {
+              "device": "b59",
+              "waves": 2
+            },
+            {
+              "device": "b60",
+              "waves": 2
+            },
+            {
+              "device": "b61",
+              "waves": 2
+            },
+            {
+              "device": "b62",
+              "waves": 2
+            },
+            {
+              "device": "b63",
+              "waves": 2
+            }
+          ]
+        },
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "a",
+              "waves": 3
+            }
+          ]
+        }
+      ],
+      "waves": 129,
+      "xp": 1290,
+      "credits": 1290
+    },
+    {
+      "name": "largest device-counter sum and payout are exact in both runtimes",
+      "rows": [
+        {
+          "level": "s13_shuffle",
+          "wave": 0,
+          "rewards": [
+            {
+              "device": "d00",
+              "waves": 1000000000
+            },
+            {
+              "device": "d01",
+              "waves": 1000000000
+            },
+            {
+              "device": "d02",
+              "waves": 1000000000
+            },
+            {
+              "device": "d03",
+              "waves": 1000000000
+            },
+            {
+              "device": "d04",
+              "waves": 1000000000
+            },
+            {
+              "device": "d05",
+              "waves": 1000000000
+            },
+            {
+              "device": "d06",
+              "waves": 1000000000
+            },
+            {
+              "device": "d07",
+              "waves": 1000000000
+            },
+            {
+              "device": "d08",
+              "waves": 1000000000
+            },
+            {
+              "device": "d09",
+              "waves": 1000000000
+            },
+            {
+              "device": "d10",
+              "waves": 1000000000
+            },
+            {
+              "device": "d11",
+              "waves": 1000000000
+            },
+            {
+              "device": "d12",
+              "waves": 1000000000
+            },
+            {
+              "device": "d13",
+              "waves": 1000000000
+            },
+            {
+              "device": "d14",
+              "waves": 1000000000
+            },
+            {
+              "device": "d15",
+              "waves": 1000000000
+            },
+            {
+              "device": "d16",
+              "waves": 1000000000
+            },
+            {
+              "device": "d17",
+              "waves": 1000000000
+            },
+            {
+              "device": "d18",
+              "waves": 1000000000
+            },
+            {
+              "device": "d19",
+              "waves": 1000000000
+            },
+            {
+              "device": "d20",
+              "waves": 1000000000
+            },
+            {
+              "device": "d21",
+              "waves": 1000000000
+            },
+            {
+              "device": "d22",
+              "waves": 1000000000
+            },
+            {
+              "device": "d23",
+              "waves": 1000000000
+            },
+            {
+              "device": "d24",
+              "waves": 1000000000
+            },
+            {
+              "device": "d25",
+              "waves": 1000000000
+            },
+            {
+              "device": "d26",
+              "waves": 1000000000
+            },
+            {
+              "device": "d27",
+              "waves": 1000000000
+            },
+            {
+              "device": "d28",
+              "waves": 1000000000
+            },
+            {
+              "device": "d29",
+              "waves": 1000000000
+            },
+            {
+              "device": "d30",
+              "waves": 1000000000
+            },
+            {
+              "device": "d31",
+              "waves": 1000000000
+            },
+            {
+              "device": "d32",
+              "waves": 1000000000
+            },
+            {
+              "device": "d33",
+              "waves": 1000000000
+            },
+            {
+              "device": "d34",
+              "waves": 1000000000
+            },
+            {
+              "device": "d35",
+              "waves": 1000000000
+            },
+            {
+              "device": "d36",
+              "waves": 1000000000
+            },
+            {
+              "device": "d37",
+              "waves": 1000000000
+            },
+            {
+              "device": "d38",
+              "waves": 1000000000
+            },
+            {
+              "device": "d39",
+              "waves": 1000000000
+            },
+            {
+              "device": "d40",
+              "waves": 1000000000
+            },
+            {
+              "device": "d41",
+              "waves": 1000000000
+            },
+            {
+              "device": "d42",
+              "waves": 1000000000
+            },
+            {
+              "device": "d43",
+              "waves": 1000000000
+            },
+            {
+              "device": "d44",
+              "waves": 1000000000
+            },
+            {
+              "device": "d45",
+              "waves": 1000000000
+            },
+            {
+              "device": "d46",
+              "waves": 1000000000
+            },
+            {
+              "device": "d47",
+              "waves": 1000000000
+            },
+            {
+              "device": "d48",
+              "waves": 1000000000
+            },
+            {
+              "device": "d49",
+              "waves": 1000000000
+            },
+            {
+              "device": "d50",
+              "waves": 1000000000
+            },
+            {
+              "device": "d51",
+              "waves": 1000000000
+            },
+            {
+              "device": "d52",
+              "waves": 1000000000
+            },
+            {
+              "device": "d53",
+              "waves": 1000000000
+            },
+            {
+              "device": "d54",
+              "waves": 1000000000
+            },
+            {
+              "device": "d55",
+              "waves": 1000000000
+            },
+            {
+              "device": "d56",
+              "waves": 1000000000
+            },
+            {
+              "device": "d57",
+              "waves": 1000000000
+            },
+            {
+              "device": "d58",
+              "waves": 1000000000
+            },
+            {
+              "device": "d59",
+              "waves": 1000000000
+            },
+            {
+              "device": "d60",
+              "waves": 1000000000
+            },
+            {
+              "device": "d61",
+              "waves": 1000000000
+            },
+            {
+              "device": "d62",
+              "waves": 1000000000
+            },
+            {
+              "device": "d63",
+              "waves": 1000000000
+            }
+          ]
+        }
+      ],
+      "waves": 64000000000,
+      "xp": 640000000000,
+      "credits": 640000000000
+    }
+  ]
+}

@@ -651,7 +651,9 @@ namespace GlimmerGrove.Persistence
         ///      <c>shuffleBest</c> rows, which the rules bound by count alone, so no rules release
         ///      (12a); absent reads as no run, so no migration. The version moves because a nested
         ///      field changes every checksum (12).
-        public const int Version = 43;
+        /// v44: per-installation Shuffle reward wave counters inside shuffleBest rows. Joined
+        ///      by max per installation, summed for payouts; an absent counter pays nothing.
+        public const int Version = 44;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1950,8 +1952,7 @@ namespace GlimmerGrove.Persistence
     /// The furthest wave one Shuffle level has ever reached.
     ///
     /// Monotonic, so the merge is a per-id <c>max</c> and nothing about it has to be adjudicated
-    /// (invariant 14a). No lifetime tally beside it, unlike <see cref="EndlessBestDto"/>: a
-    /// Shuffle wave pays nothing, so there is nothing to count.
+    /// (invariant 14a). Reward counters are independent of this best and of the graded run.
     /// </summary>
     [Serializable]
     public sealed class ShuffleBestDto
@@ -1962,6 +1963,9 @@ namespace GlimmerGrove.Persistence
         /// <summary>The furthest a single run has ever got. Only ever rises. The board's number.</summary>
         public int wave;
 
+        /// <summary>v44: cleared waves per installation. Missing means no paid waves yet.</summary>
+        public ShuffleWavesDto[] rewards;
+
         /// <summary>
         /// The best-graded run on this level (MODES.md 59o), added in v43: grade, score, how far it
         /// got and its build's figures. Joined by <c>ShuffleRecord.Better</c> - a total order, so
@@ -1970,6 +1974,14 @@ namespace GlimmerGrove.Persistence
         /// existing row, so no rules release (12a). Not always the run that set <see cref="wave"/>.
         /// </summary>
         public ShuffleRunDto top;
+    }
+
+    /// <summary>A monotonic cleared-wave counter for one installation, joined by max.</summary>
+    [Serializable]
+    public sealed class ShuffleWavesDto
+    {
+        public string device;
+        public long waves;
     }
 
     /// <summary>One graded Shuffle run, as a row carries it. See <c>Shuffle.ShuffleRecord</c>.</summary>

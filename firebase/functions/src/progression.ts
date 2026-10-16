@@ -26,6 +26,7 @@ import type { ReferralConfig } from "./referral";
 import { Rolls, subjectSeed } from "./random";
 import type { ChallengesConfig } from "./challenges";
 import type { WelcomeConfig } from "./welcome";
+import { shuffleCredits } from "./shuffle-rewards";
 
 export interface RewardRule {
   xpFirstClear: number;
@@ -428,6 +429,14 @@ export function earnedCredits(
   }
 
   return { credits, counted, rejected };
+}
+
+/** Total derived credits; the star-ledger rule above remains independently testable. */
+export function earnedCreditsForSave(
+  save: Record<string, unknown>, config: ProgressionConfig, uid = ""
+): { credits: number; counted: number; rejected: number } {
+  const stars = earnedCredits(save.levels, config, uid);
+  return { ...stars, credits: stars.credits + shuffleCredits(save, config.levelChapters) };
 }
 
 /** Guards against a config document that was never seeded or was seeded badly. */

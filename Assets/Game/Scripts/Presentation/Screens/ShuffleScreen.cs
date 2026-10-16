@@ -3,6 +3,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Shuffle;
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -22,18 +23,15 @@ namespace GlimmerGrove
     /// (<see cref="ShuffleRun"/>) and when a hand is put on the table (<see cref="Running"/>).
     /// </para>
     /// <para>
-    /// <b>It pays nothing the Infinite lane pays.</b> That lane banks a best wave onto a public
-    /// board and a tally that pays XP and credits (<c>EndlessLedger</c>, <c>EndlessCoins</c>);
-    /// this one records the level's own record like every other level, pays its stars once
-    /// through the star ledger, and banks its best wave in <see cref="ShuffleLedger"/>, which
-    /// is the Shuffle board's figure and pays nothing (invariant 19l). A run here is worth
-    /// exactly what a level is worth, which is invariant 20a's bargain collected again - and the
-    /// reason <see cref="Finished"/> replaces the siege screen's banking rather than extending it.
+    /// Stars still pay through the star ledger. Every run also pays ten XP and ten credits
+    /// per cleared wave through its own reward counters. Neither best waves nor grades pay,
+    /// and nothing reaches the Infinite lane's ledger or its daily credit allowance.
     /// </para>
     /// </summary>
     public sealed class ShuffleScreen : SiegeScreen
     {
         ShuffleRun _run;
+        bool _rewardsBanked;
 
         /// <summary>
         /// The seed the next run is dealt from. The clock, unless a fixture or a bench set one -
@@ -139,6 +137,7 @@ namespace GlimmerGrove
             Seed = 0u;
 
             _run = new ShuffleRun(seed, _tuning ?? ShuffleTuning.Shipped);
+            _rewardsBanked = false;
             board.Boosts = _run.Build.Boosts;
             board.Refit();
         }
@@ -250,9 +249,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Banks the run's best onto the Shuffle board's ledger and nothing else. See the class
-        /// note: the Infinite lane's ledger, tally and claim are that lane's, and a Shuffle wave
-        /// pays no currency.
+        /// Banks this run's cleared waves independently of its best wave and grade.
         ///
         /// <para>
         /// <b>Off the board rather than <paramref name="count"/></b>, for the Infinite lane's
@@ -270,6 +267,7 @@ namespace GlimmerGrove
             var board = Siege != null ? Siege.Siege : null;
             if (board == null || Level == null) return;
 
+            Banked(ShuffleRewards.CreditsFor(BankRewards()));
             ShuffleLedger.Record(Level.Id, board.WavesCleared);
 
             // **The run's grade, banked beside its wave** (MODES.md 59o): what the build ended on,
@@ -287,6 +285,20 @@ namespace GlimmerGrove
         /// <summary>This run's graded record, and what the level's best was before it. Null when no card was taken.</summary>
         ShuffleRecord _graded, _bestBefore;
         bool _gradedBest;
+
+        long BankRewards()
+        {
+            var board = Siege != null ? Siege.Siege : null;
+            if (_rewardsBanked || board == null || Level == null) return 0L;
+            _rewardsBanked = true;
+            return ShuffleLedger.Bank(Level.Id, board.WavesThisRun);
+        }
+
+        protected override void NoteAbandoned(string reason)
+        {
+            XpBoost.Bank(ShuffleRewards.XpFor(BankRewards()));
+            base.NoteAbandoned(reason);
+        }
 
         /// <summary>The victory panel carries the graded run as its own section (MODES.md 59o).</summary>
         protected override void Dress(WinOverlay panel)
@@ -309,6 +321,11 @@ namespace GlimmerGrove
             base.RunEnded(won);
 
             var board = Siege != null ? Siege.Siege : null;
+
+            // A loss still pays waves already cleared. Wins bank in Finished, where the
+            // result measures the delta and RunLedger applies the boost once to all its XP.
+            if (!won) XpBoost.Bank(ShuffleRewards.XpFor(BankRewards()));
+
             if (board == null || Level == null || _run == null) return;
 
             ShuffleAnalytics.TrackRun(Level, board.WavesCleared, _run);

@@ -18,11 +18,8 @@ namespace GlimmerGrove.Shuffle
     /// integer per id joined by <c>max</c> (invariant 11b), and that is this.
     /// </para>
     /// <para>
-    /// <b><c>EndlessLedger</c>'s best without its tally.</b> The Infinite lane counts lifetime
-    /// waves because it pays XP for them; a Shuffle wave pays nothing (MODES.md 59), so the only
-    /// figure kept is the published one. That is what keeps a number the server cannot recompute
-    /// safe on a public board: it is <see cref="MaxWave">bounded</see> and buys nothing
-    /// (invariant 19l). <b>Never make it pay.</b>
+    /// The best wave pays nothing. Separate per-installation counters pay each run's cleared
+    /// waves through <see cref="ShuffleRewards"/>; old bests never seed those counters.
     /// </para>
     /// <para>
     /// <b>Each row also keeps its best-graded run</b> (<see cref="ShuffleRecord"/>, MODES.md 59o,
@@ -57,6 +54,7 @@ namespace GlimmerGrove.Shuffle
         {
             public int Wave;
             public ShuffleRecord Top;
+            public ShuffleWavesDto[] Rewards;
         }
 
         static readonly Dictionary<string, Row> _rows = new Dictionary<string, Row>(StringComparer.Ordinal);
@@ -70,6 +68,52 @@ namespace GlimmerGrove.Shuffle
         /// fires on every load, so a sync asked for on it would be a sync every few seconds for ever.
         /// </summary>
         public static event Action Beaten;
+
+        /// <summary>Raised only when played waves are banked, never on load or merge.</summary>
+        public static event Action Paid;
+
+        public static long LifetimeWaves
+        {
+            get
+            {
+                long total = 0L;
+                foreach (var pair in _rows) total += ShuffleRewards.Total(pair.Value.Rewards);
+                return total;
+            }
+        }
+
+        public static long CreditsIn(Progression.IChapterMap chapters)
+            => ShuffleRewards.CreditsIn(new SaveFileDto { shuffleBest = Sorted(_rows) }, chapters);
+
+        /// <summary>
+        /// Banks this run once at its final ending, including replays below the best. The screen's
+        /// ending latch guards retries and continues. Returns the newly banked wave count.
+        /// </summary>
+        public static long Bank(LevelId level, int waves)
+        {
+            if (!level.IsValid || waves <= 0) return 0L;
+            if (!_rows.ContainsKey(level.Value) && _rows.Count >= MaxRows) return 0L;
+
+            _rows.TryGetValue(level.Value, out var held);
+            var counts = new List<ShuffleWavesDto>(ShuffleRewards.Join(held.Rewards, null));
+            string device = ShuffleRewards.DeviceId;
+            var counter = counts.Find(row => row.device == device);
+            if (counter == null)
+            {
+                if (counts.Count >= ShuffleRewards.MaxDevices) return 0L;
+                counter = new ShuffleWavesDto { device = device };
+                counts.Add(counter);
+            }
+            long added = Math.Min((long)waves, ShuffleRewards.MaxWavesPerDevice - counter.waves);
+            if (added <= 0L) return 0L;
+            counter.waves += added;
+            held.Rewards = ShuffleRewards.Join(counts.ToArray(), null);
+            _rows[level.Value] = held;
+            SaveService.MarkDirty();
+            Raise(Changed);
+            Raise(Paid);
+            return added;
+        }
 
         /// <summary>The furthest wave this level has ever reached, or nought.</summary>
         public static int BestFor(LevelId level)
@@ -253,17 +297,21 @@ namespace GlimmerGrove.Shuffle
         {
             if (rows == null) return;
 
-            foreach (var row in rows)
+            int take = Math.Min(rows.Length, MaxRows);
+            for (int i = 0; i < take; i++)
             {
-                if (row == null || string.IsNullOrEmpty(row.level)) continue;
+                var row = rows[i];
+                if (row == null || string.IsNullOrEmpty(row.level) || row.level.Length > LevelId.MaxLength) continue;
 
                 int wave = Clamp(row.wave);
-                if (wave <= 0) continue;
+                var rewards = ShuffleRewards.Join(row.rewards, null);
+                if (wave <= 0 && rewards.Length == 0) continue;
 
                 // Each fact joined by its own rule: the wave by `max`, the run by the total order.
                 into.TryGetValue(row.level, out var held);
                 if (held.Wave < wave) held.Wave = wave;
                 held.Top = ShuffleRecord.Better(held.Top, ShuffleRecord.FromDto(row.top));
+                held.Rewards = ShuffleRewards.Join(held.Rewards, rewards);
                 into[row.level] = held;
             }
         }
@@ -284,6 +332,7 @@ namespace GlimmerGrove.Shuffle
                     level = keys[i],
                     wave = row.Wave,
                     top = ShuffleRecord.ToDto(row.Top),
+                    rewards = ShuffleRewards.Join(row.Rewards, null),
                 };
             }
 

@@ -740,12 +740,9 @@ namespace GlimmerGrove.Cloud
         static List<object> ShuffleRows(ShuffleBestDto[] rows)
         {
             var list = new List<object>();
-            if (rows == null) return list;
 
-            foreach (var row in rows)
+            foreach (var row in Shuffle.ShuffleLedger.Join(rows, null))
             {
-                if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
-
                 var written = new Dictionary<string, object>
                 {
                     { "level", row.level },
@@ -756,6 +753,15 @@ namespace GlimmerGrove.Cloud
                 // which the rules bound by count alone, so it costs no rules release (12a).
                 var top = Shuffle.ShuffleRecord.ToWire(Shuffle.ShuffleRecord.FromDto(row.top));
                 if (top != null) written["top"] = top;
+
+                var rewards = new List<object>();
+                foreach (var counter in Shuffle.ShuffleRewards.Join(row.rewards, null))
+                    rewards.Add(new Dictionary<string, object>
+                    {
+                        { "device", counter.device },
+                        { "waves", counter.waves },
+                    });
+                if (rewards.Count > 0) written["rewards"] = rewards;
 
                 list.Add(written);
             }
@@ -770,25 +776,46 @@ namespace GlimmerGrove.Cloud
                 return new ShuffleBestDto[0];
 
             var rows = new List<ShuffleBestDto>();
+            int walked = 0;
 
             foreach (object item in items)
             {
+                if (walked++ == Shuffle.ShuffleLedger.MaxRows) break;
                 if (!(item is IDictionary<string, object> map)) continue;
 
                 string level = Str(map, "level");
                 long wave = Long(map, "wave", 0L);
-                if (string.IsNullOrEmpty(level) || wave <= 0L) continue;
+                if (string.IsNullOrEmpty(level)) continue;
+
+                var rewards = new List<ShuffleWavesDto>();
+                if (map.TryGetValue("rewards", out object counters) && counters is IEnumerable<object> values)
+                    foreach (var value in values)
+                    {
+                        if (rewards.Count == Shuffle.ShuffleRewards.MaxDevices) break;
+                        if (!(value is IDictionary<string, object> counter))
+                        {
+                            rewards.Add(null);
+                            continue;
+                        }
+                        rewards.Add(new ShuffleWavesDto
+                        {
+                            device = Str(counter, "device"),
+                            waves = Shuffle.ShuffleRewards.ReadWaves(
+                                counter.TryGetValue("waves", out object count) ? count : null),
+                        });
+                    }
 
                 rows.Add(new ShuffleBestDto
                 {
                     level = level,
                     wave = Cap(wave),
+                    rewards = Shuffle.ShuffleRewards.Join(rewards.ToArray(), null),
                     top = Shuffle.ShuffleRecord.ToDto(
                         Shuffle.ShuffleRecord.FromWire(map.TryGetValue("top", out object top) ? top : null)),
                 });
             }
 
-            return rows.ToArray();
+            return Shuffle.ShuffleLedger.Join(rows.ToArray(), null);
         }
 
         /// <summary>The endless bests out of a cloud document, dropping anything malformed.</summary>

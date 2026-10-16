@@ -362,6 +362,8 @@ namespace GlimmerGrove.Tests
                 // A graded Shuffle run's ordinal is bounded (ShuffleGrades.MaxOrdinal) and a stat
                 // id must be shaped like one (ShuffleStats.WellFormed); every writer stays inside.
                 case "shuffleBest[].top.grade": return 6;
+                case "shuffleBest[].rewards[].device": return "device_a";
+                case "shuffleBest[].rewards[].waves": return 123L;
                 case "levels[].bestRank": return 40;
 
                 // A streak's reader pulls a collected night back to the last day played

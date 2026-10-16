@@ -581,8 +581,8 @@ export function bestWave(save: Record<string, unknown>): number {
  * ordered on. Mirrors `ShuffleLedger.BestIn`.
  *
  * `bestWave`'s figure in every respect that matters: a reading no record here implies, so it is
- * **bounded** to the same `MAX_WAVE` and **buys nothing** (a Shuffle wave pays no currency and
- * no XP, MODES.md 59). Its own save key (`shuffleBest`, save v42) rather than rows in
+ * **bounded** to the same `MAX_WAVE` and **buys nothing**: best waves never seed the separate
+ * cleared-wave reward counters (MODES.md 59q). Its own save key (`shuffleBest`, save v42) rather than rows in
  * `endlessBest`, because every shipped client reads that list as the Infinite lane's and
  * `endlessXp` pays for it. Read through the one walk `bestWave` uses, so the two lanes cannot
  * come to bound or refuse a row differently. The day the Shuffle board pays anything, this

@@ -70,6 +70,7 @@ namespace GlimmerGrove.Cloud
             // A new Shuffle best is on the card too (`GroveCard.ShuffleWave`), for the same
             // reason and through the same intent-only event.
             GlimmerGrove.Shuffle.ShuffleLedger.Beaten += CloudSaveService.RequestSync;
+            GlimmerGrove.Shuffle.ShuffleLedger.Paid += CloudSaveService.RequestSync;
 
             // A run recorded. `RecordChanged` is raised by `PlayerProgress.RecordRun` alone -
             // a load raises `Reloaded` instead - so this is the player's act and not a merge

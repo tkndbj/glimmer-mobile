@@ -28,6 +28,7 @@ import {
   DEFAULT_KEEPER_CURVE, KeeperCurve, derivedXp, endlessXp, keeperLevel, xpBoostXp,
 } from "./grove";
 import { challengeXp } from "./challenges";
+import { shuffleXp } from "./shuffle-rewards";
 import { subjectSeed, Rolls } from "./random";
 import { ChestConfig, RolledDrop, rollChestWith } from "./daily";
 import { TaskConfig, TaskTier, findTier } from "./tasks";
@@ -231,7 +232,7 @@ export function judgeKeeperSpend(
  */
 export function earnedKeeperLevel(save: Record<string, unknown>, config: ProgressionConfig): number {
   const curve = (config as { keeper?: KeeperCurve }).keeper ?? DEFAULT_KEEPER_CURVE;
-  const provable = derivedXp(save.levels, config) + endlessXp(save, config) + challengeXp(save, config);
+  const provable = derivedXp(save.levels, config) + endlessXp(save, config) + challengeXp(save, config) + shuffleXp(save);
   return keeperLevel(provable + xpBoostXp(save, config, provable), curve);
 }
 

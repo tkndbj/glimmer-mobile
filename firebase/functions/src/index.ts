@@ -74,7 +74,8 @@ import {
 import {
   WHEEL_MIN_PERCENT, applyWheelPercent, readWheelPosition, usableWheelConfig, wheelPercent,
 } from "./wheel";
-import { earnedCredits } from "./progression";
+import { earnedCreditsForSave } from "./progression";
+import { shuffleXp } from "./shuffle-rewards";
 import { holdsPass, PassState, readPass } from "./event-pass";
 import {
   MarkClaim, markCurrencyValue, isMarkGrantId, judgeMarkClaim, noteLateClaim,
@@ -2024,7 +2025,7 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
   // Three derived sources, summed before the boost is clamped against them: the star ledger,
   // the Infinite lane and the daily challenges. The client sums the same three
   // (`PlayerProgression.EnsureFresh`); the shared vectors hold each pair.
-  const provableXp = derivedXp(save.levels, config) + endlessXp(save, config) + challengeXp(save, config);
+  const provableXp = derivedXp(save.levels, config) + endlessXp(save, config) + challengeXp(save, config) + shuffleXp(save);
   const earnedLevel = keeperLevel(provableXp + xpBoostXp(save, config, provableXp), curve);
 
   // Plus every level bought outright (invariant 57), read off the wallet document this call
@@ -2045,7 +2046,7 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
   // their grove would have been clamped to near nothing and ranked at the bottom. Nothing
   // could catch it but a live run: the unit vectors take `affordable` as a parameter, and a
   // clamp that is too tight looks exactly like a clamp that is working.
-  const derived = earnedCredits(save.levels, config, uid);
+  const derived = earnedCreditsForSave(save, config, uid);
   //
   // Typed rather than read off `DocumentData`, so the next person to reach for the reply's
   // name gets a compile error instead of a zero.
@@ -2944,14 +2945,14 @@ function adminRow(
 
   const levels = data?.levels;
   const tally = levelTally(levels);
-  const earned = earnedCredits(levels ?? {}, config, uid).credits;
+  const earned = earnedCreditsForSave(data ?? {}, config, uid).credits;
   const credits = Math.max(0, Math.max(earned, wallet.credits.earnedFloor) + wallet.credits.granted - wallet.credits.spent);
   const gems = Math.max(0, wallet.gems.earnedFloor + wallet.gems.granted - wallet.gems.spent);
 
   let earnedLevel = 0;
   if (data) {
     const curve = (config as { keeper?: KeeperCurve }).keeper ?? DEFAULT_KEEPER_CURVE;
-    const provable = derivedXp(levels, config) + endlessXp(data, config) + challengeXp(data, config);
+    const provable = derivedXp(levels, config) + endlessXp(data, config) + challengeXp(data, config) + shuffleXp(data);
     earnedLevel = keeperLevel(provable + xpBoostXp(data, config, provable), curve);
   }
   const bought = keeperBoughtOf(walletRaw);
