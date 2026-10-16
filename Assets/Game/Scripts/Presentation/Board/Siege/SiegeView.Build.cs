@@ -22,6 +22,8 @@ namespace GlimmerGrove
             _layout = rules.Layout;
             _board = (SiegeBoard)Run.Board;
 
+            BuildBatches();
+
             _gems.Clear();
             _mob.Clear();
 
@@ -46,6 +48,7 @@ namespace GlimmerGrove
             // across it is a destroyed node handed out as a live one, and every bolt after the
             // first rebuild would be invisible.
             _spare.Clear();
+            _booms?.Clear();
 
             _wave = 0;
 

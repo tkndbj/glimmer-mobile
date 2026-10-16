@@ -373,6 +373,7 @@ namespace GlimmerGrove
 
         sealed class Post
         {
+            public Tw Kick;
             public RectTransform Node;
             public Image Socket;
             public Image Body;

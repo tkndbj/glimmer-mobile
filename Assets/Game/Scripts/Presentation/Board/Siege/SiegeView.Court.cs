@@ -83,8 +83,8 @@ namespace GlimmerGrove
 
                 // **It shatters rather than fading.** A fade is something the player missed; a
                 // break is something that happened to them.
-                Burst.Sparks(_fx, died, fire, 8, Cell * 1.5f, Cell * .16f, .40f);
-                Pop(died, Pal.A(fire, .85f), 1.2f, .20f);
+                FxSparks(_fx, died, fire, 8, Cell * 1.5f, Cell * .16f, .40f);
+                FxPop(died, Pal.A(fire, .85f), 1.2f, .20f);
                 Audio.SfxVaried("shatter", .26f, .10f);
             });
         }
@@ -126,7 +126,7 @@ namespace GlimmerGrove
                 }, ring).Delay(i * .07f).OnDone(() => { if (ring) Destroy(ring.gameObject); });
             }
 
-            Shockwave(at, fire, 2.8f, .32f);
+            FxWave(at, fire, 2.8f, .32f);
             Audio.Sfx("blocked", .48f, .70f);
         }
 
@@ -234,8 +234,8 @@ namespace GlimmerGrove
 
                 if (_fx == null) return;
 
-                Shockwave(at, fire, 3.4f, .30f);
-                Burst.Sparks(_fx, at, fire, 16, Cell * 2.8f, Cell * .22f, .55f);
+                FxWave(at, fire, 3.4f, .30f);
+                FxSparks(_fx, at, fire, 16, Cell * 2.8f, Cell * .22f, .55f);
                 ShakeBoard(Cell * .12f);
                 Audio.Sfx("bell", .62f, .74f);
             });
@@ -287,9 +287,9 @@ namespace GlimmerGrove
 
                 if (_fx == null) return;
 
-                Pop(at, Pal.Poppy, 4.2f, .30f);
-                Shockwave(at, fire, 5.0f, .42f);
-                Burst.Sparks(_fx, at, fire, 22, Cell * 3.6f, Cell * .28f, .65f);
+                FxPop(at, Pal.Poppy, 4.2f, .30f);
+                FxWave(at, fire, 5.0f, .42f);
+                FxSparks(_fx, at, fire, 22, Cell * 3.6f, Cell * .28f, .65f);
                 ShakeBoard(Cell * .22f);
                 Flow.Flash(new Color(1f, .32f, .30f), .34f, .3f);
                 Audio.Sfx("boom", .82f, .74f);
@@ -334,8 +334,8 @@ namespace GlimmerGrove
                 }, ring).Delay(i * .06f).OnDone(() => { if (ring) Destroy(ring.gameObject); });
             }
 
-            Pop(at, Pal.Radiance, 3.2f, .28f);
-            Burst.Sparks(_fx, at, Pal.Gold, 24, Cell * 4f, Cell * .28f, .70f);
+            FxPop(at, Pal.Radiance, 3.2f, .28f);
+            FxSparks(_fx, at, Pal.Gold, 24, Cell * 4f, Cell * .28f, .70f);
             ShakeBoard(Cell * .10f);
             Dilate(.4f, .22f);
 

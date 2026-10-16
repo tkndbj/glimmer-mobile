@@ -10,6 +10,23 @@ authority where the two touch.
 
 Everything here runs without Unity unless it says otherwise.
 
+Shuffle's repeated particles, segmented arcs and pooled projectile reels use `ShuffleFx` (Presentation),
+enabled only for a `ShuffleRamp`. Ordered runs retain the original parent, blending, sprite trim and
+nine-slice borders; they never batch across an intervening widget. Non-sorting canvases isolate each run
+without changing its place in the board. Immutable particle records animate in `ShuffleParticles.shader`
+on the split-precision `Tween.Clock`; time and partial expiry do not upload new geometry. Small compatible
+masks are copied to private GPU atlases without resizing. Pooled reels use original-size GPU frame arrays
+and per-frame sprite rectangles in `ShuffleFlipbook.shader`, including halos, flight and trail cropping.
+Compressed copies retain their format; an unsupported GPU format can be decoded at its original size.
+Frame phase keeps Flipbook's raw unscaled step and inactive-delay semantics; completion/wake callbacks
+stay on their existing tween clock. Pooled shots, card darts, lasers, recoil and damage tallies cancel
+through direct handles instead of scanning the global tween list. Unsupported shaders, arrays or
+copies keep the CPU/sprite path. Both shaders are retained explicitly in `GraphicsSettings`. Active effects
+are never capped and idle particle pages are bounded. `FxAnimationTests` runs offline; `ShuffleFxTests`
+needs the Editor and compares legacy art, motion, random draws, masking, pool reuse and allocations.
+`ShuffleFx.Sample` and `ShuffleFx.Geometry` are the device profiler markers. General UI/gameplay tweens
+and bespoke persistent effects keep their existing paths.
+
 - **Tablet layout:** there is no offline gate for a screen's geometry, so it is measured in the Editor -
   build a screen into a world-space `Canvas` sized to `CanvasFit.WidthFor/HeightFor(w, h)`, call `View.Init`
   by reflection, force every `localScale` to one (entrances start at zero and are still queued),

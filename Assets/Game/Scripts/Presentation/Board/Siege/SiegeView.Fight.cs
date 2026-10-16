@@ -101,8 +101,8 @@ namespace GlimmerGrove
         {
             var feet = at + new Vector2(0f, -mob.Height * .38f);
 
-            Shockwave(feet, Pal.Lift(fire, .3f), 6.2f, .46f);
-            Burst.Sparks(_fx, feet, Pal.Rope, 16, Cell * 2.4f, Cell * .18f, .5f);
+            FxWave(feet, Pal.Lift(fire, .3f), 6.2f, .46f);
+            FxSparks(_fx, feet, Pal.Rope, 16, Cell * 2.4f, Cell * .18f, .5f);
 
             if (mob.Body != null) Tween.Punch(mob.Body.rectTransform, .14f, .42f);
             if (mob.Crown != null) Tween.Punch(mob.Crown, .06f, .3f);
@@ -130,7 +130,7 @@ namespace GlimmerGrove
             ShakeBoard(24f + 6f * phase);
             Flow.Flash(Pal.A(fire, 1f), .30f + .08f * phase, .4f);
 
-            Burst.Sparks(_fx, at, fire, 22, Cell * 3.6f, Cell * .26f, .6f);
+            FxSparks(_fx, at, fire, 22, Cell * 3.6f, Cell * .26f, .6f);
             Crackle(mob, fire, 2.2f, 4);
 
             if (mob.Body != null) Tween.Punch(mob.Body.rectTransform, .2f, .45f);
@@ -190,8 +190,8 @@ namespace GlimmerGrove
             var spot = mob.Crown.anchoredPosition + mob.Bar.anchoredPosition
                      + new Vector2(mark.rectTransform.anchoredPosition.x - mob.Bar.sizeDelta.x * .5f, 0f);
 
-            Burst.Sparks(_fx, spot, Pal.Lift(fire, .4f), 10, Cell * 1.6f, Cell * .14f, .4f);
-            Pop(spot, fire, 1.6f, .3f);
+            FxSparks(_fx, spot, Pal.Lift(fire, .4f), 10, Cell * 1.6f, Cell * .14f, .4f);
+            FxPop(spot, fire, 1.6f, .3f);
 
             if (mob.Fill != null)
             {

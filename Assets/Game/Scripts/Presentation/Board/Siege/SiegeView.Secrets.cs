@@ -119,7 +119,7 @@ namespace GlimmerGrove
                     return true;
 
                 case SiegeVia.Steam:
-                    Pop(to, SteamHue, 1.6f, .24f);
+                    FxPop(to, SteamHue, 1.6f, .24f);
                     Cinder(to, SteamHue, Cell * .9f, .5f, new Vector2(0f, Cell * 1.2f));
                     land();
                     return true;
@@ -132,8 +132,8 @@ namespace GlimmerGrove
                     Shuriken(from, to, flight, () =>
                     {
                         if (this == null) return;
-                        Pop(to, BladeHue, 1.4f, .18f);
-                        Burst.Sparks(_fx, to, BladeHue, 5, Cell * 1.6f, Cell * .14f, .26f);
+                        FxPop(to, BladeHue, 1.4f, .18f);
+                        FxSparks(_fx, to, BladeHue, 5, Cell * 1.6f, Cell * .14f, .26f);
                         land();
                         if (shot.From >= 0) Shuriken(to, Muzzle(shot.Ward), .22f, null);
                     });
@@ -142,7 +142,7 @@ namespace GlimmerGrove
                 }
 
                 case SiegeVia.Plague:
-                    Pop(to, PlagueHue, 1.4f, .22f);
+                    FxPop(to, PlagueHue, 1.4f, .22f);
                     Cinder(to, PlagueHue, Cell * .6f, .5f, new Vector2(0f, Cell * .7f));
                     land();
                     return true;
@@ -150,14 +150,14 @@ namespace GlimmerGrove
                 case SiegeVia.Comet:
                 case SiegeVia.Armageddon:
                 case SiegeVia.Shard:
-                    Pop(to, Pal.Sun, 1.5f, .22f);
+                    FxPop(to, Pal.Sun, 1.5f, .22f);
                     Cinder(to, Pal.Ember, Cell * .7f, .4f, new Vector2(Random.Range(-Cell, Cell) * .5f, Cell));
                     land();
                     return true;
 
                 case SiegeVia.Rainbow:
                     for (int i = 0; i < 3; i++)
-                        Pop(to, Spectrum[Random.Range(0, Spectrum.Length)], 1.2f + i * .4f, .2f + i * .05f);
+                        FxPop(to, Spectrum[Random.Range(0, Spectrum.Length)], 1.2f + i * .4f, .2f + i * .05f);
                     land();
                     return true;
 
@@ -170,19 +170,19 @@ namespace GlimmerGrove
                 {
                     var eye = _abyss != null ? _abyss.Pit.At : to;
                     Cinder(to, HoleWash, Cell * .6f, .3f, (eye - to) * .8f);
-                    if (shot.Killed) Pop(to, Pal.Bloom, 1.8f, .24f);
+                    if (shot.Killed) FxPop(to, Pal.Bloom, 1.8f, .24f);
                     land();
                     return true;
                 }
 
                 case SiegeVia.Dragon:
-                    Pop(to, Pal.Sun, 1.7f, .22f);
+                    FxPop(to, Pal.Sun, 1.7f, .22f);
                     Cinder(to, Pal.Ember, Cell * .8f, .45f, new Vector2(0f, Cell * 1.1f));
                     land();
                     return true;
 
                 case SiegeVia.Solar:
-                    Pop(to, Pal.Radiance, 2f, .26f);
+                    FxPop(to, Pal.Radiance, 2f, .26f);
                     Cinder(to, Pal.Sun, Cell * .9f, .4f, new Vector2(0f, Cell * 1.3f));
                     land();
                     return true;
@@ -192,12 +192,12 @@ namespace GlimmerGrove
                         Fly(Muzzle(shot.Ward), to, Pal.Sun, Cell * .9f, .12f, 0f, Pal.Ember, () =>
                         {
                             if (this == null) return;
-                            Pop(to, Pal.Radiance, 2.2f, .24f);
+                            FxPop(to, Pal.Radiance, 2.2f, .24f);
                             land();
                         });
                     else
                     {
-                        Pop(to, Pal.Marigold, 1.4f, .2f);
+                        FxPop(to, Pal.Marigold, 1.4f, .2f);
                         land();
                     }
                     return true;
@@ -207,13 +207,13 @@ namespace GlimmerGrove
                     return true;
 
                 case SiegeVia.Reflect:
-                    Pop(to, Pal.Gold, 1.6f, .22f);
+                    FxPop(to, Pal.Gold, 1.6f, .22f);
                     Embers(to, Pal.Parchment, 5, Cell * .4f, Cell * .18f);
                     land();
                     return true;
 
                 case SiegeVia.Bomblet:
-                    Pop(to, Pal.Marigold, 1.3f, .2f);
+                    FxPop(to, Pal.Marigold, 1.3f, .2f);
                     land();
                     return true;
 
@@ -221,7 +221,7 @@ namespace GlimmerGrove
                 {
                     var from = NearestBall(to);
                     Arc(from, to, StormHue, Cell * .07f, .2f, 1, .36f);
-                    Pop(to, StormHue, 1.4f, .2f);
+                    FxPop(to, StormHue, 1.4f, .2f);
                     land();
                     return true;
                 }
@@ -234,7 +234,7 @@ namespace GlimmerGrove
                         {
                             if (this == null) return;
                             Boom(to, Blast("boom_fire"), Cell * 1.2f);
-                            Pop(to, Pal.Marigold, 1.2f, .18f);
+                            FxPop(to, Pal.Marigold, 1.2f, .18f);
                             land();
                         });
                     if (!Flourished(SiegeVia.Swarm, shot.Ward)) Audio.SfxVaried("whoosh", .3f, .1f);
@@ -242,7 +242,7 @@ namespace GlimmerGrove
                 }
 
                 case SiegeVia.Dust:
-                    Pop(to, Pal.Glass, 1.3f, .2f);
+                    FxPop(to, Pal.Glass, 1.3f, .2f);
                     land();
                     return true;
 
@@ -250,7 +250,7 @@ namespace GlimmerGrove
                 {
                     var tint2 = Spectrum[_prismBeam++ % Spectrum.Length];
                     Lase(PrismAt, to, tint2, .2f, 0f, false);
-                    Pop(to, tint2, 1.8f, .22f);
+                    FxPop(to, tint2, 1.8f, .22f);
                     land();
                     return true;
                 }
@@ -814,7 +814,7 @@ namespace GlimmerGrove
             }, spike).OnDone(() =>
             {
                 if (spike) Destroy(spike.gameObject);
-                if (_fx != null) Burst.Sparks(_fx, at + new Vector2(0f, Cell * .6f), Pal.Glass, 5, Cell * 1.5f, Cell * .14f, .3f);
+                if (_fx != null) FxSparks(_fx, at + new Vector2(0f, Cell * .6f), Pal.Glass, 5, Cell * 1.5f, Cell * .14f, .3f);
             });
 
             Tween.After(.55f, () => { if (spike) Destroy(spike.gameObject); }, spike);
@@ -1235,7 +1235,7 @@ namespace GlimmerGrove
 
             Flash(hit, Pal.Gold, 2.6f);
             Ripple(hit, Pal.Gold, Cell * 3.6f, .4f, 0f, 1f);
-            Burst.Sparks(_fx, hit, Pal.Gold, 8, Cell * 2f, Cell * .18f, .35f);
+            FxSparks(_fx, hit, Pal.Gold, 8, Cell * 2f, Cell * .18f, .35f);
             Audio.SfxVaried("land", .45f, .12f);
 
             if (left > 0) return;
@@ -1439,7 +1439,7 @@ namespace GlimmerGrove
             Fly(from, at, Pal.Poppy, Cell * .45f, over, Random.value < .5f ? .4f : -.4f, Pal.Hollow, () =>
             {
                 if (this == null || _fx == null) return;
-                Pop(at, Pal.Poppy, 1.4f, .2f);
+                FxPop(at, Pal.Poppy, 1.4f, .2f);
             });
         }
 
@@ -1600,7 +1600,7 @@ namespace GlimmerGrove
                 {
                     if (this == null) return;
                     Flash(to, Pal.Gold, 2.6f);
-                    Burst.Sparks(_fx, to, Pal.Gold, 8, Cell * 2f, Cell * .16f, .3f);
+                    FxSparks(_fx, to, Pal.Gold, 8, Cell * 2f, Cell * .16f, .3f);
                     if (mob != null && mob.Node != null) Tween.Shake(mob.Node, Cell * .15f, .2f);
                     land();
                 });
@@ -1977,7 +1977,7 @@ namespace GlimmerGrove
                 {
                     var spot = head ? head.rectTransform.anchoredPosition : last;
                     Destroy(host.gameObject);
-                    if (_fx != null) Burst.Sparks(_fx, spot, rainbow ? Pal.Radiance : tint, 8, Cell * 1.8f, Cell * .16f, .3f);
+                    if (_fx != null) FxSparks(_fx, spot, rainbow ? Pal.Radiance : tint, 8, Cell * 1.8f, Cell * .16f, .3f);
                 }
             });
 

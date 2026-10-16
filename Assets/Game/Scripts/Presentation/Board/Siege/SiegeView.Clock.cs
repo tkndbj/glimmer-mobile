@@ -718,9 +718,9 @@ namespace GlimmerGrove
             var tint = TintOf(post.Colour);
             var at = new Vector2(PostX(System.Array.IndexOf(_posts, post)), _lineY);
 
-            Shockwave(at, Pal.Lift(tint, .45f), 3.2f, .42f);
-            Pop(at, Pal.Lift(tint, .3f), 2.4f, .3f);
-            Burst.Sparks(_fx, at + new Vector2(0f, Cell * .4f), tint, 16, Cell * 3.4f,
+            FxWave(at, Pal.Lift(tint, .45f), 3.2f, .42f);
+            FxPop(at, Pal.Lift(tint, .3f), 2.4f, .3f);
+            FxSparks(_fx, at + new Vector2(0f, Cell * .4f), tint, 16, Cell * 3.4f,
                          Cell * .26f, .55f);
 
             Tween.Punch(post.Node, .18f, .34f);

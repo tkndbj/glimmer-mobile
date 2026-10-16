@@ -222,6 +222,8 @@ namespace GlimmerGrove
         /// <summary>The flash where something landed: a flare, a streak across, a glint turning.</summary>
         void Flash(Vector2 at, Color tint, float cells)
         {
+            if (_batchFx != null) { BatchFlash(at, tint, cells); return; }
+
             var flare = Lit("Flare", _fx, StrikeFx.Flare, Pal.A(tint, 1f), Vector2.one * Cell * cells);
             if (flare != null)
             {
@@ -278,6 +280,16 @@ namespace GlimmerGrove
         void Ripple(Vector2 at, Color tint, float reach, float life, float delay,
                     float squash = GroundSquash)
         {
+            if (_batchFx != null)
+            {
+                _batchFx.Emit(_fx, Kit(StrikeFx.Ring), Additive.Material, new FxParticle
+                {
+                    Motion = FxMotion.Ripple, At = at, Size = new Vector2(reach, reach * squash),
+                    Tint = tint, Duration = life, Delay = delay,
+                });
+                return;
+            }
+
             var ring = Lit("Ripple", _fx, StrikeFx.Ring, Pal.A(tint, 0f), new Vector2(reach, reach * squash));
             if (ring == null) return;
 
@@ -356,6 +368,8 @@ namespace GlimmerGrove
         /// </summary>
         void Embers(Vector2 at, Color tint, int count, float reach, float size)
         {
+            if (_batchFx != null) { BatchEmbers(at, tint, count, reach, size); return; }
+
             var sprite = Kit(StrikeFx.Star) ?? Art.Spark(64);
             var host = UIKit.Node("Embers", _fx);
             float gravity = Cell * 9f;
@@ -394,6 +408,8 @@ namespace GlimmerGrove
         /// <summary>Stars popping in and out round an impact, each on its own beat.</summary>
         void Twinkles(Vector2 at, Color tint, int count, float spread)
         {
+            if (_batchFx != null) { BatchTwinkles(at, tint, count, spread); return; }
+
             var host = UIKit.Node("Twinkles", _fx);
 
             for (int i = 0; i < count; i++)
@@ -428,6 +444,16 @@ namespace GlimmerGrove
         void Lightup(Color tint, float alpha, float life)
         {
             if (_fx == null) return;
+
+            if (_batchFx != null)
+            {
+                _batchFx.Emit(_fx, Art.Round(4), Additive.Material, new FxParticle
+                {
+                    Motion = FxMotion.Light, Size = new Vector2(Span.x, Span.y),
+                    Tint = Pal.A(tint, alpha), Duration = life,
+                });
+                return;
+            }
 
             var flash = Lit("Lightup", _fx, Art.Round(4), Pal.A(tint, alpha), new Vector2(Span.x, Span.y));
             flash.rectTransform.anchoredPosition = Vector2.zero;

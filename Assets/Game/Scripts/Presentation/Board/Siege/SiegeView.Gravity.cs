@@ -391,7 +391,7 @@ namespace GlimmerGrove
                 Flash(at, Pal.Bloom, 3.6f);
                 Ripple(at, WellViolet, Cell * 6.4f, .55f, 0f);
                 Ripple(at, Pal.Sun, Cell * 4.2f, .45f, .07f);
-                Burst.Sparks(_fx, at, Pal.Bloom, 22, Cell * 3.2f, Cell * .24f, .55f);
+                FxSparks(_fx, at, Pal.Bloom, 22, Cell * 3.2f, Cell * .24f, .55f);
                 Twinkles(at, WellViolet, 9, Cell * 1.7f);
                 Lightup(Pal.Cream, .20f, .26f);
                 ShakeBoard(Cell * .15f);

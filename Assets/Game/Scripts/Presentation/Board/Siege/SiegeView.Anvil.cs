@@ -221,7 +221,7 @@ namespace GlimmerGrove
                     // furnace gets.
                     if (boss)
                     {
-                        Shockwave(stood, HeaveGlow, size, .30f);
+                        FxWave(stood, HeaveGlow, size, .30f);
                         return;
                     }
 
@@ -231,9 +231,9 @@ namespace GlimmerGrove
                     // the board's own amber now, and the cloud is thrown from under the feet
                     // upward rather than out, because ground going out from under something
                     // throws its dust *up*.
-                    Burst.Sparks(_fx, stood + new Vector2(0f, -Cell * .2f), HeaveCore,
+                    FxSparks(_fx, stood + new Vector2(0f, -Cell * .2f), HeaveCore,
                                  14, Cell * size * 1.8f, Cell * .20f, .58f);
-                    Pop(stood, Pal.A(HeaveGlow, .85f), size * 1.15f, .30f);
+                    FxPop(stood, Pal.A(HeaveGlow, .85f), size * 1.15f, .30f);
                 });
             }
         }

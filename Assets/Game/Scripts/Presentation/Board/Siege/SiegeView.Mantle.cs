@@ -353,12 +353,12 @@ namespace GlimmerGrove
                     var stood = node.anchoredPosition;
                     if (boss)
                     {
-                        Shockwave(stood, MantleHue, 2.4f, .32f);
+                        FxWave(stood, MantleHue, 2.4f, .32f);
                         return;
                     }
 
-                    Pop(stood, Pal.A(MantleHue, .9f), 1.3f, .30f);
-                    Burst.Sparks(_fx, stood, MantleIce, 8, Cell * 1.6f, Cell * .16f, .45f);
+                    FxPop(stood, Pal.A(MantleHue, .9f), 1.3f, .30f);
+                    FxSparks(_fx, stood, MantleIce, 8, Cell * 1.6f, Cell * .16f, .45f);
                 }, this);
             }
 
@@ -431,7 +431,7 @@ namespace GlimmerGrove
             }, hex).OnDone(() => { if (hex) Destroy(hex.gameObject); });
 
             Ripple(at, MantleHue, Cell * 1.8f, .3f, 0f, 1f);
-            Burst.Sparks(_fx, at, MantleIce, 5, Cell * 1.2f, Cell * .12f, .3f);
+            FxSparks(_fx, at, MantleIce, 5, Cell * 1.2f, Cell * .12f, .3f);
             Audio.SfxVaried("blocked", .22f, .10f);
         }
 

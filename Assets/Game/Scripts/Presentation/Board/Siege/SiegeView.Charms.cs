@@ -488,7 +488,7 @@ namespace GlimmerGrove
                 ring.color = Pal.A(Pal.Lift(tint, .6f), t < .5f ? t * 2f : 1f);
             }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
 
-            Burst.Sparks(_fx, at, tint, 10, Cell * 2.6f, Cell * .22f, over * 1.6f);
+            FxSparks(_fx, at, tint, 10, Cell * 2.6f, Cell * .22f, over * 1.6f);
             // `lit` rather than a slot of its own: it is the set's one rising note, which is
             // what a wind-up is, and `sfx.tsv` is a fixed vocabulary (`sfxnames.py` proves the
             // code asks for no other name).
@@ -546,15 +546,15 @@ namespace GlimmerGrove
                 // The white core under it, which is what makes a burst read as *light* rather than
                 // as a picture of fire: the reel is graded to one of the four gem colours, so the
                 // one thing it cannot carry is the part that is hotter than its own colour.
-                Pop(at, Pal.Cream, cells * .62f, .22f);
+                FxPop(at, Pal.Cream, cells * .62f, .22f);
 
                 // **A scale, not a size.** `ProtoView.Shockwave` tweens `localScale` on a
                 // cell-sized ring, and every call in the old cut passed it `Cell * n` - a ring
                 // scaled five hundred times, which is a white flash over the whole screen and not
                 // an impact. Two thirds of the blast, so the ring runs just ahead of the fire.
-                Shockwave(at, Pal.Lift(tint, .6f), cells * .72f, .40f);
+                FxWave(at, Pal.Lift(tint, .6f), cells * .72f, .40f);
 
-                Burst.Sparks(_fx, at, tint, 24, Cell * cells * 1.15f, Cell * .30f, .70f);
+                FxSparks(_fx, at, tint, 24, Cell * cells * 1.15f, Cell * .30f, .70f);
 
                 ShakeBoard(Cell * .085f);
                 Audio.Sfx("boom", .62f, 1.06f);
@@ -723,7 +723,7 @@ namespace GlimmerGrove
 
                 // The shards. Thrown along the arm rather than in a circle, so the row reads as
                 // having been *struck* from one side.
-                Burst.Sparks(_fx, at, tint, 7, Cell * 2.4f, Cell * .20f, .40f);
+                FxSparks(_fx, at, tint, 7, Cell * 2.4f, Cell * .20f, .40f);
             });
         }
 
@@ -1120,10 +1120,10 @@ namespace GlimmerGrove
             // light it gathered goes back out - so it is a white core over a wide bloom rather
             // than another coloured burst, because what leaves here is every ward at once and no
             // one colour may own it.
-            Pop(from, Pal.Cream, 7.2f, .26f);
-            Shockwave(from, Pal.Cream, 4.6f, .40f);
-            Shockwave(from, Pal.Gold, 7.0f, .58f);
-            Burst.Sparks(_fx, from, Pal.Cream, 30, Cell * 7.0f, Cell * .34f, .80f);
+            FxPop(from, Pal.Cream, 7.2f, .26f);
+            FxWave(from, Pal.Cream, 4.6f, .40f);
+            FxWave(from, Pal.Gold, 7.0f, .58f);
+            FxSparks(_fx, from, Pal.Cream, 30, Cell * 7.0f, Cell * .34f, .80f);
             ShakeBoard(Cell * .11f);
 
             // **Spread across the window rather than a fixed step per bolt, and the window is
@@ -1213,7 +1213,7 @@ namespace GlimmerGrove
                         if (hit.Killed) Land(land, tint, ward.Model, ward.Colour, angle, hit);
                         else
                         {
-                            Pop(land, hit.Weak ? Pal.Gold : tint, hit.Weak ? 1.9f : 1.4f, .26f);
+                            FxPop(land, hit.Weak ? Pal.Gold : tint, hit.Weak ? 1.9f : 1.4f, .26f);
                             Number(hit.Raider, land, hit.Damage, hit.Weak);
 
                             if (body != null && body.Body != null)
@@ -1366,8 +1366,8 @@ namespace GlimmerGrove
                 else Tween.After(.6f, () => { if (img) Destroy(img.gameObject); });
             }
 
-            Shockwave(at, Pal.Lift(tint, .6f), 1.9f, .28f);
-            Burst.Sparks(_fx, at, tint, 9, Cell * 2.6f, Cell * .22f, .42f);
+            FxWave(at, Pal.Lift(tint, .6f), 1.9f, .28f);
+            FxSparks(_fx, at, tint, 9, Cell * 2.6f, Cell * .22f, .42f);
         }
 
         /// <summary>

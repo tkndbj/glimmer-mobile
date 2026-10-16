@@ -426,8 +426,8 @@ namespace GlimmerGrove
                 if (mob != null && mob.Node)
                 {
                     var at = mob.Node.anchoredPosition;
-                    Pop(at, Pal.Bloom, mob.Boss ? 3.4f : 2.0f, .36f);
-                    Burst.Sparks(_fx, at, WellViolet, 8, Cell * 2.4f, Cell * .18f, .45f);
+                    FxPop(at, Pal.Bloom, mob.Boss ? 3.4f : 2.0f, .36f);
+                    FxSparks(_fx, at, WellViolet, 8, Cell * 2.4f, Cell * .18f, .45f);
                 }
 
                 Hurt(hits[i]);

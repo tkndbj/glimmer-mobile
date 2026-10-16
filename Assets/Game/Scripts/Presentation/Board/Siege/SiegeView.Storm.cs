@@ -128,6 +128,8 @@ namespace GlimmerGrove
         {
             if (_fx == null) return;
 
+            if (_batchFx != null) { BatchArc(a, b, tint, wide, life, forks, jag); return; }
+
             var host = UIKit.Node("Arc", _fx);
             var group = UIKit.Group(host);
             group.alpha = 0f;
@@ -277,8 +279,8 @@ namespace GlimmerGrove
                     Tween.After(at + life * .25f, () =>
                     {
                         if (_fx == null) return;
-                        Pop(b, tint, 1.5f, .22f);
-                        Burst.Sparks(_fx, b, tint, 5, Cell * 1.1f, Cell * .13f, .3f);
+                        FxPop(b, tint, 1.5f, .22f);
+                        FxSparks(_fx, b, tint, 5, Cell * 1.1f, Cell * .13f, .3f);
                     }, _fx);
             }
         }
@@ -307,9 +309,9 @@ namespace GlimmerGrove
             {
                 if (_fx == null) return;
 
-                Pop(at, tint, 2.4f, .26f);
-                Shockwave(at, Pal.Lift(tint, .4f), 2.6f, .3f);
-                Burst.Sparks(_fx, at, tint, 8, Cell * 1.8f, Cell * .18f, .38f);
+                FxPop(at, tint, 2.4f, .26f);
+                FxWave(at, Pal.Lift(tint, .4f), 2.6f, .3f);
+                FxSparks(_fx, at, tint, 8, Cell * 1.8f, Cell * .18f, .38f);
             }, _fx);
         }
 
@@ -830,8 +832,8 @@ namespace GlimmerGrove
             Tween.Rotate(star.rectTransform, 45f, .3f);
             Tween.Fade(star, 0f, .3f).OnDone(() => { if (star) Destroy(star.gameObject); });
 
-            Shockwave(from, Pal.Lift(fire, .5f), 4.2f * scale, .32f);
-            Pop(from, fire, 3.2f * scale, .28f);
+            FxWave(from, Pal.Lift(fire, .5f), 4.2f * scale, .32f);
+            FxPop(from, fire, 3.2f * scale, .28f);
 
             // Bolts thrown outward off the hand, which is what says the thing left rather than
             // simply appeared somewhere else.
@@ -844,7 +846,7 @@ namespace GlimmerGrove
                 Arc(from, from + away, fire, Cell * .055f, .2f, 1, .4f);
             }
 
-            Burst.Sparks(_fx, from, fire, 14, Cell * 2.6f * scale, Cell * .2f, .45f);
+            FxSparks(_fx, from, fire, 14, Cell * 2.6f * scale, Cell * .2f, .45f);
         }
 
         // ------------------------------------------------------------------ the landing
@@ -960,8 +962,8 @@ namespace GlimmerGrove
                             at + new Vector2(away, -Cell * .28f),
                             fire, Cell * .07f, .3f, 1, .4f, .03f);
                     }
-                    Shockwave(at + new Vector2(0f, -Cell * .35f), Pal.Lift(fire, .3f), 5.2f, .42f);
-                    Tween.After(.14f, () => Shockwave(at + new Vector2(0f, -Cell * .35f),
+                    FxWave(at + new Vector2(0f, -Cell * .35f), Pal.Lift(fire, .3f), 5.2f, .42f);
+                    Tween.After(.14f, () => FxWave(at + new Vector2(0f, -Cell * .35f),
                                                       Pal.Lift(fire, .25f), 3.4f, .32f), _fx);
                     break;
                 }
@@ -1010,7 +1012,7 @@ namespace GlimmerGrove
                             fire, Cell * .06f, .3f, 1, .4f, .04f);
                     }
 
-                    Shockwave(at + new Vector2(0f, -Cell * .35f), Pal.Lift(fire, .3f), 4.4f, .42f);
+                    FxWave(at + new Vector2(0f, -Cell * .35f), Pal.Lift(fire, .3f), 4.4f, .42f);
                     break;
                 }
 

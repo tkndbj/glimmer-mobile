@@ -313,8 +313,8 @@ namespace GlimmerGrove
             Scorch(aim, Pal.Ember);
 
             Boom(at, Blast("boom_fire"), Cell * 3.4f);
-            Burst.Sparks(_fx, at, Pal.Ember, 22, Cell * 3f, Cell * .3f);
-            Shockwave(at, Pal.Sun, Cell * 4.5f, .34f);
+            FxSparks(_fx, at, Pal.Ember, 22, Cell * 3f, Cell * .3f);
+            FxWave(at, Pal.Sun, Cell * 4.5f, .34f);
             ShakeBoard(26f);
 
             // Its own clip rather than the `burst` a raider's death plays. That one is struck
@@ -369,8 +369,8 @@ namespace GlimmerGrove
 
             var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
 
-            Burst.Sparks(_fx, at, Pal.Mint, 16, Cell * 2f, Cell * .2f, .5f);
-            Shockwave(at, Pal.Mint, Cell * 2.6f, .30f);
+            FxSparks(_fx, at, Pal.Mint, 16, Cell * 2f, Cell * .2f, .5f);
+            FxWave(at, Pal.Mint, Cell * 2.6f, .30f);
             Tween.Pop(_posts[ward].Node, 1.12f, .28f);
 
             // A spell rather than an object. `chime` read as a coin landing here, which is the
@@ -386,8 +386,8 @@ namespace GlimmerGrove
             var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
             var tint = TintOf(_board.Wards[ward].Colour);
 
-            Burst.Sparks(_fx, at, tint, 20, Cell * 2.2f, Cell * .2f, .45f);
-            Shockwave(at, tint, Cell * 3f, .30f);
+            FxSparks(_fx, at, tint, 20, Cell * 2.2f, Cell * .2f, .45f);
+            FxWave(at, tint, Cell * 3f, .30f);
             Tween.Shake(post.Node, Cell * .1f, .3f);
 
             Audio.Sfx("lit", .7f, .85f);

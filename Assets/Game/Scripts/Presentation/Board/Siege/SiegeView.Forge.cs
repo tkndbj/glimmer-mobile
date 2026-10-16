@@ -150,14 +150,14 @@ namespace GlimmerGrove
             if (!forged.Banked)
             {
                 if (post.Dump != null) Refuse(post.Dump.rectTransform);
-                Burst.Sparks(_fx, at, DarkCoat, 10, Cell * 1.6f, Cell * .2f, .5f);
+                FxSparks(_fx, at, DarkCoat, 10, Cell * 1.6f, Cell * .2f, .5f);
                 Audio.Sfx("blocked", .45f, .9f);
                 return;
             }
 
-            Pop(at, Pal.Cream, 2.6f, .30f);
-            Shockwave(at, Pal.Lift(tint, .5f), 3.4f, .40f);
-            Burst.Sparks(_fx, at, tint, 16, Cell * 2.8f, Cell * .24f, .5f);
+            FxPop(at, Pal.Cream, 2.6f, .30f);
+            FxWave(at, Pal.Lift(tint, .5f), 3.4f, .40f);
+            FxSparks(_fx, at, tint, 16, Cell * 2.8f, Cell * .24f, .5f);
 
             if (post.Dump != null) Tween.Pop(post.Dump.transform, 0f, .42f);
             if (post.Halo != null) Tween.Pop(post.Halo.transform, 0f, .42f);
@@ -291,10 +291,10 @@ namespace GlimmerGrove
                     // read as one grey event. The colour is the charm's now, and the second ring
                     // an instant behind the first is what makes a body look *seized* rather than
                     // splashed.
-                    Shockwave(here, StillGlow, size, .40f);
-                    Tween.After(.09f, () => Shockwave(here, StillCore, size * .62f, .30f), _fx);
+                    FxWave(here, StillGlow, size, .40f);
+                    Tween.After(.09f, () => FxWave(here, StillCore, size * .62f, .30f), _fx);
 
-                    Burst.Sparks(_fx, here, StillCore, mob.Boss ? 16 : 8, Cell * 1.35f,
+                    FxSparks(_fx, here, StillCore, mob.Boss ? 16 : 8, Cell * 1.35f,
                                  Cell * .16f, .55f);
                 }, _fx);
             }
@@ -530,8 +530,8 @@ namespace GlimmerGrove
             {
                 if (!rt) return;
 
-                Shockwave(new Vector2(0f, mid), glow, DialWide * .9f, DialOut);
-                Burst.Sparks(_fx, new Vector2(0f, mid), glow, 18, size * .60f,
+                FxWave(new Vector2(0f, mid), glow, DialWide * .9f, DialOut);
+                FxSparks(_fx, new Vector2(0f, mid), glow, 18, size * .60f,
                              Cell * .20f, .58f);
 
                 Tween.Run(DialOut, Ease.InQuad, t =>

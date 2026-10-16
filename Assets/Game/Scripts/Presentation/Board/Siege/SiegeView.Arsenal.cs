@@ -79,6 +79,7 @@ namespace GlimmerGrove
         {
             public RectTransform Node;
             public Image Head, Tail;
+            public Tw Flight, Timer;
             public bool Out;
         }
 
@@ -119,7 +120,9 @@ namespace GlimmerGrove
 
             if (dart.Node == null) return;
 
-            Tween.KillAll(dart.Node);
+            dart.Flight?.Kill();
+            dart.Timer?.Kill();
+            dart.Flight = dart.Timer = null;
             dart.Node.gameObject.SetActive(false);
             _darts.Push(dart);
         }
@@ -147,7 +150,7 @@ namespace GlimmerGrove
 
             node.anchoredPosition = a;
 
-            Tween.Run(flight, Ease.Linear, t =>
+            dart.Flight = Tween.Run(flight, Ease.Linear, t =>
             {
                 if (!node) return;
 
@@ -178,7 +181,7 @@ namespace GlimmerGrove
                 landed?.Invoke();
             });
 
-            Tween.After(flight + .2f, () => GiveDart(dart), node);
+            dart.Timer = Tween.After(flight + .2f, () => GiveDart(dart), node);
         }
 
         // ------------------------------------------------------------------ a hit a build dealt
@@ -213,29 +216,29 @@ namespace GlimmerGrove
                 case SiegeVia.Splash:
                     if (!Flourished(SiegeVia.Splash, shot.From))
                     {
-                        Shockwave(source, Pal.Lift(tint, .35f), 3.2f, .3f);
-                        Pop(source, tint, 2.6f, .26f);
+                        FxWave(source, Pal.Lift(tint, .35f), 3.2f, .3f);
+                        FxPop(source, tint, 2.6f, .26f);
                     }
-                    Pop(to, tint, 1.3f, .2f);
+                    FxPop(to, tint, 1.3f, .2f);
                     land();
                     break;
 
                 case SiegeVia.Arc:
                     Arc(source, to, TeslaHue, Cell * .07f, .24f, 1, .38f);
-                    Pop(to, TeslaHue, 1.4f, .2f);
+                    FxPop(to, TeslaHue, 1.4f, .2f);
                     if (!Flourished(SiegeVia.Arc, shot.From)) Audio.SfxVaried("arc", .18f);
                     land();
                     break;
 
                 case SiegeVia.Lance:
                     if (!Flourished(SiegeVia.Lance, shot.Ward)) Lance(shot.Ward, to.x, tint);
-                    Pop(to, Pal.Radiance, 1.5f, .22f);
+                    FxPop(to, Pal.Radiance, 1.5f, .22f);
                     land();
                     break;
 
                 case SiegeVia.Twin:
                     Fly(source, to + new Vector2(Cell * .3f, 0f), tint, Cell * .42f, .16f, .12f, Color.clear,
-                        () => { Pop(to, tint, 1.2f, .18f); land(); });
+                        () => { FxPop(to, tint, 1.2f, .18f); land(); });
                     break;
 
                 case SiegeVia.Execute:
@@ -249,20 +252,20 @@ namespace GlimmerGrove
                         Boom(source, Blast("boom_fire"), Cell * 3.2f);
                         Audio.SfxVaried("boom", .22f);
                     }
-                    Pop(to, Pal.Marigold, 1.4f, .2f);
+                    FxPop(to, Pal.Marigold, 1.4f, .2f);
                     land();
                     break;
 
                 case SiegeVia.Pellet:
                     Fly(source, to, tint, Cell * .34f, .15f, Random.Range(-.12f, .12f), Color.clear,
-                        () => { Pop(to, tint, 1f, .16f); land(); });
+                        () => { FxPop(to, tint, 1f, .16f); land(); });
                     break;
 
                 case SiegeVia.Ricochet:
                     Fly(source, to, Pal.Gold, Cell * .45f, .14f, .18f, Pal.Gold, () =>
                     {
-                        Pop(to, Pal.Gold, 1.6f, .2f);
-                        Burst.Sparks(_fx, to, Pal.Gold, 6, Cell * 1.4f, Cell * .14f, .3f);
+                        FxPop(to, Pal.Gold, 1.6f, .2f);
+                        FxSparks(_fx, to, Pal.Gold, 6, Cell * 1.4f, Cell * .14f, .3f);
                         land();
                     });
                     break;
@@ -274,7 +277,7 @@ namespace GlimmerGrove
                         Pal.Hollow, () =>
                         {
                             Boom(to, Blast("boom_fire"), Cell * 2f);
-                            Pop(to, MeteorHue, 1.8f, .22f);
+                            FxPop(to, MeteorHue, 1.8f, .22f);
                             land();
                         });
                     if (!Flourished(SiegeVia.Missile, shot.Ward)) Audio.SfxVaried("whoosh", .2f);
@@ -282,13 +285,13 @@ namespace GlimmerGrove
                 }
 
                 case SiegeVia.Quake:
-                    Pop(to, QuakeHue, 1.5f, .22f);
+                    FxPop(to, QuakeHue, 1.5f, .22f);
                     Tween.Punch(mob.Node, .12f, .18f);
                     land();
                     break;
 
                 case SiegeVia.Toxic:
-                    Pop(to, ToxicHue, 1.1f, .2f);
+                    FxPop(to, ToxicHue, 1.1f, .2f);
                     land();
                     break;
 
@@ -296,10 +299,10 @@ namespace GlimmerGrove
                 {
                     var post = new Vector2(PostX(shot.Ward), _lineY + Cell * 1.3f);
                     Arc(post, to, TeslaHue, Cell * .085f, .26f, 2, .42f);
-                    Pop(to, TeslaHue, 1.6f, .22f);
+                    FxPop(to, TeslaHue, 1.6f, .22f);
                     if (!Flourished(SiegeVia.Tesla, shot.Ward))
                     {
-                        Burst.Sparks(_fx, post, TeslaHue, 6, Cell * 1.2f, Cell * .12f, .26f);
+                        FxSparks(_fx, post, TeslaHue, 6, Cell * 1.2f, Cell * .12f, .26f);
                         Audio.SfxVaried("arc", .22f);
                     }
                     land();
@@ -308,7 +311,7 @@ namespace GlimmerGrove
 
                 case SiegeVia.Shatter:
                     Fly(source, to, IceHue, Cell * .4f, .16f, .1f, Pal.Glass,
-                        () => { Pop(to, IceHue, 1.5f, .2f); land(); });
+                        () => { FxPop(to, IceHue, 1.5f, .2f); land(); });
                     break;
 
                 case SiegeVia.Meteor:
@@ -344,7 +347,7 @@ namespace GlimmerGrove
 
                 case SiegeVia.Hydra:
                     Fly(source, to, HydraHue, Cell * .4f, .2f, Random.value < .5f ? .3f : -.3f, HydraHue,
-                        () => { Pop(to, HydraHue, 1.4f, .2f); land(); });
+                        () => { FxPop(to, HydraHue, 1.4f, .2f); land(); });
                     break;
 
                 // A laser gun's light going on into another body (`SiegeView.Laser`), or its own
@@ -354,7 +357,7 @@ namespace GlimmerGrove
                     break;
 
                 default:
-                    Pop(to, tint, 1.2f, .2f);
+                    FxPop(to, tint, 1.2f, .2f);
                     land();
                     break;
             }
@@ -455,7 +458,7 @@ namespace GlimmerGrove
                 foreach (var img in group) img.color = Pal.A(Pal.Poppy, 1f - t * t);
             }, host).OnDone(() => { if (host) Destroy(host.gameObject); });
 
-            Pop(at, Pal.Poppy, 2f, .24f);
+            FxPop(at, Pal.Poppy, 2f, .24f);
             if (mob != null && mob.Node != null) Tween.Shake(mob.Node, Cell * .12f, .2f);
             Audio.SfxVaried("felled", .26f);
         }
@@ -492,7 +495,7 @@ namespace GlimmerGrove
                 case SiegeVia.Shatter:
                     Ripple(at, IceHue, Cell * (3f + volley.Reach * 1.6f), .4f, 0f);
                     Embers(at, Pal.Glass, 14, Cell * .7f, Cell * .26f);
-                    Pop(at, Pal.Glass, 2.8f, .28f);
+                    FxPop(at, Pal.Glass, 2.8f, .28f);
                     Audio.SfxVaried("shatter", .3f);
                     break;
 

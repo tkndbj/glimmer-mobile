@@ -211,8 +211,8 @@ namespace GlimmerGrove
                     Tween.Scale(rt, 1f, .30f + i * .05f, Ease.OutBack).Delay(i * .06f);
                 }
 
-            Burst.Sparks(_fx, at, Pal.Rope, 16, Cell * 2.6f, Cell * .24f, .55f);
-            Burst.Sparks(_fx, at, fire, 8, Cell * 1.6f, Cell * .18f, .4f);
+            FxSparks(_fx, at, Pal.Rope, 16, Cell * 2.6f, Cell * .24f, .55f);
+            FxSparks(_fx, at, fire, 8, Cell * 1.6f, Cell * .18f, .4f);
             Tween.Shake(post.Node, Cell * .22f, .34f);
             Audio.Sfx("boom", .62f, .5f);
         }
@@ -283,7 +283,7 @@ namespace GlimmerGrove
                 chip.color = Pal.A(Color.white, t < .7f ? 1f : 1f - (t - .7f) / .3f);
             }, chip).OnDone(() => { if (chip) Destroy(chip.gameObject); });
 
-            Burst.Sparks(_fx, origin, Pal.Rope, 7, Cell * 1.4f, Cell * .16f, .4f);
+            FxSparks(_fx, origin, Pal.Rope, 7, Cell * 1.4f, Cell * .16f, .4f);
         }
 
         /// <summary>
@@ -299,8 +299,8 @@ namespace GlimmerGrove
             if (post == null || post.Node == null) return;
 
             var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
-            Pop(at, Pal.Cream, 2.2f, .3f);
-            Shockwave(at, Pal.Lift(TintOf(post.Colour), .45f), 2.8f, .36f);
+            FxPop(at, Pal.Cream, 2.2f, .3f);
+            FxWave(at, Pal.Lift(TintOf(post.Colour), .45f), 2.8f, .36f);
             Tween.Punch(post.Node, .16f, .3f);
             Audio.Sfx("collect", .5f, 1.05f);
         }
@@ -334,18 +334,18 @@ namespace GlimmerGrove
                 Tween.After(when + .3f, () =>
                 {
                     if (_fx == null) return;
-                    Pop(to, fire, 2.2f, .26f);
-                    Burst.Sparks(_fx, to, fire, 8, Cell * 1.8f, Cell * .18f, .4f);
+                    FxPop(to, fire, 2.2f, .26f);
+                    FxSparks(_fx, to, fire, 8, Cell * 1.8f, Cell * .18f, .4f);
                 }, _fx);
             }
 
             if (post.Dump != null)
             {
                 Tween.Punch(post.Dump.transform, .5f, .3f);
-                Pop(at, fire, 1.9f, .28f);
+                FxPop(at, fire, 1.9f, .28f);
             }
 
-            Burst.Sparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
+            FxSparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
             Flow.Flash(Pal.A(fire, .45f), .2f, .25f);
             Audio.Sfx("shatter", .55f, .9f);
         }

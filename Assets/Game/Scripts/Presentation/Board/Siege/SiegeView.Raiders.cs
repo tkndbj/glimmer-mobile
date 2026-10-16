@@ -601,7 +601,7 @@ namespace GlimmerGrove
             Felling(DyingFor);
 
             Boom(at, Blast("boom_fire"), mob.Height * 2f);
-            Burst.Sparks(_fx, at, Pal.Ember, 14, mob.Height * 1.6f, mob.Height * .2f);
+            FxSparks(_fx, at, Pal.Ember, 14, mob.Height * 1.6f, mob.Height * .2f);
             Audio.SfxVaried("burst", .38f);
 
             var node = mob.Node;
@@ -741,8 +741,8 @@ namespace GlimmerGrove
             // fade, no shrink, nothing hanging in the air afterwards. Smoke stays what a ward
             // comes down in (`Fell`): something lost, not something destroyed.
             Boom(at, Blast("boom_burst"), mob.Height * 3f, 20f);
-            Burst.Sparks(_fx, at, Pal.Gold, 26, mob.Height * 2.4f, mob.Height * .2f, .8f);
-            Shockwave(at, Pal.Gold, 7f, .55f);
+            FxSparks(_fx, at, Pal.Gold, 26, mob.Height * 2.4f, mob.Height * .2f, .8f);
+            FxWave(at, Pal.Gold, 7f, .55f);
             Audio.SfxVaried("burst", .7f);
             Destroy(node.gameObject);
         }

@@ -58,6 +58,7 @@ namespace GlimmerGrove
         {
             public RectTransform Host;
             public Image Halo, Sheath, Stream, Core, Muzzle, Impact;
+            public Tw Flight, Timer, Sparks;
             public bool Out;
         }
 
@@ -121,7 +122,10 @@ namespace GlimmerGrove
 
             if (beam.Host == null) return;
 
-            Tween.KillAll(beam.Host);
+            beam.Flight?.Kill();
+            beam.Timer?.Kill();
+            beam.Sparks?.Kill();
+            beam.Flight = beam.Timer = beam.Sparks = null;
             beam.Host.gameObject.SetActive(false);
             _beams.Push(beam);
         }
@@ -193,7 +197,7 @@ namespace GlimmerGrove
 
             float life = LaserOpen + LaserHold + LaserShut;
 
-            Tween.Run(life, Ease.Linear, t =>
+            beam.Flight = Tween.Run(life, Ease.Linear, t =>
             {
                 if (beam.Host == null) return;
 
@@ -231,10 +235,10 @@ namespace GlimmerGrove
             }, beam.Host).Delay(after).OnDone(() => GiveBeam(beam));
 
             // Handed back on a timer too, in case the tween is torn down with the layer.
-            Tween.After(after + life + .2f, () => GiveBeam(beam), beam.Host);
+            beam.Timer = Tween.After(after + life + .2f, () => GiveBeam(beam), beam.Host);
 
             // The sparks a beam throws where it lands, sprayed back along it and off to the sides.
-            Tween.After(after + LaserOpen * .6f, () =>
+            beam.Sparks = Tween.After(after + LaserOpen * .6f, () =>
             {
                 if (_fx == null) return;
 
@@ -292,7 +296,7 @@ namespace GlimmerGrove
 
             Flared(shot.Ward);
 
-            Pop(to, shot.Weak ? Pal.Gold : tint, shot.Weak ? 1.7f : 1.25f, .2f);
+            FxPop(to, shot.Weak ? Pal.Gold : tint, shot.Weak ? 1.7f : 1.25f, .2f);
             Number(shot.Raider, to, shot.Damage, shot.Weak);
             if (shot.Killed) Audio.SfxVaried("zap", .42f);
             if (mob.Body != null) Tween.Punch(mob.Body.transform, .1f, .14f);
@@ -320,7 +324,7 @@ namespace GlimmerGrove
             Tween.After(after, () =>
             {
                 if (this == null) return;
-                Pop(to, tint, 1.15f, .18f);
+                FxPop(to, tint, 1.15f, .18f);
                 Number(raider, to, damage, false);
                 if (killed) KillSound();
             }, _fx);
@@ -351,14 +355,16 @@ namespace GlimmerGrove
             var body = post.Body;
             if (body == null) return;
 
-            Tween.KillChannel(body, "kick");
-            Tween.Run(RecoilFor, Ease.OutQuad, t =>
+            if (_batchFx != null) post.Kick?.Kill();
+            else Tween.KillChannel(body, "kick");
+            var kick = Tween.Run(RecoilFor, Ease.OutQuad, t =>
             {
                 if (!body) return;
                 float k = t < .3f ? t / .3f : 1f - (t - .3f) / .7f;
                 body.rectTransform.anchoredPosition = new Vector2(0f, Cell * .06f - Cell * .11f * k);
                 body.rectTransform.localScale = new Vector3(1f + k * .06f, 1f - k * .05f, 1f);
-            }, body, "kick");
+            }, body, _batchFx != null ? null : "kick");
+            if (_batchFx != null) post.Kick = kick;
         }
 
         /// <summary>A laser's voice: a bright zap, held to one per turret every <see cref="LaserVoiceEvery"/>.</summary>

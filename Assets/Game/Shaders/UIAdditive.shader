@@ -1,4 +1,4 @@
-// The one custom shader in the game: Unity's own UI/Default with its blend mode changed to
+// Unity's own UI/Default with its blend mode changed to
 // additive. See `Additive.cs` for why it exists and what may use it.
 //
 // **Every line but one is `UI/Default`** - the stencil for `Mask`, `_ClipRect` for `RectMask2D`,

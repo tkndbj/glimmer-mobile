@@ -45,10 +45,15 @@ namespace GlimmerGrove
             public RectTransform Node;
             public Image Reel, Halo;
             public Flipbook Film;
+            public FxFlipbookGraphic Book;
+            public Tw Flight, Timer;
+            public System.Action Return;
+            public Stack<Puff> Pool;
             public bool Out;
         }
 
         readonly Stack<Puff> _spare = new Stack<Puff>(24);
+        Stack<Puff> _booms;
 
         /// <summary>
         /// A widget playing <paramref name="frames"/>, aimed, sized to the reel's own shape.
@@ -60,8 +65,13 @@ namespace GlimmerGrove
         /// </summary>
         Puff Lend(Sprite[] frames, Color tint, float wide, Vector2 at, float angle, float fps,
                   bool loop, float head)
+            => LendFrom(_spare, frames, tint, wide, at, angle, fps, loop, head);
+
+        Puff LendFrom(Stack<Puff> pool, Sprite[] frames, Color tint, float wide, Vector2 at,
+                      float angle, float fps, bool loop, float head)
         {
-            var puff = _spare.Count > 0 ? _spare.Pop() : Build();
+            var puff = pool.Count > 0 ? pool.Pop() : Build();
+            puff.Pool = pool;
             puff.Out = true;
 
             var first = frames[0];
@@ -80,10 +90,16 @@ namespace GlimmerGrove
             // **Every borrower gets a whole frame back.** Only a bolt in flight draws part of its
             // reel (`Emerged`), and a pooled widget is one frame away from being a muzzle flash.
             puff.Reel.type = Image.Type.Simple;
+            puff.Reel.preserveAspect = true;
             puff.Reel.fillAmount = 1f;
             puff.Reel.rectTransform.localScale = Vector3.one;
 
-            puff.Film = Flipbook.Attach(puff.Reel, frames, fps, loop);
+            if (puff.Book != null)
+            {
+                _batchFx.Play(puff.Book, frames, fps, loop, -(head - .5f) * tall);
+                puff.Halo.enabled = !puff.Book.GpuAnimated;
+            }
+            else puff.Film = Flipbook.Attach(puff.Reel, frames, fps, loop);
             return puff;
         }
 
@@ -101,11 +117,23 @@ namespace GlimmerGrove
             // Built with the sprite it will be given rather than with none: an `Image` with a null
             // sprite is a white rectangle, not a blank (invariant 7b), and a pooled widget spends
             // its whole life one frame away from being shown.
-            var reel = UIKit.Img("Reel", node, Art.Pixel, Color.clear, new Vector2(1f, 1f));
+            Image reel;
+            FxFlipbookGraphic book = null;
+            if (_batchFx != null)
+            {
+                var rt = UIKit.Box("Reel", node, Vector2.one, new Vector2(.5f, .5f), Vector2.zero);
+                book = rt.gameObject.AddComponent<FxFlipbookGraphic>();
+                book.sprite = Art.Pixel;
+                book.color = Color.clear;
+                reel = book;
+            }
+            else reel = UIKit.Img("Reel", node, Art.Pixel, Color.clear, new Vector2(1f, 1f));
             reel.raycastTarget = false;
             reel.preserveAspect = true;
 
-            return new Puff { Node = node, Reel = reel, Halo = halo };
+            var puff = new Puff { Node = node, Reel = reel, Halo = halo, Book = book };
+            if (book != null) puff.Return = () => Give(puff);
+            return puff;
         }
 
         /// <summary>Lights the halo under a widget already lent. Only the bolt in flight wants one.</summary>
@@ -114,6 +142,7 @@ namespace GlimmerGrove
             puff.Halo.rectTransform.sizeDelta = new Vector2(size, size);
             puff.Halo.rectTransform.anchoredPosition = Vector2.zero;
             puff.Halo.color = Pal.A(Pal.Lift(tint, .5f), .8f);
+            if (puff.Book != null) puff.Book.Halo(puff.Halo.color, size);
         }
 
         /// <summary>
@@ -126,8 +155,13 @@ namespace GlimmerGrove
         /// </summary>
         void Ends(Puff puff, float after)
         {
+            if (puff.Book != null)
+            {
+                puff.Book.OnFinished = puff.Return;
+                puff.Timer = Tween.After(after + .08f, puff.Return, puff.Node);
+                return;
+            }
             if (puff.Film != null) puff.Film.OnFinished = () => Give(puff);
-
             Tween.After(after + .08f, () => Give(puff), puff.Node);
         }
 
@@ -146,15 +180,27 @@ namespace GlimmerGrove
 
             if (!puff.Node) return;
 
-            Tween.KillAll(puff.Node);
-            Flipbook.Detach(puff.Reel);
+            if (puff.Book != null)
+            {
+                // These are the only two tweens owned by a Puff. Direct handles avoid scanning
+                // every UI/game tween each time a muzzle flash, impact or round is recycled.
+                puff.Flight?.Kill();
+                puff.Timer?.Kill();
+                puff.Flight = puff.Timer = null;
+                _batchFx.Stop(puff.Book);
+            }
+            else
+            {
+                Tween.KillAll(puff.Node);
+                Flipbook.Detach(puff.Reel);
+            }
             puff.Film = null;
 
             puff.Reel.color = Color.clear;
             puff.Halo.color = Color.clear;
             puff.Node.gameObject.SetActive(false);
 
-            _spare.Push(puff);
+            puff.Pool.Push(puff);
         }
 
         // ------------------------------------------------------------------ the wake
@@ -200,6 +246,8 @@ namespace GlimmerGrove
         void Cinder(Vector2 at, Color tint, float size, float life, Vector2 drift)
         {
             if (_fx == null) return;
+
+            if (_batchFx != null) { BatchCinder(at, tint, size, life, drift); return; }
 
             var ember = _cinders.Count > 0 ? _cinders.Pop() : Kindle();
             if (ember.Node == null) return;
@@ -581,8 +629,9 @@ namespace GlimmerGrove
             var body = post.Body;
             if (body != null)
             {
-                Tween.KillChannel(body, "kick");
-                Tween.Run(RecoilFor, Ease.OutQuad, t =>
+                if (_batchFx != null) post.Kick?.Kill();
+                else Tween.KillChannel(body, "kick");
+                var kick = Tween.Run(RecoilFor, Ease.OutQuad, t =>
                 {
                     if (!body) return;
                     float k = t < .3f ? t / .3f : 1f - (t - .3f) / .7f;
@@ -590,7 +639,8 @@ namespace GlimmerGrove
                         new Vector2(0f, Cell * .06f - Cell * .13f * k);
                     body.rectTransform.localScale =
                         new Vector3(1f + k * .07f, 1f - k * .06f, 1f);
-                }, body, "kick");
+                }, body, _batchFx != null ? null : "kick");
+                if (_batchFx != null) post.Kick = kick;
             }
 
             float flight = Mathf.Clamp(dir.magnitude / (Cell * 26f), ShortestFlight, LongestFlight);
@@ -607,7 +657,7 @@ namespace GlimmerGrove
             // here rather than inside `Flash` for exactly that reason: two rings a sixth of a cell
             // apart is one ring at twice the brightness, which reads as a brighter turret rather
             // than as a second barrel.
-            if (!look.Tracer) Shockwave(muzzle, Pal.Lift(tint, .5f), 2.2f, .22f);
+            if (!look.Tracer) FxWave(muzzle, Pal.Lift(tint, .5f), 2.2f, .22f);
 
             float flare = BarrelFlare(ward.Model);
 
@@ -653,35 +703,39 @@ namespace GlimmerGrove
                 float size = look.Scale;
                 var wake = look.Wake;
                 float nextWake = 0f;
+                bool gpuFlight = round.Book != null && round.Book.Fly(land - from, lean, size, span, Cell, tall);
 
-                Tween.Run(flight, Ease.Linear, t =>
+                var flightTween = Tween.Run(flight, Ease.Linear, t =>
                 {
                     if (!node) return;
-                    node.anchoredPosition = Vector2.Lerp(from, land, t);
+                    var at = Vector2.Lerp(from, land, t);
+                    if (gpuFlight) round.Book.Progress(t);
+                    else node.anchoredPosition = at;
 
                     // An element's trail, only where a build has struck one (`LookOf`).
                     if (wake.a > 0f && t >= nextWake)
                     {
                         nextWake = t + .2f;
-                        Cinder(node.anchoredPosition, wake, Cell * .3f * size, .34f,
+                        Cinder(at, wake, Cell * .3f * size, .34f,
                                (from - land).normalized * Cell * .4f);
                     }
 
                     // It grows a little on the way in, which is a cheap read of "coming toward
                     // you" on a board with no depth - and it is the only thing about the bolt this
                     // class animates, because the fourteen frames under it are doing the rest.
-                    node.localScale = Vector3.one * (Mathf.Lerp(.86f, 1.12f, t) * size);
+                    if (!gpuFlight) node.localScale = Vector3.one * (Mathf.Lerp(.86f, 1.12f, t) * size);
 
                     // **The trail unrolls out of the barrel** (`Emerged`). The reel does not
                     // move and is not scaled - only the amount of it that is drawn changes, so
                     // nothing in the picture is ever distorted and the cut edge sits at the
                     // muzzle rather than travelling with the bolt.
-                    reel.fillAmount = Emerged(span * t, Cell, tall);
+                    if (!gpuFlight) reel.fillAmount = Emerged(span * t, Cell, tall);
                 }, node).OnDone(() =>
                 {
                     Give(round);
                     if (lands) Land(to, tint, ward.Model, look.Colour, angle, shot);
                 });
+                if (round.Book != null) round.Flight = flightTween;
 
                 // **After the bolt, so it draws over it** - uGUI paints in sibling order. That is
                 // where the crop's straight edge is hidden (`Emerged`), and it is the honest
@@ -755,7 +809,7 @@ namespace GlimmerGrove
 
             if (frames == null || frames.Length == 0)
             {
-                Pop(at, tint, .9f, .16f);
+                FxPop(at, tint, .9f, .16f);
                 return;
             }
 
@@ -779,14 +833,14 @@ namespace GlimmerGrove
                           Cell * (shot.Killed ? 4.1f : 3.2f) * BoltScale(model), at,
                           angle, 35f, false, .5f), .35f);
 
-            Pop(at, shot.Weak ? Pal.Gold : tint, shot.Weak ? 1.9f : 1.2f, .24f);
+            FxPop(at, shot.Weak ? Pal.Gold : tint, shot.Weak ? 1.9f : 1.2f, .24f);
 
             // A double is drawn as a *different kind* of hit rather than a bigger one: gold, a
             // ring, and sparks. It is the mode's one rule and the board is where it is said.
             if (shot.Weak)
             {
-                Burst.Sparks(_fx, at, Pal.Gold, 8, Cell * 2.4f, Cell * .2f, .38f);
-                Shockwave(at, Pal.Gold, 1.7f, .26f);
+                FxSparks(_fx, at, Pal.Gold, 8, Cell * 2.4f, Cell * .2f, .38f);
+                FxWave(at, Pal.Gold, 1.7f, .26f);
             }
 
             Number(shot.Raider, at, shot.Damage, shot.Weak);

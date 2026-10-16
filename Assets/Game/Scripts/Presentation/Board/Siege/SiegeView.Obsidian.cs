@@ -488,11 +488,11 @@ namespace GlimmerGrove
             }
 
             // Shards of the stone itself - dark, drawn normally - and the curse's own sparks.
-            Burst.Sparks(_fx, at, HexDeep, 16, Cell * big * 1.4f, Cell * .26f, .62f);
+            FxSparks(_fx, at, HexDeep, 16, Cell * big * 1.4f, Cell * .26f, .62f);
             Embers(at, Hex, 20, Cell * 1.8f, Cell * .30f);
             Twinkles(at, HexCore, 7, Cell * 1.4f);
             Lightup(Hex, .22f, .42f);
-            Pop(at, HexCore, big * .55f, .24f);
+            FxPop(at, HexCore, big * .55f, .24f);
 
             // **And what is left of it stays**, gathering under the burst: the knot the hill's
             // half of the curse is thrown from (`Knotted`).
@@ -875,8 +875,8 @@ namespace GlimmerGrove
                 }, stamp).OnDone(() => { if (stamp) Destroy(stamp.gameObject); });
             }
 
-            Pop(stood, HexCore, size * .8f, .26f);
-            Burst.Sparks(_fx, stood, Hex, mob.Boss ? 14 : 8, Cell * size * 1.2f, Cell * .18f, .5f);
+            FxPop(stood, HexCore, size * .8f, .26f);
+            FxSparks(_fx, stood, Hex, mob.Boss ? 14 : 8, Cell * size * 1.2f, Cell * .18f, .5f);
             Tween.Punch(node, mob.Boss ? .08f : .14f, .28f);
         }
 
@@ -914,7 +914,7 @@ namespace GlimmerGrove
                 Tween.After(i * .03f + .16f, () =>
                 {
                     if (_fx == null) return;
-                    Pop(where, Pal.A(Hex, .7f), .7f, .22f);
+                    FxPop(where, Pal.A(Hex, .7f), .7f, .22f);
                     Wisp(where, Cell * .5f);
                 }, this);
             }
@@ -1077,7 +1077,7 @@ namespace GlimmerGrove
 
             var at = mob.Node.anchoredPosition;
 
-            Pop(at + new Vector2(0f, mob.Height * .18f), Pal.Lift(Hex, .30f), .80f, .24f);
+            FxPop(at + new Vector2(0f, mob.Height * .18f), Pal.Lift(Hex, .30f), .80f, .24f);
             Number(hit.Raider, at, hit.Damage, false);
 
             if (mob.Body != null) Tween.Punch(mob.Body.transform, .04f, .12f);
@@ -1085,7 +1085,7 @@ namespace GlimmerGrove
             if (hit.Killed)
             {
                 if (_fx != null)
-                    Burst.Sparks(_fx, at, HexCore, 8, mob.Height * 1.2f, mob.Height * .16f, .45f);
+                    FxSparks(_fx, at, HexCore, 8, mob.Height * 1.2f, mob.Height * .16f, .45f);
                 return;
             }
 

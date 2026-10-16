@@ -83,7 +83,7 @@ namespace GlimmerGrove
                 Arc(a, b, fire, Cell * .045f, .22f, 0, .04f, i * .045f);
             }
 
-            Shockwave(at, Pal.Lift(fire, .25f), 2.2f, .26f);
+            FxWave(at, Pal.Lift(fire, .25f), 2.2f, .26f);
             Audio.Sfx("blocked", .44f, 1.18f);
         }
 

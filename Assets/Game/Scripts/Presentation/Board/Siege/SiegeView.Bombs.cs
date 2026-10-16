@@ -98,7 +98,7 @@ namespace GlimmerGrove
             Tween.Scale(fuse.Node.transform, 1f, .34f, Ease.OutBack);
             Tween.Move(fuse.Node, fuse.Node.anchoredPosition, .01f);
 
-            Burst.Sparks(_fx, fuse.Node.anchoredPosition, tint, 9, Cell * 1.5f, .45f);
+            FxSparks(_fx, fuse.Node.anchoredPosition, tint, 9, Cell * 1.5f, .45f);
             Audio.Sfx("land", .5f);
             ShakeBoard(.12f);
 

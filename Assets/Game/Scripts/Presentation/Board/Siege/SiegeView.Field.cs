@@ -363,8 +363,8 @@ namespace GlimmerGrove
                 else Tween.After(.5f, () => { if (img) Destroy(img.gameObject); });
             }
 
-            Pop(at, tint, 1.7f, .3f);
-            Burst.Sparks(_fx, at, tint, 8, Cell * 3.2f, Cell * .22f, .42f);
+            FxPop(at, tint, 1.7f, .3f);
+            FxSparks(_fx, at, tint, 8, Cell * 3.2f, Cell * .22f, .42f);
         }
 
         /// <summary>
@@ -399,7 +399,7 @@ namespace GlimmerGrove
             }
 
             Shatter(at, Pal.Cream, 0f);
-            Burst.Sparks(_fx, at, tint, 12, Cell * 3.6f, Cell * .26f, .5f);
+            FxSparks(_fx, at, tint, 12, Cell * 3.6f, Cell * .26f, .5f);
 
             if (!rise.Rose)
             {
@@ -435,7 +435,7 @@ namespace GlimmerGrove
             }, spark).OnDone(() =>
             {
                 if (spark) Destroy(spark.gameObject);
-                Pop(to, Pal.Cream, 1.6f, .3f);
+                FxPop(to, Pal.Cream, 1.6f, .3f);
             });
         }
 
@@ -480,7 +480,7 @@ namespace GlimmerGrove
             var post = _posts[ward];
             if (post == null || post.Node == null) return;
 
-            Pop(new Vector2(PostX(ward), TubeY), tint, .7f, .2f);
+            FxPop(new Vector2(PostX(ward), TubeY), tint, .7f, .2f);
             Tween.Punch(post.Node, .1f, .2f);
             Audio.SfxVaried("lit", .18f);
         }

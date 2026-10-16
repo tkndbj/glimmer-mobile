@@ -292,8 +292,9 @@ namespace GlimmerGrove
             float crosses = Mathf.Max(.05f, flight - delay);
 
             var trail = Time.unscaledTime;
+            bool gpuFlight = puff.Book != null && puff.Book.Throw(to - from, side, angle, bow, wafts);
 
-            Tween.Run(crosses, Ease.Linear, t =>
+            var flightTween = Tween.Run(crosses, Ease.Linear, t =>
             {
                 if (!node) return;
 
@@ -308,8 +309,12 @@ namespace GlimmerGrove
                 at += side * bow * 1.4f * Mathf.Sin(t * Mathf.PI);
                 if (wafts) at += side * .55f * Mathf.Sin(t * Mathf.PI * 2f) * (1f - t);
 
-                node.anchoredPosition = at;
-                node.localScale = Vector3.one * Mathf.Lerp(.8f, 1.25f, t);
+                if (gpuFlight) puff.Book.Progress(t);
+                else
+                {
+                    node.anchoredPosition = at;
+                    node.localScale = Vector3.one * Mathf.Lerp(.8f, 1.25f, t);
+                }
 
                 // A wake of embers behind it, thinned to about twenty a second so a three-orb
                 // volley is a trail of sparks rather than a wall of them.
@@ -332,6 +337,7 @@ namespace GlimmerGrove
                     Cinder(at, fire, Cell * .26f, .3f, back);
                 }
             }, node).Delay(delay).OnDone(() => Give(puff));
+            if (puff.Book != null) puff.Flight = flightTween;
         }
 
         /// <summary>
@@ -362,7 +368,7 @@ namespace GlimmerGrove
                 Ends(Lend(ground, Pal.A(fire, .8f), Cell * 9f, at + new Vector2(0f, Cell * .3f),
                           0f, 30f, false, .5f), .55f);
 
-            Burst.Sparks(_fx, at, fire, 18, Cell * 3.4f, Cell * .26f, .55f);
+            FxSparks(_fx, at, fire, 18, Cell * 3.4f, Cell * .26f, .55f);
 
             ShakeBoard(24f);
             Audio.Sfx("boom", .75f, .52f);
@@ -512,9 +518,9 @@ namespace GlimmerGrove
                           Cell * (spell.Felled ? 5.2f : 4.2f) * BurstAt(kind), at, 0f, 32f,
                           false, .5f), .4f);
 
-            Pop(at, fire, 2.6f * BurstAt(kind), .3f);
-            Shockwave(at, fire, 3.6f * BurstAt(kind), .34f);
-            Burst.Sparks(_fx, at, fire, greater ? 20 : 14, Cell * 3f, Cell * .24f, .5f);
+            FxPop(at, fire, 2.6f * BurstAt(kind), .3f);
+            FxWave(at, fire, 3.6f * BurstAt(kind), .34f);
+            FxSparks(_fx, at, fire, greater ? 20 : 14, Cell * 3f, Cell * .24f, .5f);
 
             // What the boss's own verb leaves behind on the post, over and above the burst - see
             // `SiegeView.Storm`. A roar has already had its own above, because it lands on four
@@ -577,8 +583,8 @@ namespace GlimmerGrove
             // A burst where the loose things reach it, which is the beat that joins the two.
             // No ring: a circle closing on a boss has been withdrawn from every spell in the
             // mode, here as in `Brace`.
-            Pop(at, fire, 2.4f, .28f);
-            Burst.Sparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
+            FxPop(at, fire, 2.4f, .28f);
+            FxSparks(_fx, at, fire, 12, Cell * 2.2f, Cell * .2f, .45f);
 
             Audio.Sfx("boom", .5f, .62f);
         }
@@ -600,8 +606,8 @@ namespace GlimmerGrove
             if (caster != null && caster.Node != null)
             {
                 var at = caster.Node.anchoredPosition;
-                Pop(at, fire, 3.4f, .34f);
-                Shockwave(at, fire, 4.2f, .40f);
+                FxPop(at, fire, 3.4f, .34f);
+                FxWave(at, fire, 4.2f, .40f);
             }
 
             // The top of the hill, which is where `SiegeTuning.RaiseAt` puts them.
@@ -622,8 +628,8 @@ namespace GlimmerGrove
             if (bloom != null && bloom.Length > 0)
                 Ends(Lend(bloom, Color.white, Cell * 6.4f, crest, 0f, 32f, false, .5f), .5f);
 
-            Shockwave(crest, fire, 7.5f, .55f);
-            Burst.Sparks(_fx, crest, fire, 22, Cell * 5f, Cell * .28f, .7f);
+            FxWave(crest, fire, 7.5f, .55f);
+            FxSparks(_fx, crest, fire, 22, Cell * 5f, Cell * .28f, .7f);
 
             // Shards coming up out of the ground on the spot the bodies will stand on. Upward
             // only - a raise is the one thing on this board that arrives from *under* it, and
@@ -730,13 +736,13 @@ namespace GlimmerGrove
             var post = _posts[ward];
             var at = new Vector2(PostX(ward), _lineY + Cell * .3f);
 
-            Burst.Sparks(_fx, at, fire, 10, Cell * 2.2f, Cell * .18f, .6f);
+            FxSparks(_fx, at, fire, 10, Cell * 2.2f, Cell * .18f, .6f);
             Tween.Shake(post.Node, Cell * .1f, .26f);
 
             // A second scatter down at the tube, because what a douse really took is what was in
             // it - the fuel readout is where every decision in this mode is read (invariant 37y),
             // so that is where the loss has to be seen happening.
-            Burst.Sparks(_fx, new Vector2(PostX(ward), _lineY - Cell * .1f), fire, 8,
+            FxSparks(_fx, new Vector2(PostX(ward), _lineY - Cell * .1f), fire, 8,
                          Cell * 1.4f, Cell * .12f, .45f);
 
             Audio.Sfx("whoosh", .55f, 1.25f);
@@ -757,7 +763,7 @@ namespace GlimmerGrove
             var post = _posts[ward];
             var at = new Vector2(PostX(ward), _lineY + Cell * .18f);
 
-            Burst.Sparks(_fx, at, fire, 8, Cell * 1.5f, Cell * .14f, .5f);
+            FxSparks(_fx, at, fire, 8, Cell * 1.5f, Cell * .14f, .5f);
             Tween.Shake(post.Node, Cell * .06f, .22f);
 
             // **The chain's own clip, and it is the one sound in the library that is a *fastening*
@@ -809,7 +815,7 @@ namespace GlimmerGrove
                 rt.localScale = Vector3.one;
             });
 
-            Burst.Sparks(_fx, new Vector2(PostX(ward), _lineY + Cell * .55f), fire, 12,
+            FxSparks(_fx, new Vector2(PostX(ward), _lineY + Cell * .55f), fire, 12,
                          Cell * 1.8f, Cell * .16f, .5f);
 
             Audio.Sfx("shatter", .5f, 1.15f);
@@ -830,7 +836,7 @@ namespace GlimmerGrove
                 if (mob.Boss || mob.Body == null) continue;
 
                 Tween.Punch(mob.Body.transform, .16f, .3f);
-                Burst.Sparks(_fx, mob.Node.anchoredPosition, fire, 5, Cell * 1.1f, Cell * .12f,
+                FxSparks(_fx, mob.Node.anchoredPosition, fire, 5, Cell * 1.1f, Cell * .12f,
                              .35f);
             }
 
@@ -844,7 +850,7 @@ namespace GlimmerGrove
             Tween.Shake(post.Node, Cell * .16f, .3f);
             ShakeBoard(hit.Felled ? 22f : 9f);
 
-            Burst.Sparks(_fx, new Vector2(PostX(hit.Ward), _lineY), Pal.Rose, 9, Cell * 2f,
+            FxSparks(_fx, new Vector2(PostX(hit.Ward), _lineY), Pal.Rose, 9, Cell * 2f,
                          Cell * .2f, .4f);
 
             Audio.SfxVaried("blocked", hit.Felled ? .7f : .34f);
@@ -860,7 +866,7 @@ namespace GlimmerGrove
             var at = new Vector2(PostX(System.Array.IndexOf(_posts, post)), _lineY);
 
             Boom(at, Blast("boom_smoke"), Cell * 3.4f);
-            Burst.Sparks(_fx, at, Pal.Ember, 20, Cell * 3f, Cell * .28f, .7f);
+            FxSparks(_fx, at, Pal.Ember, 20, Cell * 3f, Cell * .28f, .7f);
             Audio.Sfx("shatter", .8f, .78f);
 
             post.Body.sprite = Piece("ward_dead");
@@ -918,9 +924,9 @@ namespace GlimmerGrove
 
             Tween.Rotate(post.Body.rectTransform, 0f, .34f, Ease.OutBack);
 
-            Shockwave(at, Pal.Lift(tint, .45f), 3.4f, .46f);
-            Pop(at, Pal.Lift(tint, .3f), 2.6f, .32f);
-            Burst.Sparks(_fx, at + new Vector2(0f, Cell * .4f), tint, 18, Cell * 3.2f,
+            FxWave(at, Pal.Lift(tint, .45f), 3.4f, .46f);
+            FxPop(at, Pal.Lift(tint, .3f), 2.6f, .32f);
+            FxSparks(_fx, at + new Vector2(0f, Cell * .4f), tint, 18, Cell * 3.2f,
                          Cell * .26f, .6f);
 
             Tween.Punch(post.Node, .2f, .36f);
@@ -1179,6 +1185,21 @@ namespace GlimmerGrove
         {
             if (frames == null || frames.Length == 0) return;
 
+            if (_batchFx != null)
+            {
+                // A separate pool keeps explosions from changing which sibling a normal
+                // projectile borrows. Their original paths had independent object lifetimes.
+                if (_booms == null) _booms = new Stack<Puff>(8);
+                var puff = LendFrom(_booms, frames, Color.white, size, at, 0f, fps, false, .5f);
+                // Boom stretches every frame to its authored square. It is always on top,
+                // including a borrowed widget which previously occupied an older sibling slot.
+                puff.Reel.preserveAspect = false;
+                puff.Reel.rectTransform.sizeDelta = Vector2.one * size;
+                puff.Node.SetAsLastSibling();
+                Ends(puff, frames.Length / fps + .1f);
+                return;
+            }
+
             var img = UIKit.Img("Boom", _fx, frames[0], Color.white, new Vector2(size, size));
             img.raycastTarget = false;
             img.rectTransform.anchoredPosition = at;
@@ -1220,6 +1241,7 @@ namespace GlimmerGrove
             public float Until, Drift;
             public Text Label;
             public RectTransform Rt;
+            public Tw Pop, Rise, Fade;
         }
 
         readonly Dictionary<int, Tally> _tally = new Dictionary<int, Tally>();
@@ -1339,11 +1361,13 @@ namespace GlimmerGrove
 
             float from = tally.Weak ? 1.85f : 1.4f;
 
-            Tween.KillChannel(tally.Label, "pop");
-            Tween.Run(.17f, Ease.OutBack, k =>
+            if (_batchFx != null) tally.Pop?.Kill();
+            else Tween.KillChannel(tally.Label, "pop");
+            var pop = Tween.Run(.17f, Ease.OutBack, k =>
             {
                 if (rt) rt.localScale = Vector3.one * Mathf.Lerp(from, 1f, k);
-            }, tally.Label, "pop");
+            }, tally.Label, _batchFx != null ? null : "pop");
+            if (_batchFx != null) tally.Pop = pop;
         }
 
         /// <summary>
@@ -1359,8 +1383,16 @@ namespace GlimmerGrove
             var label = tally.Label;
             if (!rt || !label) return;
 
-            Tween.KillChannel(label, "rise");
-            Tween.KillChannel(label, "fade");
+            if (_batchFx != null)
+            {
+                tally.Rise?.Kill();
+                tally.Fade?.Kill();
+            }
+            else
+            {
+                Tween.KillChannel(label, "rise");
+                Tween.KillChannel(label, "fade");
+            }
 
             var opaque = label.color;
             opaque.a = 1f;
@@ -1379,20 +1411,22 @@ namespace GlimmerGrove
             Vector2 to = from + new Vector2(tally.Drift * Cell * .10f,
                                             Cell * (tally.Weak ? .26f : .20f));
 
-            Tween.Run(life * .28f, Ease.OutCubic, k =>
+            var rise = Tween.Run(life * .28f, Ease.OutCubic, k =>
             {
                 if (rt) rt.anchoredPosition = Vector2.Lerp(from, to, k);
-            }, label, "rise");
+            }, label, _batchFx != null ? null : "rise");
+            if (_batchFx != null) tally.Rise = rise;
 
             // Held at full for the first half and only then let go, because a number that starts
             // fading the instant it appears is one nobody has finished reading.
-            Tween.Run(life, Ease.Linear, k =>
+            var fade = Tween.Run(life, Ease.Linear, k =>
             {
                 if (!label) return;
                 var colour = label.color;
                 colour.a = k < .45f ? 1f : 1f - (k - .45f) / .55f;
                 label.color = colour;
-            }, label, "fade").OnDone(() => Retire(tally));
+            }, label, _batchFx != null ? null : "fade").OnDone(() => Retire(tally));
+            if (_batchFx != null) tally.Fade = fade;
         }
 
         void Retire(Tally tally)

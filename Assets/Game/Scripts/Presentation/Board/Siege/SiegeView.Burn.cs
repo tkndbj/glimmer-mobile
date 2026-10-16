@@ -331,7 +331,7 @@ namespace GlimmerGrove
 
             // A lick of light where the fire is biting, offset up the body so it reads as coming
             // out of the flame rather than as a hit landing on the ground.
-            Pop(at + new Vector2(0f, mob.Height * .18f), Pal.Lift(tint, .35f), .85f, .22f);
+            FxPop(at + new Vector2(0f, mob.Height * .18f), Pal.Lift(tint, .35f), .85f, .22f);
 
             Number(burn.Raider, at, burn.Damage, false);
 
@@ -342,7 +342,7 @@ namespace GlimmerGrove
             if (burn.Killed)
             {
                 Audio.SfxVaried("zap", .42f);
-                Burst.Sparks(_fx, at, tint, 8, mob.Height * 1.3f, mob.Height * .16f, .42f);
+                FxSparks(_fx, at, tint, 8, mob.Height * 1.3f, mob.Height * .16f, .42f);
             }
         }
 

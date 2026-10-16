@@ -78,7 +78,7 @@ namespace GlimmerGrove
             gear.Node.localScale = new Vector3(.2f, .2f, 1f);
             Tween.Scale(gear.Node.transform, 1f, .38f, Ease.OutBack);
 
-            Burst.Sparks(_fx, gear.Node.anchoredPosition, tint, 10, Cell * 1.7f, .45f);
+            FxSparks(_fx, gear.Node.anchoredPosition, tint, 10, Cell * 1.7f, .45f);
             Audio.Sfx("land", .42f, 1.25f);
 
             Tween.After(.4f, () =>

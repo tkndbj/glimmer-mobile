@@ -248,7 +248,7 @@ namespace GlimmerGrove
                 Flash(at, tint, nova ? 3.4f : 2.6f);
                 Ripple(at, lift, Cell * (nova ? 4.6f : 3.4f), .42f, 0f, 1f);
                 Twinkles(at, tint, nova ? 7 : 4, Cell * .9f);
-                Burst.Sparks(_fx, at, lift, nova ? 16 : 10, Cell * 2.4f, Cell * .2f, .45f);
+                FxSparks(_fx, at, lift, nova ? 16 : 10, Cell * 2.4f, Cell * .2f, .45f);
 
                 // Two notes a beat apart: the forge's chime, and a rising one for what it made.
                 Audio.Sfx("chime", .5f, nova ? 1.55f : 1.35f);
@@ -312,7 +312,7 @@ namespace GlimmerGrove
             {
                 if (_fx == null) return;
                 Boom(at, CharmBurst(colour), Cell * 1.75f, 22f);
-                Burst.Sparks(_fx, at, tint, 6, Cell * 2.2f, Cell * .2f, .38f);
+                FxSparks(_fx, at, tint, 6, Cell * 2.2f, Cell * .2f, .38f);
             }, _fx);
         }
 
@@ -378,8 +378,8 @@ namespace GlimmerGrove
 
                 // The head blows out against the field's edge; the trail burns down behind it.
                 Boom(to, CharmBurst(colour), Cell * 2.2f);
-                Pop(to, lift, 1.8f, .22f);
-                Burst.Sparks(_fx, to, lift, 10, Cell * 1.8f, Cell * .2f, .4f);
+                FxPop(to, lift, 1.8f, .22f);
+                FxSparks(_fx, to, lift, 10, Cell * 1.8f, Cell * .2f, .4f);
                 ShakeBoard(Cell * .05f);
                 if (flare) flare.color = Color.clear;
                 if (head) head.color = Color.clear;
