@@ -4250,6 +4250,18 @@
       "text": "hattına katıldı"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "Çubuğun {0} eşya taşır. Önce seçili bir eşyaya dokunup çıkar."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Çubuğunda en az bir eşya bırak."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Seçildi"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "Rengi yok. Hangi yuvayı korursa korusun bütün akıncılara ateş eder."
     },
@@ -6102,6 +6114,10 @@
       "text": "Daha fazlası için yeterli mücevher yok."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "Düşen kule yok."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "Yer kalmadı: en fazla {0} tane taşıyabilirsin."
     },
@@ -6414,6 +6430,14 @@
       "text": "Tepenin bir köşesine dokun"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Düşen bir kuleye dokun"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Tepede bir sıraya dokun"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Ateş Çömleği"
     },
@@ -6438,6 +6462,14 @@
       "text": "Bir kuleyi iyileştirir. Düşmüş bir kuleyi kaldıramaz."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Dirilt"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Düşen bir kuleyi tam canla geri getirir; kule birkaç saniye her darbeden korunur."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Fırtına Çağrısı"
     },
@@ -6454,12 +6486,20 @@
       "text": "Bir kuleyi enerjiyle doldurur; hangi rengi eşleştirirsen eşleştir ateş açar."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Duvar"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Birkaç saniyeliğine tepe boyunca bir duvar örer. Arkasındaki akıncılar geçemez. Boss yürümeye devam eder."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Doruk"
     },
     {
       "key": "ward.apex.note",
-      "text": "Tam güçle 3 akıncıyı daha vurur."
+      "text": "3 akıncıya daha sıçrar, %100 hasar verir."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "3 akıncıyı daha, daha sert vurur."
+      "text": "3 akıncıya daha sıçrar, %80 hasar verir."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Zırhı yok sayar. Zırhlı akıncılara iki kat hasar."
+      "text": "Zırhı yok sayar. Zırhlı akıncılara +%100 hasar."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Yıkıcı güçle 6 akıncıya daha sıçrar."
+      "text": "6 akıncıya daha sıçrar, %160 hasar verir."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Hedefi 3 sn boyunca tutuşturur."
+      "text": "Hedefi 3 sn yakar, saniyede %30 hasar verir."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Her 4. atış tam güçle bütün şeridi vurur."
+      "text": "Her 4. atış bütün şeridi vurur, %100 hasar verir."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Hedefin çevresindeki her şeyi daha sert vurur."
+      "text": "Hedefin yanındaki akıncılara da %70 hasar verir."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Her 5. atış bütün şeridi vurur."
+      "text": "Her 5. atış bütün şeridi vurur, %80 hasar verir."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Her öldürmede iki kat enerji geri alır."
+      "text": "Her öldürmede bir atışlık enerjinin %40 kadarını geri alır."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "2 akıncıyı daha vurur."
+      "text": "2 akıncıya daha sıçrar, %60 hasar verir."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Hedefin çevresindeki her şeyi vurur."
+      "text": "Hedefin yanındaki akıncılara da %40 hasar verir."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Hedefi 4 sn boyunca tutuşturur. İki kat sıcak yakar."
+      "text": "Hedefi 4 sn yakar, saniyede %60 hasar verir."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Hedefi 6 sn boyunca tutuşturur. Bir alev seli."
+      "text": "Hedefi 6 sn yakar, saniyede %120 hasar verir."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Her 3. atış bütün şeridi daha sert boydan boya geçer."
+      "text": "Her 3. atış bütün şeridi vurur, %160 hasar verir."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "Atış 5 akıncıya daha seker."
+      "text": "5 akıncıya daha sıçrar, %140 hasar verir."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Her öldürmede enerji geri alır."
+      "text": "Her öldürmede bir atışlık enerjinin %20 kadarını geri alır."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Hedefin çevresindeki her şeye bir yıldız düşürür."
+      "text": "2 kare çevredeki akıncılara da %120 hasar verir."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Zırhı yok sayar. Zırhlı akıncılara üç kat hasar."
+      "text": "Zırhı yok sayar. Zırhlı akıncılara +%160 hasar."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Şimşeği 4 akıncıya daha, daha sert sıçratır."
+      "text": "4 akıncıya daha sıçrar, %120 hasar verir."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Her öldürmede bolca enerji geri alır."
+      "text": "Her öldürmede bir atışlık enerjinin %70 kadarını geri alır."
     },
     {
       "key": "store.good.xp_boost_day",

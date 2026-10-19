@@ -653,7 +653,11 @@ namespace GlimmerGrove.Persistence
         ///      field changes every checksum (12).
         /// v44: per-installation Shuffle reward wave counters inside shuffleBest rows. Joined
         ///      by max per installation, summed for payouts; an absent counter pays nothing.
-        public const int Version = 44;
+        /// v45: the action bar's chosen kit (<see cref="SettingsDto.kit"/>, <c>UtilityKit</c>),
+        ///      inside <c>settings</c>, which the rules do not look inside, so no rules release
+        ///      (12a). Absent is "never chosen", the bar every player already had, so no
+        ///      migration. The version moves because a nested field changes every checksum (12).
+        public const int Version = 45;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1170,6 +1174,27 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public StoredFlag board;
+
+        /// <summary>
+        /// The utility ids the player chose for the five slots of the action bar, as they were
+        /// written (<c>Utilities.UtilityKit</c>). Empty means never chosen, and that reads as the
+        /// catalog's first five - which is the bar every player had before the choice existed,
+        /// so nobody's bar moves on the update.
+        ///
+        /// <para>
+        /// <b>A setting, for <see cref="board"/>'s reason</b>: <c>settings</c> is already in the
+        /// mapper both ways, already joined by the merge (newest file wins, a preference's rule)
+        /// and already one key of <c>firestore.rules</c>' <c>hasOnly</c> list, which checks
+        /// nothing inside it - so this reaches the server with no rules release (12a). Bounded by
+        /// the client to <c>UtilityKit.Size</c> ids.
+        /// </para>
+        /// <para>
+        /// <b>Read back exactly as written</b> - an id the catalog no longer knows is skipped when
+        /// the bar is resolved and never pruned from here, because a loader that repairs a field
+        /// makes every write owe a sync (11f).
+        /// </para>
+        /// </summary>
+        public string[] kit;
     }
 
     /// <summary>

@@ -56,6 +56,27 @@ namespace GlimmerGrove.Modes
         void Wear(float dt)
         {
             if (_mantle > 0f) _mantle = Math.Max(0f, _mantle - dt);
+
+            // **And each revive's barrier, for the same reason and in the same place**
+            // (`SiegeWard.Barrier`): a post raised this step keeps every one of its seconds.
+            for (int w = 0; w < _wards.Length; w++)
+            {
+                var post = _wards[w];
+                if (post.Barrier > 0f) post.Barrier = Math.Max(0f, post.Barrier - dt);
+            }
+        }
+
+        /// <summary>
+        /// Seconds of cover over post <paramref name="ward"/>: the phoenix's mantle over the
+        /// whole line or a revive's barrier over this post, whichever runs longer. Nought when
+        /// nothing covers it. What the view draws a shell off, so the two covers are one picture.
+        /// </summary>
+        public float CoverLeft(int ward)
+        {
+            if (ward < 0 || ward >= _wards.Length || !_wards[ward].Alive) return 0f;
+
+            float barrier = _wards[ward].Barrier;
+            return barrier > _mantle ? barrier : _mantle;
         }
 
         /// <summary>
@@ -93,7 +114,9 @@ namespace GlimmerGrove.Modes
         /// </summary>
         bool Turned(int ward)
         {
-            if (_mantle <= 0f) return false;
+            // The mantle covers the line; a revive's barrier covers its own post.
+            bool barrier = ward >= 0 && ward < _wards.Length && _wards[ward].Barrier > 0f;
+            if (_mantle <= 0f && !barrier) return false;
 
             _report.Turned.Add(ward);
             return true;

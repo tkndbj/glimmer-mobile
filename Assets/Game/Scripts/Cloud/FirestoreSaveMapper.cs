@@ -161,6 +161,7 @@ namespace GlimmerGrove.Cloud
                         { "haptics", (long)(dto.settings?.haptics.state ?? 0) },
                         { "board", (long)(dto.settings?.board.state ?? 0) },
                         { "language", dto.settings?.language ?? string.Empty },
+                        { "kit", new List<object>(dto.settings?.kit ?? new string[0]) },
                     }
                 },
 
@@ -525,6 +526,7 @@ namespace GlimmerGrove.Cloud
                 dto.settings.haptics = new StoredFlag { state = (int)Long(settings, "haptics", 0) };
                 dto.settings.board = new StoredFlag { state = (int)Long(settings, "board", 0) };
                 dto.settings.language = Str(settings, "language");
+                dto.settings.kit = StrList(settings, "kit");
             }
 
             if (Map(doc, "wallet") is IDictionary<string, object> wallet)

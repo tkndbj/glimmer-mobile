@@ -657,6 +657,10 @@ namespace GlimmerGrove.Modes
             // reaches nought is the frame the hill walks again.
             if (_still > 0f) _still = Math.Max(0f, _still - dt);
 
+            // **And a wall's, for the same reason** (`SiegeBoard.Rampart`): the frame it reaches
+            // nought is the frame the bodies behind it walk again.
+            if (_rampart > 0f) _rampart = Math.Max(0f, _rampart - dt);
+
             float charge = _roar > 0f ? SiegeTuning.Rally : 1f;
 
             // **A gravity well's clock, and the share of the way in it closes this step**
@@ -738,8 +742,15 @@ namespace GlimmerGrove.Modes
                 // `Surge.Stride` is one on every lane but the Shuffle lane's deepest waves
                 // (`ShuffleRamp.SurgePacePercent`), where it is how the hill keeps climbing once
                 // health has stopped.
+                float before = raider.March;
+
                 raider.March += dt * raider.Pace * (raider.Boss ? 1f : charge) * _boosts.HillPace
                               * raider.Surge.Stride / SiegeTuning.MarchOf(raider.Kind);
+
+                // **A wall holds whatever stands behind it** (`SiegeBoard.Rampart`). After the
+                // step and before the arrival checks, so a body stopped at the wall is never read
+                // as having reached the line. Nothing on a board no wall was raised on.
+                Held(raider, before);
 
                 if (raider.March < raider.Hold) continue;
 
@@ -1348,7 +1359,8 @@ namespace GlimmerGrove.Modes
         {
             // The phoenix's mantle as well, as a backstop: every door that hurts the line asks
             // `Turned` first, and this covers one added later that forgets (`SiegeBoard.Mantle`).
-            if (Sheltered || Mantled) return false;
+            // A revive's barrier is the same cover on one post (`SiegeWard.Barrier`).
+            if (Sheltered || Mantled || ward.Barrier > 0f) return false;
 
             ward.Health -= damage;
             return ward.Health <= 0 && Topple(ward);
@@ -1364,7 +1376,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         bool Topple(SiegeWard ward)
         {
-            if (Sheltered || Mantled) return false;
+            if (Sheltered || Mantled || ward.Barrier > 0f) return false;
 
             ward.Health = 0;
             ward.Alive = false;

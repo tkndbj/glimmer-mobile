@@ -593,7 +593,7 @@ namespace GlimmerGrove
         /// </summary>
         void PaintDiscount(WardOffer offer)
         {
-            if (_discount == null || !WardDiscount.Offered) return;
+            if (_discount == null || !WardDiscount.OfferedFor(Model)) return;
 
             var cut = offer.Discounted();
 

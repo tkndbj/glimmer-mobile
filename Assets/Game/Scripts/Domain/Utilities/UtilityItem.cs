@@ -92,6 +92,42 @@ namespace GlimmerGrove.Utilities
         /// </para>
         /// </summary>
         Gravity = 5,
+
+        /// <summary>
+        /// A fallen turret stood back up at full health, inside a barrier that turns away every
+        /// hit for a moment (the item's magnitude, in tenths of a second).
+        ///
+        /// <para>
+        /// <b>The raise a mending is not allowed to sell, sold as its own item and priced as
+        /// one.</b> <see cref="Mend"/> pours health into a standing ward and the bar never offers
+        /// it a fallen one; this is aimed at fallen posts only, so the two never answer the same
+        /// tap. It is the Shuffle lane's phoenix (<c>SiegeBoard.Mantle</c>) cut down to one post:
+        /// the same shell, the same rule that a covered post is never hurt, doused, chained or
+        /// sealed, and a clock of its own on the post rather than on the line.
+        /// </para>
+        /// <para>
+        /// <b>It delivers no damage, so it is charged nothing</b> (invariant 39): it buys a
+        /// finish, never a grade, and the raised ward comes back empty because fuel is what the
+        /// player matched for. It can never raise a line that has already fallen whole - a run
+        /// with nothing standing is over, and only a continue answers that (invariant 23).
+        /// </para>
+        /// </summary>
+        Revive = 6,
+
+        /// <summary>
+        /// A wall across the whole width of the hill along one of its bands, standing for the
+        /// item's magnitude (tenths of a second): nothing behind it walks past it.
+        ///
+        /// <para>
+        /// <b>A hold rather than a hurt</b>, so it is charged nothing, for the gravity well's
+        /// reason (invariant 39). A body already past the wall walks on; a body behind it - and
+        /// everything still mustering at the crest - stops at it and stands there until it
+        /// falls. <b>A boss is never held</b>, for <c>SiegeRaider.Shove</c>'s reason and the
+        /// 2026-10-05 ruling: a boss is untouchable until it reaches its ground, so holding one
+        /// back would be gating the player's own damage.
+        /// </para>
+        /// </summary>
+        Wall = 7,
     }
 
     /// <summary>
@@ -197,6 +233,8 @@ namespace GlimmerGrove.Utilities
                 case UtilityKind.Mend: return UtilityUnit.Ward;
                 case UtilityKind.Surge: return UtilityUnit.Fuel;
                 case UtilityKind.Gravity: return UtilityUnit.Time;
+                case UtilityKind.Revive: return UtilityUnit.Time;
+                case UtilityKind.Wall: return UtilityUnit.Time;
                 case UtilityKind.None: return UtilityUnit.None;
                 default: return UtilityUnit.None;
             }
@@ -245,6 +283,20 @@ namespace GlimmerGrove.Utilities
         /// four answers would be sixteen that reject nothing (invariant 5d).
         /// </summary>
         Well = 3,
+
+        /// <summary>
+        /// One <em>fallen</em> ward on the line - the only thing a revive may be aimed at, and
+        /// the one thing every other ward-aimed utility refuses. Its own answer rather than
+        /// <see cref="Ward"/> with a flag, because the targets drawn are the opposite set.
+        /// </summary>
+        Fallen = 4,
+
+        /// <summary>
+        /// One band of the hill's aiming grid, the whole width of it (<c>SiegeTuning.BlastRows</c>
+        /// rows). <b>A row rather than a box</b>, because a wall spans every lane: twenty panes
+        /// resolving to four answers would be sixteen that reject nothing (invariant 5d).
+        /// </summary>
+        Row = 5,
     }
 
     /// <summary>
@@ -261,6 +313,8 @@ namespace GlimmerGrove.Utilities
         public const string Surge = "surge";
         public const string Storm = "storm";
         public const string Gravity = "gravity";
+        public const string Revive = "revive";
+        public const string Wall = "wall";
 
         public static UtilityKind Parse(string id)
         {
@@ -269,6 +323,8 @@ namespace GlimmerGrove.Utilities
             if (string.Equals(id, Surge, StringComparison.Ordinal)) return UtilityKind.Surge;
             if (string.Equals(id, Storm, StringComparison.Ordinal)) return UtilityKind.Storm;
             if (string.Equals(id, Gravity, StringComparison.Ordinal)) return UtilityKind.Gravity;
+            if (string.Equals(id, Revive, StringComparison.Ordinal)) return UtilityKind.Revive;
+            if (string.Equals(id, Wall, StringComparison.Ordinal)) return UtilityKind.Wall;
             return UtilityKind.None;
         }
 
@@ -281,6 +337,8 @@ namespace GlimmerGrove.Utilities
                 case UtilityKind.Surge: return Surge;
                 case UtilityKind.Storm: return Storm;
                 case UtilityKind.Gravity: return Gravity;
+                case UtilityKind.Revive: return Revive;
+                case UtilityKind.Wall: return Wall;
                 default: return string.Empty;
             }
         }
@@ -295,6 +353,8 @@ namespace GlimmerGrove.Utilities
         public static UtilityTarget TargetOf(UtilityKind kind)
             => kind == UtilityKind.Storm ? UtilityTarget.Everywhere
              : kind == UtilityKind.Gravity ? UtilityTarget.Well
+             : kind == UtilityKind.Revive ? UtilityTarget.Fallen
+             : kind == UtilityKind.Wall ? UtilityTarget.Row
              : kind == UtilityKind.Blast ? UtilityTarget.Hill
              : UtilityTarget.Ward;
     }
@@ -325,7 +385,8 @@ namespace GlimmerGrove.Utilities
 
         /// <summary>
         /// How strong one is, in the unit its kind measures: damage for a blast or a storm, health
-        /// for a mend, tenths of a second held for a gravity well.
+        /// for a mend, tenths of a second held for a gravity well, shielded for a revive and
+        /// standing for a wall.
         ///
         /// <b>Not read for a surge</b>, which fills the ward's tube to the brim whatever this says
         /// (<c>SiegeBoard.Brim</c>). The field stays in its row because the content file is read

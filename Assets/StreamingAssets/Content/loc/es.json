@@ -4250,6 +4250,18 @@
       "text": "se ha unido a tu línea"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "Tu barra lleva {0}. Toca primero un objeto seleccionado para quitarlo."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Deja al menos un objeto en tu barra."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Seleccionado"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "No tiene color. Dispara a todos los invasores, defienda el hueco que defienda."
     },
@@ -6102,6 +6114,10 @@
       "text": "No tienes gemas suficientes para más."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "Ninguna torre ha caído."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "No caben más: {0} es lo máximo que puedes llevar."
     },
@@ -6414,6 +6430,14 @@
       "text": "Toca una esquina de la colina"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Toca una torre caída"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Toca una fila de la colina"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Bomba de fuego"
     },
@@ -6438,6 +6462,14 @@
       "text": "Cura una torre. No puede levantar una torre caída."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Revivir"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Devuelve una torre caída con toda su vida, protegida de todo golpe durante unos segundos."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Llamada de tormenta"
     },
@@ -6454,12 +6486,20 @@
       "text": "Llena una torre de energía, así que abre fuego combines el color que combines."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Muro"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Levanta un muro a lo ancho de la colina durante unos segundos. Los invasores de detrás no pueden pasar. Un jefe sigue andando."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Cima"
     },
     {
       "key": "ward.apex.note",
-      "text": "Alcanza a 3 invasores más con toda su potencia."
+      "text": "Salta a 3 invasores más con un 100% de daño."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "Alcanza a 3 invasores más, con más fuerza."
+      "text": "Salta a 3 invasores más con un 80% de daño."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Ignora la armadura. Doble daño a invasores con armadura."
+      "text": "Ignora la armadura. +100% de daño a invasores con armadura."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Encadena a 6 invasores más con una potencia devastadora."
+      "text": "Salta a 6 invasores más con un 160% de daño."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Prende fuego al objetivo durante 3 s."
+      "text": "Quema al objetivo durante 3 s: 30% de daño por segundo."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Cada 4.º disparo alcanza todo el carril, con toda su potencia."
+      "text": "Cada 4.º disparo barre el carril con un 100% de daño."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Alcanza todo lo que rodea al objetivo, con más fuerza."
+      "text": "También golpea a los invasores junto al objetivo con un 70% de daño."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Cada 5.º disparo alcanza todo el carril."
+      "text": "Cada 5.º disparo barre el carril con un 80% de daño."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Recupera el doble de energía con cada baja."
+      "text": "Cada baja devuelve el 40% de la energía de un disparo."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "Alcanza a 2 invasores más."
+      "text": "Salta a 2 invasores más con un 60% de daño."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Alcanza todo lo que rodea al objetivo."
+      "text": "También golpea a los invasores junto al objetivo con un 40% de daño."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Prende fuego al objetivo durante 4 s. Quema el doble."
+      "text": "Quema al objetivo durante 4 s: 60% de daño por segundo."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Prende fuego al objetivo durante 6 s. Un torrente de llamas."
+      "text": "Quema al objetivo durante 6 s: 120% de daño por segundo."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Cada 3.er disparo recorre todo el carril, con más fuerza."
+      "text": "Cada 3.º disparo barre el carril con un 160% de daño."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "El disparo rebota en 5 invasores más."
+      "text": "Salta a 5 invasores más con un 140% de daño."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Recupera energía con cada baja."
+      "text": "Cada baja devuelve el 20% de la energía de un disparo."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Hace caer una estrella sobre todo lo que rodea al objetivo."
+      "text": "Golpea también a 2 casillas a la redonda: 120% de daño."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Ignora la armadura. Triple daño a invasores con armadura."
+      "text": "Ignora la armadura. +160% de daño a invasores con armadura."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Encadena rayos a 4 invasores más, con más fuerza."
+      "text": "Salta a 4 invasores más con un 120% de daño."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Recupera mucha energía con cada baja."
+      "text": "Cada baja devuelve el 70% de la energía de un disparo."
     },
     {
       "key": "store.good.xp_boost_day",

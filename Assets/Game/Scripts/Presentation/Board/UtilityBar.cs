@@ -117,12 +117,12 @@ namespace GlimmerGrove
         /// cost. It is also honest: the two on the right are where the next two go.
         /// </para>
         /// <para>
-        /// A catalog longer than this draws its first five. That is a content mistake rather than
-        /// a state to design for - <c>ContentValidation</c> is where it is caught - and drawing
-        /// what fits beats drawing off the end of the shelf.
+        /// <b>Which five is the player's choice</b> (<c>UtilityKit</c>, made on the loadout's kit
+        /// shelf), the same on every board of every lane; never chosen, it is the catalog's first
+        /// five, which is the bar every player had before there was a choice.
         /// </para>
         /// </summary>
-        public const int Slots = 5;
+        public const int Slots = UtilityKit.Size;
 
         /// <summary>One cell, square, matching the tray sprite's own inset spacing.</summary>
         const float SlotSize = 184f;
@@ -253,7 +253,10 @@ namespace GlimmerGrove
 
             _row = rt;
 
-            var items = UtilityLedger.Catalog.Items;
+            // **The chosen kit, read once per run.** A choice made on the shelf reaches the next
+            // board; one made over this board (it cannot be - the kit shelf is not reachable from
+            // a run) would not move a slot under a thumb mid-wave.
+            var items = UtilityKit.Selected();
 
             for (int i = 0; i < Slots; i++)
                 _slots.Add(BuildSlot(i < items.Count ? items[i] : null, i));
@@ -586,7 +589,9 @@ namespace GlimmerGrove
         public string AimingNote
             => Armed == null ? string.Empty
              : Loc.Get(Armed.Target == UtilityTarget.Ward ? "utility.aim.ward"
+                     : Armed.Target == UtilityTarget.Fallen ? "utility.aim.fallen"
                      : Armed.Target == UtilityTarget.Well ? "utility.aim.well"
+                     : Armed.Target == UtilityTarget.Row ? "utility.aim.row"
                      : "utility.aim.hill");
 
         /// <summary>Whether this bar is drawing this utility at all.</summary>

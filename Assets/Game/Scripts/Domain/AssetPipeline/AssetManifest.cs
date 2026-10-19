@@ -238,6 +238,12 @@ namespace GlimmerGrove.AssetPipeline
         public static string GravityFx(string key) => ArtRoot + "Fx/Gravity/" + key;
 
         /// <summary>
+        /// The glass bar a wall utility stands on the hill as (<c>SiegeView.Rampart</c>). Cut from
+        /// CraftPix's <i>Merge Shooter Cartoon Asset Kit</i> by <c>Tools/make_utility_art.py</c>.
+        /// </summary>
+        public static string WallFx => ArtRoot + "Fx/Wall/wall";
+
+        /// <summary>
         /// A task chest's opening reel: <c>Chests/{tier}</c>, a folder of frames.
         ///
         /// Its own folder so the reels bundle apart from the global set
@@ -467,7 +473,7 @@ namespace GlimmerGrove.AssetPipeline
             // a build, exactly as adding a mode is (invariant 20), and `ContentValidation` errors
             // on a catalog entry whose icon is not one of these rather than letting it draw blank.
             "Utility/firepot", "Utility/mending", "Utility/surge", "Utility/stormcall",
-            "Utility/gravityhole",
+            "Utility/gravityhole", "Utility/revive", "Utility/wall",
 
             // The bar's own furniture: the shelf and one cell. Global with the icons,
             // because the bar is drawn on the board and in a shop panel that opens over it.

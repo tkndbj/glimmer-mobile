@@ -5435,6 +5435,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/decree
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2138b91ef5de75a4caec01565114c2fe
+    m_Address: Art/Fx/Wall/wall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2139b6bd7d8006245a4b29bdd38feb1b
     m_Address: Art/Fx/Siege/levin_hit/f00
     m_ReadOnly: 0
@@ -17699,6 +17704,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/weaver_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69cf1d9b50f36494db3b0567953888dd
+    m_Address: Art/Ui/Utility/revive
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69d93ee3b9c8be94f857d774cbf6a315
     m_Address: Art/Fx/Siege/muzzle_lance_r/f01
@@ -37115,6 +37125,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/decree_muzzle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc9b50f10d28eb144a7cb5c66de23380
+    m_Address: Art/Ui/Utility/wall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dca9ef2400d920f4f8c1bb99d254ab35
     m_Address: Art/Fx/Siege/hit_arcstorm_g/f02

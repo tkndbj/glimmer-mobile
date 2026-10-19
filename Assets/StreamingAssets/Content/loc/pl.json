@@ -4250,6 +4250,18 @@
       "text": "dołącza do twojej linii"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "Miejsca na pasku: {0}. Najpierw dotknij wybranego przedmiotu, aby go zdjąć."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Zostaw na pasku co najmniej jeden przedmiot."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Wybrany"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "Nie ma koloru. Strzela do każdego najeźdźcy, niezależnie od pilnowanego miejsca."
     },
@@ -6102,6 +6114,10 @@
       "text": "Za mało klejnotów na więcej."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "Żadna wieża nie padła."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "Brak miejsca: maksymalnie można nieść {0}."
     },
@@ -6414,6 +6430,14 @@
       "text": "Dotknij rogu wzgórza"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Dotknij poległej wieży"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Dotknij rzędu wzgórza"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Garnek ognia"
     },
@@ -6438,6 +6462,14 @@
       "text": "Leczy wieżę. Nie podniesie wieży, która upadła."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Wskrzeszenie"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Przywraca poległą wieżę z pełnym zdrowiem, chronioną przed każdym ciosem przez kilka sekund."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Wezwanie burzy"
     },
@@ -6454,12 +6486,20 @@
       "text": "Napełnia wieżę energią, więc otwiera ogień bez względu na dopasowany kolor."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Mur"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Wznosi mur w poprzek wzgórza na kilka sekund. Najeźdźcy za nim nie przejdą. Boss idzie dalej."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Szczyt"
     },
     {
       "key": "ward.apex.note",
-      "text": "Trafia 3 kolejnych najeźdźców z pełną siłą."
+      "text": "Przeskakuje na 3 kolejnych najeźdźców za 100% obrażeń."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "Trafia 3 kolejnych najeźdźców, mocniej."
+      "text": "Przeskakuje na 3 kolejnych najeźdźców za 80% obrażeń."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Ignoruje pancerz. Podwójne obrażenia opancerzonym najeźdźcom."
+      "text": "Ignoruje pancerz. +100% obrażeń opancerzonym najeźdźcom."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Przeskakuje na 6 kolejnych najeźdźców z niszczycielską siłą."
+      "text": "Przeskakuje na 6 kolejnych najeźdźców za 160% obrażeń."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Podpala cel na 3 s."
+      "text": "Pali cel przez 3 s: 30% obrażeń na sekundę."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Co 4. strzał trafia cały tor z pełną siłą."
+      "text": "Co 4. strzał trafia cały tor za 100% obrażeń."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Trafia wszystko wokół celu, mocniej."
+      "text": "Trafia też najeźdźców obok celu za 70% obrażeń."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Co 5. strzał trafia cały tor."
+      "text": "Co 5. strzał trafia cały tor za 80% obrażeń."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Odzyskuje podwójną energię za każde pokonanie."
+      "text": "Każde pokonanie zwraca 40% energii strzału."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "Trafia 2 kolejnych najeźdźców."
+      "text": "Przeskakuje na 2 kolejnych najeźdźców za 60% obrażeń."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Trafia wszystko wokół celu."
+      "text": "Trafia też najeźdźców obok celu za 40% obrażeń."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Podpala cel na 4 s. Pali dwa razy mocniej."
+      "text": "Pali cel przez 4 s: 60% obrażeń na sekundę."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Podpala cel na 6 s. Potok płomieni."
+      "text": "Pali cel przez 6 s: 120% obrażeń na sekundę."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Co 3. strzał przebiega cały tor, mocniej."
+      "text": "Co 3. strzał trafia cały tor za 160% obrażeń."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "Strzał odbija się do 5 kolejnych najeźdźców."
+      "text": "Przeskakuje na 5 kolejnych najeźdźców za 140% obrażeń."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Odzyskuje energię za każde pokonanie."
+      "text": "Każde pokonanie zwraca 20% energii strzału."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Zrzuca gwiazdę na wszystko wokół celu."
+      "text": "Trafia też najeźdźców do 2 pól dalej za 120% obrażeń."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Ignoruje pancerz. Potrójne obrażenia opancerzonym najeźdźcom."
+      "text": "Ignoruje pancerz. +160% obrażeń opancerzonym najeźdźcom."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Przerzuca piorun na 4 kolejnych najeźdźców, mocniej."
+      "text": "Przeskakuje na 4 kolejnych najeźdźców za 120% obrażeń."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Odzyskuje dużo energii za każde pokonanie."
+      "text": "Każde pokonanie zwraca 70% energii strzału."
     },
     {
       "key": "store.good.xp_boost_day",

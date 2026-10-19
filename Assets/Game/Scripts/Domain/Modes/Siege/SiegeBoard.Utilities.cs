@@ -377,23 +377,32 @@ namespace GlimmerGrove.Modes
                 var post = _wards[i];
                 if (post.Alive) continue;
 
-                post.Alive = true;
-                post.Health = post.Full;
-                post.Fuel = 0f;
-                post.Charges = 0;
-                post.Dark = 0f;
-                post.Bound = 0f;
-
-                // The stone too, for `Mend`'s reason: a line raised under rubble is a line that
-                // cannot fire, and a continue may buy a finish (invariant 23).
-                post.Rubble = 0;
-                post.Settling = 0f;
-                post.Cool = 0f;
-
+                StandUp(post);
                 raised++;
             }
 
             return raised;
+        }
+
+        /// <summary>
+        /// One fallen post standing again: full health, no fuel, nothing on it. The whole of what
+        /// <see cref="Rally"/> does to each post, written once so a continue and a revive
+        /// (<see cref="Restore"/>) cannot come to raise a turret two different ways.
+        /// </summary>
+        static void StandUp(SiegeWard post)
+        {
+            post.Alive = true;
+            post.Health = post.Full;
+            post.Fuel = 0f;
+            post.Charges = 0;
+            post.Dark = 0f;
+            post.Bound = 0f;
+
+            // The stone too, for `Mend`'s reason: a line raised under rubble is a line that
+            // cannot fire, and a continue may buy a finish (invariant 23).
+            post.Rubble = 0;
+            post.Settling = 0f;
+            post.Cool = 0f;
         }
 
         /// <summary>Whether this ward is standing but smothered. Asked by a surge's offer.</summary>

@@ -868,7 +868,7 @@ gates print the derived totals.
 
 - **Live on the App Store (id `6804516450`) and Google Play.** Ads via LevelPlay (ironSource, AdMob partner
   bidding, Unity Ads); `app-ads.txt` live at `tekoworld.com` (repo root and website `public/` byte-identical).
-- **Save schema v43**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
+- **Save schema v45**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
 - **Cloud**: Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22, `europe-west1`; anonymous by
   default with Apple/Google linking and per-account local archives. `gcloud functions list` is the authority
   on deployed functions. Firebase Unity SDK 13.15.0 as vendored tarballs under `GooglePackages/` (gitignored;
@@ -883,7 +883,7 @@ gates print the derived totals.
 - **Systems live**: progression, tasks (45), season (47), streak (48), ranks (52) and the rank ceremony,
   tutorial (53), keeper levels for sale (57), the welcome bonus (58), daily challenges in four genres — Pairs, Glade, Merge, Push
   (56), referrals (51), reminders (50), the update wall (49, ships asking nothing), two public boards
-  (Endless Watch and Shuffle, one tab each) plus two distributions, five utilities (the bar is full), thirty turrets including the legendary band.
+  (Endless Watch and Shuffle, one tab each) plus two distributions, seven utilities with a five-slot bar the player chooses (MODES.md 39r), thirty turrets including the legendary band.
 - **Economy shapes worth knowing**: free play ~953 credits and 12 gems a day; with every advert ~7,160. Content
   pays credits once (80 a level, 40 a star). Stars: gold `par x 1.20`, silver `par x 1.40`, fail at `par x
   1.60`, except a siege, which authors its own. Chapter gate: 16 stars of the chapter behind, flat (cut to

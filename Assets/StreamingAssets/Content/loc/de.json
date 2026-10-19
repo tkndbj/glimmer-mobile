@@ -4250,6 +4250,18 @@
       "text": "ist deiner Linie beigetreten"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "Deine Leiste fasst {0}. Tippe zuerst auf ein ausgewähltes Hilfsmittel, um es abzulegen."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Lass mindestens ein Hilfsmittel auf deiner Leiste."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Ausgewählt"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "Trägt keine Farbe. Schießt auf jeden Plünderer, egal welchen Platz er bewacht."
     },
@@ -6102,6 +6114,10 @@
       "text": "Nicht genug Juwelen für mehr."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "Kein Turm ist gefallen."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "Kein Platz mehr: {0} ist das Maximum, das du tragen kannst."
     },
@@ -6414,6 +6430,14 @@
       "text": "Tippe auf eine Ecke des Hügels"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Tippe auf einen gefallenen Turm"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Tippe auf eine Reihe des Hügels"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Feuertopf"
     },
@@ -6438,6 +6462,14 @@
       "text": "Heilt einen Turm. Einen gefallenen kann sie nicht wieder aufstellen."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Wiederbeleben"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Holt einen gefallenen Turm mit voller Gesundheit zurück, ein paar Sekunden lang vor jedem Treffer geschützt."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Sturmruf"
     },
@@ -6454,12 +6486,20 @@
       "text": "Füllt einen Turm mit Energie, damit er feuert, egal welche Farbe du kombiniert hast."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Mauer"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Errichtet für ein paar Sekunden eine Mauer quer über den Hügel. Plünderer dahinter kommen nicht vorbei. Ein Boss läuft weiter."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Gipfel"
     },
     {
       "key": "ward.apex.note",
-      "text": "Trifft 3 weitere Plünderer mit voller Kraft."
+      "text": "Springt auf 3 weitere Plünderer über, mit 100 % Schaden."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "Trifft 3 weitere Plünderer, stärker."
+      "text": "Springt auf 3 weitere Plünderer über, mit 80 % Schaden."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Ignoriert Rüstung. Doppelter Schaden an gepanzerten Plünderern."
+      "text": "Ignoriert Rüstung. +100 % Schaden an gepanzerten Plünderern."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Springt mit verheerender Kraft auf 6 weitere Plünderer über."
+      "text": "Springt auf 6 weitere Plünderer über, mit 160 % Schaden."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Setzt das Ziel 3 s lang in Brand."
+      "text": "Verbrennt das Ziel 3 s lang: 30 % Schaden pro Sekunde."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Jeder 4. Schuss trifft die ganze Bahn mit voller Kraft."
+      "text": "Jeder 4. Schuss trifft die ganze Bahn mit 100 % Schaden."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Trifft alles rund ums Ziel, stärker."
+      "text": "Trifft auch Plünderer neben dem Ziel mit 70 % Schaden."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Jeder 5. Schuss trifft die ganze Bahn."
+      "text": "Jeder 5. Schuss trifft die ganze Bahn mit 80 % Schaden."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Bekommt bei jedem Besiegten doppelte Energie zurück."
+      "text": "Pro Besiegtem kommen 40 % Schussenergie zurück."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "Trifft 2 weitere Plünderer."
+      "text": "Springt auf 2 weitere Plünderer über, mit 60 % Schaden."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Trifft alles rund ums Ziel."
+      "text": "Trifft auch Plünderer neben dem Ziel mit 40 % Schaden."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Setzt das Ziel 4 s lang in Brand. Brennt doppelt so heiß."
+      "text": "Verbrennt das Ziel 4 s lang: 60 % Schaden pro Sekunde."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Setzt das Ziel 6 s lang in Brand. Ein Flammenstrom."
+      "text": "Verbrennt das Ziel 6 s lang: 120 % Schaden pro Sekunde."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Jeder 3. Schuss läuft die ganze Bahn entlang, stärker."
+      "text": "Jeder 3. Schuss trifft die ganze Bahn mit 160 % Schaden."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "Der Schuss prallt auf 5 weitere Plünderer ab."
+      "text": "Springt auf 5 weitere Plünderer über, mit 140 % Schaden."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Bekommt bei jedem Besiegten Energie zurück."
+      "text": "Pro Besiegtem kommen 20 % Schussenergie zurück."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Lässt einen Stern auf alles rund ums Ziel fallen."
+      "text": "Trifft auch Plünderer bis 2 Felder weit mit 120 % Schaden."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Ignoriert Rüstung. Dreifacher Schaden an gepanzerten Plünderern."
+      "text": "Ignoriert Rüstung. +160 % Schaden an gepanzerten Plünderern."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Lässt Blitze auf 4 weitere Plünderer überspringen, stärker."
+      "text": "Springt auf 4 weitere Plünderer über, mit 120 % Schaden."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Bekommt bei jedem Besiegten viel Energie zurück."
+      "text": "Pro Besiegtem kommen 70 % Schussenergie zurück."
     },
     {
       "key": "store.good.xp_boost_day",

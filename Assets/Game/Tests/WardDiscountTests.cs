@@ -166,6 +166,29 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(WardUpgradeState.Topped, topped.State);
         }
 
+        /// <summary>
+        /// Tiers I and II only (the owner, 2026-10-19): tier III and the legendary band are sold at
+        /// full price, and both bands are on the shipped shelf to be asked about.
+        /// </summary>
+        [Test]
+        public void TheOfferStandsOnTiersOneAndTwoOnly()
+        {
+            var seen = new HashSet<int>();
+
+            foreach (var model in WardLedger.Catalog.Models)
+            {
+                int band = WardTier.Of(model);
+                seen.Add(band);
+
+                Assert.AreEqual(band <= 2, WardDiscount.Covers(model),
+                                $"{model.Id} (tier {band}) has the discount wrong");
+            }
+
+            Assert.IsTrue(seen.Contains(1) && seen.Contains(2) && seen.Contains(3) && seen.Contains(4),
+                          "the shipped shelf no longer has all four bands");
+            Assert.IsFalse(WardDiscount.Covers(null));
+        }
+
         // -------------------------------------------------------------------- purchases
         static WardModel APricedTurret()
         {
@@ -220,6 +243,32 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(before - price, PlayerProgression.Credits);
             Assert.AreEqual(stars + 1, WardStarLedger.StarsOf(model, 'b'));
+        }
+
+        [Test]
+        public void ATierThreeOrLegendaryTurretIsNeverSoldDiscounted()
+        {
+            WardModel top = null;
+            foreach (var model in WardLedger.Catalog.Models)
+                if (!WardDiscount.Covers(model) && !model.IsStarter) { top = model; break; }
+
+            Assert.IsNotNull(top, "the roster sells no tier III or legendary turret");
+
+            if (top.ForGems) Wallet.Ledger(Currency.Gems).GrantLocally(top.GemPrice * 4L);
+            Wallet.Ledger(Currency.Credits).GrantLocally(top.CoinPrice * 4L + 1_000_000L);
+            long before = PlayerProgression.Credits;
+            long gemsBefore = PlayerProgression.Gems;
+
+            Assert.IsFalse(WardLedger.TryBuy(top, 'r', 999, discounted: true));
+            Assert.AreEqual(before, PlayerProgression.Credits);
+            Assert.AreEqual(gemsBefore, PlayerProgression.Gems);
+
+            Assert.IsTrue(WardLedger.TryBuy(top, 'r', 999));
+            if (WardUpgrade.OfferFor(top, 'r').State == WardUpgradeState.Topped) return;
+
+            long afterUnlock = PlayerProgression.Credits;
+            Assert.IsFalse(WardUpgrade.TryBuy(top, 'r', discounted: true));
+            Assert.AreEqual(afterUnlock, PlayerProgression.Credits);
         }
 
         // ------------------------------------------------------------------ plumbing

@@ -4250,6 +4250,18 @@
       "text": "a rejoint ta ligne"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "Ta barre en contient {0}. Touche d'abord un objet sélectionné pour le retirer."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Garde au moins un objet sur ta barre."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Sélectionné"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "Elle n'a pas de couleur. Elle tire sur tous les pillards, quel que soit l'emplacement qu'elle garde."
     },
@@ -6102,6 +6114,10 @@
       "text": "Pas assez de gemmes pour plus."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "Aucune tourelle n'est tombée."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "Plus de place : {0} est le maximum que tu peux porter."
     },
@@ -6414,6 +6430,14 @@
       "text": "Touche un coin de la colline"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Touche une tourelle tombée"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Touche une rangée de la colline"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Pot de feu"
     },
@@ -6438,6 +6462,14 @@
       "text": "Soigne une tourelle. Ne peut pas relever une tourelle tombée."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Résurrection"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Relève une tourelle tombée avec toute sa vie, protégée de chaque coup pendant quelques secondes."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Appel de l'orage"
     },
@@ -6454,12 +6486,20 @@
       "text": "Remplit une tourelle d'énergie, pour qu'elle ouvre le feu quelle que soit la couleur alignée."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Rempart"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Dresse un rempart sur toute la largeur de la colline pendant quelques secondes. Les pillards derrière ne passent pas. Un boss avance quand même."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Apogée"
     },
     {
       "key": "ward.apex.note",
-      "text": "Touche 3 pillards de plus à pleine puissance."
+      "text": "Saute sur 3 pillards de plus, à 100 % des dégâts."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "Touche 3 pillards de plus, plus fort."
+      "text": "Saute sur 3 pillards de plus, à 80 % des dégâts."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Ignore l'armure. Dégâts doublés sur les pillards en armure."
+      "text": "Ignore l'armure. +100 % de dégâts sur les pillards en armure."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Enchaîne sur 6 pillards de plus avec une puissance dévastatrice."
+      "text": "Saute sur 6 pillards de plus, à 160 % des dégâts."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Met le feu à la cible pendant 3 s."
+      "text": "Brûle la cible pendant 3 s : 30 % des dégâts par seconde."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Un tir sur 4 touche toute la voie, à pleine puissance."
+      "text": "Un tir sur 4 touche toute la voie, à 100 % des dégâts."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Touche tout ce qui entoure la cible, plus fort."
+      "text": "Touche aussi les pillards à côté de la cible, à 70 % des dégâts."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Un tir sur 5 touche toute la voie."
+      "text": "Un tir sur 5 touche toute la voie, à 80 % des dégâts."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Récupère le double d'énergie à chaque ennemi abattu."
+      "text": "Chaque ennemi abattu rend 40 % de l'énergie d'un tir."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "Touche 2 pillards de plus."
+      "text": "Saute sur 2 pillards de plus, à 60 % des dégâts."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Touche tout ce qui entoure la cible."
+      "text": "Touche aussi les pillards à côté de la cible, à 40 % des dégâts."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Met le feu à la cible pendant 4 s. Brûle deux fois plus fort."
+      "text": "Brûle la cible pendant 4 s : 60 % des dégâts par seconde."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Met le feu à la cible pendant 6 s. Un torrent de flammes."
+      "text": "Brûle la cible pendant 6 s : 120 % des dégâts par seconde."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Un tir sur 3 traverse toute la voie, plus fort."
+      "text": "Un tir sur 3 touche toute la voie, à 160 % des dégâts."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "Le tir rebondit sur 5 pillards de plus."
+      "text": "Saute sur 5 pillards de plus, à 140 % des dégâts."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Récupère de l'énergie à chaque ennemi abattu."
+      "text": "Chaque ennemi abattu rend 20 % de l'énergie d'un tir."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Fait tomber une étoile sur tout ce qui entoure la cible."
+      "text": "Touche aussi les pillards à 2 cases, à 120 % des dégâts."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Ignore l'armure. Dégâts triplés sur les pillards en armure."
+      "text": "Ignore l'armure. +160 % de dégâts sur les pillards en armure."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Enchaîne la foudre sur 4 pillards de plus, plus fort."
+      "text": "Saute sur 4 pillards de plus, à 120 % des dégâts."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Récupère beaucoup d'énergie à chaque ennemi abattu."
+      "text": "Chaque ennemi abattu rend 70 % de l'énergie d'un tir."
     },
     {
       "key": "store.good.xp_boost_day",

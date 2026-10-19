@@ -54,7 +54,9 @@ namespace GlimmerGrove
             if (_arming.Target == UtilityTarget.Everywhere) return;
 
             if (_arming.Target == UtilityTarget.Ward) AimWards();
+            else if (_arming.Target == UtilityTarget.Fallen) AimFallen();
             else if (_arming.Target == UtilityTarget.Well) AimWells();
+            else if (_arming.Target == UtilityTarget.Row) AimRows();
             else AimHill();
         }
 
@@ -165,6 +167,79 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// A target over each <em>fallen</em> ward - the opposite set to <see cref="AimWards"/>,
+        /// because a revive is the one thing that may be aimed at a post that is down
+        /// (<c>UtilityTarget.Fallen</c>). Sized and placed as a standing ward's target is, so the
+        /// two read as the same control; green rather than gold, the revive's own colour.
+        /// </summary>
+        void AimFallen()
+        {
+            if (_posts == null) return;
+
+            for (int i = 0; i < _posts.Length; i++)
+            {
+                if (_board.Wards[i] == null || _board.Wards[i].Alive) continue;
+
+                int ward = i;
+                var size = new Vector2(Cell * 2.05f, Cell * 2.6f);
+
+                var hit = UIKit.Button("AimFallen" + i, _aim, Art.Ring(128, 7f),
+                                       size, new Vector2(.5f, .5f),
+                                       new Vector2(PostX(i), _lineY + Cell * .06f),
+                                       () => Loose(SiegeAim.AtWard(ward)));
+
+                hit.PressScale = .92f;
+                hit.ClickSfx = null;
+
+                var img = hit.GetComponent<Image>();
+                if (img != null) img.color = Pal.A(Pal.Mint, .9f);
+
+                Tween.Breathe(hit.transform, .06f, .9f);
+            }
+        }
+
+        /// <summary>
+        /// The hill as its bands, each the whole width (<c>UtilityTarget.Row</c>): what a wall is
+        /// aimed at. The same bands <see cref="AimHill"/> cuts into boxes, laid out by the same
+        /// arithmetic (<see cref="BoxAt"/>), so the band that lights is the band the rule reads;
+        /// a line along each band's near edge says where the wall will stand.
+        /// </summary>
+        void AimRows()
+        {
+            float wide = Span.x, tall = BoxTall;
+
+            for (int row = 0; row < SiegeTuning.BlastRows; row++)
+            {
+                int atRow = row;
+                var at = new Vector2(0f, BoxAt(0, row).y);
+
+                var pane = UIKit.Button("AimRow" + row, _aim, Art.Round(18),
+                                        new Vector2(wide, tall), new Vector2(.5f, .5f), at,
+                                        () => Loose(SiegeAim.AtRow(atRow)));
+
+                pane.PressScale = .97f;
+                pane.ClickSfx = null;
+
+                var catcher = pane.GetComponent<Image>();
+                if (catcher != null) catcher.color = new Color(0f, 0f, 0f, 0f);
+
+                var face = UIKit.Img("Face", pane.transform, Art.Round(18),
+                                     Pal.A(Pal.Rope, .16f),
+                                     new Vector2(wide - Gutter, tall - Gutter));
+                face.type = Image.Type.Sliced;
+                face.raycastTarget = false;
+
+                // The wall's own line: the band's near edge, where `SiegeTuning.WallMarch` stands it.
+                var edge = UIKit.Img("Edge", pane.transform, Art.Round(3), Pal.A(Pal.Rope, .85f),
+                                     new Vector2(wide - Gutter * 4f, 6f), new Vector2(.5f, 0f),
+                                     new Vector2(0f, Gutter));
+                edge.raycastTarget = false;
+
+                Tween.Breathe(edge.transform, .05f, 1.4f, row * .12f);
+            }
+        }
+
+        /// <summary>
         /// Hands a chosen target to the screen and draws whatever came back.
         ///
         /// <b>Disarmed first, whatever happens.</b> A refusal that left the layer up would put
@@ -227,6 +302,15 @@ namespace GlimmerGrove
 
                 case UtilityKind.Surge:
                     Surged(use.Ward);
+                    break;
+
+                case UtilityKind.Revive:
+                    Restored(use.Ward);
+                    break;
+
+                case UtilityKind.Wall:
+                    // **Nothing here either, for the well's reason**: the wall is put up, kept and
+                    // taken down off the model's own clock (`SiegeView.Rampart`).
                     break;
 
                 case UtilityKind.Gravity:
@@ -376,6 +460,25 @@ namespace GlimmerGrove
             // A spell rather than an object. `chime` read as a coin landing here, which is the
             // wrong news about a ward being put back together.
             Audio.Sfx("mend", .75f);
+        }
+
+        /// <summary>
+        /// A fallen turret standing again because a revive was spent on it: the post comes up as
+        /// a continue raises one (<see cref="Raise"/>) and its shell forms around it off the
+        /// model's own clock (<c>SiegeView.Mantle</c>), so nothing here times the barrier.
+        /// </summary>
+        void Restored(int ward)
+        {
+            if (_posts == null || ward < 0 || ward >= _posts.Length) return;
+
+            Raise(_posts[ward]);
+
+            var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
+            FxSparks(_fx, at, Pal.Mint, 18, Cell * 2.2f, Cell * .22f, .55f);
+            FxWave(at, Pal.Mint, Cell * 3f, .34f);
+
+            Audio.Sfx("mend", .85f, .92f);
+            Audio.Sfx("charge", .5f, 1.2f);
         }
 
         void Surged(int ward)

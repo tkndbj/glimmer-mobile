@@ -5,7 +5,7 @@
     python Tools/make_utility_art.py --write     # re-cut (the artwork is where --source says)
     python Tools/make_utility_art.py --contact sheet.png   # the shelf as a phone draws it
 
-**The four icons are cut, not drawn** (since 2026-10-03): a bomb, a potion, a battery and a bolt,
+**The icons are cut, not drawn** (since 2026-10-03): a bomb, a potion, a battery and a bolt,
 supplied by the owner and cut exactly as the gravity hole's icon is (`make_gravity_fx.icon`) -
 trimmed to the ink, fitted to the one square every utility icon is written at. Nothing is
 recoloured or graded. The artwork lives outside the repo and the cut PNG is the committed
@@ -60,7 +60,22 @@ ICONS = {
     "mending": "Chibi Green Healing Potion",
     "surge": "Glowing Golden Energy Battery",
     "stormcall": "Neon Gold Lightning Bolt",
+    # The owner's two, supplied 2026-10-19 with the utilities themselves.
+    "revive": "revive",
+    "wall": "wall",
 }
+
+#: The bar a wall utility stands on the hill as (`SiegeView.Rampart`), and where it is cut from:
+#: CraftPix's *Merge Shooter Cartoon Asset Kit*, its gameplay-area wall - a glass bar the width of
+#: the field (free licence, no attribution - invariant 46). The owner chose it on 2026-10-19 over
+#: a stone section, for a futuristic, see-through barrier; the view draws it translucent.
+WALL_SOURCE = Path("to-assets") / "_extracted" / "craftpix-net-239749-merge-shooter-cartoon-asset-kit" / \
+    "Png" / "Gameplay Area" / "wall.png"
+WALL_OUT = REPO / "Assets" / "Game" / "Art" / "Fx" / "Wall" / "wall.png"
+
+#: Written at the Fx folder's cap (`ProjectSetup`'s 512), trimmed to its ink and keeping its
+#: aspect: the view's `SiegeView.WallAspect` is this width over this height, by hand.
+WALL_W, WALL_H = 512, 44
 
 #: The shelf's cells in `UtilityItem.Order`, for the contact sheet. The fifth is cut by
 #: `make_gravity_fx.py` and is drawn here from disk, because the question a sheet answers is
@@ -121,6 +136,15 @@ def icon(painting):
     sheet = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     sheet.alpha_composite(art, ((SIZE - art.width) // 2, (SIZE - art.height) // 2))
     return sheet
+
+
+def wall(source):
+    """The wall bar: trimmed to its ink and resized to the Fx cap. Nothing recoloured."""
+    art = Image.open(source).convert("RGBA")
+    box = art.split()[3].point(lambda v: 255 if v >= TRIM_ALPHA else 0).getbbox()
+    if box is None:
+        sys.exit(f"{source.name} is entirely transparent")
+    return art.crop(box).resize((WALL_W, WALL_H), Image.LANCZOS)
 
 
 # --------------------------------------------------------------------------- the furniture
@@ -289,10 +313,28 @@ def main():
             if not path.exists() or Image.open(path).size != (SIZE, SIZE):
                 stale.append(name)
 
+        # The wall's bar, from the CraftPix pack under the same source folder.
+        source = args.source / WALL_SOURCE
+        WALL_OUT.parent.mkdir(parents=True, exist_ok=True)
+        if source.exists():
+            want = encode(wall(source))
+            if args.check:
+                if not WALL_OUT.exists() or WALL_OUT.read_bytes() != want:
+                    stale.append("wall stone")
+            else:
+                WALL_OUT.write_bytes(want)
+                print(f"  wrote {WALL_OUT.relative_to(REPO)}  ({len(want) / 1024:.1f} kB)")
+        elif args.write:
+            sys.exit(f"no wall piece at {source} (pass --source)")
+        else:
+            uncut.append("wall stone")
+            if not WALL_OUT.exists() or Image.open(WALL_OUT).size != (WALL_W, WALL_H):
+                stale.append("wall stone")
+
     if args.check:
         if stale:
             sys.exit("stale, re-run with --write: " + ", ".join(stale))
-        print(f"  {len(FURNITURE) + len(ICONS)} utility sprites match")
+        print(f"  {len(FURNITURE) + len(ICONS) + 1} utility sprites match")
         if uncut:
             print("  cut not re-proved (artwork not found, pass --source): " + ", ".join(uncut))
 

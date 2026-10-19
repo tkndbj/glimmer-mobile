@@ -48,6 +48,9 @@ namespace GlimmerGrove
         /// <summary>How many kit slots the row draws, filled or not. <c>UtilityBar.Slots</c>.</summary>
         public const int Kits = UtilityBar.Slots;
 
+        /// <summary>The kit cell's picture size, inside its frame.</summary>
+        const float KitFace = KitCell - 44f;
+
         const float Pad = 18f, Gap = 12f;
 
         /// <summary>
@@ -238,6 +241,8 @@ namespace GlimmerGrove
             WardLoadout.Changed += Paint;
             UtilityLedger.Changed -= Paint;
             UtilityLedger.Changed += Paint;
+            UtilityKit.Changed -= Paint;
+            UtilityKit.Changed += Paint;
 
             Paint();
             Dress();
@@ -247,6 +252,7 @@ namespace GlimmerGrove
         {
             WardLoadout.Changed -= Paint;
             UtilityLedger.Changed -= Paint;
+            UtilityKit.Changed -= Paint;
             _art?.Dispose();
         }
 
@@ -301,9 +307,13 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// The five kit cells, built once with every part a cell can show; which utility each
+        /// carries is bound by <see cref="Paint"/>, because the choice can change while the map
+        /// is up (the shelf is a panel over it) and a rebuild would replay the row.
+        /// </summary>
         void BuildKits(RectTransform rt, float mid)
         {
-            var items = UtilityLedger.Catalog.Items;
             float step = KitCell + KitGap;
 
             for (int i = 0; i < Kits; i++)
@@ -314,29 +324,29 @@ namespace GlimmerGrove
                                      Vector2.one * KitCell, new Vector2(.5f, 0f),
                                      new Vector2(x, mid));
 
-                var kit = new Kit { Item = i < items.Count ? items[i] : null };
+                var kit = new Kit();
 
-                if (kit.Item != null)
-                {
-                    kit.Face = UIKit.Img("Face", cell.transform, Art.S(kit.Item.Art), Color.white,
-                                         Vector2.one * (KitCell - 44f));
-                    kit.Face.preserveAspect = true;
-                    kit.Face.raycastTarget = false;
+                kit.Face = UIKit.Img("Face", cell.transform, null, Color.white,
+                                     Vector2.one * KitFace);
+                kit.Face.preserveAspect = true;
+                kit.Face.raycastTarget = false;
+                kit.Face.enabled = false;
 
-                    // Top-right, over the cell's own rim, which is where the action bar puts it -
-                    // the corner nothing else uses.
-                    kit.Badge = UIKit.Img("Badge", cell.transform, Art.Disc(96), Pal.Ink,
-                                          Vector2.one * 56f, new Vector2(1f, 1f),
-                                          new Vector2(-4f, 4f));
-                    kit.Badge.raycastTarget = false;
+                // Top-right, over the cell's own rim, which is where the action bar puts it -
+                // the corner nothing else uses.
+                kit.Badge = UIKit.Img("Badge", cell.transform, Art.Disc(96), Pal.Ink,
+                                      Vector2.one * 56f, new Vector2(1f, 1f),
+                                      new Vector2(-4f, 4f));
+                kit.Badge.raycastTarget = false;
+                kit.Badge.enabled = false;
 
-                    // Shrinkable, because the ceiling is a hundred and a `UIKit.Label` that
-                    // overflows is not clipped - it keeps drawing out over the cell beside it.
-                    kit.Count = UIKit.Shrinkable(
-                        UIKit.Label("Count", kit.Badge.transform, "0", 32, Pal.Cream,
-                                    TextAnchor.MiddleCenter, Vector2.one * 50f,
-                                    new Vector2(.5f, .5f), Vector2.zero, FontStyle.Bold), 16);
-                }
+                // Shrinkable, because the ceiling is a hundred and a `UIKit.Label` that
+                // overflows is not clipped - it keeps drawing out over the cell beside it.
+                kit.Count = UIKit.Shrinkable(
+                    UIKit.Label("Count", kit.Badge.transform, "0", 32, Pal.Cream,
+                                TextAnchor.MiddleCenter, Vector2.one * 50f,
+                                new Vector2(.5f, .5f), Vector2.zero, FontStyle.Bold), 16);
+                kit.Count.enabled = false;
 
                 _kits.Add(kit);
             }
@@ -354,16 +364,22 @@ namespace GlimmerGrove
         {
             if (this == null) return;
 
+            // **Bound on every paint, every field** (44mc): the kit is the player's choice and can
+            // change under this bar, so which utility a cell carries is read here, not at build.
+            var chosen = UtilityKit.Selected();
+
             for (int i = 0; i < _kits.Count; i++)
             {
                 var kit = _kits[i];
-                if (kit.Item == null) continue;
+                kit.Item = i < chosen.Count ? chosen[i] : null;
 
-                int held = UtilityLedger.Held(kit.Item);
+                int held = kit.Item == null ? 0 : UtilityLedger.Held(kit.Item);
 
-                if (kit.Face != null) kit.Face.enabled = held > 0;
-                if (kit.Badge != null) kit.Badge.enabled = held > 0;
-                if (kit.Count != null) kit.Count.text = held.ToString();
+                kit.Face.sprite = kit.Item == null ? null : Art.S(kit.Item.Art);
+                kit.Face.enabled = held > 0 && kit.Face.sprite != null;
+                kit.Badge.enabled = held > 0;
+                kit.Count.enabled = held > 0;
+                kit.Count.text = held.ToString();
             }
 
             Dress();

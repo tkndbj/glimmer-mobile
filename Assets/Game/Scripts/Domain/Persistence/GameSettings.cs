@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace GlimmerGrove.Persistence
 {
@@ -58,6 +59,40 @@ namespace GlimmerGrove.Persistence
         /// of saved state - from having to know that a sound system exists.
         /// </summary>
         public static event Action Changed;
+
+        static string[] _kit = Array.Empty<string>();
+
+        /// <summary>
+        /// The utility ids chosen for the action bar, exactly as stored - empty when never
+        /// chosen. <b>Raw on purpose</b>: what the ids <em>mean</em> needs the catalog, and that
+        /// is <c>Utilities.UtilityKit</c>'s, which is the only writer.
+        /// </summary>
+        public static IReadOnlyList<string> Kit => _kit;
+
+        /// <summary>
+        /// Stores the bar's kit. <b>Raises nothing</b>: <see cref="Changed"/> is the sound and
+        /// board-visibility channel (<c>GroveBoard</c> withdraws or republishes a card on it), and
+        /// a kit choice is neither - <c>UtilityKit.Changed</c> is its event.
+        /// </summary>
+        public static bool SetKit(IReadOnlyList<string> ids)
+        {
+            var next = new string[ids?.Count ?? 0];
+            for (int i = 0; i < next.Length; i++) next[i] = ids[i] ?? string.Empty;
+
+            if (SameKit(_kit, next)) return false;
+
+            _kit = next;
+            SaveService.Save();
+            return true;
+        }
+
+        static bool SameKit(string[] a, string[] b)
+        {
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+                if (!string.Equals(a[i], b[i], StringComparison.Ordinal)) return false;
+            return true;
+        }
 
         public static void SetMusic(bool on)
         {
@@ -119,6 +154,9 @@ namespace GlimmerGrove.Persistence
             HapticsOn = s.haptics.Resolve(true);
             BoardOptIn = s.board.Resolve(true);
             Language = s.language ?? string.Empty;
+
+            // Copied as written, never pruned (11f) - see `SettingsDto.kit`.
+            _kit = s.kit == null ? Array.Empty<string>() : (string[])s.kit.Clone();
         }
 
         internal static void WriteInto(SaveFileDto dto)
@@ -130,6 +168,7 @@ namespace GlimmerGrove.Persistence
                 haptics = StoredFlag.From(HapticsOn),
                 board = StoredFlag.From(BoardOptIn),
                 language = Language,
+                kit = (string[])_kit.Clone(),
             };
         }
     }

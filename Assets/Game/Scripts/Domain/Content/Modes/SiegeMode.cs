@@ -1538,6 +1538,9 @@ namespace GlimmerGrove.Content
             foreach (var piece in GravityFx.All)
                 list.Add(AssetRequest.Sprite(AssetManifest.GravityFx(piece)));
 
+            // And the wall's stone, for the same reason (`SiegeView.Rampart`).
+            list.Add(AssetRequest.Sprite(AssetManifest.WallFx));
+
             if (chapter == null)
             {
                 list.AddRange(CastArt(Insects));

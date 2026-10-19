@@ -4250,6 +4250,18 @@
       "text": "joined your line"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "Your bar holds {0}. Tap a selected item to take it off first."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Keep at least one item on your bar."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Selected"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "Wears no colour. Fires at every raider, whichever slot it guards."
     },
@@ -6102,6 +6114,10 @@
       "text": "Not enough gems for more."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "No turret has fallen."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "No room for more - {0} is the most you can carry."
     },
@@ -6414,6 +6430,14 @@
       "text": "Tap a corner of the hill"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Tap a fallen turret"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Tap a row of the hill"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Firepot"
     },
@@ -6438,6 +6462,14 @@
       "text": "Heal a turret. It cannot raise a fallen one."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Revive"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Brings a fallen turret back at full health, shielded from every hit for a few seconds."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Stormcall"
     },
@@ -6454,12 +6486,20 @@
       "text": "Fills one turret with fuel, so it opens fire whatever colour you have matched."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Wall"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Raises a wall across the hill for a few seconds. Raiders behind it cannot pass. A boss walks on."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Apex"
     },
     {
       "key": "ward.apex.note",
-      "text": "Hits 3 more raiders at full power."
+      "text": "Jumps to 3 more raiders for 100% damage."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "Hits 3 more raiders, harder."
+      "text": "Jumps to 3 more raiders for 80% damage."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Ignores armour. Double damage to armoured raiders."
+      "text": "Ignores armour. +100% damage to armoured raiders."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Chains to 6 more raiders at devastating power."
+      "text": "Jumps to 6 more raiders for 160% damage."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Sets the target on fire for 3s."
+      "text": "Burns the target for 3s, 30% damage each second."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Every 4th shot hits the whole lane, at full power."
+      "text": "Every 4th shot hits its whole lane for 100% damage."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Hits everything next to the target, harder."
+      "text": "Also hits raiders next to the target for 70% damage."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Every 5th shot hits the whole lane."
+      "text": "Every 5th shot hits its whole lane for 80% damage."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Gets double fuel back on every kill."
+      "text": "Each kill gives back 40% of a shot's fuel."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "Hits 2 more raiders."
+      "text": "Jumps to 2 more raiders for 60% damage."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Hits everything next to the target."
+      "text": "Also hits raiders next to the target for 40% damage."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Sets the target on fire for 4s. Burns twice as hot."
+      "text": "Burns the target for 4s, 60% damage each second."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Sets the target on fire for 6s. A torrent of flame."
+      "text": "Burns the target for 6s, 120% damage each second."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Every 3rd shot runs the whole lane, harder."
+      "text": "Every 3rd shot hits its whole lane for 160% damage."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "The shot bounces on to 5 more raiders."
+      "text": "Jumps to 5 more raiders for 140% damage."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Gets fuel back on every kill."
+      "text": "Each kill gives back 20% of a shot's fuel."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Calls down a star on everything around the target."
+      "text": "Also hits raiders within 2 squares for 120% damage."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Ignores armour. Triple damage to armoured raiders."
+      "text": "Ignores armour. +160% damage to armoured raiders."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Chains lightning to 4 more raiders, harder."
+      "text": "Jumps to 4 more raiders for 120% damage."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Gets heavy fuel back on every kill."
+      "text": "Each kill gives back 70% of a shot's fuel."
     },
     {
       "key": "store.good.xp_boost_day",

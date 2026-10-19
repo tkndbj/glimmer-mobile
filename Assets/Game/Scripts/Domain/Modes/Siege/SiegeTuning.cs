@@ -970,6 +970,30 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int GravityWells = 4;
 
+        // ------------------------------------------------------------------ the wall
+        /// <summary>
+        /// Where a wall raised on aiming band <paramref name="row"/> stands, as a march reading:
+        /// the band's near edge, the side toward the line (<see cref="BlastRows"/> bands, so the
+        /// last band's wall stands at the line itself). Everything behind it is held.
+        ///
+        /// <b>A band of the drawn grid and never a point</b> (invariant 39f): the row the player
+        /// taps is the row that lights, and this is the same reading the view draws the wall on.
+        /// </summary>
+        public static float WallMarch(int row)
+        {
+            if (row < 0) row = 0;
+            if (row >= BlastRows) row = BlastRows - 1;
+            return (row + 1f) / BlastRows;
+        }
+
+        /// <summary>
+        /// How far behind a wall a held body stops, as a share of the hill: its middle stands
+        /// this far up the slope from the wall's foot, so it is drawn pressed against the wall
+        /// rather than standing in it. A drawing number living in the rules for the anvil's
+        /// reason (<see cref="AnvilHeave"/>): the view draws a body where the model says it is.
+        /// </summary>
+        public const float WallStand = .09f;
+
         /// <summary>
         /// The lane a well stands on: the second from the left for the left pair, the second
         /// from the right for the right pair. Wells count left to right, top row first.

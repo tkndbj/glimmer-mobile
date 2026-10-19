@@ -23,6 +23,17 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public int Full { get; private set; }
 
+        /// <summary>
+        /// Seconds left on the barrier a revive stood this post up inside, or nought
+        /// (<c>SiegeBoard.Restore</c>). While it holds, nothing reaches the post - the phoenix's
+        /// mantle (<c>SiegeBoard.Mantle</c>) on one post rather than the line, asked through the
+        /// same <c>Turned</c> door. Run down by the board's own clock (<c>SiegeBoard.Wear</c>).
+        /// </summary>
+        public float Barrier;
+
+        /// <summary>Whether a revive's barrier is round this post right now.</summary>
+        public bool Shielded => Alive && Barrier > 0f;
+
         /// <summary>Seconds until its next bolt.</summary>
         public float Cool;
 

@@ -142,6 +142,15 @@ namespace GlimmerGrove
             // like the two above; returns on its first line on every board holding no build.
             Arsenal(Time.unscaledDeltaTime);
 
+            // **The shields over the line** - the phoenix's mantle and a revive's barrier, one
+            // shell read off `SiegeBoard.CoverLeft` per post (`SiegeView.Mantle`). Every board,
+            // because a revive can be used on every board; one comparison per post while nothing
+            // is covered.
+            Mantling(Time.unscaledDeltaTime);
+
+            // **And a wall on the hill** (`SiegeView.Rampart`), read off `SiegeBoard.WallLeft`.
+            Ramparts(Time.unscaledDeltaTime);
+
             // The fight's own beats - the plant, each phase turning, the guard going up and
             // coming down - read off the raiders `Follow` just drew. See `SiegeView.Fight`.
             Fight(Time.unscaledDeltaTime);
@@ -533,7 +542,20 @@ namespace GlimmerGrove
                 _order[j + 1] = held;
             }
 
+            // **A standing wall takes its place among them by its march** (`SiegeView.Rampart`):
+            // every body further up the hill than its line is drawn behind it, every body past it
+            // in front. With no wall, `wall` is the end of the list and this is the loop it was.
+            int wall = _order.Count;
+            float line = RampartDepth;
+            if (line >= 0f)
+                for (int i = 0; i < _order.Count; i++)
+                    if (DepthOf(_order[i]) >= line) { wall = i; break; }
+
             for (int i = 0; i < _order.Count; i++) _order[i].Node.SetSiblingIndex(i);
+
+            // Inserted after the bodies are in order, which moves every one from `wall` on down
+            // by one - exactly the bodies that are past it.
+            if (line >= 0f) _rampartNode.SetSiblingIndex(wall);
         }
 
         float DepthOf(Mob mob)

@@ -40,6 +40,8 @@ namespace GlimmerGrove
                 case UtilityKind.Surge: return Pal.Sun;     // the surge's battery
                 case UtilityKind.Storm: return Pal.Azure;   // the stormcall's blue edge
                 case UtilityKind.Gravity: return Pal.Bloom; // the gravity hole's outer light
+                case UtilityKind.Revive: return Pal.Mint;   // the revive's green ring
+                case UtilityKind.Wall: return Pal.Foxglove; // the wall's violet crystal
                 default: return Pal.Rope;
             }
         }

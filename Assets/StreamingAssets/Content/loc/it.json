@@ -4250,6 +4250,18 @@
       "text": "si è unita alla tua linea"
     },
     {
+      "key": "ui.loadout.kit_full",
+      "text": "La tua barra ne tiene {0}. Tocca prima un oggetto selezionato per toglierlo."
+    },
+    {
+      "key": "ui.loadout.kit_last",
+      "text": "Tieni almeno un oggetto sulla barra."
+    },
+    {
+      "key": "ui.loadout.kit_selected",
+      "text": "Selezionato"
+    },
+    {
       "key": "ui.loadout.legendary",
       "text": "Non ha colore. Spara a ogni predone, qualunque posto difenda."
     },
@@ -6102,6 +6114,10 @@
       "text": "Non hai abbastanza gemme per altri."
     },
     {
+      "key": "ui.utility.no_fallen",
+      "text": "Nessuna torretta è caduta."
+    },
+    {
       "key": "ui.utility.no_room",
       "text": "Non c'è più spazio: {0} è il massimo che puoi portare."
     },
@@ -6414,6 +6430,14 @@
       "text": "Tocca un angolo della collina"
     },
     {
+      "key": "utility.aim.fallen",
+      "text": "Tocca una torretta caduta"
+    },
+    {
+      "key": "utility.aim.row",
+      "text": "Tocca una fila della collina"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Vaso di fuoco"
     },
@@ -6438,6 +6462,14 @@
       "text": "Cura una torretta. Non può rialzarne una caduta."
     },
     {
+      "key": "utility.revive.name",
+      "text": "Rianima"
+    },
+    {
+      "key": "utility.revive.note",
+      "text": "Rimette in piedi una torretta caduta con tutta la vita, protetta da ogni colpo per qualche secondo."
+    },
+    {
       "key": "utility.stormcall.name",
       "text": "Richiamo della tempesta"
     },
@@ -6454,12 +6486,20 @@
       "text": "Riempie di energia una torretta, così apre il fuoco qualunque colore tu abbia abbinato."
     },
     {
+      "key": "utility.wall.name",
+      "text": "Muro"
+    },
+    {
+      "key": "utility.wall.note",
+      "text": "Alza un muro per tutta la larghezza della collina per qualche secondo. I predoni dietro non passano. Un boss avanza comunque."
+    },
+    {
       "key": "ward.apex.name",
       "text": "Apice"
     },
     {
       "key": "ward.apex.note",
-      "text": "Colpisce altri 3 predoni a piena potenza."
+      "text": "Salta su altri 3 predoni con il 100% dei danni."
     },
     {
       "key": "ward.arcstorm.name",
@@ -6467,7 +6507,7 @@
     },
     {
       "key": "ward.arcstorm.note",
-      "text": "Colpisce altri 3 predoni, più forte."
+      "text": "Salta su altri 3 predoni con il 80% dei danni."
     },
     {
       "key": "ward.beacon.name",
@@ -6491,7 +6531,7 @@
     },
     {
       "key": "ward.breaker.note",
-      "text": "Ignora l'armatura. Danni doppi ai predoni corazzati."
+      "text": "Ignora l'armatura. +100% di danni ai predoni corazzati."
     },
     {
       "key": "ward.cleaver.name",
@@ -6507,7 +6547,7 @@
     },
     {
       "key": "ward.eclipse.note",
-      "text": "Rimbalza su altri 6 predoni con potenza devastante."
+      "text": "Salta su altri 6 predoni con il 160% dei danni."
     },
     {
       "key": "ward.ember.name",
@@ -6515,7 +6555,7 @@
     },
     {
       "key": "ward.ember.note",
-      "text": "Dà fuoco al bersaglio per 3 s."
+      "text": "Brucia il bersaglio per 3 s: 30% dei danni al secondo."
     },
     {
       "key": "ward.glacier.name",
@@ -6531,7 +6571,7 @@
     },
     {
       "key": "ward.harpoon.note",
-      "text": "Un colpo su 4 colpisce tutta la corsia, a piena potenza."
+      "text": "Un colpo su 4 colpisce tutta la corsia con il 100% dei danni."
     },
     {
       "key": "ward.howitzer.name",
@@ -6539,7 +6579,7 @@
     },
     {
       "key": "ward.howitzer.note",
-      "text": "Colpisce tutto intorno al bersaglio, più forte."
+      "text": "Colpisce anche i predoni accanto al bersaglio con il 70% dei danni."
     },
     {
       "key": "ward.lance.name",
@@ -6547,7 +6587,7 @@
     },
     {
       "key": "ward.lance.note",
-      "text": "Un colpo su 5 colpisce tutta la corsia."
+      "text": "Un colpo su 5 colpisce tutta la corsia con il 80% dei danni."
     },
     {
       "key": "ward.leech.name",
@@ -6555,7 +6595,7 @@
     },
     {
       "key": "ward.leech.note",
-      "text": "Recupera il doppio dell'energia a ogni nemico abbattuto."
+      "text": "Ogni abbattuto rende il 40% dell'energia di un colpo."
     },
     {
       "key": "ward.lighthouse.name",
@@ -6563,7 +6603,7 @@
     },
     {
       "key": "ward.lighthouse.note",
-      "text": "Colpisce altri 2 predoni."
+      "text": "Salta su altri 2 predoni con il 60% dei danni."
     },
     {
       "key": "ward.mortar.name",
@@ -6571,7 +6611,7 @@
     },
     {
       "key": "ward.mortar.note",
-      "text": "Colpisce tutto intorno al bersaglio."
+      "text": "Colpisce anche i predoni accanto al bersaglio con il 40% dei danni."
     },
     {
       "key": "ward.permafrost.name",
@@ -6595,7 +6635,7 @@
     },
     {
       "key": "ward.pyre.note",
-      "text": "Dà fuoco al bersaglio per 4 s. Brucia il doppio."
+      "text": "Brucia il bersaglio per 4 s: 60% dei danni al secondo."
     },
     {
       "key": "ward.pyroclast.name",
@@ -6603,7 +6643,7 @@
     },
     {
       "key": "ward.pyroclast.note",
-      "text": "Dà fuoco al bersaglio per 6 s. Un torrente di fiamme."
+      "text": "Brucia il bersaglio per 6 s: 120% dei danni al secondo."
     },
     {
       "key": "ward.railgun.name",
@@ -6611,7 +6651,7 @@
     },
     {
       "key": "ward.railgun.note",
-      "text": "Un colpo su 3 percorre tutta la corsia, più forte."
+      "text": "Un colpo su 3 colpisce tutta la corsia con il 160% dei danni."
     },
     {
       "key": "ward.ricochet.name",
@@ -6619,7 +6659,7 @@
     },
     {
       "key": "ward.ricochet.note",
-      "text": "Il colpo rimbalza su altri 5 predoni."
+      "text": "Salta su altri 5 predoni con il 140% dei danni."
     },
     {
       "key": "ward.rime.name",
@@ -6635,7 +6675,7 @@
     },
     {
       "key": "ward.siphon.note",
-      "text": "Recupera energia a ogni nemico abbattuto."
+      "text": "Ogni abbattuto rende il 20% dell'energia di un colpo."
     },
     {
       "key": "ward.spark.name",
@@ -6659,7 +6699,7 @@
     },
     {
       "key": "ward.starfall.note",
-      "text": "Fa cadere una stella su tutto ciò che circonda il bersaglio."
+      "text": "Colpisce anche entro 2 caselle con il 120% dei danni."
     },
     {
       "key": "ward.stasis.name",
@@ -6675,7 +6715,7 @@
     },
     {
       "key": "ward.sunderer.note",
-      "text": "Ignora l'armatura. Danni tripli ai predoni corazzati."
+      "text": "Ignora l'armatura. +160% di danni ai predoni corazzati."
     },
     {
       "key": "ward.tempest.name",
@@ -6683,7 +6723,7 @@
     },
     {
       "key": "ward.tempest.note",
-      "text": "Fa rimbalzare fulmini su altri 4 predoni, più forte."
+      "text": "Salta su altri 4 predoni con il 120% dei danni."
     },
     {
       "key": "ward.wellspring.name",
@@ -6691,7 +6731,7 @@
     },
     {
       "key": "ward.wellspring.note",
-      "text": "Recupera molta energia a ogni nemico abbattuto."
+      "text": "Ogni abbattuto rende il 70% dell'energia di un colpo."
     },
     {
       "key": "store.good.xp_boost_day",

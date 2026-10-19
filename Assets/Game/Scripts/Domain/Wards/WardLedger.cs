@@ -277,6 +277,9 @@ namespace GlimmerGrove.Wards
         public static bool TryBuy(WardModel model, char colour, int keeperLevel,
                                   bool discounted = false)
         {
+            // A band the offer is not made on is refused here too, not only left undrawn.
+            if (discounted && !WardDiscount.Covers(model)) return false;
+
             var offer = OfferFor(model, colour, keeperLevel);
             if (discounted) offer = offer.Discounted();
             if (!offer.CanBuy) return false;

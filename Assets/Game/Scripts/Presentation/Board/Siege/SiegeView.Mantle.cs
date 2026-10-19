@@ -15,9 +15,15 @@ namespace GlimmerGrove
     /// <b>Four beats, each drawn off the model and never timed beside it.</b> The rise and the
     /// push are drawn on the frame the report says the mantle went up
     /// (<see cref="SiegeReport.Mantled"/>). The shield is put up, kept and taken down off
-    /// <see cref="SiegeBoard.MantleLeft"/> every frame. A hit is drawn off
-    /// <see cref="SiegeReport.Turned"/>. The break is drawn on the frame the clock reads nought.
-    /// None of it can show a covered line the model has stopped covering, or the reverse.
+    /// <see cref="SiegeBoard.CoverLeft"/> every frame, per post. A hit is drawn off
+    /// <see cref="SiegeReport.Turned"/>. The break is drawn on the frame a post's clock reads
+    /// nought. None of it can show a covered post the model has stopped covering, or the reverse.
+    /// </para>
+    /// <para>
+    /// <b>One shell for two covers.</b> A revive (<c>SiegeWard.Barrier</c>) is the mantle on one
+    /// post, so it is drawn by the same shell off the same reading - which is why this runs on
+    /// every board rather than only on a Shuffle build, at the cost of one comparison per post a
+    /// frame while nothing is covered.
     /// </para>
     /// <para>
     /// <b>Blue on purpose.</b> Every hurt on this line is warm (a blow's rose, a fall's ember)
@@ -72,18 +78,18 @@ namespace GlimmerGrove
 
             /// <summary>When it was last drawn being hit, in real seconds.</summary>
             public float HitAt = -1f;
+
+            /// <summary>How fully this post's shell stands, eased, from nought (gone) to one (formed).</summary>
+            public float Shown;
+
+            /// <summary>Whether this post was covered last frame: the edge its break is drawn on.</summary>
+            public bool WasUp;
         }
 
         RectTransform _mantleHost;
         MantleLook[] _mantles;
 
-        /// <summary>How fully the shield stands, eased, from nought (gone) to one (formed).</summary>
-        float _mantleShown;
-
         float _mantleAge;
-
-        /// <summary>Whether the model's mantle was up last frame: the edge the break is drawn on.</summary>
-        bool _mantleWasUp;
 
         /// <summary>
         /// The board the shields were drawn for. A run dealt again hands the view a new board
@@ -121,10 +127,11 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ every frame
         /// <summary>
-        /// Keeps the shields drawn true to <see cref="SiegeBoard.MantleLeft"/>: forms them as the
-        /// clock starts, flickers them through its last <see cref="MantleWarn"/> seconds, breaks
-        /// them on the frame it reaches nought and takes them down once faded. Called from
-        /// <c>Arsenal</c>, so it never runs on a board holding no build.
+        /// Keeps the shields drawn true to <see cref="SiegeBoard.CoverLeft"/>, post by post: forms
+        /// a shell as its clock starts, flickers it through its last <see cref="MantleWarn"/>
+        /// seconds, breaks it on the frame the clock reaches nought and takes it down once faded.
+        /// Called on every board (<c>SiegeView.Clock</c>); while nothing is covered and nothing is
+        /// fading it reads one number per post and returns.
         /// </summary>
         void Mantling(float dt)
         {
@@ -133,57 +140,62 @@ namespace GlimmerGrove
             if (_mantleBoard != _board)
             {
                 if (_mantleHost) ScrapMantle();
-                _mantleWasUp = false;
                 _mantleBoard = _board;
             }
 
-            float left = _board.MantleLeft;
-            bool up = left > 0f;
+            bool any = false;
+            for (int i = 0; i < _posts.Length; i++)
+                if (_board.CoverLeft(i) > 0f) { any = true; break; }
 
-            // The break, on the edge, while the shells are still there to break.
-            if (_mantleWasUp && !up) MantleBreak();
-            _mantleWasUp = up;
+            if (!any && !_mantleHost) return;
 
-            if (!up && _mantleShown <= 0f)
-            {
-                if (_mantleHost) ScrapMantle();
-                return;
-            }
-
-            if (up && (!_mantleHost || _mantles == null || _mantles.Length != _posts.Length)) BuildMantle();
+            if (any && (!_mantleHost || _mantles == null || _mantles.Length != _posts.Length)) BuildMantle();
             if (!_mantleHost) return;
 
             _mantleAge += dt;
-            _mantleShown = Mathf.MoveTowards(_mantleShown, up ? 1f : 0f, dt / (up ? MantleForm : MantleFade));
-
-            // Formed with an overshoot, so the shell arrives rather than fades in; faded out plain.
-            float form = up ? Ease.OutBack(_mantleShown) : _mantleShown;
-
-            // **The warning: a flicker that quickens toward the end**, so the player sees the
-            // shield is about to fail before it does. Off until the last `MantleWarn` seconds.
-            float flicker = 1f;
-            if (up && left < MantleWarn)
-            {
-                float k = 1f - left / MantleWarn;
-                float beat = Mathf.Abs(Mathf.Sin(_mantleAge * Mathf.Lerp(7f, 24f, k)));
-                flicker = Mathf.Lerp(1f, .30f + .70f * beat, k);
-            }
 
             float breathe = .88f + .12f * Mathf.Sin(_mantleAge * 2.6f);
             float wide = MantleWide, high = MantleHigh;
+            bool showing = false, broke = false;
 
             for (int i = 0; i < _mantles.Length; i++)
             {
                 var look = _mantles[i];
                 if (look == null || !look.Root) continue;
 
+                float left = _board.CoverLeft(i);
+                bool up = left > 0f;
+
+                // The break, on the edge, while the shell is still there to break.
+                if (look.WasUp && !up) { MantleBreak(i); broke = true; }
+                look.WasUp = up;
+
+                look.Shown = Mathf.MoveTowards(look.Shown, up ? 1f : 0f, dt / (up ? MantleForm : MantleFade));
+
+                // A fallen post wears no shell, and one that has finished fading is put away.
                 bool standing = i < _board.Wards.Count && _board.Wards[i].Alive;
-                look.Root.gameObject.SetActive(standing);
-                if (!standing) continue;
+                bool drawn = standing && (up || look.Shown > 0f);
+                look.Root.gameObject.SetActive(drawn);
+                if (!drawn) continue;
+
+                showing = true;
+
+                // Formed with an overshoot, so the shell arrives rather than fades in; faded out plain.
+                float form = up ? Ease.OutBack(look.Shown) : look.Shown;
+
+                // **The warning: a flicker that quickens toward the end**, so the player sees the
+                // shield is about to fail before it does. Off until the last `MantleWarn` seconds.
+                float flicker = 1f;
+                if (up && left < MantleWarn)
+                {
+                    float k = 1f - left / MantleWarn;
+                    float beat = Mathf.Abs(Mathf.Sin(_mantleAge * Mathf.Lerp(7f, 24f, k)));
+                    flicker = Mathf.Lerp(1f, .30f + .70f * beat, k);
+                }
 
                 look.Struck = Mathf.MoveTowards(look.Struck, 0f, dt * 3.2f);
                 float hit = look.Struck;
-                float lit = _mantleShown * flicker;
+                float lit = look.Shown * flicker;
 
                 look.Root.anchoredPosition = MantleAt(i);
                 look.Root.localScale = new Vector3(form, form, 1f);
@@ -233,6 +245,11 @@ namespace GlimmerGrove
                     riser.color = Pal.A(MantleIce, Mathf.Sin(run * Mathf.PI) * .8f * lit);
                 }
             }
+
+            // One sound for every shell that broke this frame: four at once is a flam (37q).
+            if (broke) Audio.Sfx("shatter", .42f, 1.3f);
+
+            if (!any && !showing) ScrapMantle();
         }
 
         static void Paint(Image image, Color hue, float alpha, float scale)
@@ -287,7 +304,6 @@ namespace GlimmerGrove
                 _mantles[i] = look;
             }
 
-            _mantleShown = 0f;
             _mantleAge = 0f;
         }
 
@@ -296,7 +312,6 @@ namespace GlimmerGrove
             if (_mantleHost) Destroy(_mantleHost.gameObject);
             _mantleHost = null;
             _mantles = null;
-            _mantleShown = 0f;
         }
 
         // ------------------------------------------------------------------ the rise
@@ -437,36 +452,32 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the break
         /// <summary>
-        /// The mantle running out: every shell shatters into shards of light thrown outward
-        /// and falling, with one ring and one sound for the line. The shells themselves then
-        /// fade over <see cref="MantleFade"/>, and <see cref="Mantling"/> takes them down.
+        /// One post's cover running out: its shell shatters into shards of light thrown outward
+        /// and falling, with a ring. The shell then fades over <see cref="MantleFade"/>, and
+        /// <see cref="Mantling"/> takes it down; the sound is <see cref="Mantling"/>'s, once for
+        /// however many broke on the same frame.
         /// </summary>
-        void MantleBreak()
+        void MantleBreak(int post)
         {
-            if (_fx == null || _mantles == null) return;
+            if (_fx == null || _mantles == null || post < 0 || post >= _mantles.Length) return;
+
+            var look = _mantles[post];
+            if (look == null || !look.Root || !look.Root.gameObject.activeSelf) return;
 
             float wide = MantleWide, high = MantleHigh;
+            var at = MantleAt(post);
 
-            for (int i = 0; i < _mantles.Length; i++)
+            const int Shards = 10;
+            for (int s = 0; s < Shards; s++)
             {
-                var look = _mantles[i];
-                if (look == null || !look.Root || !look.Root.gameObject.activeSelf) continue;
-
-                var at = MantleAt(i);
-                const int Shards = 10;
-                for (int s = 0; s < Shards; s++)
-                {
-                    float a = Mathf.PI * 2f * (s + Random.Range(-.3f, .3f)) / Shards;
-                    var spot = at + new Vector2(Mathf.Cos(a) * wide * .48f, Mathf.Sin(a) * high * .48f);
-                    var drift = new Vector2(Mathf.Cos(a) * Cell * 1.2f, Mathf.Sin(a) * Cell * .6f - Cell * 1.6f);
-                    Cinder(spot, s % 3 == 0 ? MantleIce : MantleHue, Cell * Random.Range(.30f, .55f), .55f, drift);
-                }
-
-                Ripple(at, MantleHue, Cell * 3.4f, .4f, 0f, 1f);
-                look.Struck = 1f;
+                float a = Mathf.PI * 2f * (s + Random.Range(-.3f, .3f)) / Shards;
+                var spot = at + new Vector2(Mathf.Cos(a) * wide * .48f, Mathf.Sin(a) * high * .48f);
+                var drift = new Vector2(Mathf.Cos(a) * Cell * 1.2f, Mathf.Sin(a) * Cell * .6f - Cell * 1.6f);
+                Cinder(spot, s % 3 == 0 ? MantleIce : MantleHue, Cell * Random.Range(.30f, .55f), .55f, drift);
             }
 
-            Audio.Sfx("shatter", .42f, 1.3f);
+            Ripple(at, MantleHue, Cell * 3.4f, .4f, 0f, 1f);
+            look.Struck = 1f;
         }
     }
 }

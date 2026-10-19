@@ -106,7 +106,7 @@ namespace GlimmerGrove
 
             // Decided once, at build: whether the offer exists does not move while a panel is up
             // (content and the ad unit), only whether a video is loaded does.
-            bool discount = WardDiscount.Offered;
+            bool discount = WardDiscount.OfferedFor(Model);
             float height = PanelH + (discount ? ActH + ActGap : 0f);
 
             var panel = MakePanel(new Vector2(PanelW, height), Loc.Get(Model.NameKey));

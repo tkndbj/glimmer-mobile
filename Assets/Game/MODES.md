@@ -1611,6 +1611,25 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    near half over them. **It reached the chest tables by cutting one option's weight in two**, side by
    side, so every other option keeps its numbers and a client on the old table still rolls the currency
    the server recomputes (9c).
+39p. **A revive raises one fallen turret whole, behind the mantle's own rule on a clock the post
+   carries** (`revive`, 2026-10-19). `SiegeBoard.Restore` stands the post up exactly as a continue
+   does (`StandUp`, shared with `Rally`) and sets `SiegeWard.Barrier` (the magnitude, tenths); every
+   hit already asks `Turned`, which now reads the mantle *or* the post's barrier, and `Bear`/`Topple`
+   back it up. It is aimed only at a fallen post (`UtilityTarget.Fallen`), refused on a line that has
+   fallen whole (23: only a continue answers that) and charged nothing (39). The view draws the
+   phoenix's shell off `SiegeBoard.CoverLeft` per post, on every board.
+39q. **A wall holds what is behind it and pushes nothing** (`wall`, 2026-10-19). Aimed at a band
+   (`UtilityTarget.Row`), it stands on that band's near edge (`SiegeTuning.WallMarch`) for the
+   magnitude in tenths; a body behind it stops `WallStand` short and is never moved backwards, a body
+   past it walks on, a boss is never held (the 2026-10-05 ruling), one wall at a time, refused with
+   nothing to hold, charged nothing. One clock on the board, so every board nobody raised one on
+   plays bit for bit as before. The view sorts it among the raiders by its march (`SiegeView.Rampart`).
+39r. **The bar carries the player's kit: up to five chosen on the loadout's kit shelf, the same on
+   every board of every lane** (`UtilityKit`, `SettingsDto.kit`, save v45 - inside `settings`, so no
+   rules release). Never chosen is the catalog's first five, derived and never stored, which is the bar
+   everyone had before. Drawn in catalog order; a sixth is refused rather than swapped, the last
+   cannot come off, and the kit never touches stock (an item off the bar is still held). The shelf
+   card toggles the choice; its price pill buys.
 40. **A mechanic that attacks the *field* was the hole this mode had** - everything could only hurt the
    wards, so the field was a fuel tap the player operated while looking somewhere else.
 40a. **A mechanic nobody authored into a wave does not exist, and it shipped that way for two chapters** -

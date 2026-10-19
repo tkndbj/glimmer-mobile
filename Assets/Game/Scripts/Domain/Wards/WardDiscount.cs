@@ -51,6 +51,19 @@ namespace GlimmerGrove.Wards
         /// </summary>
         public static bool Offered => Percent > 0 && AdConfig.HasUnit(AdPlacement.TurretDiscount);
 
+        /// <summary>
+        /// The highest shelf band (<see cref="WardTier"/>) the offer is made on. <b>Tiers I and
+        /// II only</b> (the owner, 2026-10-19): tier III and the legendary band are sold at full
+        /// price, unlock and stars alike.
+        /// </summary>
+        public const int TopBand = 2;
+
+        /// <summary>Whether the offer belongs beside <paramref name="model"/>'s prices.</summary>
+        public static bool OfferedFor(WardModel model) => Offered && Covers(model);
+
+        /// <summary>Whether <paramref name="model"/>'s band is one the offer is made on at all.</summary>
+        public static bool Covers(WardModel model) => model != null && WardTier.Of(model) <= TopBand;
+
         /// <summary>Where the offer stands right now.</summary>
         public static WardDiscountState State
             => !Offered ? WardDiscountState.Off

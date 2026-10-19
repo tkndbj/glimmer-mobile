@@ -626,6 +626,19 @@ namespace GlimmerGrove
                 return;
             }
 
+            // **A revive with no fallen turret is refused on the tap that would arm it**, with the
+            // reason: a targeting layer with no target on it is a mode the player can only leave
+            // by tapping the slot again, and nothing on the board would say why it is empty.
+            if (item != null && item.Target == UtilityTarget.Fallen
+                && (_siege?.Siege == null || !_siege.Siege.AnyFallen))
+            {
+                _bar?.Arm(null);
+                if (_siege != null) _siege.Arming = null;
+
+                Say("ui.utility.no_fallen");
+                return;
+            }
+
             if (_siege != null) _siege.Arming = item;
             if (item == null || _bar == null) return;
 
@@ -761,9 +774,12 @@ namespace GlimmerGrove
         /// a firepot that reached nobody, a mending on an unhurt ward, a surge into a full one -
         /// are all the same news: nothing happened and nothing was taken.
         /// </summary>
-        void Refuse()
+        void Refuse() => Say("ui.utility.no_target");
+
+        /// <summary>One line over the bar saying why a utility did nothing.</summary>
+        void Say(string key)
         {
-            Scenery.Toast(Safe, Loc.Get("ui.utility.no_target"), Pal.Cream, 2.2f,
+            Scenery.Toast(Safe, Loc.Get(key), Pal.Cream, 2.2f,
                           new Vector2(.5f, 0f), UtilityBar.Room + 90f);
         }
 

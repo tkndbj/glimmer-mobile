@@ -87,6 +87,7 @@ namespace GlimmerGrove
         void PaintShelf()
         {
             _shelfIcons.Clear();
+            _kitLooks.Clear();
             _painted = Columns;
 
             for (int i = _grid.childCount - 1; i >= 0; i--)
@@ -552,10 +553,103 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// Puts one on the bar or takes it off, and says why not when it cannot.
+        /// <paramref name="choosable"/> is false only for a locked item nobody holds.
+        /// </summary>
+        void Pick(UtilityItem item, bool choosable)
+        {
+            if (!choosable && !UtilityKit.IsSelected(item))
+            {
+                Audio.Sfx("blocked", .4f);
+                Scenery.Toast(Content, Loc.Format("ui.loadout.level_note", item.MinLevel), Pal.Gold, 2.4f);
+                return;
+            }
+
+            switch (UtilityKit.Toggle(item))
+            {
+                case KitRefusal.None:
+                    // **A redraw of the choice and nothing else** (16d, 44mb): the cards, their
+                    // prices and their counts did not change, so the only thing that moves is the
+                    // rim and chip on the card that was tapped.
+                    Audio.Sfx("click", .55f);
+                    PaintChoice();
+                    return;
+
+                case KitRefusal.Full:
+                    Audio.Sfx("blocked", .4f);
+                    Scenery.Toast(Content, Loc.Format("ui.loadout.kit_full", UtilityKit.Size), Pal.Gold, 2.4f);
+                    return;
+
+                case KitRefusal.Last:
+                    Audio.Sfx("blocked", .4f);
+                    Scenery.Toast(Content, Loc.Get("ui.loadout.kit_last"), Pal.Gold, 2.4f);
+                    return;
+
+                default:
+                    Audio.Sfx("blocked", .4f);
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// The rim a chosen kit item wears: solid orange (<c>Pal.Amber</c>) over the card's own
+        /// blue plate - the border is the whole of the mark, so the card itself does not change.
+        /// </summary>
+        static readonly Color KitRim = Pal.Amber;
+
+        /// <summary>How thick the chosen rim is drawn, in the outline sprite's units.</summary>
+        const float KitRimWidth = 8f;
+
+        /// <summary>The two parts of a kit card that say it is chosen, kept so a toggle can flip them.</summary>
+        sealed class KitLook
+        {
+            public GameObject Rim, Chip;
+        }
+
+        /// <summary>
+        /// Every kit card's choice marks, by item id. Rebuilt with the shelf (<c>PaintShelf</c>);
+        /// read by <see cref="PaintChoice"/>, which is the whole of what a toggle redraws.
+        /// </summary>
+        readonly Dictionary<string, KitLook> _kitLooks = new Dictionary<string, KitLook>();
+
+        /// <summary>
+        /// Shows the rim and chip on exactly the cards the kit carries, and hides them on the rest.
+        /// Switches existing objects on and off - nothing is built, destroyed or re-entered.
+        /// </summary>
+        void PaintChoice()
+        {
+            foreach (var pair in _kitLooks)
+            {
+                bool chosen = UtilityKit.IsSelected(UtilityLedger.Catalog.Find(pair.Key));
+                if (pair.Value.Rim) pair.Value.Rim.SetActive(chosen);
+                if (pair.Value.Chip) pair.Value.Chip.SetActive(chosen);
+            }
+        }
+
+        /// <summary>
+        /// One kit item: its picture, name and price - and whether it rides on the bar.
+        ///
+        /// <para>
+        /// <b>Tapping the card puts it on the bar or takes it off</b> (<c>UtilityKit</c>), and a
+        /// chosen card wears a solid orange rim and a SELECTED chip over its usual blue plate.
+        /// Both are built on every card and switched by <see cref="PaintChoice"/>, so a toggle
+        /// redraws two objects rather than the shelf. <b>Tapping the price buys</b>, as the whole
+        /// card used to: the price is drawn as the thing a press lands on, and the panel it opens
+        /// is unchanged.
+        /// </para>
+        /// <para>
+        /// A sixth choice is refused with the reason rather than swapped in (which of five comes
+        /// off is the player's call), and so is taking off the last one. A locked item nobody
+        /// holds cannot be chosen - its slot would be a door to a shop that refuses - but one
+        /// already held can, since a gate never confiscates (15a).
+        /// </para>
+        /// </summary>
         void ItemCell(UtilityItem item, int level, Vector2 at, int index)
         {
             bool open = item.ReachedBy(level);
             int held = UtilityLedger.Held(item.Id);
+            bool chosen = UtilityKit.IsSelected(item);
 
             var cell = UIKit.Box("Item_" + item.Id, _grid, new Vector2(CellW, CellH),
                                  new Vector2(.5f, 1f), at);
@@ -566,6 +660,12 @@ namespace GlimmerGrove
 
             var plate = UIKit.Img("Plate", cell, Art.S("Ui/" + Skins.PlateBlue), Color.white);
             UIKit.StretchTo((RectTransform)plate.transform, 0, 0, 0, 0);
+
+            var look = new KitLook();
+
+            var rim = UIKit.Img("Edge", cell, Art.RoundOutline(CellRadius, KitRimWidth), KitRim);
+            UIKit.StretchTo((RectTransform)rim.transform, -2, -2, -2, -2);
+            look.Rim = rim.gameObject;
 
             // The ward cell's numbers, for the ward cell's reason - the two grids share a cell
             // size, so anything that is not the same here is a difference nobody chose. They are
@@ -619,6 +719,16 @@ namespace GlimmerGrove
 
             bool priced = open && item.ForSale;
 
+            // The price is the buy button now that the card is the choice (see the summary).
+            // The seat is its raycast target; the press lands on the box and goes no further.
+            seat.raycastTarget = true;
+            var buy = box.gameObject.AddComponent<Btn>();
+            buy.Setup(() =>
+            {
+                if (!open || !item.ForSale) { Audio.Sfx("blocked", .4f); return; }
+                Flow.Modal<UtilityBuyOverlay>(v => { v.Item = item; v.Bought = Paint; });
+            });
+
             var label = UIKit.Titled("T", box, text, Pt(32f * Scale),
                                      open ? Pal.Cream : Pal.A(Pal.Cream, .55f),
                                      TextAnchor.MiddleCenter,
@@ -633,13 +743,30 @@ namespace GlimmerGrove
                           new Vector2(36f * Scale, 36f * Scale), new Vector2(.5f, .5f),
                           new Vector2(-label.preferredWidth * .5f - 21f * Scale, 0f));
 
-            cell.gameObject.AddComponent<Btn>().Setup(() =>
-            {
-                if (!open || !item.ForSale) { Audio.Sfx("blocked", .4f); return; }
-                Flow.Modal<UtilityBuyOverlay>(v => { v.Item = item; v.Bought = Paint; });
-            });
+            // **SELECTED**, on a chip straddling the card's top edge: the one word the owner asked
+            // the shelf to say, over the one place on the card nothing else uses.
+            var chip = UIKit.Img("Chosen", cell, Art.S("Ui/" + Skins.Buy), Color.white,
+                                 new Vector2(CellW * .56f, 52f * Scale), new Vector2(.5f, 1f),
+                                 Vector2.zero);
+            chip.raycastTarget = false;
 
-            Tween.Pop(cell, Mathf.Min(index, 9) * .022f, .3f);
+            var word = UIKit.Titled("T", chip.transform, Loc.Get("ui.loadout.kit_selected").Upper(),
+                                    Pt(28f * Scale), Pal.Cream, TextAnchor.MiddleCenter,
+                                    new Vector2(CellW * .56f - 24f * Scale, 44f * Scale),
+                                    new Vector2(.5f, .5f),
+                                    new Vector2(0f, 52f * Scale * UIKit.PillFaceLift), 0f, 2f);
+            UIKit.Shrinkable(word, Pt(16f * Scale));
+            look.Chip = chip.gameObject;
+
+            look.Rim.SetActive(chosen);
+            look.Chip.SetActive(chosen);
+            _kitLooks[item.Id] = look;
+
+            cell.gameObject.AddComponent<Btn>().Setup(() => Pick(item, open || held > 0));
+
+            // **Only on the way in**, the turret cell's rule (16d): a purchase landing repaints the
+            // shelf, and replaying the entrance there reads as the screen reloading itself.
+            if (!_shown) Tween.Pop(cell, Mathf.Min(index, 9) * .022f, .3f);
         }
     }
 }

@@ -603,6 +603,24 @@
         "maxHeld": 100,
         "order": 5,
         "cooldownSeconds": 45
+      },
+      {
+        "id": "revive",
+        "kind": "revive",
+        "magnitude": 30,
+        "gemPrice": 80,
+        "maxHeld": 100,
+        "order": 6,
+        "cooldownSeconds": 60
+      },
+      {
+        "id": "wall",
+        "kind": "wall",
+        "magnitude": 50,
+        "gemPrice": 40,
+        "maxHeld": 100,
+        "order": 7,
+        "cooldownSeconds": 30
       }
     ]
   },

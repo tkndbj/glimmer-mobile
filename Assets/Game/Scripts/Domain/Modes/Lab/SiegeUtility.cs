@@ -15,10 +15,10 @@ namespace GlimmerGrove.Modes
         /// <summary>Which lane, 0..<c>Lanes - 1</c>. Read by a blast.</summary>
         public readonly int Lane;
 
-        /// <summary>Which band down the hill, 0..<c>BlastRows - 1</c>. Read by a blast.</summary>
+        /// <summary>Which band down the hill, 0..<c>BlastRows - 1</c>. Read by a blast and a wall.</summary>
         public readonly int Row;
 
-        /// <summary>Which ward. Read by a mend and a surge.</summary>
+        /// <summary>Which ward. Read by a mend, a surge and a revive.</summary>
         public readonly int Ward;
 
         /// <summary>
@@ -41,6 +41,9 @@ namespace GlimmerGrove.Modes
         public static SiegeAim AtWard(int ward) => new SiegeAim(0, 0, ward);
 
         public static SiegeAim AtWell(int well) => new SiegeAim(0, 0, -1, well);
+
+        /// <summary>One whole band of the hill, which is what a wall is aimed at.</summary>
+        public static SiegeAim AtRow(int row) => new SiegeAim(0, row, -1);
     }
 
     /// <summary>
@@ -215,6 +218,15 @@ namespace GlimmerGrove.Modes
                     return aim.Well >= 0 && aim.Well < SiegeTuning.GravityWells
                         && !board.Sinking && board.Pullable > 0;
 
+                case UtilityKind.Revive:
+                    // Only a post that is down, on a run that is not (`SiegeBoard.Restore`).
+                    return board.Fallen(aim.Ward);
+
+                case UtilityKind.Wall:
+                    // **Answerable in advance, like a well**: one wall at a time, and only where
+                    // there is something behind it to hold.
+                    return !board.Walled && board.Holdable(aim.Row) > 0;
+
                 default:
                     return false;
             }
@@ -312,6 +324,26 @@ namespace GlimmerGrove.Modes
                     // damage, so it saves no matches. It buys seconds and a place - a finish and
                     // never a grade (invariant 39).
                     return new SiegeUse(true, 0, taken, -1);
+                }
+
+                case UtilityKind.Revive:
+                {
+                    // The magnitude is the barrier, in tenths; the health is always the whole of
+                    // the turret's own (`SiegeBoard.Restore`).
+                    if (!board.Restore(aim.Ward, item.Magnitude)) return SiegeUse.Refused;
+
+                    // Nought matches, for the mending's reason: it delivers no damage, so it
+                    // saves no matches - a finish and never a grade (invariant 39).
+                    return new SiegeUse(true, 0, board.Wards[aim.Ward].Health, aim.Ward);
+                }
+
+                case UtilityKind.Wall:
+                {
+                    int held = board.Wall(aim.Row, item.Magnitude);
+                    if (held <= 0) return SiegeUse.Refused;
+
+                    // Nought matches, for the well's reason: it buys seconds, never damage.
+                    return new SiegeUse(true, 0, held, -1);
                 }
 
                 default:

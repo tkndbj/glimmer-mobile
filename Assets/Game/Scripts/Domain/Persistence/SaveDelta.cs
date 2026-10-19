@@ -176,6 +176,10 @@ namespace GlimmerGrove.Persistence
             if (a.board.state != b.board.state) return true;
             if (!Same(a.language, b.language)) return true;
 
+            // The bar's chosen kit, in the order it was written (`UtilityKit` writes it in
+            // catalog order), so a choice made on one phone is the bar the other one draws.
+            if (!SameIds(a.kit, b.kit)) return true;
+
             var walletA = remote.wallet ?? WalletDto.Unwritten();
             var walletB = merged.wallet ?? WalletDto.Unwritten();
             // The heart ledger, and not the count beside it. The count is derived from
