@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Finisci una partita per ottenere il tuo primo voto."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Scorta iniziale"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Una mano"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Borsa del custode"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Tesoro nascosto"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Grande bottino"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Caveau reale"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Caveau leggendario"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Offerta speciale"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Offerta iniziale"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Non mollare!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Più potenza"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Ciao di nuovo!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Ottimo valore"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Un grande pacchetto, solo per te."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Una piccola spinta per iniziare il tuo viaggio."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "Ci sei quasi! Ecco un piccolo aiuto."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Più gemme e monete per la tua prossima torretta."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "Ti abbiamo tenuto da parte qualcosa di speciale."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Gemme e monete a un ottimo prezzo."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0}%"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Per te"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} gemme"
     }
   ]
 }

@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Termina una partida para conseguir tu primera nota."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Alijo inicial"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Mano amiga"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Morral del guardián"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Tesoro escondido"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Gran botín"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Bóveda real"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Bóveda legendaria"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Oferta especial"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Oferta de inicio"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "¡Sigue así!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Más poder"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "¡Hola de nuevo!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Gran valor"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Un gran paquete, solo para ti."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Un pequeño impulso para empezar tu aventura."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "¡Casi lo logras! Aquí tienes una ayuda."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Más gemas y monedas para tu próxima torre."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "Te guardamos algo especial."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Gemas y monedas a un gran precio."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0}%"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Para ti"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} gemas"
     }
   ]
 }

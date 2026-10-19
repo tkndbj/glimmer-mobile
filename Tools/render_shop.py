@@ -84,9 +84,74 @@ DEAL_ROW = BAND_GAP + DEAL_H + BAND_GAP
 DEAL = None                            # (credits, gems, seconds left) when drawn
 
 
+# `ShopScreen.OfferH` / `OfferRow` - the personal offer's band (invariant 64), under the deal band
+# when both stand: the deal card's height and seal room, on a violet box. `--offer` draws it.
+OFFER_ROW = DEAL_ROW
+OFFER = None                           # (product id, seconds left) when drawn
+OFFER_FACE = (117, 66, 199)            # ShopScreen.OfferFace (.46, .26, .78)
+OFFER_SEAL_WORD = 34                   # the band's seal caption
+
+
 def shelf_top():
-    """`ShopScreen.ShelfTop`: the header, the tabs and the deal band."""
-    return SHELF_TOP + (DEAL_ROW if DEAL else 0.0)
+    """`ShopScreen.ShelfTop`: the header, the tabs, the deal band and the offer band."""
+    return SHELF_TOP + (DEAL_ROW if DEAL else 0.0) + (OFFER_ROW if OFFER else 0.0)
+
+
+def offer_value(product):
+    """`OfferValue.Extra`: `DealValue.BundlePercent` over the shipped base packs, less the hundred."""
+    store = rules()["store"]["products"]
+    packs = [q for q in store if not q.get("passDays")]
+    g = min((q for q in packs if q.get("shelf") == "gems" and q.get("gems")), key=lambda q: q["referenceUsdCents"])
+    c = min((q for q in packs if q.get("shelf") == "coins" and q.get("credits")), key=lambda q: q["referenceUsdCents"])
+    worth = (product.get("credits", 0) * c["referenceUsdCents"] * g["gems"]
+             + product.get("gems", 0) * g["referenceUsdCents"] * c["credits"])
+    pct = worth * 100 // (product["referenceUsdCents"] * c["credits"] * g["gems"])
+    pct = min(9990, pct - pct % 10)
+    return pct - 100 if pct > 100 else 0
+
+
+def offer_band(sheet):
+    """`ShopScreen.BuildOffer`: the offer's own picture on a violet box, its gems over its coins,
+    the "+N%" seal over the corner, and FOR YOU over the time it has left."""
+    pid, left = OFFER
+    product = next(q for q in rules()["store"]["products"] if q["id"] == pid)
+    offers = sorted((q for q in rules()["store"]["products"] if q.get("shelf") == "offers"),
+                    key=lambda q: q["referenceUsdCents"])
+    rung_at = rung(offers.index(product) + 1, len(offers), 7)
+
+    slot_bottom = HEADER + TABROW + (DEAL_ROW if DEAL else 0.0) + BAND_GAP + DEAL_H
+    cy = slot_bottom - DEAL_CARD_H / 2
+    K.paste(sheet, K.tint(K.skin("Hud/plate_flat", BAND_W, DEAL_CARD_H), OFFER_FACE), W / 2, cy)
+    lx, rx, top = W / 2 - BAND_W / 2, W / 2 + BAND_W / 2, cy - DEAL_CARD_H / 2
+
+    art = DEAL_CARD_H - 2 * K.DEAL_ART_PAD
+    K.paste(sheet, K.fit(Image.open(UI / "Shop" / ("offer_%d.png" % (rung_at + 1))).convert("RGBA"), (art, art)),
+            lx + K.DEAL_ART_LEFT + art / 2, cy)
+
+    amount_left = lx + K.DEAL_ART_LEFT + art + K.DEAL_AMOUNT_GAP
+    gems = txt("ui.offer.gems_amount").replace("{0}", f"{product['gems']:,}").upper()
+    coins = txt("ui.shop.plus_coins").replace("{0}", f"{product['credits']:,}").upper()
+    SETTLED.append(("offer gems", gems, K.shrunk_left(sheet, gems, amount_left, cy - 26 - 37, DEAL_AMOUNT_W, 74, 52, 28,
+                                                     fill=K.BLOOM, outline=4), 28))
+    SETTLED.append(("offer coins", coins, K.shrunk_left(sheet, coins, amount_left, cy + 40 - 22, DEAL_AMOUNT_W, 44, 32, 18,
+                                                       fill=K.GOLD, outline=3), 18))
+
+    tx = rx - DEAL_TIMER_X
+    K.shrunk(sheet, txt("ui.offer.for_you").upper(), tx, cy - 44, DEAL_TIMER_W, 42, 32, 20, fill=K.CREAM, outline=3)
+    K.paste(sheet, K.skin("Hud/trough", DEAL_TIMER_W, DEAL_TIMER_H), tx, cy + 18)
+    K.text(sheet, timer(left), tx, cy + 18, 48, fill=(255, 92, 72) if left < DEAL_URGENT else (255, 255, 255), outline=3)
+
+    extra = offer_value(product)
+    if extra:
+        sx, sy = lx + K.DEAL_SEAL_IN, top + K.DEAL_SEAL_DROP
+        K.paste(sheet, K.tint(K.skin("Hud/burst", round(K.DEAL_SEAL_SIZE), round(K.DEAL_SEAL_SIZE)), K.DEAL_SEAL)
+                .rotate(8, Image.BICUBIC), sx, sy)
+        word = txt("ui.offer.bonus").replace("{0}", str(extra))
+        SETTLED.append(("offer seal", word, K.shrunk(sheet, word, sx, sy, K.DEAL_SEAL_SIZE * .72, K.DEAL_SEAL_SIZE * .5,
+                                                     OFFER_SEAL_WORD, 16, fill=(255, 255, 255), outline=3), 16))
+
+    print("  offer band: %s, rung %d, %s gems + %s coins, seal +%d%%, timer %r"
+          % (pid, rung_at + 1, f"{product['gems']:,}", f"{product['credits']:,}", extra, timer(left)))
 
 
 def countdown(seconds):
@@ -939,6 +1004,10 @@ def screen(shelf, offline=False):
     if DEAL:
         deal_band(sheet)
 
+    # ---- the personal offer's band, under it (invariant 64)
+    if OFFER:
+        offer_band(sheet)
+
     # ---- the grid
     rows = [] if offline else products(shelf)
     rungs = LADDER.get(shelf, 3)
@@ -1136,6 +1205,9 @@ def main():
     ap.add_argument("--deal", nargs=3, type=int, metavar=("COINS", "GEMS", "SECONDS"),
                     help="a live shop deal (invariant 60): its band under the tabs and the "
                          "purple alert on the shop tab, e.g. --deal 26000 900 93784")
+    ap.add_argument("--offer", nargs=2, metavar=("PRODUCT", "SECONDS"),
+                    help="a standing personal offer (invariant 64): its band under the tabs and any deal, "
+                         "e.g. --offer gg_offer_4 21600")
     ap.add_argument("--pass", dest="pass_state", choices=("price", "claim", "tomorrow"), default="price",
                     help="how a seven-day pass card faces: for sale, today's piece to claim, or "
                          "claimed today (with --left days left)")
@@ -1148,9 +1220,10 @@ def main():
     if args.measure:
         sys.exit(0 if measure_seal() else 1)
 
-    global SOLD, DEAL, PASS_STATE, PASS_LEFT
+    global SOLD, DEAL, OFFER, PASS_STATE, PASS_LEFT
     SOLD = args.sold
     DEAL = tuple(args.deal) if args.deal else None
+    OFFER = (args.offer[0], int(args.offer[1])) if args.offer else None
     PASS_STATE, PASS_LEFT = args.pass_state, args.left
 
     if args.all:

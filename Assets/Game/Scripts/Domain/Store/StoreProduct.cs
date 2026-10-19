@@ -61,6 +61,17 @@ namespace GlimmerGrove.Store
         /// </para>
         /// </summary>
         Utilities,
+
+        /// <summary>
+        /// The personal offers (invariant 64): real-money currency packs the offer engine deals to one
+        /// player at a time, in its popup and the shop's "for you" row, <b>never on a shop shelf</b> -
+        /// the shop lists the shelves in <c>ShopScreen.Shelves</c>, and this is not one of them. A
+        /// product here is an ordinary consumable granting currency and nothing else (18), so the
+        /// server honours it exactly as it honours a gem pack; what it grants is fixed by its id,
+        /// which is what lets a purchase re-delivered after a crash, a restore or a refund work
+        /// unchanged. Appended last, so no ordinal before it moves.
+        /// </summary>
+        Offers,
     }
 
     /// <summary>

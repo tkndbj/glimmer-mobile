@@ -1451,6 +1451,11 @@ namespace GlimmerGrove.Cloud
                 // and until a reply has said what this account holds the shop offers no deal.
                 Store.DealLedger.ApplyServerState(state.CarriesDeals, state.DealsBought);
 
+                // What the account has paid (invariant 64): the offer engine's money segments read
+                // it, and until a reply has said, it offers nothing.
+                Offers.PayerLedger.ApplyServerState(state.CarriesPayer, state.PayerPurchases,
+                                                    state.PayerCents, state.PayerTopCents, state.PayerLastUnix);
+
                 // The seven-day passes: the wallet document is the entitlement, and the shop's
                 // pass cards claim or sell by what it last said.
                 Store.DailyPassLedger.ApplyServerState(state.CarriesDailyPasses, state.DailyPasses);

@@ -38,7 +38,8 @@ namespace GlimmerGrove.Cloud
     /// </summary>
     public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
                                                    Referral.IReferralBackend, IWalletFeed, Store.IDealBackend,
-                                                   Store.IDailyPassBackend, Shuffle.IShuffleTuningBackend
+                                                   Store.IDailyPassBackend, Shuffle.IShuffleTuningBackend,
+                                                   Offers.IOfferTuningBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -643,6 +644,38 @@ namespace GlimmerGrove.Cloud
             catch (Exception e)
             {
                 return (Classify(e, "read shuffle tuning"), null);
+            }
+        }
+
+        // ------------------------------------------------------------ offer tuning
+        /// <summary>
+        /// The published offer tuning (invariant 64): one get of <c>config/offers</c>, never a
+        /// listener, answering the body published for <paramref name="schema"/> - exactly as
+        /// <see cref="ReadShuffleTuningAsync"/> reads its document, for its reasons.
+        /// </summary>
+        public async Task<(CloudResult result, string body)> ReadOfferTuningAsync(
+            int schema, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), null);
+
+            try
+            {
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("offers").GetSnapshotAsync(), ReadSeconds, cancellation);
+
+                if (!snapshot.Exists) return (CloudResult.Success, null);
+
+                var document = snapshot.ToDictionary();
+                string field = "schema" + schema.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                return document.TryGetValue(field, out object raw) && raw is string body
+                     ? (CloudResult.Success, body)
+                     : (CloudResult.Success, (string)null);
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read offer tuning"), null);
             }
         }
 
@@ -2100,6 +2133,16 @@ namespace GlimmerGrove.Cloud
                     state.CarriesDeals = true;
                     foreach (var id in dealList)
                         if (id is string s && s.Length > 0) state.DealsBought.Add(s);
+                }
+
+                // What the account has paid (invariant 64), presence first for the same reason.
+                if (entry.TryGetValue("payerPurchases", out object payer) && payer != null)
+                {
+                    state.CarriesPayer = true;
+                    state.PayerPurchases = (int)ReadLong(entry, "payerPurchases");
+                    state.PayerCents = ReadLong(entry, "payerCents");
+                    state.PayerTopCents = ReadLong(entry, "payerTopCents");
+                    state.PayerLastUnix = ReadLong(entry, "payerLastUnix");
                 }
 
                 // The seven-day passes still owed, presence first for the same reason.

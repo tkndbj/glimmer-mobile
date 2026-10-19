@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Termine uma partida para ganhar sua primeira nota."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Reserva inicial"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Uma mãozinha"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Bolsa do guardião"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Tesouro escondido"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Grande tesouro"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Cofre real"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Cofre lendário"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Oferta especial"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Oferta inicial"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Continue assim!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Mais poder"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Que bom te ver!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Ótimo valor"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Um grande pacote, só para você."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Um empurrãozinho para começar sua jornada."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "Foi por pouco! Aqui vai uma ajuda."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Mais gemas e moedas para sua próxima torre."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "Guardamos algo especial para você."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Gemas e moedas por um ótimo preço."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0}%"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Para você"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} gemas"
     }
   ]
 }

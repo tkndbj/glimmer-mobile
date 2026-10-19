@@ -247,6 +247,7 @@ namespace GlimmerGrove.Progression
             SaveService.Save();
             Invalidate();
             Raise(Spent);
+            TrackSpend(currency, amount, reason);
             return true;
         }
 
@@ -265,8 +266,19 @@ namespace GlimmerGrove.Progression
             SaveService.Save();
             Invalidate();
             Raise(Spent);
+            TrackSpend(currency, amount, reason);
             return true;
         }
+
+        /// <summary>
+        /// Every debit, said once to analytics with what it bought (the sink side of the economy,
+        /// invariant 64's measurement): the one place all of them pass, so a chart of where currency
+        /// goes cannot miss a shop that spends by another door.
+        /// </summary>
+        static void TrackSpend(string currency, long amount, string reason)
+            => Analytics.Telemetry.Track("currency_spent", "currency", currency, "amount", amount,
+                                         "reason", reason == null || reason.Length <= 100 ? reason ?? string.Empty
+                                                                                          : reason.Substring(0, 100));
 
         // A listener that throws must not turn a debit already taken or a claim already booked
         // into a false return, which every caller reads as "did not happen" - gems gone and

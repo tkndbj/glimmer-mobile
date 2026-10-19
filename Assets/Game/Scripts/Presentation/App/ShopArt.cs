@@ -99,8 +99,24 @@ namespace GlimmerGrove
         /// shelf it was authored on. A shelf is a browsing decision and could be re-cut; what
         /// arrives in the wallet cannot, so the picture keys on that.
         /// </summary>
+        /// <summary>
+        /// The personal offers' pictures (invariant 64): a gem pile and a coin pile together, larger
+        /// rung by rung, cut by <c>Tools/make_offer_art.py</c> from the two ladders above. As long as
+        /// the offers shelf (18e), read at the product's rung like every other ladder.
+        /// </summary>
+        public static readonly string[] Offers =
+        {
+            "Shop/offer_1", "Shop/offer_2", "Shop/offer_3", "Shop/offer_4",
+            "Shop/offer_5", "Shop/offer_6", "Shop/offer_7",
+        };
+
+        /// <summary>The address of an offer product's picture, read at its rung of the offers shelf.</summary>
+        public static string OfferPicture(StoreProduct product)
+            => "Ui/" + Offers[ShopLadder.Rung(product, Offers.Length)];
+
         static string[] LadderFor(StoreProduct product)
-            => product.Gems > 0 && product.Credits > 0 ? Bundles
+            => product.Shelf == StoreShelf.Offers ? Offers
+             : product.Gems > 0 && product.Credits > 0 ? Bundles
              : product.Gems > 0 ? Gems
              : Coins;
 

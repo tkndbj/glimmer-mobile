@@ -177,7 +177,23 @@ namespace GlimmerGrove
         /// and the empty plate all hang off it and four copies of a sum is four places for a band
         /// to be forgotten. An instance property since the deal band came and went on its own clock.
         /// </summary>
-        float ShelfTop => HeaderHeight + TabRow + DealRow;
+        float ShelfTop => HeaderHeight + TabRow + DealRow + OfferRow;
+
+        /// <summary>
+        /// The personal offer's band (invariant 64): under the deal band when both stand, with the
+        /// same room above it for its seal. Nought while no offer stands.
+        /// </summary>
+        const float OfferH = OfferCardH + DealCard.SealRise + 4f;
+
+        float OfferRow => _offer != null ? BandGap + OfferH + BandGap : 0f;
+
+        float OfferCentreY => -(HeaderHeight + TabRow + DealRow + BandGap + OfferH * .5f);
+
+        /// <summary>The offer the band is showing, or null (<see cref="Offers.OfferLedger.Standing"/>).</summary>
+        Offers.StandingOffer _offer;
+
+        /// <summary>The offer band itself. Null while no offer stands.</summary>
+        RectTransform _offerBand;
 
         RectTransform _viewport, _tabs;
         GridView _grid;
@@ -293,6 +309,7 @@ namespace GlimmerGrove
             // Decided before the grid, because whether a deal band stands under the tabs
             // decides where the shelf starts (`ShelfTop`).
             _deal = DealLedger.Offered;
+            _offer = Offers.OfferLedger.Standing;
 
             BuildGrid();
             BuildHeader();
@@ -351,11 +368,15 @@ namespace GlimmerGrove
             // runs out, which no event announces (`DealClock`).
             DealLedger.Changed += OnDealsChanged;
             DealLedger.Refresh();
+
+            // A personal offer dealt, bought or run out: its band comes or goes (invariant 64).
+            Offers.OfferLedger.Changed += OnOfferChanged;
         }
 
         void OnDestroy()
         {
             DealLedger.Changed -= OnDealsChanged;
+            Offers.OfferLedger.Changed -= OnOfferChanged;
             DailyPassLedger.Changed -= Restock;
             StoreService.Changed -= OnStoreChanged;
             StoreService.Granted -= OnGranted;
@@ -528,6 +549,7 @@ namespace GlimmerGrove
             BuildBalances();
             BuildTabs();
             BuildDeal();
+            BuildOffer();
             BuildNotice();
         }
 
@@ -607,7 +629,134 @@ namespace GlimmerGrove
 
             _deal = next;
             BuildDeal();
+
+            // The offer band hangs under the deal band, so it moves with it.
+            RebuildOffer();
             Relayout();
+        }
+
+        // ---------------------------------------------------------------- the offer band
+        /// <summary>
+        /// The personal offer standing now (invariant 64), under the tabs and any deal: the offer's
+        /// own picture on a violet box, its gems over its coins, the "+N%" seal over the corner, and
+        /// FOR YOU over the time it has left. The whole card is the tap; it opens the offer panel,
+        /// which says the store's price. Nothing is ever charged here. Mirrored by
+        /// <c>render_offers.py</c>, whose constants these are.
+        /// </summary>
+        void BuildOffer()
+        {
+            _offerBand = null;
+            var offer = _offer;
+            if (offer == null || offer.Product == null) return;
+
+            var band = UIKit.Box("Offer", Safe, new Vector2(BandW, OfferH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, OfferCentreY));
+
+            var product = offer.Product;
+            var card = UIKit.Button("Card", band, Art.S("Ui/" + Skins.PlateFlat), new Vector2(BandW, OfferCardH),
+                                    new Vector2(.5f, 0f), new Vector2(0f, OfferCardH * .5f), () => TapOffer());
+            card.PressScale = .985f;
+            card.GetComponent<Image>().color = OfferFace;
+            var root = (RectTransform)card.transform;
+
+            float art = OfferCardH - 2f * OfferArtPad;
+            var picture = UIKit.Img("Art", root, Art.S(ShopArt.OfferPicture(product)), Color.white,
+                                    new Vector2(art, art), new Vector2(0f, .5f), new Vector2(OfferArtLeft + art * .5f, 0f));
+            picture.preserveAspect = true;
+            picture.enabled = picture.sprite != null;
+            Tween.Breathe(picture.transform, .035f, 2.4f);
+
+            float left = OfferArtLeft + art + OfferAmountGap;
+            UIKit.Shrinkable(
+                UIKit.Titled("Gems", root, Loc.Format("ui.offer.gems_amount", product.Gems.ToString("N0")).Upper(), 52, Pal.Bloom,
+                             TextAnchor.MiddleLeft, new Vector2(OfferAmountW, 74f), new Vector2(0f, .5f),
+                             new Vector2(left + OfferAmountW * .5f, 26f), 4f, 3f), 28);
+            UIKit.Shrinkable(
+                UIKit.Titled("Coins", root, Loc.Format("ui.shop.plus_coins", product.Credits.ToString("N0")).Upper(), 32,
+                             Pal.Gold, TextAnchor.MiddleLeft, new Vector2(OfferAmountW, 44f), new Vector2(0f, .5f),
+                             new Vector2(left + OfferAmountW * .5f, -40f), 3f, 2f), 18);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("ForYou", root, Loc.Get("ui.offer.for_you").Upper(), 32, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(DealTimerW, 42f), new Vector2(1f, .5f),
+                             new Vector2(-DealTimerX, 44f), 3f, 2f), 20);
+            UIKit.Img("Trough", root, Art.S("Ui/" + Skins.Trough), Color.white,
+                      new Vector2(DealTimerW, DealTimerH), new Vector2(1f, .5f), new Vector2(-DealTimerX, -18f));
+            var timer = UIKit.Shrinkable(
+                UIKit.Titled("Timer", root, DealClock.Timer(offer.SecondsLeft(GameClock.NowUnix())), 48,
+                             Color.white, TextAnchor.MiddleCenter, new Vector2(DealTimerW - 30f, DealTimerH),
+                             new Vector2(1f, .5f), new Vector2(-DealTimerX, -18f), 3f, 2f), 28);
+
+            int extra = Offers.OfferValue.Extra(product, StoreRules.Catalog);
+            if (extra > 0)
+            {
+                var seal = UIKit.Img("Seal", root, Art.S("Ui/" + Skins.Badge), Pal.Poppy,
+                                     new Vector2(DealCard.SealSize, DealCard.SealSize), new Vector2(0f, 1f),
+                                     new Vector2(DealCard.SealIn, -DealCard.SealDrop));
+                seal.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
+                var word = UIKit.Shrinkable(
+                    UIKit.Titled("Word", seal.transform, Loc.Format("ui.offer.bonus", extra), 34, Color.white,
+                                 TextAnchor.MiddleCenter, new Vector2(DealCard.SealSize * .72f, DealCard.SealSize * .5f),
+                                 new Vector2(.5f, .5f), new Vector2(0f, 2f), 3f, 2f), 16);
+                word.transform.localRotation = Quaternion.Euler(0f, 0f, -8f);
+            }
+
+            Sheen.Attach(root, 3.4f);
+            OfferClock.Attach(band.gameObject, timer, offer, OnOfferChanged);
+
+            band.localScale = Vector3.zero;
+            Tween.Pop(band, 0f, .55f, .3f);
+            _offerBand = band;
+        }
+
+        /// <summary>The offer card's height inside its slot - the deal card's.</summary>
+        const float OfferCardH = DealCardH;
+
+        /// <summary>The picture's margin top and bottom, its left margin, and the air before the amount.</summary>
+        const float OfferArtPad = 14f, OfferArtLeft = 40f, OfferAmountGap = 16f;
+
+        /// <summary>The amount column's width, between the picture and the clock.</summary>
+        const float OfferAmountW = 420f;
+
+        /// <summary>The offer box's colour: a deep violet, the gems' side of the shop, apart from the deal's emerald.</summary>
+        static readonly Color OfferFace = new Color(.46f, .26f, .78f);
+
+        void TapOffer()
+        {
+            var standing = Offers.OfferLedger.Standing;
+            if (standing == null) { OnOfferChanged(); return; }
+
+            Flow.Modal<OfferOverlay>(v =>
+            {
+                v.Offer = standing;
+                v.FromShop = true;
+            });
+        }
+
+        /// <summary>The standing offer changed, or the one shown ran out. Rebuilds the band only (44mb).</summary>
+        void OnOfferChanged()
+        {
+            if (!this || _grid == null) return;
+
+            var next = Offers.OfferLedger.Standing;
+            if (_offerBand && next != null && next.SameAs(_offer)) return;
+            if (!_offerBand && next == null) { _offer = null; return; }
+
+            _offer = next;
+            RebuildOffer();
+            Relayout();
+        }
+
+        void RebuildOffer()
+        {
+            if (_offerBand)
+            {
+                // Hidden before it is destroyed, for the deal band's reason.
+                _offerBand.gameObject.SetActive(false);
+                Destroy(_offerBand.gameObject);
+                _offerBand = null;
+            }
+            BuildOffer();
         }
 
         /// <summary>

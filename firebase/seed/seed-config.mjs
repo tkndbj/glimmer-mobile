@@ -300,7 +300,7 @@ function readStore(progression) {
 
   const MAX_GRANT = 5000000;                  // mirrors StoreLimits.MaxGrant and products.ts
   const MIN_CAPACITY = 6, MAX_CAPACITY = 50;  // mirrors StoreLimits and products.ts
-  const SHELVES = new Set(["gems", "coins", "bundles", "supplies", "event_pass"]);
+  const SHELVES = new Set(["gems", "coins", "bundles", "supplies", "event_pass", "offers"]);
   const KINDS = new Set(["consumable", "nonconsumable"]);
 
   const products = {};
@@ -420,6 +420,16 @@ function readStore(progression) {
       );
     }
 
+    // A personal offer (invariant 64): a repeatable pack of currency and nothing else, dealt to one
+    // player at a time. Mirrors StoreCatalog.ReadProduct and content.py, clause for clause.
+    if (entry.shelf === "offers" &&
+        (entry.kind !== "consumable" || capacity > 0 || passDays > 0 || entry.badge || entry.eventPassId)) {
+      throw new Error(
+        `store product '${id}' sits on the offers shelf but is not a consumable pack of currency with ` +
+        "no badge, capacity or pass; an offer is dealt again and again"
+      );
+    }
+
     // One-time offers are left out of the ladder check below, and that is the whole
     // point of them rather than a loophole: a starter pack is deliberately better value
     // than anything else on its shelf, and it cannot cannibalise the ladder because the
@@ -433,7 +443,9 @@ function readStore(progression) {
     // A pass is left out for the one-time offer's reason: it is not a rung of its shelf's
     // ladder but a different shape of purchase (currency paid over days), and its per-day
     // figures ranked against a pack's whole grant would mean nothing in either direction.
-    if (entry.kind !== "nonconsumable" && passDays === 0) {
+    // The offers are left out too: they are dealt one at a time and never stand side by side, so
+    // they are no ladder a player compares (invariant 64); content.py holds each to beat the shop.
+    if (entry.kind !== "nonconsumable" && passDays === 0 && entry.shelf !== "offers") {
       if (!shelves.has(entry.shelf)) shelves.set(entry.shelf, []);
       shelves.get(entry.shelf).push({ id, credits, gems, cents });
     }
@@ -441,9 +453,13 @@ function readStore(progression) {
     // Only what the server needs in order to honour a receipt. The shelf, the badge and
     // the reference price are display and validation; publishing them would invite
     // somebody to think the server had an opinion about them.
+    //
+    // The reference cents are the one exception, and they are display nowhere: the payer counters
+    // (`payer.ts`, invariant 64) are kept in them, so the server has to know what a purchase was worth
+    // in the unit every storefront shares.
     products[id] = passDays > 0
-      ? { credits, gems, kind: entry.kind, capacity, passDays }
-      : { credits, gems, kind: entry.kind, capacity };
+      ? { credits, gems, kind: entry.kind, capacity, passDays, cents }
+      : { credits, gems, kind: entry.kind, capacity, cents };
   }
 
   // The ladder has to get better as it gets bigger. A middle rung worth less per unit of

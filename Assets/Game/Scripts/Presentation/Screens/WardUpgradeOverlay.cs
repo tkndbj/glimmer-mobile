@@ -217,7 +217,11 @@ namespace GlimmerGrove
 
             // A star the player cannot pay for: a limited-time deal may answer it once this panel
             // is closed (invariant 60c).
-            if (offer.Shortfall > 0) DealMoment.NoteShortfall();
+            if (offer.Shortfall > 0)
+            {
+                DealMoment.NoteShortfall();
+                Offers.OfferLedger.NoteShortfall(offer.Shortfall);
+            }
 
             _label.text = offer.Cost.ToString("N0");
             _coin.enabled = true;

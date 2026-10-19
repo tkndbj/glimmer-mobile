@@ -506,6 +506,10 @@ namespace GlimmerGrove
                 // A switch over an enum whose default is a real colour hides exactly this.
                 case StoreShelf.EventPass: return Pal.Aqua;
 
+                // The personal offers (invariant 64), which draw no tab: named for the event
+                // shelf's reason above, in the deal seal's red - an offer is the same kind of news.
+                case StoreShelf.Offers: return Pal.Poppy;
+
                 default: return Pal.Bloom;              // gems
             }
         }

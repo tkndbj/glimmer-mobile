@@ -129,6 +129,7 @@ import {
   WalletReply,
 } from "./wallet";
 import { rebuildChapterStandings } from "./standings";
+import { addPurchase } from "./payer";
 
 
 initializeApp();
@@ -1683,6 +1684,10 @@ export const redeemPurchase = onCall(
         state[currency].granted += amount;
         granted[currency] = amount;
       }
+
+      // The payer counters (invariant 64), raised in the transaction that records the receipt, so
+      // a retried receipt - which returns above, granting nothing - can never count twice.
+      state.payer = addPurchase(state.payer ?? null, grant.cents, Math.floor(Date.now() / 1000));
 
       // A seven-day pass: the loop above has just paid its first piece (a pass's amounts are
       // per day), and this opens the run that owes the rest - in the transaction that records

@@ -360,6 +360,25 @@ namespace GlimmerGrove.Store
                                  0, 500, 199, StoreBadge.None, passDays: 7),
                 new StoreProduct("gg_coin_pass_7d", StoreProductKind.Consumable, StoreShelf.Coins,
                                  20000, 0, 199, StoreBadge.None, passDays: 7),
+
+                // --- personal offers (invariant 64) -------------------------------------
+                // One per price point, dealt by the offer engine and never shown on a shelf. What
+                // each grants is fixed by its id - the receipt carries nothing else - so the engine
+                // chooses which one a player sees, never what it pays.
+                new StoreProduct("gg_offer_1", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 5000, 300, 99, StoreBadge.None),
+                new StoreProduct("gg_offer_2", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 8000, 400, 149, StoreBadge.None),
+                new StoreProduct("gg_offer_3", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 20000, 900, 399, StoreBadge.None),
+                new StoreProduct("gg_offer_4", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 60000, 1500, 799, StoreBadge.None),
+                new StoreProduct("gg_offer_5", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 130000, 3500, 1499, StoreBadge.None),
+                new StoreProduct("gg_offer_6", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 280000, 8500, 3999, StoreBadge.None),
+                new StoreProduct("gg_offer_7", StoreProductKind.Consumable, StoreShelf.Offers,
+                                 560000, 17000, 7999, StoreBadge.None),
             },
             new[]
             {
@@ -619,6 +638,18 @@ namespace GlimmerGrove.Store
                 }
             }
 
+            // A personal offer (invariant 64): a repeatable pack of currency and nothing else, dealt
+            // to one player at a time and never on a shelf. Refused rather than repaired for the
+            // grant bound's reason - a card the server would not honour is worse than no card.
+            if (shelf == StoreShelf.Offers &&
+                (oneTime || capacity > 0 || passDays > 0 || passId.Length > 0 || !string.IsNullOrEmpty(dto.badge)))
+            {
+                problems.Add($"store product '{id}' sits on the offers shelf but is not a consumable pack of " +
+                             "currency with no badge, capacity or pass; an offer is dealt again and again, " +
+                             "so it must be a repeatable currency product");
+                return null;
+            }
+
             var badge = ReadBadge(dto.badge, id, problems);
 
             // A pass wears its own ribbon and no shelf badge: a badge points at a rung of a ladder,
@@ -723,6 +754,7 @@ namespace GlimmerGrove.Store
             if (string.Equals(shelf, "coins", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Coins; return true; }
             if (string.Equals(shelf, "bundles", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Bundles; return true; }
             if (string.Equals(shelf, "supplies", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Supplies; return true; }
+            if (string.Equals(shelf, "offers", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Offers; return true; }
             return false;
         }
 

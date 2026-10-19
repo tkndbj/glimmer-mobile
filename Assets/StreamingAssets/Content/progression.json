@@ -504,6 +504,62 @@
         "credits": 20000,
         "passDays": 7,
         "referenceUsdCents": 199
+      },
+      {
+        "id": "gg_offer_1",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 5000,
+        "gems": 300,
+        "referenceUsdCents": 99
+      },
+      {
+        "id": "gg_offer_2",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 8000,
+        "gems": 400,
+        "referenceUsdCents": 149
+      },
+      {
+        "id": "gg_offer_3",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 20000,
+        "gems": 900,
+        "referenceUsdCents": 399
+      },
+      {
+        "id": "gg_offer_4",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 60000,
+        "gems": 1500,
+        "referenceUsdCents": 799
+      },
+      {
+        "id": "gg_offer_5",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 130000,
+        "gems": 3500,
+        "referenceUsdCents": 1499
+      },
+      {
+        "id": "gg_offer_6",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 280000,
+        "gems": 8500,
+        "referenceUsdCents": 3999
+      },
+      {
+        "id": "gg_offer_7",
+        "kind": "consumable",
+        "shelf": "offers",
+        "credits": 560000,
+        "gems": 17000,
+        "referenceUsdCents": 7999
       }
     ],
     "goods": [

@@ -622,6 +622,22 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    session; the back key defers and never loses. Held by `test/gifts.mjs`, `GiftTests` and the live
    `admin-gift.mjs`; `render_gift.py` is the mirror.
 
+### Personal offers
+
+64. **A personal offer is a real-money product on the `offers` shelf, dealt by rules that choose which
+   and when, never what it pays.** Seven consumables `gg_offer_1..7` grant fixed currency set in
+   `progression.json` (18; a re-delivered receipt needs no context), never on a shop shelf, sealed "+N%" by
+   `OfferValue` (60d's arithmetic). `OfferRules.Choose` is one pure function: pacing (holdout, first levels,
+   one standing, per day/session, gap after any money popup, quiet after a purchase, backoff per close),
+   then the offers answering the moment (`OfferTrigger`) for the player's segments. **Measures, moments and
+   looks are code; segments, thresholds, offers and pacing are content** in `config/offers`
+   (`seed-offers.mjs`, strict reader first; revision 1 = `OfferTuning.ShippedJson`; the stop is
+   `"enabled": false`). History is device-local per account (`OfferHistory`, no save field); what the account
+   paid is the server's (`payer` on the wallet, raised by `redeemPurchase`, only climbs; nothing dealt until
+   a reply carries it). `OfferMoment` raises `OfferOverlay` after `DealMoment`; the shop's band re-opens the
+   standing offer. Held by `OfferTuningTests`, `OfferRulesTests`, `test/payer.mjs`, `content.py`;
+   `render_offers.py --measure` and `make_offer_art.py --check`.
+
 ### Art credits
 
 46. **An art credit lives on the publisher's site, nowhere in the app.** No shipped vendor compels one.

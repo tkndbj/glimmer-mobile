@@ -161,6 +161,9 @@ namespace GlimmerGrove
 
             Telemetry.Track("deal_offer_shown", "trigger", DealPrompt.Id(trigger), "deals", deals.Count);
 
+            // One money popup paces the next: the offer engine waits its gap after this (invariant 64).
+            Offers.OfferLedger.NotePopup();
+
             Flow.Modal<DealOverlay>(v =>
             {
                 v.Deals = deals;

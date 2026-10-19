@@ -55,6 +55,14 @@ export interface ProductGrant {
    * `claimDailyPass`. Still currency and nothing else (18) - just in instalments.
    */
   passDays: number;
+
+  /**
+   * What the product costs in reference US cents (the catalog's `referenceUsdCents`), or 0 when the
+   * published catalog predates it. Never a price anybody is charged - the store sets those - but the
+   * unit the payer counters are kept in (`payer.ts`, invariant 64), so a segment reads the same
+   * player the same way in every storefront.
+   */
+  cents: number;
 }
 
 export type ProductTable = Record<string, ProductGrant>;
@@ -118,6 +126,7 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     kind: typeof raw.kind === "string" ? raw.kind : "consumable",
     capacity: nonNegative(raw.capacity),
     passDays: nonNegative(raw.passDays),
+    cents: nonNegative(raw.cents),
   };
 
   // Refused by name rather than merely unread. A season's pass is bought with gems

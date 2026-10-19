@@ -21,6 +21,7 @@ import { ChallengeAdDays, ChallengeTiersHeld, adPlaysOn, readChallengeAds, readC
 import { DealsBought, readDealsBought } from "./deals";
 import { DailyPasses, PassReplyRow, passReply, readDailyPasses } from "./daily-pass";
 import { GiftReplyRow, GiftsPending, giftRows, readGiftsPending } from "./gifts";
+import { PayerRecord, payerReply, readPayer } from "./payer";
 
 export interface CurrencyState {
   granted: number;
@@ -175,6 +176,13 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * writer writes this document whole.
    */
   gifts?: GiftsPending;
+
+  /**
+   * What the account has paid (`payer.ts`, invariant 64): purchases, reference cents in all and at
+   * most, and when the last was granted. Written by `redeemPurchase` in the granting transaction and
+   * only ever raised; carried through `readWallet` because every writer writes this document whole.
+   */
+  payer?: PayerRecord;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -277,12 +285,22 @@ export interface WalletReply {
    * from a function not yet redeployed changes nothing it knows.
    */
   gifts: GiftReplyRow[];
+
+  /**
+   * What the account has paid (invariant 64). Always present, including as noughts, so the client
+   * reads the fields' presence as "this deployment counts purchases" and deals no personal offer
+   * before it does - the wheel's trick.
+   */
+  payerPurchases: number;
+  payerCents: number;
+  payerTopCents: number;
+  payerLastUnix: number;
 }
 
 /** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
 const MODELLED_WALLET_KEYS = new Set<string>([
   ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
-  "keeperBought", "challengeAds", "deals", "dailyPasses", "gifts", "streak", "updatedAt",
+  "keeperBought", "challengeAds", "deals", "dailyPasses", "gifts", "payer", "streak", "updatedAt",
 ]);
 
 /**
@@ -411,6 +429,11 @@ export function readWallet(
   const gifts = readGiftsPending((raw as { gifts?: unknown } | undefined)?.gifts);
   if (Object.keys(gifts).length > 0) wallet.gifts = gifts;
 
+  // What the account has paid, carried through for exactly the reason every field above it is -
+  // and deleting this one would deal a first-purchase offer to somebody who already paid.
+  const payer = readPayer((raw as { payer?: unknown } | undefined)?.payer);
+  if (payer) wallet.payer = payer;
+
   // **Everything else the document holds, carried through untouched - and this is the rule
   // the eight paragraphs above were each one instance of.** Every writer of this document
   // writes it whole, so a field this function does not copy is a field the next write deletes.
@@ -510,6 +533,7 @@ export function toReply(
     dealsBought: Object.keys(wallet.deals ?? {}).sort(),
     dailyPasses: passReply(wallet.dailyPasses),
     gifts: giftRows(wallet.gifts),
+    ...payerReply(wallet.payer),
   }));
 }
 

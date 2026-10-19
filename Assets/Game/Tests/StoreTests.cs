@@ -333,6 +333,9 @@ namespace GlimmerGrove.Tests
         {
             foreach (StoreShelf shelf in System.Enum.GetValues(typeof(StoreShelf)))
             {
+                // Offers are dealt alone, never laddered (invariant 64); OfferStoreTests holds them.
+                if (shelf == StoreShelf.Offers) continue;
+
                 var rungs = new List<StoreProduct>();
                 foreach (var product in catalog.Shelf(shelf))
                     if (!product.IsOneTime && !product.IsDailyPass) rungs.Add(product);

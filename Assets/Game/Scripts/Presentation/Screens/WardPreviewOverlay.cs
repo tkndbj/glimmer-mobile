@@ -566,7 +566,11 @@ namespace GlimmerGrove
 
                     // A coin price the player cannot pay: a limited-time deal may answer it once
                     // this panel is closed (invariant 60c).
-                    if (!gems && offer.Shortfall > 0) DealMoment.NoteShortfall();
+                    if (!gems && offer.Shortfall > 0)
+                    {
+                        DealMoment.NoteShortfall();
+                        Offers.OfferLedger.NoteShortfall(offer.Shortfall);
+                    }
 
                     _status.color = Short;
                     _label.text = offer.Cost.ToString("N0");

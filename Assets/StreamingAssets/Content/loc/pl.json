@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Ukończ grę, aby zdobyć pierwszą ocenę."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Zapas na start"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Pomocna dłoń"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Torba strażnika"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Ukryty skarb"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Wielki łup"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Królewski skarbiec"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Legendarny skarbiec"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Oferta specjalna"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Oferta na start"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Nie poddawaj się!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Więcej mocy"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Witaj ponownie!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Świetna okazja"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Duży pakiet, tylko dla ciebie."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Mały zastrzyk na start twojej przygody."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "Tak blisko! Oto mała pomoc."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Więcej klejnotów i monet na następną wieżę."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "Mamy dla ciebie coś wyjątkowego."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Klejnoty i monety w świetnej cenie."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0}%"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Dla ciebie"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "Klejnoty: {0}"
     }
   ]
 }

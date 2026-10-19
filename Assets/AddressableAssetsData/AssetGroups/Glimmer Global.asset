@@ -27,6 +27,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/courtBulwark_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 001ec9c9391e33945ae39a896234d420
+    m_Address: Art/Ui/Shop/offer_5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0023dea6712e73543b54dfb0287aec08
     m_Address: Art/Siege/harrow_cast/f02
     m_ReadOnly: 0
@@ -68,6 +73,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_beacon_r
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 00849a27264b92c4880cfff219af2e6c
+    m_Address: Art/Ui/Shop/offer_6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0085ac13338f5ee4d80e04df2ca58635
     m_Address: Art/Siege/wildMon_r/f09
@@ -6515,6 +6525,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/maw_muzzle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 279862558cbb88d46ad48b6962731184
+    m_Address: Art/Ui/Shop/offer_7
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27a6e73c5fd9f264297daf794d507528
     m_Address: Art/Fx/Siege/muzzle_spectrum_y/f02
@@ -15118,6 +15133,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/courtBrute_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5acb052b0d83d964a9260d3135106d35
+    m_Address: Art/Ui/Shop/offer_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5acf061d2b8b53048823ab51a066265c
     m_Address: Art/Fx/Siege/shot_pyre_b/f02
@@ -34276,6 +34296,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/boulder
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cba2cc7575fc089419297b6392038c1d
+    m_Address: Art/Ui/Shop/offer_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cbcad441371a3d444b37cbad108f94c3
     m_Address: Art/Fx/Siege/muzzle_cleaver_g/f01
     m_ReadOnly: 0
@@ -37408,6 +37433,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_howitzer_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de56227beb001b64fb83dbdee7e8c5b3
+    m_Address: Art/Ui/Shop/offer_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: de6773142fa0cbb48a6e80cc84e08b9e
     m_Address: Art/Fx/Siege/charm_blast_r/f11
     m_ReadOnly: 0
@@ -38090,6 +38120,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_prism_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1dd44fa5b8544a40a892bbeb3440661
+    m_Address: Art/Ui/Shop/offer_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e1ed565a7678a4177d0fad987e44a895
     m_Address: Art/Ui/ic_trophy

@@ -466,6 +466,11 @@ namespace GlimmerGrove.EditorTools
             foreach (StoreShelf shelf in System.Enum.GetValues(typeof(StoreShelf)))
             {
                 var rungs = new List<StoreProduct>();
+                // The personal offers are dealt one at a time and never stand side by side, so
+                // they are no ladder a player compares (invariant 64); each is held instead to
+                // beat the shop's own prices (`content.py`, `OfferStoreTests`).
+                if (shelf == StoreShelf.Offers) continue;
+
                 foreach (var product in catalog.Shelf(shelf))
                     if (!product.IsOneTime && !product.IsDailyPass) rungs.Add(product);
 

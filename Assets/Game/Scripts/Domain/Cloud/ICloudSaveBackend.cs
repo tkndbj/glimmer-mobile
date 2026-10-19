@@ -372,6 +372,19 @@ namespace GlimmerGrove.Cloud
         public List<string> DealsBought = new List<string>();
 
         /// <summary>
+        /// What the server has recorded this account paying (invariant 64): purchases, their
+        /// reference cents in all and at most, and when the last one landed (<c>payer*</c> on every
+        /// row). Folded in by <c>Offers.PayerLedger.ApplyServerState</c>.
+        /// </summary>
+        public int PayerPurchases;
+        public long PayerCents;
+        public long PayerTopCents;
+        public long PayerLastUnix;
+
+        /// <summary>Whether the reply carried the payer fields at all, for <see cref="CarriesEndless"/>'s reason.</summary>
+        public bool CarriesPayer;
+
+        /// <summary>
         /// Whether the reply carried the list at all, for <see cref="CarriesEndless"/>'s reason: an
         /// account that bought nothing answers an empty list, a deployment that predates deals
         /// answers nothing, and only the first may open the shop's deal band.

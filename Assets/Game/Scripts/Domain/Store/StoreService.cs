@@ -913,7 +913,10 @@ namespace GlimmerGrove.Store
                             "gems", gems,
                             "capacity", product != null ? product.HeartCapacity : 0,
                             "already", redemption.AlreadyGranted,
-                            "linked", Cloud.CloudSaveService.IsLinked);
+                            "linked", Cloud.CloudSaveService.IsLinked,
+                            // Which arm of the offer engine's holdout paid (invariant 64): revenue
+                            // per arm is the whole measure of what the engine earns.
+                            "offer_arm", Offers.OfferLedger.Arm);
 
             // Nothing to celebrate on a retry, which is what every launch after an
             // interrupted purchase looks like: the server had already honoured it, and

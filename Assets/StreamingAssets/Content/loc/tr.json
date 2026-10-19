@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "İlk notunu almak için bir oyunu bitir."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Başlangıç Hazinesi"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Yardım Eli"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Bekçi Kesesi"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Hazine Yığını"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Büyük Ganimet"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Kraliyet Kasası"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Efsane Kasası"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Özel Teklif"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Başlangıç Teklifi"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Devam Et!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Güçlen"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Tekrar Hoş Geldin!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Harika Fırsat"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Sadece senin için büyük bir paket."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Yolculuğuna başlaman için küçük bir destek."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "Çok yaklaştın! İşte biraz yardım."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Bir sonraki kulen için daha fazla mücevher ve altın."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "Senin için özel bir şey ayırdık."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Harika fiyata mücevher ve altın."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+%{0}"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Sana Özel"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} mücevher"
     }
   ]
 }

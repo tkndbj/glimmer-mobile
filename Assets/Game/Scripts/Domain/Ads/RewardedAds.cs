@@ -533,6 +533,9 @@ namespace GlimmerGrove.Ads
                             "watched_today", WatchedToday(impression.PlacementId),
                             "day", _dayKey);
 
+            // The offer engine's ad-watcher reading (invariant 64).
+            Offers.OfferLedger.NoteAdView();
+
             return drop;
         }
 
@@ -573,6 +576,8 @@ namespace GlimmerGrove.Ads
                             "placement", result.Impression.PlacementId,
                             "reward", reward ?? string.Empty,
                             "day", DailyRules.DayKeyFor(GameClock.NowUnix()));
+
+            Offers.OfferLedger.NoteAdView();
         }
 
         /// <summary>

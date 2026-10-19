@@ -483,6 +483,9 @@ namespace GlimmerGrove
                         // A level the player cannot pay for in coins: a limited-time deal may
                         // answer it on this screen in a moment (invariant 60c).
                         DealMoment.NoteShortfall();
+
+                        // And the offer engine may size an offer to the gap (invariant 64).
+                        Offers.OfferLedger.NoteShortfall(offer.Price - PlayerProgression.Credits);
                     }
                     break;
 

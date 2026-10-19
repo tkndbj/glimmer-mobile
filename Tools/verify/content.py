@@ -1623,7 +1623,7 @@ def check_chapter_map(chapter, cid, ordered):
 # What a card may promise, mirrored from StoreLimits so a content push cannot exceed what
 # the reader and the server will both accept.
 MAX_GRANT = 5_000_000
-STORE_SHELVES = {"gems", "coins", "bundles", "supplies", "event_pass"}
+STORE_SHELVES = {"gems", "coins", "bundles", "supplies", "event_pass", "offers"}
 
 # The heart-container rungs. Mirrors StoreLimits.MinHeartCapacity / MaxHeartCapacity and
 # products.ts MAX_CAPACITY.
@@ -4135,6 +4135,8 @@ def check_store(progression, keys, manifest=None):
 
     seen = set()
     shelves = {}
+    offers = []
+    offer_lines = []
 
     for entry in products:
         pid = entry.get("id") or ""
@@ -4245,11 +4247,21 @@ def check_store(progression, keys, manifest=None):
         if key not in keys:
             errors.append(f"store product '{pid}' missing string '{key}'")
 
+        # A personal offer (invariant 64): a repeatable pack of currency and nothing else, dealt to
+        # one player at a time and never on a shelf. Mirrors StoreCatalog.ReadProduct and the seeder.
+        if entry.get("shelf") == "offers":
+            if (entry.get("kind") != "consumable" or capacity or pass_days or pass_id
+                    or entry.get("badge")):
+                errors.append(f"store product '{pid}' sits on the offers shelf but is not a consumable "
+                              "pack of currency with no badge, capacity or pass")
+            offers.append((cents, pid, credits, gems))
+
         # One-time offers are deliberately better value than the ladder and cannot undercut
         # it, because the store will not sell one twice. See ValidateStoreLadder. A pass is left
         # out too: its figures are per day, so it is a different shape of purchase rather than a
         # rung, and it is ranked by nothing in the game (StoreCatalog.RankShelves).
-        if entry.get("kind") != "nonconsumable" and cents and not pass_days:
+        # The offers are left out too: dealt one at a time, they are no ladder (invariant 64).
+        if entry.get("kind") != "nonconsumable" and cents and not pass_days and entry.get("shelf") != "offers":
             shelves.setdefault(entry["shelf"], []).append((cents, pid, credits, gems))
 
     # A season's pass used to be a store product, and this is where the two files were held
@@ -4287,6 +4299,25 @@ def check_store(progression, keys, manifest=None):
     coin_base = min(shelves.get("coins", []), default=None)
     if gem_base and coin_base and gem_base[3] and coin_base[0]:
         per_gem = max(1, (coin_base[2] * gem_base[0]) // (gem_base[3] * coin_base[0]))
+
+    # Every offer beats the shop: what its gems and coins would cost from the cheapest packs, over
+    # what it costs - DealValue.BundlePercent's arithmetic, which the "+N%" seal prints (invariant 64).
+    # An offer worth no more than the shop draws no seal and is a worse deal than the shelf it hides.
+    if offers and gem_base and coin_base and gem_base[3] and coin_base[2]:
+        for cents, pid, credits, gems in sorted(offers):
+            worth = (credits * coin_base[0] * gem_base[3] + gems * gem_base[0] * coin_base[2])
+            price = cents * coin_base[2] * gem_base[3]
+            percent = (worth * 100) // price if price else 0
+            if percent <= 100:
+                errors.append(f"store offer '{pid}' is worth {percent}% of the shop's own prices; an "
+                              "offer must beat the shelf it is dealt in place of")
+            else:
+                extra = (percent - percent % 10) - 100
+                offer_lines.append(f"store offer '{pid}': ${cents / 100:.2f} for {gems} gems + {credits} coins, "
+                             f"seal +{extra}%")
+    if len(offers) and len(offers) != 7:
+        warnings.append(f"store: {len(offers)} offer products; Tools/make_offer_art.py cuts one picture per "
+                        "rung and refuses a ladder that is not as long as the shelf (18e)")
 
     for shelf, rungs in shelves.items():
         rungs.sort()
@@ -4346,6 +4377,7 @@ def check_store(progression, keys, manifest=None):
         "per_gem": per_gem,
         "shelves": {shelf: len(rungs) for shelf, rungs in shelves.items()},
         "vessels": [(cap, cents) for cents, cap, _ in vessels],
+        "offers": offer_lines,
     }
 
 
@@ -5052,6 +5084,8 @@ def main():
               f"- one gem is worth about {shop['per_gem']} credits across the two ladders")
         print(f"      free play collects about {per_day_credits} credit(s) and "
               f"{per_day_gems} gem(s) a day")
+        for line in shop.get("offers", []):
+            print(f"      {line}")
 
         if shop["vessels"]:
             ladder = ", ".join(f"{cap} for ${cents / 100:.2f}"

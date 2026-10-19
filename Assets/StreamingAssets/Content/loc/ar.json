@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "أنه جولة لتحصل على أول تقدير."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "كنز البداية"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "يد العون"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "جراب الحارس"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "كنز ثمين"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "غنيمة كبرى"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "الخزنة الملكية"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "خزنة الأساطير"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "عرض خاص"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "عرض البداية"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "واصل التقدم!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "مزيد من القوة"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "مرحبا بعودتك!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "قيمة رائعة"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "حزمة كبيرة لك وحدك."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "دفعة صغيرة لبداية رحلتك."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "كنت قريبا جدا! إليك بعض المساعدة."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "مزيد من الجواهر والعملات لبرجك القادم."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "خبأنا لك شيئا مميزا."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "جواهر وعملات بسعر رائع."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0}%"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "لك خصيصا"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "الجواهر: {0}"
     }
   ]
 }

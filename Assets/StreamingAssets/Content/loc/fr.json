@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Termine une partie pour obtenir ta première note."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Réserve de départ"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Coup de pouce"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Besace du gardien"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Trésor caché"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Grand butin"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Trésor royal"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Trésor légendaire"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Offre spéciale"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Offre de départ"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Continue !"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Plus de puissance"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Bon retour !"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Super affaire"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Un gros lot, rien que pour toi."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Un petit coup de pouce pour bien commencer."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "Si près du but ! Voici un peu d'aide."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Plus de gemmes et de pièces pour ta prochaine tourelle."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "On t'a gardé quelque chose de spécial."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Des gemmes et des pièces à petit prix."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0} %"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Pour toi"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} gemmes"
     }
   ]
 }

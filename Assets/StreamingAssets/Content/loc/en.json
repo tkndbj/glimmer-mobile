@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Finish a run to earn your first grade."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Starter Stash"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Helping Hand"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Keeper's Satchel"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Treasure Trove"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Grand Hoard"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Royal Vault"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Legend's Vault"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Special Offer"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Starter Offer"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Keep Going!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Power Up"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Welcome Back!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Great Value"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "A big bundle, just for you."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "A little boost to start your journey."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "So close! Here is a little help."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "More gems and coins for your next turret."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "We saved something special for you."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Gems and coins at a great price."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0}%"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "For You"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} gems"
     }
   ]
 }

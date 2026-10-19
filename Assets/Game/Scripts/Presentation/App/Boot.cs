@@ -168,6 +168,11 @@ namespace GlimmerGrove
             // never in its way: a run opens on whatever the device holds at that moment.
             GlimmerGrove.Shuffle.ShuffleConfig.Attach();
 
+            // The offer engine (invariant 64): its tuning's launch read, beside play as the Shuffle
+            // tuning's is, and the ledger hearing purchases and account switches from the start.
+            Offers.OfferConfig.Attach();
+            Offers.OfferLedger.Hook();
+
             // Hears wins from the start, so the first one of the session can answer a deal
             // (invariant 60c).
             DealMoment.Hook();
@@ -365,6 +370,10 @@ namespace GlimmerGrove
                 // step, so a frame that asked a question is a frame that offers nothing.
                 DealMoment.Tick();
 
+                // And a personal offer, on a calm screen once the deals popup has had its moment
+                // (invariant 64). After it, so a frame that raised a deals popup is covered.
+                OfferMoment.Tick();
+
                 // And our "remind me" panel, after a chest, on a calm screen (invariant 50p). Last,
                 // so a frame that raised a deals popup is covered and asks nothing.
                 ReminderMoment.Tick();
@@ -384,6 +393,7 @@ namespace GlimmerGrove
                     Referral.ReferralLedger.Paused();
                     GiftMoment.Paused();
                     DealMoment.Paused();
+                    OfferMoment.Paused();
                     ReminderMoment.Paused();
                 }
                 else
@@ -391,6 +401,7 @@ namespace GlimmerGrove
                     Referral.ReferralLedger.Resumed();
                     GiftMoment.Resumed();
                     DealMoment.Resumed();
+                    OfferMoment.Resumed();
 
                     // Returning: pick up another device's work, and drop any backoff the
                     // last failure left. A player who reopens the game has quite often

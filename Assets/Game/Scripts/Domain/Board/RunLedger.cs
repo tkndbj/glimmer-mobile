@@ -237,6 +237,10 @@ namespace GlimmerGrove
                 ? index.ChapterNeighbour(chapter, +1)
                 : null;
 
+            // The offer engine hears the run (invariant 64): its loss rate, and the moment a calm
+            // screen may answer. A reader of the outcome, never a hand in it.
+            Offers.OfferLedger.NoteRun(level.Id.Value, true, lit, wanted, opened != null);
+
             // The star ledger's XP plus whatever else this run earned. Nought on every board but
             // the Infinite lane, and passed in rather than asked for here because this ledger is
             // mode-blind (invariant 20a) - what it is told is "this run also earned N", not which
@@ -322,6 +326,9 @@ namespace GlimmerGrove
             var streak = Record();
 
             LevelAnalytics.TrackDefeated(level, run.Moves, run.Seconds, left, reason.ToString());
+
+            // How far the run got is the near-miss reading (invariant 64): `lit` of `wanted`.
+            Offers.OfferLedger.NoteRun(level.Id.Value, false, lit, wanted, false);
 
             return new LossRecord(run, streak, left, charged, price);
         }

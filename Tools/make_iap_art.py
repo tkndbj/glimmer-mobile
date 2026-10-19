@@ -90,7 +90,13 @@ TONES = {
     "bundles": (0x3B, 0xE9, 0xD8),      # Pal.Aqua
     "supplies": (0xE8, 0x61, 0x5A),     # Pal.Rose
     "event_pass": (0xFF, 0xC9, 0x3C),   # Pal.Sun
+    "offers": (0x75, 0x42, 0xC7),       # ShopScreen.OfferFace, the "for you" band's violet
 }
+
+# The personal offers (invariant 64) draw `make_offer_art.RUNGS` - a coin pile behind a gem pile -
+# so their shop pictures' names are mapped back onto the pack sprites those were cut from.
+SHOP_TO_PACK = {f"coins_{i + 1}": stem for i, stem in enumerate(LADDERS["coins"])}
+SHOP_TO_PACK.update({f"gems_{i + 1}": stem for i, stem in enumerate(LADDERS["gems"])})
 
 PLATE = (26, 44, 59)                    # the card's own plate
 
@@ -177,6 +183,10 @@ def picture_of(product):
     # vessel is a non-consumable, so the one-time rule would draw all three the same.
     if product.get("heartCapacity", 0) > 0:
         return "vessel", rung(tier, size, len(VESSELS))
+
+    # A personal offer: its rung of the offers shelf, which `ShopArt.Offers` reads at seven.
+    if shelf == "offers":
+        return "offer", rung(tier, size, 7)
 
     ladder = LADDERS.get(shelf)
     if ladder is None:
@@ -310,6 +320,15 @@ def build(source):
         if kind == "vessel":
             layer = vessel_layer(payload)
             soft.append(product["id"])
+        elif kind == "offer":
+            # `make_offer_art.rung`, composed from the pack's full-size sprites rather than the
+            # shipped 512s, inside the frame's padding - the in-game picture, drawn sharp.
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            import make_offer_art
+            room = round(SIZE * (1 - PAD * 2))
+            art = make_offer_art.rung(payload, room, lambda name: trimmed(folder / f"{SHOP_TO_PACK[name]}.png"))
+            layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+            layer.alpha_composite(art, ((SIZE - room) // 2, (SIZE - room) // 2))
         elif kind == "pass":
             sys.path.insert(0, str(Path(__file__).resolve().parent))
             import make_shop_art

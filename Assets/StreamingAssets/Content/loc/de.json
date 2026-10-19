@@ -9116,6 +9116,94 @@
     {
       "key": "ui.shuffle.no_grade",
       "text": "Beende einen Lauf für deine erste Note."
+    },
+    {
+      "key": "store.product.gg_offer_1",
+      "text": "Startvorrat"
+    },
+    {
+      "key": "store.product.gg_offer_2",
+      "text": "Helfende Hand"
+    },
+    {
+      "key": "store.product.gg_offer_3",
+      "text": "Hütertasche"
+    },
+    {
+      "key": "store.product.gg_offer_4",
+      "text": "Schatzfund"
+    },
+    {
+      "key": "store.product.gg_offer_5",
+      "text": "Großer Hort"
+    },
+    {
+      "key": "store.product.gg_offer_6",
+      "text": "Königlicher Tresor"
+    },
+    {
+      "key": "store.product.gg_offer_7",
+      "text": "Legendärer Tresor"
+    },
+    {
+      "key": "ui.offer.look.special",
+      "text": "Sonderangebot"
+    },
+    {
+      "key": "ui.offer.look.starter",
+      "text": "Startangebot"
+    },
+    {
+      "key": "ui.offer.look.rescue",
+      "text": "Weiter so!"
+    },
+    {
+      "key": "ui.offer.look.boost",
+      "text": "Mehr Power"
+    },
+    {
+      "key": "ui.offer.look.comeback",
+      "text": "Willkommen!"
+    },
+    {
+      "key": "ui.offer.look.value",
+      "text": "Top-Wert"
+    },
+    {
+      "key": "ui.offer.line.special",
+      "text": "Ein großes Paket, nur für dich."
+    },
+    {
+      "key": "ui.offer.line.starter",
+      "text": "Ein kleiner Schub für den Start deiner Reise."
+    },
+    {
+      "key": "ui.offer.line.rescue",
+      "text": "So knapp! Hier ist ein bisschen Hilfe."
+    },
+    {
+      "key": "ui.offer.line.boost",
+      "text": "Mehr Juwelen und Münzen für deinen nächsten Turm."
+    },
+    {
+      "key": "ui.offer.line.comeback",
+      "text": "Wir haben dir etwas Besonderes aufgehoben."
+    },
+    {
+      "key": "ui.offer.line.value",
+      "text": "Juwelen und Münzen zu einem tollen Preis."
+    },
+    {
+      "key": "ui.offer.bonus",
+      "text": "+{0} %"
+    },
+    {
+      "key": "ui.offer.for_you",
+      "text": "Für dich"
+    },
+    {
+      "key": "ui.offer.gems_amount",
+      "text": "{0} Juwelen"
     }
   ]
 }
