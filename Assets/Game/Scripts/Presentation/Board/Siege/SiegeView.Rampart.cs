@@ -72,6 +72,22 @@ namespace GlimmerGrove
         static Sprite WallPiece() => AssetLibrary.Sprite(AssetManifest.WallFx);
 
         /// <summary>
+        /// The bar's drawn size on this board. <b>One arithmetic for the wall and its preview</b>
+        /// (<c>SiegeView.Aim.AimRows</c>), so the ghost a player taps is the wall that rises.
+        /// </summary>
+        Vector2 RampartBar
+        {
+            get
+            {
+                float wide = Span.x * .98f;
+                return new Vector2(wide, wide / WallAspect);
+            }
+        }
+
+        /// <summary>Where the foot of a wall raised on band <paramref name="row"/> stands, in board space.</summary>
+        float RampartFootY(int row) => MarchY(SiegeTuning.WallMarch(row));
+
+        /// <summary>
         /// Keeps the wall true to <see cref="SiegeBoard.WallLeft"/>. Called on every board
         /// (<c>SiegeView.Clock</c>); with no wall standing it is two comparisons.
         /// </summary>
@@ -122,10 +138,10 @@ namespace GlimmerGrove
             _rampartMarch = SiegeTuning.WallMarch(row);
             _rampartAge = 0f;
 
-            float wide = Span.x * .98f;
-            float bar = wide / WallAspect;
+            var size = RampartBar;
+            float wide = size.x, bar = size.y;
             float curtain = BoxTall * WallTall;
-            float footY = MarchY(_rampartMarch);
+            float footY = RampartFootY(row);
 
             // Pivoted at its foot, so it grows up out of the ground and its foot is the wall's
             // line - the reading the rule holds bodies against.

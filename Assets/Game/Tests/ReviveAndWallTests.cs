@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     public sealed class ReviveAndWallTests
     {
         const int Barrier = 30;   // tenths: the shipped revive's three seconds
-        const int Stands = 50;    // tenths: the shipped wall's five seconds
+        const int Stands = 70;    // tenths: the shipped wall's seven seconds
 
         static SiegeLayout Layout(string wave, string boss = null)
         {

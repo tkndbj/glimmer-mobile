@@ -616,7 +616,7 @@
       {
         "id": "wall",
         "kind": "wall",
-        "magnitude": 50,
+        "magnitude": 70,
         "gemPrice": 40,
         "maxHeld": 100,
         "order": 7,

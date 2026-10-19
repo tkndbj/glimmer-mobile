@@ -1620,7 +1620,7 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    phoenix's shell off `SiegeBoard.CoverLeft` per post, on every board.
 39q. **A wall holds what is behind it and pushes nothing** (`wall`, 2026-10-19). Aimed at a band
    (`UtilityTarget.Row`), it stands on that band's near edge (`SiegeTuning.WallMarch`) for the
-   magnitude in tenths; a body behind it stops `WallStand` short and is never moved backwards, a body
+   magnitude in tenths (seven seconds shipped); a body behind it stops `WallStand` short and is never moved backwards, a body
    past it walks on, a boss is never held (the 2026-10-05 ruling), one wall at a time, refused with
    nothing to hold, charged nothing. One clock on the board, so every board nobody raised one on
    plays bit for bit as before. The view sorts it among the raiders by its march (`SiegeView.Rampart`).

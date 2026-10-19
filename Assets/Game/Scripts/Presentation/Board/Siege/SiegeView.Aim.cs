@@ -199,14 +199,28 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The hill as its bands, each the whole width (<c>UtilityTarget.Row</c>): what a wall is
-        /// aimed at. The same bands <see cref="AimHill"/> cuts into boxes, laid out by the same
-        /// arithmetic (<see cref="BoxAt"/>), so the band that lights is the band the rule reads;
-        /// a line along each band's near edge says where the wall will stand.
+        /// Where a wall can stand, drawn as the wall itself (<c>UtilityTarget.Row</c>): one faint
+        /// copy of the barrier at each of the places it can rise, each over the band of the hill a
+        /// tap chooses it from.
+        ///
+        /// <para>
+        /// <b>The preview is the wall, not a marking about it.</b> Shaded bands with a line along
+        /// one edge asked the player to work out which edge the wall would stand on, and was read
+        /// as confusing. Each ghost is placed by the same two numbers the standing wall is
+        /// (<see cref="RampartFootY"/>, <see cref="RampartBar"/>), so what is previewed and what
+        /// rises cannot come apart (33g): tap a ghost, or anywhere on the band above it, and the
+        /// wall appears exactly there.
+        /// </para>
+        /// <para>
+        /// The tap target is still the whole band (<see cref="BoxAt"/>'s arithmetic), so nothing
+        /// on the hill falls between two targets and through to the gems underneath.
+        /// </para>
         /// </summary>
         void AimRows()
         {
-            float wide = Span.x, tall = BoxTall;
+            float tall = BoxTall;
+            var size = RampartBar;
+            var sprite = WallPiece();
 
             for (int row = 0; row < SiegeTuning.BlastRows; row++)
             {
@@ -214,28 +228,37 @@ namespace GlimmerGrove
                 var at = new Vector2(0f, BoxAt(0, row).y);
 
                 var pane = UIKit.Button("AimRow" + row, _aim, Art.Round(18),
-                                        new Vector2(wide, tall), new Vector2(.5f, .5f), at,
+                                        new Vector2(Span.x, tall), new Vector2(.5f, .5f), at,
                                         () => Loose(SiegeAim.AtRow(atRow)));
 
-                pane.PressScale = .97f;
+                // Held still on a press: a ghost that shrank under the thumb would preview a wall
+                // somewhere it will not stand.
+                pane.PressScale = 1f;
                 pane.ClickSfx = null;
 
                 var catcher = pane.GetComponent<Image>();
                 if (catcher != null) catcher.color = new Color(0f, 0f, 0f, 0f);
 
-                var face = UIKit.Img("Face", pane.transform, Art.Round(18),
-                                     Pal.A(Pal.Rope, .16f),
-                                     new Vector2(wide - Gutter, tall - Gutter));
-                face.type = Image.Type.Sliced;
-                face.raycastTarget = false;
+                // The ghost, foot on the line the wall will stand on - placed in the pane's own
+                // space from the board's, so it is `RampartFootY` exactly.
+                float foot = RampartFootY(row) - at.y;
 
-                // The wall's own line: the band's near edge, where `SiegeTuning.WallMarch` stands it.
-                var edge = UIKit.Img("Edge", pane.transform, Art.Round(3), Pal.A(Pal.Rope, .85f),
-                                     new Vector2(wide - Gutter * 4f, 6f), new Vector2(.5f, 0f),
-                                     new Vector2(0f, Gutter));
-                edge.raycastTarget = false;
+                var glow = Lit("GhostField", (RectTransform)pane.transform, Art.FadeUp(64),
+                               Pal.A(WallHue, .16f), new Vector2(size.x * .97f, tall * WallTall));
+                glow.rectTransform.anchoredPosition = new Vector2(0f, foot + tall * WallTall * .5f);
 
-                Tween.Breathe(edge.transform, .05f, 1.4f, row * .12f);
+                var ghost = UIKit.Img("Ghost", pane.transform, sprite, new Color(1f, 1f, 1f, .42f),
+                                      size, new Vector2(.5f, .5f), new Vector2(0f, foot + size.y * .5f));
+                ghost.raycastTarget = false;
+
+                // An `Image` with no sprite is a white rectangle (7b).
+                ghost.enabled = sprite != null;
+
+                // Faded in rather than switched on, top band first, so the four read as places
+                // appearing on the hill rather than as a sheet laid over it.
+                var group = UIKit.Group((RectTransform)pane.transform);
+                group.alpha = 0f;
+                Tween.Fade(group, 1f, .16f + row * .04f);
             }
         }
 
