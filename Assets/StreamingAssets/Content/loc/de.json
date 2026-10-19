@@ -7634,6 +7634,170 @@
       "text": "Halte jeden Turm am Feuern, durch die Rüstung hindurch"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Eisenbastion"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Panzerhof"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Schläger und ein Schild in jeder Welle"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "Triebwerksdeck"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "Die bisher größte Menge, Schläger am Ende"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Kranspitze"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "Zwei Farben, dann die anderen zwei"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Zahnradwerk"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Bomber wirbeln das Feld unter dem Zahnrad auf"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Gerüsttor"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "Ein Kriegsbringer und ein Knochenrufer, gemeinsam"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Kanonenbootdock"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "Eine Farbe nach der anderen, Schläger vorneweg"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "Die lange Treppe"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Vier Wellen die Treppe hinauf"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "Rohrwerk"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Drei Schilde an der Spitze jeder Welle"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Hangarbucht"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Vier Wellen, und kein Boss"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Kettenbrücke"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "Ein Oberherr und ein Kriegsherr, gemeinsam"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Sandsackreihe"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "Eine Schildwand in jeder Welle"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "Der Gitterweg"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "Die Menge wächst mit jeder Welle"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Kistenstapel"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Bomben und Rüstung in jeder Welle"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Mech-Halle"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "Schläger ab der ersten Welle"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "Der Wachturm"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "Ein Gepanzerter und ein Fessler, gemeinsam"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Trägerbrücke"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Schläger einer Farbe nach der anderen"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Radarposten"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "Der längste Aufstieg der Festung"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Munitionslager"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "Ein Bomber führt jede Welle an"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "Der Suchscheinwerfer"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Alles, was die Festung hat, auf einmal"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "Oberkommando"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "Ein Sonnenfürst und ein Verwüster, gemeinsam"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Glutfunke"
     },

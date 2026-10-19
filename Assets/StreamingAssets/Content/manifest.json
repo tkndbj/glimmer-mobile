@@ -411,6 +411,36 @@
       ]
     },
     {
+      "id": "s14_ironbastion",
+      "version": 1,
+      "order": 157,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s14_tankyard",
+        "s14_thrusterdeck",
+        "s14_cranepoint",
+        "s14_gearworks",
+        "s14_trestlegate",
+        "s14_gunshipdock",
+        "s14_longstair",
+        "s14_pipeworks",
+        "s14_hangarbay",
+        "s14_chainbridge",
+        "s14_sandbagrow",
+        "s14_grateway",
+        "s14_cratestack",
+        "s14_mechbay",
+        "s14_watchtower",
+        "s14_girderspan",
+        "s14_radarpost",
+        "s14_ammodump",
+        "s14_searchlight",
+        "s14_highcommand"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

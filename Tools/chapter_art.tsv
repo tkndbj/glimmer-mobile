@@ -89,6 +89,13 @@ s11_windwreck	windwreck_map.png
 # `neonhaven_map.png` - pass the folder it was saved in as --source. Drawn by s12_neonhaven, and
 # by whatever eleventh chapter comes next.
 s12_neonhaven	neonhaven_map.png
+# map12 - four strips, the owner's own painting (2026-10-19): a military sky fortress - floating
+# rocks carrying a hangar, a mech bay, a radar dish, watchtowers, cranes, a tank and jet thrusters,
+# joined by a steel road edged in hazard stripes, with girder bridges, a grated bridge, a chain
+# bridge and a stair between them. One flattened 2048x8256 picture, supplied as `map1.png` and
+# saved as `ironbastion_map.png` - pass the folder it was saved in as --source. Drawn by
+# s14_ironbastion, and by whatever twelfth chapter comes next.
+s14_ironbastion	ironbastion_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

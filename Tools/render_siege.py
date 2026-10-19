@@ -3153,6 +3153,8 @@ CHAPTER_CASTS = {
     "s11_windwreck": "armada",
     # The eleventh chapter draws the vanguard, a fifth square over the six (`SiegeMode.Vanguard`).
     "s12_neonhaven": "vanguard",
+    # The twelfth chapter wraps onto the armada again: no sixth square exists (`SiegeMode.MainCasts`).
+    "s14_ironbastion": "armada",
     "s02_endlesswatch": "medley",
 }
 

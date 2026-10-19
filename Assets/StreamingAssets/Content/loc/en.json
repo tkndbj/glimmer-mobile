@@ -7634,6 +7634,170 @@
       "text": "Keep every ward firing, through the plate"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Ironbastion"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Tank Yard"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Brutes and a shield in every wave"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "Thruster Deck"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "The biggest crowd yet, brutes at the back"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Crane Point"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "Two colours, then the other two"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Gearworks"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Bombers turn the field under the gear"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Trestle Gate"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "A warbringer and a bonecaller, together"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Gunship Dock"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "One colour at a time, brutes at its head"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "The Long Stair"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Four waves up the stair"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "Pipeworks"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Three shields at the head of every wave"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Hangar Bay"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Four waves, and no boss"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Chain Bridge"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "An overlord and a warlord, together"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Sandbag Row"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "A wall of shields in every wave"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "The Grateway"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "The crowd grows with every wave"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Crate Stack"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Bombs and plate in every wave"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Mech Bay"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "Brutes from the very first wave"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "The Watchtower"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "An ironclad and a shackler, together"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Girder Span"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Brutes of one colour at a time"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Radar Post"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "The longest climb in the fortress"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Ammo Dump"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "A bomber leads every wave"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "Searchlight"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Everything the fortress has, at once"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "High Command"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "A sunlord and a harrower, together"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },

@@ -289,6 +289,9 @@ NUDGE = {
 #:
 #: **`map11` accepts every rung for the same reason**: its glass road switches back across the
 #: middle of four strips eighteen times, so twenty rungs on it cannot all keep their marks clear.
+#:
+#: **`map12` accepts every rung for the same reason**: its steel road switches back across the
+#: middle of four strips a dozen times and crosses six decks, so twenty rungs cannot all clear.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
@@ -297,6 +300,7 @@ ACCEPTED_OVERLAPS = {
     9: True,
     10: True,
     11: True,
+    12: True,
 }
 
 
@@ -439,6 +443,22 @@ TRACES = {
             (1560, 1140), (1280, 1000), (840, 660), (620, 520), (1200, 120), (1000, 0),
         ),
     ),
+    #: `map12` is the owner's military sky fortress (2026-10-19): a steel road of riveted plates
+    #: edged in hazard stripes, switching back up a stack of floating rocks and crossing between
+    #: them on **six decks** - a stair, a chain bridge, a grated bridge and three girder bridges.
+    #: Only the plate is listed as ground (`GROUND[12]`), so every deck is walked as a deck, and
+    #: the line is read down the middle of the plate between its two striped edges.
+    12: dict(
+        size=(2048, 8256),
+        bends=(
+            (300, 8256), (1300, 7620), (1580, 7540), (1220, 7224), (640, 6872), (1400, 6312),
+            (720, 5960), (880, 5860), (1120, 5520), (1460, 5360), (1280, 5180), (960, 5008),
+            (680, 4788), (1480, 4348), (1240, 4168), (1000, 4036), (1440, 3796), (1200, 3596),
+            (840, 3396), (600, 3276), (800, 3096), (1380, 2724), (1580, 2564), (1400, 2384),
+            (900, 2064), (600, 1772), (760, 1572), (1300, 1312), (1540, 1232), (1400, 1032),
+            (840, 760), (600, 530), (1260, 160), (1040, 0),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -557,6 +577,13 @@ GROUND = {
     # road comes out whole while the rocks do not. The building walls that pass are a few specks
     # far from the line, and a walked map never asks about anywhere the line is not.
     11: [(63, 63, 105), (69, 72, 112)],
+
+    # `map12` is the military sky fortress, and its ground is its **steel road** and nothing else:
+    # the plate's two blue-greys, (114, 109, 119) where the dusk lights it at the foot and
+    # (117, 114, 126) under the night sky at the head - one paint, sampled every 150 source pixels
+    # along `TRACES[12]` and never further than eight from one of these. The rock tops beside it
+    # are warm, (138, 114, 108), twenty-four apart in red, so it is read at a tolerance of ten.
+    12: [(114, 109, 119), (117, 114, 126)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -591,6 +618,7 @@ STREAM = {
     9: [],
     10: [],
     11: [],
+    12: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -657,6 +685,12 @@ VOID = {
     # `map11`'s void is a night sky running navy at the head to magenta at the foot. Subtracted
     # from the road at its own tolerance only, for `map9`'s reason (it is walked, not searched).
     11: [(24, 22, 52), (40, 30, 90), (131, 56, 148), (190, 70, 190)],
+
+    # `map12`'s void is a sky running slate at the head through mauve to orange at the foot.
+    # Subtracted from the road at its own tolerance only, for `map9`'s reason (it is walked, not
+    # searched); the mauve nearest the plate, (128, 105, 113), is thirteen from it in red.
+    12: [(80, 86, 111), (93, 98, 119), (91, 78, 88), (128, 105, 113), (151, 110, 106),
+         (196, 116, 88), (210, 117, 81)],
 }
 
 #: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
@@ -690,7 +724,7 @@ ENCLOSED = {10}
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8}
+TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10}
 DEFAULT_TOLERANCE = 26
 
 

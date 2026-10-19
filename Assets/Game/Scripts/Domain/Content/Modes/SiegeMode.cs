@@ -1203,8 +1203,18 @@ namespace GlimmerGrove.Content
         /// <b>Eleven, and the eleventh is a fifth square</b> (<see cref="VanguardOrder"/>), for the
         /// same reason a third time: appending it moves no shipped chapter onto a new cast.
         /// </para>
+        /// <para>
+        /// <b>Twelve, and the twelfth is the armada again.</b> No sixth square exists - after the
+        /// five, every slot has exactly one family left and those twelve do not form a square - so
+        /// the twelfth chapter wraps rather than cutting art. Left alone the table would have
+        /// wrapped onto the insects, the first chapter's beetles, which is exactly the wrong
+        /// crowd for the hardest hill on the ladder; so it names the armada, the heaviest square
+        /// (every brute and bulwark swings), two chapters after Windwreck drew it. Appending it
+        /// moves no shipped chapter onto a new cast and costs no art.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
-                                            Insects, Reunion, Gathering, Armada, Vanguard };
+                                            Insects, Reunion, Gathering, Armada, Vanguard,
+                                            Armada };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.

@@ -875,10 +875,11 @@ gates print the derived totals.
   `pwsh GooglePackages/fetch.ps1`).
 - **One live mode, Thornwatch (siege)** on three tracks: the ladder, the Infinite lane and the Shuffle lane
   (`s13_shufflewatch`, keeper 5, MODES.md 59 - a dealt Breaker line, no bosses, three upgrade cards every two
-  waves; the two authored star waves are guesses until the owner plays). Chapters `s01`, `s03`–`s08` (ten rungs each), `s09`–`s12` (twenty,
-  boss duels every fifth), and `s02_endlesswatch` on the Infinite track (opens at keeper 10). Glade, fall and
-  prism are hidden. Six casts; the cast table and its squares are full (`SiegeMode.MainCasts`) — the next
-  chapter wraps or cuts a cast. Details in `MODES.md`.
+  waves; the two authored star waves are guesses until the owner plays). Chapters `s01`, `s03`–`s08` (ten rungs each), `s09`–`s12` and
+  `s14_ironbastion` (twenty, boss duels every fifth; `s13` is the Shuffle lane's id), and `s02_endlesswatch` on
+  the Infinite track (opens at keeper 10). Glade, fall and prism are hidden. Six casts; no sixth square exists,
+  so the twelfth chapter wraps onto the armada (`SiegeMode.MainCasts`, MODES.md 37ff) and a later one wraps
+  again or cuts a cast. Details in `MODES.md`.
 - **Systems live**: progression, tasks (45), season (47), streak (48), ranks (52) and the rank ceremony,
   tutorial (53), keeper levels for sale (57), the welcome bonus (58), daily challenges in four genres — Pairs, Glade, Merge, Push
   (56), referrals (51), reminders (50), the update wall (49, ships asking nothing), two public boards

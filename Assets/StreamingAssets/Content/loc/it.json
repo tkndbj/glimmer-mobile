@@ -7634,6 +7634,170 @@
       "text": "Tieni ogni torretta in azione, attraverso le armature"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Bastione di ferro"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Cortile dei carri"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Bruti e uno scudo in ogni ondata"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "Ponte dei propulsori"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "La folla più grande finora, bruti in coda"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Punta della gru"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "Due colori, poi gli altri due"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Officina degli ingranaggi"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Bombardieri scuotono il campo sotto l'ingranaggio"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Porta del cavalletto"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "Un portatore di guerra e un evocatore di ossa, insieme"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Molo della cannoniera"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "Un colore alla volta, con i bruti in testa"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "La lunga scalinata"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Quattro ondate su per la scalinata"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "Le tubature"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Tre scudi in testa a ogni ondata"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Baia dell'hangar"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Quattro ondate, e nessun boss"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Ponte delle catene"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "Un signore supremo e un condottiero, insieme"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Fila di sacchi"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "Un muro di scudi in ogni ondata"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "Il passaggio a grata"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "La folla cresce a ogni ondata"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Pila di casse"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Bombe e armature in ogni ondata"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Hangar del mech"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "Bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "La torre di guardia"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "Un corazzato e un incatenatore, insieme"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Campata di travi"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Bruti di un colore alla volta"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Postazione radar"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "La salita più lunga della fortezza"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Deposito di munizioni"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "Un bombardiere guida ogni ondata"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "Il riflettore"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Tutto ciò che ha la fortezza, in una volta"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "Alto comando"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "Un signore del sole e un devastatore, insieme"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Favilla"
     },

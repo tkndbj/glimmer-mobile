@@ -303,6 +303,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Vanguard, SiegeMode.CastFor(GameTrack.Main, 10),
                             "Neonhaven does not draw the vanguard");
 
+            // No sixth square exists, so the twelfth chapter wraps - onto the armada, the
+            // heaviest square, rather than onto the first chapter's insects (`SiegeMode.MainCasts`).
+            Assert.AreEqual(SiegeMode.Armada, SiegeMode.CastFor(GameTrack.Main, 11),
+                            "Ironbastion does not draw the armada");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
 

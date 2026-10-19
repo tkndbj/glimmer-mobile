@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s14_ironbastion
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s14_ironbastion
+  m_GUID: c76562b3bc6e02d468d4577f70b07ec5
+  m_SerializeEntries:
+  - m_GUID: 54399d8c1f77771418063d57f32f51f7
+    m_Address: Art/Map/map12_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9b4a688660f26242915c8038f9936eb
+    m_Address: Art/Map/map12_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbd94d72c71a16a4a93cad8d83d2dd30
+    m_Address: Art/Map/map12_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f556a865d8c21c84ca27981c108eabf6
+    m_Address: Art/Map/map12_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: dc8e8db3d574ce54f9cf57ef6f7d7419, type: 2}
+    - {fileID: 11400000, guid: a714988c11404ca4db999f86c43eb9ad, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s14_ironbastion_BundledAssetGroupSchema
+    - Glimmer Chapter s14_ironbastion_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

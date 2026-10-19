@@ -7634,6 +7634,170 @@
       "text": "Zırhı aşarak her kuleyi ateşte tut"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Demir Kale"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Tank Avlusu"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Her aşamada devler ve bir kalkan"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "İtici Güverte"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "Şimdiye kadarki en büyük kalabalık, devler arkada"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Vinç Burnu"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "İki renk, sonra diğer ikisi"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Dişli Atölyesi"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Bombacılar dişlinin altında tahtayı karıştırır"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Sehpa Kapısı"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "Bir savaş habercisi ve bir kemik çağırıcısı, birlikte"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Savaş Gemisi İskelesi"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "Her seferinde bir renk, başında devler"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "Uzun Merdiven"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Merdivende dört aşama"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "Boru Hattı"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Her aşamanın başında üç kalkan"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Hangar Bölmesi"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Dört aşama, hiç boss yok"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Zincir Köprü"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "Bir büyük efendi ve bir savaş beyi, birlikte"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Kum Torbası Sırası"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "Her aşamada bir kalkan duvarı"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "Izgaralı Yol"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "Kalabalık her aşamayla büyür"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Sandık Yığını"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Her aşamada bombalar ve zırh"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Robot Bölmesi"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "İlk aşamadan itibaren devler"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "Gözetleme Kulesi"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "Bir zırhlı ve bir zincirci, birlikte"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Kiriş Açıklığı"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Her seferinde tek renkten devler"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Radar Karakolu"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "Kaledeki en uzun tırmanış"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Cephanelik"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "Her aşamayı bir bombacı yönetir"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "Projektör"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Kalenin elindeki her şey, bir arada"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "Yüksek Komuta"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "Bir güneş efendisi ve bir yıkıcı, birlikte"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Kıvılcımcık"
     },

@@ -7634,6 +7634,170 @@
       "text": "Niech każda wieża strzela, przez pancerz"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Żelazny bastion"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Plac czołgów"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Osiłki i tarcza w każdej fali"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "Pokład silników"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "Największy tłum jak dotąd, osiłki z tyłu"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Cypel dźwigu"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "Dwa kolory, potem dwa pozostałe"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Warsztat zębatek"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Bombowcy mieszają planszę pod zębatką"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Brama rusztowania"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "Zwiastun wojny i przywoływacz kości, razem"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Dok kanonierki"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "Jeden kolor naraz, na czele osiłki"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "Długie schody"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Cztery fale w górę schodów"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "Rurociąg"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Trzy tarcze na czele każdej fali"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Zatoka hangaru"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Cztery fale i żadnego bossa"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Most łańcuchowy"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "Władca i wódz, razem"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Rząd worków"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "Mur tarcz w każdej fali"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "Kratowa kładka"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "Tłum rośnie z każdą falą"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Stos skrzyń"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Bomby i pancerz w każdej fali"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Hala mecha"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "Osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "Wieża strażnicza"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "Opancerzony i skuwacz, razem"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Przęsło dźwigarów"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Osiłki jednego koloru naraz"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Posterunek radarowy"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "Najdłuższa wspinaczka w twierdzy"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Skład amunicji"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "Bombowiec prowadzi każdą falę"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "Reflektor"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Wszystko, co ma twierdza, naraz"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "Naczelne dowództwo"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "Pan słońca i niszczyciel, razem"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Iskierka"
     },

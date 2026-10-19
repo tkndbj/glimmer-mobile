@@ -1125,6 +1125,32 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    146 pulled back off the painted car by hand (`NUDGE[11]`); twenty rungs reach over 31 marks,
    accepted as `map10`'s 33.
 
+37ff. **The twelfth chapter is harder by its crowd and its surge.** Ironbastion
+   (`s14_ironbastion` - `s13` is the Shuffle lane's id - order 157, levels 151-170, the owner's
+   military sky fortress, 2026-10-19) was commissioned as "make sure it's harder than the previous
+   chapter". Its crowd is held above Neonhaven's on every count and under a ceiling
+   (`Tools/chapters/s14_ironbastion.py`: 894 raiders +4%, 195 brutes +3%, 69 shields +6%, 20
+   bombers +43%). **A first cut at a surge of 1.6 was a wall** - three-star embers held 29 of 180
+   against Neonhaven's 64 (Neonhaven holds 64 today against the 34 it shipped at; the rules have
+   moved since) - because of a handful of spiky rungs (a three-shield wall, one-colour brute
+   floods, a sixteen-brute bay), which were smoothed. At 1.5 it held 42 and the strongest line
+   145 against 151, and **the owner played it and found it "a little easy"**, so the dial is health
+   rather than headcount (a bigger crowd pays more cogs and charms back, and spikes single rungs).
+   At 1.6 it held 39 and 131; **the owner chose 1.7** (`Traded` row `(11, 17)`, "70% is fine").
+   Shipped: three-star embers **21 of 180** (a third of Neonhaven's 64 - the good line is asked to
+   buy upgrades here), the strongest line **118** against 151, every rung won at some rhythm on it;
+   the one-star line 12 against 11 is printed, not compared (37fa's reason).
+   `TheTwelfthChapterIsHarder` holds it: strictly fewer on the good line, no more on the
+   strongest, and each at least 30% of Neonhaven (`StepShare`, the owner's call; it was 60 while
+   tuning). **The duels were placed by the fight gate**: a sunlord made any rung it stood on the
+   hardest of the chapter, so it stands at the finale (sunlord + harrower), after
+   warbringer + bonecaller, overlord + warlord and ironclad + shackler; at 1.7 the four fall 6, 3,
+   7 and 4 of 9 on the strongest line. **The cast is
+   the armada again**: no sixth square exists (37fa), so `MainCasts` wraps onto the heaviest square
+   rather than the first chapter's insects. The curse and the void stone carry on. Its map
+   (`map12`) is walked along its steel road (`TRACES[12]`, `GROUND[12]` at a tolerance of ten);
+   twenty rungs reach over 35 marks, accepted as `map11`'s 31.
+
 ## The Shuffle lane - the third track
 
 The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a

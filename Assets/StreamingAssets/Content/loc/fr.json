@@ -7634,6 +7634,170 @@
       "text": "Garde toutes les tourelles en action, à travers l'armure"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Bastion de fer"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Cour des chars"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Des brutes et un bouclier dans chaque vague"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "Pont des réacteurs"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "La plus grande foule à ce jour, des brutes à l'arrière"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Pointe de la grue"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "Deux couleurs, puis les deux autres"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Atelier des rouages"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Des bombardiers retournent le plateau sous le rouage"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Porte du tréteau"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "Un porte-guerre et un invocateur d'os, ensemble"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Quai de la canonnière"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "Une couleur à la fois, des brutes en tête"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "Le long escalier"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Quatre vagues dans l'escalier"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "La tuyauterie"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Trois boucliers en tête de chaque vague"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Baie du hangar"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Quatre vagues, et aucun boss"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Pont des chaînes"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "Un seigneur suprême et un chef de guerre, ensemble"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Rangée de sacs"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "Un mur de boucliers dans chaque vague"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "La passerelle grillagée"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "La foule grossit à chaque vague"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Pile de caisses"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Bombes et armure dans chaque vague"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Baie du méca"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "Des brutes dès la première vague"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "La tour de guet"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "Un cuirassé et un enchaîneur, ensemble"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Travée de poutres"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Des brutes d'une seule couleur à la fois"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Poste radar"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "La plus longue montée de la forteresse"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Dépôt de munitions"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "Un bombardier mène chaque vague"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "Le projecteur"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Tout ce que la forteresse a, d'un coup"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "Haut commandement"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "Un seigneur soleil et un ravageur, ensemble"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Flammèche"
     },

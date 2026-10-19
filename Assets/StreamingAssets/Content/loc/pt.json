@@ -7634,6 +7634,170 @@
       "text": "Mantenha todas as torres atirando, através da armadura"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "Bastião de Ferro"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "Pátio dos tanques"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "Brutos e um escudo em cada onda"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "Convés dos propulsores"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "A maior multidão até agora, brutos no fim"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "Ponta do guindaste"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "Duas cores, depois as outras duas"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "Oficina das engrenagens"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "Bombardeiros agitam o tabuleiro sob a engrenagem"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "Portão do cavalete"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "Um arauto da guerra e um invocador de ossos, juntos"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "Doca da canhoneira"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "Uma cor por vez, com brutos à frente"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "A escada longa"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "Quatro ondas escada acima"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "A tubulação"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "Três escudos à frente de cada onda"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "Baía do hangar"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "Quatro ondas, e nenhum chefe"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "Ponte das correntes"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "Um soberano e um senhor da guerra, juntos"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "Fileira de sacos"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "Uma muralha de escudos em cada onda"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "A passagem gradeada"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "A multidão cresce a cada onda"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "Pilha de caixas"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "Bombas e armadura em cada onda"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "Hangar do robô"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "Brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "A torre de vigia"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "Um encouraçado e um acorrentador, juntos"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "Vão de vigas"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "Brutos de uma cor por vez"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "Posto de radar"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "A subida mais longa da fortaleza"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "Paiol"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "Um bombardeiro lidera cada onda"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "O holofote"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "Tudo o que a fortaleza tem, de uma vez"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "Alto comando"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "Um senhor do sol e um devastador, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Faisquinha"
     },

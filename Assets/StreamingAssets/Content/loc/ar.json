@@ -7634,6 +7634,170 @@
       "text": "أبق كل برج يطلق النار، عبر الدروع"
     },
     {
+      "key": "chapter.s14_ironbastion.name",
+      "text": "الحصن الحديدي"
+    },
+    {
+      "key": "level.s14_tankyard.name",
+      "text": "ساحة الدبابات"
+    },
+    {
+      "key": "level.s14_tankyard.tagline",
+      "text": "عمالقة وحاجز في كل موجة"
+    },
+    {
+      "key": "level.s14_thrusterdeck.name",
+      "text": "منصة الدافعات"
+    },
+    {
+      "key": "level.s14_thrusterdeck.tagline",
+      "text": "أكبر حشد حتى الآن، والعمالقة في الخلف"
+    },
+    {
+      "key": "level.s14_cranepoint.name",
+      "text": "رأس الرافعة"
+    },
+    {
+      "key": "level.s14_cranepoint.tagline",
+      "text": "لونان، ثم اللونان الآخران"
+    },
+    {
+      "key": "level.s14_gearworks.name",
+      "text": "ورشة التروس"
+    },
+    {
+      "key": "level.s14_gearworks.tagline",
+      "text": "المفجرون يقلبون اللوحة تحت الترس"
+    },
+    {
+      "key": "level.s14_trestlegate.name",
+      "text": "بوابة الدعامة"
+    },
+    {
+      "key": "level.s14_trestlegate.tagline",
+      "text": "جالب حرب ومستدعي عظام، معا"
+    },
+    {
+      "key": "level.s14_gunshipdock.name",
+      "text": "رصيف المروحية الحربية"
+    },
+    {
+      "key": "level.s14_gunshipdock.tagline",
+      "text": "لون واحد في كل مرة، والعمالقة في المقدمة"
+    },
+    {
+      "key": "level.s14_longstair.name",
+      "text": "الدرج الطويل"
+    },
+    {
+      "key": "level.s14_longstair.tagline",
+      "text": "أربع موجات على الدرج"
+    },
+    {
+      "key": "level.s14_pipeworks.name",
+      "text": "شبكة الأنابيب"
+    },
+    {
+      "key": "level.s14_pipeworks.tagline",
+      "text": "ثلاثة حواجز في مقدمة كل موجة"
+    },
+    {
+      "key": "level.s14_hangarbay.name",
+      "text": "حظيرة الطائرات"
+    },
+    {
+      "key": "level.s14_hangarbay.tagline",
+      "text": "أربع موجات، بلا زعيم"
+    },
+    {
+      "key": "level.s14_chainbridge.name",
+      "text": "جسر السلاسل"
+    },
+    {
+      "key": "level.s14_chainbridge.tagline",
+      "text": "سيد أعظم وأمير حرب، معا"
+    },
+    {
+      "key": "level.s14_sandbagrow.name",
+      "text": "صف أكياس الرمل"
+    },
+    {
+      "key": "level.s14_sandbagrow.tagline",
+      "text": "جدار من الحواجز في كل موجة"
+    },
+    {
+      "key": "level.s14_grateway.name",
+      "text": "الممر الشبكي"
+    },
+    {
+      "key": "level.s14_grateway.tagline",
+      "text": "الحشد يكبر مع كل موجة"
+    },
+    {
+      "key": "level.s14_cratestack.name",
+      "text": "كومة الصناديق"
+    },
+    {
+      "key": "level.s14_cratestack.tagline",
+      "text": "قنابل ودروع في كل موجة"
+    },
+    {
+      "key": "level.s14_mechbay.name",
+      "text": "حظيرة الآلي"
+    },
+    {
+      "key": "level.s14_mechbay.tagline",
+      "text": "عمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s14_watchtower.name",
+      "text": "برج المراقبة"
+    },
+    {
+      "key": "level.s14_watchtower.tagline",
+      "text": "مدرع ومقيد، معا"
+    },
+    {
+      "key": "level.s14_girderspan.name",
+      "text": "جسر العوارض"
+    },
+    {
+      "key": "level.s14_girderspan.tagline",
+      "text": "عمالقة من لون واحد في كل مرة"
+    },
+    {
+      "key": "level.s14_radarpost.name",
+      "text": "مركز الرادار"
+    },
+    {
+      "key": "level.s14_radarpost.tagline",
+      "text": "أطول صعود في الحصن"
+    },
+    {
+      "key": "level.s14_ammodump.name",
+      "text": "مستودع الذخيرة"
+    },
+    {
+      "key": "level.s14_ammodump.tagline",
+      "text": "مفجر يقود كل موجة"
+    },
+    {
+      "key": "level.s14_searchlight.name",
+      "text": "الكشاف"
+    },
+    {
+      "key": "level.s14_searchlight.tagline",
+      "text": "كل ما يملكه الحصن، دفعة واحدة"
+    },
+    {
+      "key": "level.s14_highcommand.name",
+      "text": "القيادة العليا"
+    },
+    {
+      "key": "level.s14_highcommand.tagline",
+      "text": "سيد الشمس وحاصد، معا"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "شرارة الجمر"
     },

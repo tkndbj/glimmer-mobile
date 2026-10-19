@@ -268,6 +268,37 @@ namespace GlimmerGrove.Tests
             new Rung("s12_neoncrown", new[] { "yyrbrryb", "brbgygbr", "ygbrygyg", "rrggrbrr", "yygbbyyb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#ggrbyRGbyr", "rgbyRGbyrgbyr" }, "hollowking:y+ironclad:b", 50, 15, 38, 52, "plsfha", true, true),
         };
 
+        /// <summary>
+        /// Ironbastion, the twelfth chapter: the owner's military sky fortress, twenty rungs, a duel
+        /// on every fifth, seven tenths of surge (two over Neonhaven) and a crowd heavier than
+        /// Neonhaven's on every count, the armada cast again, and the curse and the void stone
+        /// carried on - every rung deals both. Held to `s14_ironbastion.json` by
+        /// `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Ironbastion =
+        {
+            new Rung("s14_tankyard", new[] { "ggbbrygg", "byrrybry", "ybbggryb", "rbygybrg", "rgrbbybr" }, "rgby", "rgby", new[] { "rgbyRG#gbyrgbyr", "rgbyRGby#byRGby", "rgBY#rrgRGbyrgby" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_thrusterdeck", new[] { "gbrrgbyb", "rbgbyrbr", "rrgbybgy", "gyyrgrgr", "rbybgryg" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyRGby", "rgbyrgby#grgbyRGBY", "rgbyrgbyRGbyrgBYr" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_cranepoint", new[] { "bgybgrbb", "gbgygrbr", "yrbbrgyr", "ygrgybgb", "gybbrbgy" }, "rgby", "rgby", new[] { "rrggRGrrggrg#rg", "bbyyBBYYbbyy#by", "rgbyRGBY#r#g#b#yrg" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_gearworks", new[] { "rrbgrgyg", "bbryygby", "yygbbyrr", "grrgbyry", "gyrbrgbb" }, "rgby", "rgby", new[] { "rgbyRGby!gRGbyr", "rgBY#r!yRGby!brg", "rgby!b#gRGbyRGby!r" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_trestlegate", new[] { "rbybbryb", "ggybygrb", "rygyyggr", "yrbgrbby", "yrybgbry" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrg", "rgby#y!rRGbyRGb", "rgBY#g#rRGbyrg" }, "warbringer:r+bonecaller:y", 35, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_gunshipdock", new[] { "bryybgbr", "ygbrbrgy", "bybggryg", "rrgryyrb", "bbybgyby" }, "rgby", "rgby", new[] { "yyYYYyyyyy#yrrr", "rrRRRrrrrr#rggg", "ggGG#ggggBBB#bbbb" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_longstair", new[] { "rgbyyrrb", "ybgrybgg", "gybyrbyg", "rgrbyryy", "bbryrgbr" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrg", "rgby#g#bRGbyRGb", "rgby!ggrBY#yybrg", "rgbyRGbyrgbyr" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_pipeworks", new[] { "rygybryr", "yygrbrgy", "rrbbyybr", "brggyyby", "bybrrgrr" }, "rgby", "rgby", new[] { "#r#g#bRGBYrgbyrg", "#b#y#gRGbyrgbyrgb", "#g#r#yRGbyrgbyrg" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_hangarbay", new[] { "bgybrgby", "rbgbrbgr", "rygygbyg", "bbrrygrb", "ggrggbry" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#grgbyRGbyr", "rgby#y!rgBYrgby", "rgbyrgbyRGbyrg" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_chainbridge", new[] { "yggrgygb", "rgybbyyb", "ybbgrbry", "rrgyrgrb", "grbbygbb" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#gRGbyrgbRGb", "rgby#b#yRGbyrg" }, "overlord:b+warlord:y", 45, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_sandbagrow", new[] { "byrgbyrb", "grrygbrr", "bbgybryy", "yyggygyg", "rrybbrrb" }, "rgby", "rgby", new[] { "rgby#r#gRGbyrgby", "rgby#y#bRGbyrgby", "rgBY#b#yRGbyrgby" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_grateway", new[] { "byygbbyr", "brbrgyrb", "ggyrrbgy", "bggbygyr", "ybgrybgb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgBY#g#brgbyRGbyr", "rgby!r#yRGbyrgBYbg" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_cratestack", new[] { "gyygrggy", "rbygbybg", "ybrbryry", "grgygrby", "brgbyygb" }, "rgby", "rgby", new[] { "rgby#g!bRGbyrgby", "rgby#r#g!bRGbyrgb", "rgBY!y#bRGbyrgBY" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_mechbay", new[] { "ybggrbyy", "brgbbrbr", "ggybgrbg", "ybrrgygy", "yygrbyrr" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrg", "rgbyRGby#rRGbyrg", "RGbyrgby#grgbyrgBY" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_watchtower", new[] { "bbgybrby", "grybgbgg", "yrbrryyr", "gbgrrggb", "gbggbbyr" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyg", "rgby#y!gRGbyRGb", "rgBY#b#rRGbyrg" }, "ironclad:r+shackler:b", 25, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_girderspan", new[] { "bgyrbrrb", "bbrygybg", "grgyrrgb", "rbbgrybr", "grygbgyr" }, "rgby", "rgby", new[] { "ggGG#gggggbbr", "bbBB#bbbbbb#by", "yyYY#yyyyyrr#rr" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_radarpost", new[] { "ggygrygb", "ybbyyrrg", "grbgbgby", "byryryrb", "yygbrygb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyg", "rgby#bbrgbyRGby", "rgby#y#r!grgbyRG", "RGBYrgbyRGbyrg" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_ammodump", new[] { "rybyrryg", "byrrbygg", "gbbggrbb", "yrygyryg", "rbyrygby" }, "rgby", "rgby", new[] { "!rrgbyRGbyrgbyRG", "!grgby#bRGby!yrgb", "!brgBY#rRGbyrgBYg" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_searchlight", new[] { "ggygbgrg", "grbyrrbg", "brrbgbyy", "bbgygygb", "yybrrbyg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGbyr", "rgby#g#b#yRGby!rgb", "rgby!r#gRGbyrgBYRG" }, "", 20, 17, 38, 52, "plsfha", true, true),
+            new Rung("s14_highcommand", new[] { "yrgybbry", "rbggrybg", "ryybbgrr", "byrgbyrg", "ygbrgrby" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#ggrbyRGbyrg", "rgbyRGbyrgbyRG" }, "sunlord:g+harrower:r", 50, 17, 38, 52, "plsfha", true, true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -491,6 +522,7 @@ namespace GlimmerGrove.Tests
             ("Cogspire", Cogspire),
             ("Windwreck", Windwreck),
             ("Neonhaven", Neonhaven),
+            ("Ironbastion", Ironbastion),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line, bool walls = true)
@@ -2022,6 +2054,99 @@ namespace GlimmerGrove.Tests
         /// the "only a little" half of <see cref="TheEleventhChapterIsALittleHarder"/>.
         /// </summary>
         const int LittleShare = 70;
+
+        /// <summary>
+        /// **The twelfth chapter is harder than the eleventh, and not a wall** - the owner's brief
+        /// of 2026-10-19, "make sure it's harder than the previous chapter", measured as a pair of
+        /// bounds rather than felt.
+        ///
+        /// <para>
+        /// <b>Harder</b>: on three-star embers - the good line the last three chapters were tuned
+        /// around - it holds strictly fewer of its runs than Neonhaven does, and on the strongest
+        /// line no more; both chapters are twenty rungs, so a count is a share. <b>Not a wall</b>:
+        /// each of those lines keeps at least <see cref="StepShare"/> per cent of what it wins on
+        /// Neonhaven, and the strongest line wins every rung at some rhythm - so a draft that turns
+        /// the step into a cliff fails here with every other gate green.
+        /// </para>
+        /// <para>
+        /// <b>The one-star workhorse is printed and deliberately not compared</b>, for
+        /// <see cref="TheEleventhChapterIsALittleHarder"/>'s reason: both chapters all but refuse
+        /// it, so a few runs either way are noise rather than difficulty.
+        /// </para>
+        /// <para>
+        /// <b>Measured on 2026-10-19</b>, at the shipped surge of 1.7: three-star embers 21 of 180
+        /// against Neonhaven's 64, the strongest line 118 against 151 with nothing walled, and the
+        /// one-star workhorse 12 against 11. (At 1.5 it held 42 and 145, which the owner played and
+        /// found a little easy; at 1.6, 39 and 131.)
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheTwelfthChapterIsHarder()
+        {
+            var bought = Play(Ironbastion, Bought());
+            var before = Play(Neonhaven, Bought());
+            var upgraded = Play(Ironbastion, Starred(Workhorse, 3));
+            var upgradedBefore = Play(Neonhaven, Starred(Workhorse, 3));
+            var strong = Play(Ironbastion, Strongest());
+            var strongBefore = Play(Neonhaven, Strongest());
+
+            var faults = new List<string>();
+
+            // Harder: fewer wins than Neonhaven on the good line, and no more on the strongest.
+            if (upgraded.Held >= upgradedBefore.Held)
+                faults.Add($"on three-star '{Workhorse}' turrets Ironbastion held {upgraded.Held} "
+                           + $"against Neonhaven's {upgradedBefore.Held} - no harder than the "
+                           + "eleventh");
+
+            if (strong.Held > strongBefore.Held)
+                faults.Add($"the strongest line held {strong.Held} against Neonhaven's "
+                           + $"{strongBefore.Held} - easier than the eleventh");
+
+            // Not a wall: a good line still keeps most of what it wins on Neonhaven.
+            if (upgraded.Held * 100 < upgradedBefore.Held * StepShare)
+                faults.Add($"three-star '{Workhorse}' turrets held {upgraded.Held} against "
+                           + $"Neonhaven's {upgradedBefore.Held}, under {StepShare}% of it - the "
+                           + "twelfth chapter is a wall, not a step");
+
+            if (strong.Held * 100 < strongBefore.Held * StepShare)
+                faults.Add($"the strongest line held {strong.Held} against Neonhaven's "
+                           + $"{strongBefore.Held}, under {StepShare}% of it - the twelfth "
+                           + "chapter is a wall, not a step");
+
+            if (strong.Walled > 0)
+                faults.Add($"{strong.Walled} rung(s) of Ironbastion are held at no rhythm at all "
+                           + "on the strongest line");
+
+            string report =
+                $"Ironbastion on {Workhorse} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred, {bought.Walled} walled):\n" + bought.Table
+                + $"\nIronbastion on three-star {Workhorse} ({upgraded.Held}/{upgraded.Runs} held, "
+                + $"{upgraded.Starred} three-starred):\n" + upgraded.Table
+                + $"\nIronbastion on the strongest line ({strong.Held}/{strong.Runs} held, "
+                + $"{strong.Starred} three-starred, {strong.Walled} walled):\n" + strong.Table
+                + $"\nNeonhaven for comparison: {Workhorse} {before.Held}/{before.Runs}, "
+                + $"three-star {Workhorse} {upgradedBefore.Held}/{upgradedBefore.Runs}, "
+                + $"strongest {strongBefore.Held}/{strongBefore.Runs} "
+                + $"({strongBefore.Starred} three-starred)\n";
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
+        }
+
+        /// <summary>
+        /// How much of what a line wins on Neonhaven it must still win on Ironbastion, in per cent:
+        /// the "not a wall" half of <see cref="TheTwelfthChapterIsHarder"/>.
+        ///
+        /// <para>
+        /// <b>Thirty, and that is the owner's call rather than a measurement.</b> It was sixty while
+        /// the chapter was tuned; at 1.7 three-star embers keep 33% of Neonhaven's wins (21 of 64),
+        /// so the good line is asked to buy upgrades here - which the owner chose on 2026-10-19
+        /// ("70% is fine"). Thirty still fails a draft that walls the strongest line or takes the
+        /// good line to nothing.
+        /// </para>
+        /// </summary>
+        const int StepShare = 30;
 
         [Test]
         public void AShacklersChainAlwaysRunsOutBeforeTheNextOne()

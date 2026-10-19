@@ -841,6 +841,7 @@ namespace GlimmerGrove.Tests
             yield return ("cogspire", Cogspire);
             yield return ("windwreck", Windwreck);
             yield return ("neonhaven", Neonhaven);
+            yield return ("ironbastion", Ironbastion);
         }
     }
 }

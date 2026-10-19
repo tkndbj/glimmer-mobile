@@ -86,7 +86,11 @@ job, `ChapterIndexEntry`), and this file writes bodies.
 #: `map11` is the neon sky city, the owner's own painting (2026-10-02) - 2048x8256 a third time,
 #: and cut at **four** for the same reasons: the glass road zig-zags inside the middle two thirds
 #: of the width, and at five the server racks and the noodle stall at the edges go off the sides.
-STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4, 7: 4, 8: 6, 9: 4, 10: 4, 11: 4}
+#: `map12` is the military sky fortress, the owner's own painting (2026-10-19) - 2048x8256 a fourth
+#: time, and cut at **four** for the same reasons: the steel road zig-zags between x 300 and 1620 of
+#: the source, inside the 95-1953 that four strips keep, and at five the radar dish, the hangar and
+#: the thrusters at the edges go off the sides.
+STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4, 7: 4, 8: 6, 9: 4, 10: 4, 11: 4, 12: 4}
 
 #: How many nodes a chapter drawing each map stands on it, where that is not `PER_CHAPTER`.
 #:
@@ -96,7 +100,7 @@ STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4, 7: 4, 8: 6, 9: 4, 10: 4, 11: 4}
 #: chapter - inherits twenty seats whether it uses them or not. That is the same bargain the art
 #: itself strikes (invariant 7c): the eighth chapter of the game looks like the eighth chapter of
 #: the game. A chapter shorter than its map's chain stands on the first rungs of it.
-NODES = {8: 20, 9: 20, 10: 20, 11: 20}
+NODES = {8: 20, 9: 20, 10: 20, 11: 20, 12: 20}
 
 
 def nodes_on(which):
@@ -330,6 +334,28 @@ SEATS = {
         (0.481, 0.754, False),
         (0.285, 0.790, False),
     ),
+    12: (
+        (0.447, 0.050, False),
+        (0.807, 0.090, False),
+        (0.539, 0.129, False),
+        (0.292, 0.166, False),
+        (0.508, 0.202, False),
+        (0.672, 0.238, False),
+        (0.355, 0.279, False),
+        (0.500, 0.315, False),
+        (0.720, 0.354, False),
+        (0.549, 0.385, False),
+        (0.345, 0.423, False),
+        (0.705, 0.470, False),
+        (0.536, 0.508, False),
+        (0.727, 0.544, False),
+        (0.485, 0.580, False),
+        (0.382, 0.624, False),
+        (0.615, 0.660, False),
+        (0.721, 0.705, False),
+        (0.462, 0.746, False),
+        (0.319, 0.795, False),
+    ),
 }
 
 #: Where the end-of-chapter marker stands on each map, found the same way.
@@ -345,6 +371,7 @@ MARKERS = {
     9: (0.742, 0.854, False),
     10: (0.763, 0.854, False),
     11: (0.752, 0.854, False),
+    12: (0.754, 0.854, False),
 }
 
 
