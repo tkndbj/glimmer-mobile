@@ -509,7 +509,7 @@
         "id": "gg_offer_1",
         "kind": "consumable",
         "shelf": "offers",
-        "credits": 5000,
+        "credits": 10000,
         "gems": 300,
         "referenceUsdCents": 99
       },

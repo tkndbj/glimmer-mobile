@@ -96,6 +96,26 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// The defeat panel has settled, is the top panel and sells nothing of its own: a lost run's
+        /// moment is answered here, while "so close" is still fresh, instead of on the next calm
+        /// hub. Called once per defeat by <see cref="DefeatOverlay"/>; the offer is stacked over it,
+        /// and closing the offer leaves the defeat panel exactly as it was. Only a loss or near-miss
+        /// moment is answered, and it is spent either way, so the hub never answers it a second time.
+        /// The consent questions and the update wall still come first, as on every other screen.
+        /// </summary>
+        public static void AfterDefeat()
+        {
+            var pending = OfferLedger.Pending;
+            if (pending != OfferTrigger.Loss && pending != OfferTrigger.NearMiss) return;
+            if (ReleaseGate.IsShut || !LaunchCalm.IsSettled || AdPrivacy.Owed || AdPrivacy.IsAsking) return;
+
+            OfferConfig.Refresh();
+            var deal = OfferLedger.TryDeal(pending);
+            OfferLedger.Spend();
+            if (deal.Dealt) Show();
+        }
+
         /// <summary>Nothing over the screen, nothing about to be, and nothing else asking.</summary>
         static bool Calm()
             => !Flow.Busy

@@ -718,8 +718,11 @@ namespace GlimmerGrove
         /// <summary>The amount column's width, between the picture and the clock.</summary>
         const float OfferAmountW = 420f;
 
-        /// <summary>The offer box's colour: a deep violet, the gems' side of the shop, apart from the deal's emerald.</summary>
-        static readonly Color OfferFace = new Color(.46f, .26f, .78f);
+        /// <summary>
+        /// The offer box's colour: a bright violet that pulls the eye, the gems' side of the shop and
+        /// apart from the deal's emerald (the owner, 2026-10-19: the deep violet read as dark).
+        /// </summary>
+        static readonly Color OfferFace = new Color(.70f, .36f, 1f);
 
         void TapOffer()
         {

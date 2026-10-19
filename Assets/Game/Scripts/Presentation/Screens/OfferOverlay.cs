@@ -66,11 +66,12 @@ namespace GlimmerGrove
                              TextAnchor.MiddleCenter, new Vector2(L.LineW, L.LineH), new Vector2(.5f, 1f),
                              new Vector2(0f, -L.LineY), 3f, 2f), L.LineFloor);
 
-            // The picture on its own light, breathing.
+            // The picture on its own light at the left, breathing; what it pays beside it, so the
+            // panel is one row shorter than a picture over its figures (the owner, 2026-10-19).
             UIKit.Img("Glow", Panel, Art.Glow(128, 2.4f), new Color(1f, .82f, .38f, .55f),
-                      new Vector2(L.GlowSize, L.GlowSize), new Vector2(.5f, 1f), new Vector2(0f, -L.ArtY));
+                      new Vector2(L.GlowSize, L.GlowSize), new Vector2(.5f, 1f), new Vector2(L.ArtX, -L.RowY));
             var art = UIKit.Img("Art", Panel, Art.S(ShopArt.OfferPicture(product)), Color.white,
-                                new Vector2(L.ArtSize, L.ArtSize), new Vector2(.5f, 1f), new Vector2(0f, -L.ArtY));
+                                new Vector2(L.ArtSize, L.ArtSize), new Vector2(.5f, 1f), new Vector2(L.ArtX, -L.RowY));
             art.preserveAspect = true;
             art.enabled = art.sprite != null;
             Tween.Breathe(art.transform, .035f, 2.4f);
@@ -81,7 +82,7 @@ namespace GlimmerGrove
             {
                 var seal = UIKit.Img("Seal", Panel, Art.S("Ui/" + Skins.Badge), Pal.Poppy,
                                      new Vector2(L.SealSize, L.SealSize), new Vector2(.5f, 1f),
-                                     new Vector2(-L.SealX, -L.SealY));
+                                     new Vector2(L.SealX, -L.SealY));
                 seal.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
                 var word = UIKit.Shrinkable(
                     UIKit.Titled("Word", seal.transform, Loc.Format("ui.offer.bonus", extra), L.SealWordSize, Color.white,
@@ -91,12 +92,13 @@ namespace GlimmerGrove
                 Tween.Breathe(seal.transform, .05f, 1.6f);
             }
 
-            // The gems, big, with the shop's gem beside them; the coins on the line under.
-            var row = UIKit.Box("Gems", Panel, new Vector2(L.AmountW, L.AmountH), new Vector2(.5f, 1f),
-                                new Vector2(0f, -L.AmountY));
+            // The column at the right: the gems, big, with the shop's gem before them; the coins
+            // under, bright; then ENDS IN over the time left, large and on the window itself.
+            var row = UIKit.Box("Gems", Panel, new Vector2(L.ColumnW, L.AmountH), new Vector2(.5f, 1f),
+                                new Vector2(L.ColumnX, -L.AmountY));
             var gems = UIKit.Shrinkable(
                 UIKit.Titled("Amount", row, product.Gems.ToString("N0"), L.AmountSize, Pal.Bloom, TextAnchor.MiddleCenter,
-                             new Vector2(L.AmountW, L.AmountH), new Vector2(.5f, .5f), Vector2.zero, 5f, 3f), L.AmountFloor);
+                             new Vector2(L.ColumnW, L.AmountH), new Vector2(.5f, .5f), Vector2.zero, 5f, 3f), L.AmountFloor);
             var glyph = UIKit.Img("Gem", row, null, Color.white, new Vector2(L.GemSize, L.GemSize),
                                   new Vector2(.5f, .5f), new Vector2(0f, -DealClock.DigitLift(L.AmountSize)));
             glyph.enabled = false;
@@ -105,24 +107,21 @@ namespace GlimmerGrove
                                   new Vector2(L.GemArt, L.GemArt), new Vector2(.5f, .5f), Vector2.zero);
             stone.preserveAspect = true;
             stone.raycastTarget = false;
-            UIKit.CentreGlyph(gems, glyph, L.AmountW);
+            UIKit.CentreGlyph(gems, glyph, L.ColumnW);
 
             UIKit.Shrinkable(
                 UIKit.Titled("Coins", Panel, Loc.Format("ui.shop.plus_coins", product.Credits.ToString("N0")).Upper(),
-                             L.CoinsSize, Pal.Gold, TextAnchor.MiddleCenter, new Vector2(L.AmountW, L.CoinsH),
-                             new Vector2(.5f, 1f), new Vector2(0f, -L.CoinsY), 3f, 2f), L.CoinsFloor);
+                             L.CoinsSize, Pal.Pollen, TextAnchor.MiddleCenter, new Vector2(L.ColumnW, L.CoinsH),
+                             new Vector2(.5f, 1f), new Vector2(L.ColumnX, -L.CoinsY), 4f, 3f), L.CoinsFloor);
 
-            // The clock: ENDS IN over the time left, to the second.
             UIKit.Shrinkable(
                 UIKit.Titled("Ends", Panel, Loc.Get("ui.deal.ends_label").Upper(), L.EndsSize, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(L.TroughW, L.EndsH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -L.EndsY), 3f, 2f), L.EndsFloor);
-            UIKit.Img("Trough", Panel, Art.S("Ui/" + Skins.Trough), Color.white,
-                      new Vector2(L.TroughW, L.TroughH), new Vector2(.5f, 1f), new Vector2(0f, -L.TroughY));
+                             TextAnchor.MiddleCenter, new Vector2(L.ColumnW, L.EndsH), new Vector2(.5f, 1f),
+                             new Vector2(L.ColumnX, -L.EndsY), 3f, 2f), L.EndsFloor);
             _timer = UIKit.Shrinkable(
                 UIKit.Titled("Timer", Panel, string.Empty, L.TimerSize, Color.white, TextAnchor.MiddleCenter,
-                             new Vector2(L.TroughW - 30f, L.TroughH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -L.TroughY), 3f, 2f), L.TimerFloor);
+                             new Vector2(L.ColumnW, L.TimerH), new Vector2(.5f, 1f),
+                             new Vector2(L.ColumnX, -L.TimerY), 4f, 3f), L.TimerFloor);
 
             // The price key: the store's own price string, never one this game formats.
             _key = UIKit.TextButton("Buy", Panel, Skins.Buy, string.Empty, L.KeySize,
@@ -246,24 +245,27 @@ namespace GlimmerGrove
     {
         public sealed class PanelGeometry
         {
-            public float Width = 1030f, Height = 1350f;
+            public float Width = 1030f, Height = 990f;
             public float LineY = 184f, LineW = 900f, LineH = 64f;
             public int LineSize = 40, LineFloor = 24;
-            public float ArtY = 506f, ArtSize = 420f, GlowSize = 640f;
-            public float SealX = 190f, SealY = 366f, SealSize = 176f;
+
+            /// <summary>The picture row: its centre from the top, the picture at the left, the column at the right.</summary>
+            public float RowY = 470f, ArtX = -240f, ArtSize = 380f, GlowSize = 580f;
+            public float ColumnX = 210f, ColumnW = 480f;
+            public float SealX = -400f, SealY = 300f, SealSize = 176f;
             public int SealWordSize = 44, SealWordFloor = 22;
-            public float AmountY = 776f, AmountW = 820f, AmountH = 110f, GemSize = 88f, GemArt = 170f;
+            public float AmountY = 382f, AmountH = 110f, GemSize = 88f, GemArt = 170f;
             public int AmountSize = 96, AmountFloor = 48;
-            public float CoinsY = 852f, CoinsH = 54f;
-            public int CoinsSize = 42, CoinsFloor = 24;
-            public float EndsY = 918f, EndsH = 42f;
+            public float CoinsY = 462f, CoinsH = 64f;
+            public int CoinsSize = 50, CoinsFloor = 26;
+            public float EndsY = 534f, EndsH = 42f;
             public int EndsSize = 30, EndsFloor = 20;
-            public float TroughY = 970f, TroughW = 400f, TroughH = 70f;
-            public int TimerSize = 44, TimerFloor = 26;
-            public float KeyY = 1090f, KeyW = 480f, KeyH = 124f;
+            public float TimerY = 594f, TimerH = 80f;
+            public int TimerSize = 62, TimerFloor = 32;
+            public float KeyY = 762f, KeyW = 480f, KeyH = 124f;
             public int KeySize = 48;
-            public float FootKeyY = 82f, FootKeyW = 400f, FootKeyH = 108f;
-            public int FootKeySize = 36;
+            public float FootKeyY = 70f, FootKeyW = 340f, FootKeyH = 92f;
+            public int FootKeySize = 30;
         }
 
         public static readonly PanelGeometry Panel = new PanelGeometry();

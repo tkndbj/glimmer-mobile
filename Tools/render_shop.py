@@ -88,7 +88,7 @@ DEAL = None                            # (credits, gems, seconds left) when draw
 # when both stand: the deal card's height and seal room, on a violet box. `--offer` draws it.
 OFFER_ROW = DEAL_ROW
 OFFER = None                           # (product id, seconds left) when drawn
-OFFER_FACE = (117, 66, 199)            # ShopScreen.OfferFace (.46, .26, .78)
+OFFER_FACE = (179, 92, 255)            # ShopScreen.OfferFace (.70, .36, 1)
 OFFER_SEAL_WORD = 34                   # the band's seal caption
 
 

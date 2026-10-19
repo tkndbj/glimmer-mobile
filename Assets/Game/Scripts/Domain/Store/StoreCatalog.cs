@@ -366,7 +366,7 @@ namespace GlimmerGrove.Store
                 // each grants is fixed by its id - the receipt carries nothing else - so the engine
                 // chooses which one a player sees, never what it pays.
                 new StoreProduct("gg_offer_1", StoreProductKind.Consumable, StoreShelf.Offers,
-                                 5000, 300, 99, StoreBadge.None),
+                                 10000, 300, 99, StoreBadge.None),
                 new StoreProduct("gg_offer_2", StoreProductKind.Consumable, StoreShelf.Offers,
                                  8000, 400, 149, StoreBadge.None),
                 new StoreProduct("gg_offer_3", StoreProductKind.Consumable, StoreShelf.Offers,

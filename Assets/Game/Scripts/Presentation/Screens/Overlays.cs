@@ -367,7 +367,47 @@ namespace GlimmerGrove
         /// only updated when the screen was reopened would tick down invisibly and the
         /// button would stay stale until they gave up on it.
         /// </summary>
-        void Update() => _video?.Paint();
+        void Update()
+        {
+            _video?.Paint();
+            AskForAnOffer();
+        }
+
+        // ------------------------------------------------------------------ the personal offer
+        /// <summary>
+        /// How long the panel stands before a personal offer may be laid over it (invariant 64): its
+        /// spring, the near-miss line's arrival and the streak toast all land first.
+        /// </summary>
+        const float OfferBeat = 1.8f;
+
+        /// <summary>When the panel was first built; a rebuild is the same panel and does not move it.</summary>
+        float _builtAt = -1f;
+
+        /// <summary>The one ask per defeat has been made (or given up), so a rebuild never asks again.</summary>
+        bool _offerAsked;
+
+        /// <summary>True while the panel itself sells a way back (hearts for a video or for gems).</summary>
+        bool _selling;
+
+        /// <summary>
+        /// Asks once, when the panel has settled and is the top panel, whether a personal offer
+        /// answers this loss (<see cref="OfferMoment.AfterDefeat"/>). Never while the panel sells its
+        /// own way back - one sale per moment - and never once the player has moved on: a tap on
+        /// retry or glades before the beat closes the panel, the moment stays waiting, and the next
+        /// calm screen answers it instead.
+        /// </summary>
+        void AskForAnOffer()
+        {
+            if (_offerAsked || _builtAt < 0f || IsLeaving) return;
+            if (Time.unscaledTime - _builtAt < OfferBeat) return;
+            if (!Flow.IsTopModal(this) || Flow.Busy || !Application.isFocused) return;
+
+            _offerAsked = true;
+            if (_selling) return;
+
+            try { OfferMoment.AfterDefeat(); }
+            catch (Exception e) { Debug.LogException(e); }
+        }
 
 
         /// <summary>
@@ -462,6 +502,10 @@ namespace GlimmerGrove
             // disagree with the buttons drawn into them. See DefeatPanel - the two constants
             // this replaced were 880 and 1010, written before there was a third way out.
             var stack = DefeatPanel.Of(canRetry, offering, _rescue.Exists);
+
+            // Read on every paint, so a rescue bought or a video watched since is what the offer asks.
+            _selling = stack.HasWatch || stack.HasRescue;
+            if (_builtAt < 0f) _builtAt = Time.unscaledTime;
 
             MakePanel(new Vector2(DefeatPanel.Width, stack.Height),
                       Loc.Get(TitleKey(Run.Reason)), dismissOnScrim: false);

@@ -634,8 +634,9 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    (`seed-offers.mjs`, strict reader first; revision 1 = `OfferTuning.ShippedJson`; the stop is
    `"enabled": false`). History is device-local per account (`OfferHistory`, no save field); what the account
    paid is the server's (`payer` on the wallet, raised by `redeemPurchase`, only climbs; nothing dealt until
-   a reply carries it). `OfferMoment` raises `OfferOverlay` after `DealMoment`; the shop's band re-opens the
-   standing offer. Held by `OfferTuningTests`, `OfferRulesTests`, `test/payer.mjs`, `content.py`;
+   a reply carries it). `OfferMoment` raises `OfferOverlay` after `DealMoment`, and over a settled defeat panel
+   for a loss or near miss (`OfferMoment.AfterDefeat`: once per defeat, top panel only, never while the panel
+   sells hearts; the continue offer always comes first); the shop's band re-opens the standing offer. Held by `OfferTuningTests`, `OfferRulesTests`, `test/payer.mjs`, `content.py`;
    `render_offers.py --measure` and `make_offer_art.py --check`.
 
 ### Art credits

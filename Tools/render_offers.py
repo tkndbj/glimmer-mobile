@@ -48,13 +48,14 @@ CROWN_Y, BANNER_Y, BANNER_W, BANNER_H = 114.0, -30.0, 566.0, 157.0
 WORD_LIFT, WORD_W, WORD_H = 34.0, 356.0, 74.0
 
 # OfferLayout.Panel
-P = dict(Width=1030.0, Height=1350.0, LineY=184.0, LineW=900.0, LineH=64.0, LineSize=40, LineFloor=24,
-         ArtY=506.0, ArtSize=420.0, GlowSize=640.0, SealX=190.0, SealY=366.0, SealSize=176.0,
-         SealWordSize=44, SealWordFloor=22, AmountY=776.0, AmountW=820.0, AmountH=110.0, GemSize=88.0,
-         GemArt=170.0, AmountSize=96, AmountFloor=48, CoinsY=852.0, CoinsH=54.0, CoinsSize=42, CoinsFloor=24,
-         EndsY=918.0, EndsH=42.0, EndsSize=30, EndsFloor=20, TroughY=970.0, TroughW=400.0, TroughH=70.0,
-         TimerSize=44, TimerFloor=26, KeyY=1090.0, KeyW=480.0, KeyH=124.0, KeySize=48, FootKeyY=82.0,
-         FootKeyW=400.0, FootKeyH=108.0, FootKeySize=36)
+P = dict(Width=1030.0, Height=990.0, LineY=184.0, LineW=900.0, LineH=64.0, LineSize=40, LineFloor=24,
+         RowY=470.0, ArtX=-240.0, ArtSize=380.0, GlowSize=580.0, ColumnX=210.0, ColumnW=480.0,
+         SealX=-400.0, SealY=300.0, SealSize=176.0, SealWordSize=44, SealWordFloor=22,
+         AmountY=382.0, AmountH=110.0, GemSize=88.0, GemArt=170.0, AmountSize=96, AmountFloor=48,
+         CoinsY=462.0, CoinsH=64.0, CoinsSize=50, CoinsFloor=26, EndsY=534.0, EndsH=42.0, EndsSize=30, EndsFloor=20,
+         TimerY=594.0, TimerH=80.0, TimerSize=62, TimerFloor=32, KeyY=762.0, KeyW=480.0, KeyH=124.0, KeySize=48,
+         FootKeyY=70.0, FootKeyW=340.0, FootKeyH=92.0, FootKeySize=30)
+POLLEN = (255, 221, 87)   # Pal.Pollen, the coins line
 GLYPH_GAP = 18.0          # UIKit.GlyphGap
 POPPY = (242, 64, 79)
 URGENT = (255, 92, 72)
@@ -148,36 +149,41 @@ def panel(offer, product, products, lang="en", device="phone", left=None, state=
 
     fitted("line", s[f"ui.offer.line.{look}"], cx, top + P["LineY"], P["LineW"], P["LineH"], P["LineSize"], P["LineFloor"])
 
+    ax = cx + P["ArtX"]
     if draw:
-        K.paste(block, K.glow(P["GlowSize"], 2.4, (255, 209, 97), .55), cx, top + P["ArtY"])
-        K.paste(block, K.fit(Image.open(picture(product, products)).convert("RGBA"), (P["ArtSize"], P["ArtSize"])), cx, top + P["ArtY"])
+        K.paste(block, K.glow(P["GlowSize"], 2.4, (255, 209, 97), .55), ax, top + P["RowY"])
+        K.paste(block, K.fit(Image.open(picture(product, products)).convert("RGBA"), (P["ArtSize"], P["ArtSize"])), ax, top + P["RowY"])
 
     pct = extra(product, products)
     if pct:
-        sx, sy = cx - P["SealX"], top + P["SealY"]
+        sx, sy = cx + P["SealX"], top + P["SealY"]
         K.paste(block, K.tint(K.skin("Hud/burst", round(P["SealSize"]), round(P["SealSize"])), POPPY).rotate(8, Image.BICUBIC), sx, sy)
         fitted("seal", s["ui.offer.bonus"].replace("{0}", str(pct)), sx, sy - 2, P["SealSize"] * .72, P["SealSize"] * .5,
                P["SealWordSize"], P["SealWordFloor"], fill=(255, 255, 255))
 
-    # The gems with the shop's gem before them, centred as one block (`UIKit.CentreGlyph`).
+    # The column at the right: the gems with the shop's gem before them (`UIKit.CentreGlyph`),
+    # the coins under in Pal.Pollen, then ENDS IN over the time left, with no trough.
+    col = cx + P["ColumnX"]
     said = f"{product['gems']:,}"
     size = P["AmountSize"]
     wide = K.font(size).getlength(said)
-    lx = cx - (P["GemSize"] + GLYPH_GAP + wide) / 2
+    lx = col - (P["GemSize"] + GLYPH_GAP + wide) / 2
     ay = top + P["AmountY"]
     K.paste(block, K.fit(Image.open(UI / "Shop" / "gems_1.png").convert("RGBA"), (P["GemArt"], P["GemArt"])),
             lx + P["GemSize"] / 2, ay + round(size * .044))
     K.text(block, said, lx + P["GemSize"] + GLYPH_GAP + wide / 2, ay, size, fill=K.BLOOM, outline=5)
-    sizes.append(("gems", said, size, P["AmountFloor"]))
+    if P["GemSize"] + GLYPH_GAP + wide > P["ColumnW"]:
+        sizes.append(("gems", said, P["AmountFloor"], P["AmountFloor"]))
+    else:
+        sizes.append(("gems", said, size, P["AmountFloor"]))
 
-    fitted("coins", upper(s["ui.shop.plus_coins"].replace("{0}", f"{product['credits']:,}"), lang), cx, top + P["CoinsY"],
-           P["AmountW"], P["CoinsH"], P["CoinsSize"], P["CoinsFloor"], fill=K.GOLD)
+    fitted("coins", upper(s["ui.shop.plus_coins"].replace("{0}", f"{product['credits']:,}"), lang), col, top + P["CoinsY"],
+           P["ColumnW"], P["CoinsH"], P["CoinsSize"], P["CoinsFloor"], fill=POLLEN, outline=4)
 
-    fitted("ends", upper(s["ui.deal.ends_label"], lang), cx, top + P["EndsY"], P["TroughW"], P["EndsH"], P["EndsSize"], P["EndsFloor"])
-    K.paste(block, K.skin("Hud/trough", P["TroughW"], P["TroughH"]), cx, top + P["TroughY"])
+    fitted("ends", upper(s["ui.deal.ends_label"], lang), col, top + P["EndsY"], P["ColumnW"], P["EndsH"], P["EndsSize"], P["EndsFloor"])
     left = offer["lastsMinutes"] * 60 if left is None else left
-    fitted("timer", timer(left), cx, top + P["TroughY"], P["TroughW"] - 30, P["TroughH"], P["TimerSize"], P["TimerFloor"],
-           fill=URGENT if 0 < left < 3600 else (158, 168, 184) if left <= 0 else (255, 255, 255))
+    fitted("timer", timer(left), col, top + P["TimerY"], P["ColumnW"], P["TimerH"], P["TimerSize"], P["TimerFloor"],
+           fill=URGENT if 0 < left < 3600 else (158, 168, 184) if left <= 0 else (255, 255, 255), outline=4)
 
     ky = top + P["KeyY"]
     pill, word = {

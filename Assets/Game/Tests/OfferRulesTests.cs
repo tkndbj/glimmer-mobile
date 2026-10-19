@@ -349,7 +349,7 @@ namespace GlimmerGrove.Tests
                 {
                     new StoreProductDto { id = "gg_gems_1", kind = "consumable", shelf = "gems", gems = 100, referenceUsdCents = 99 },
                     new StoreProductDto { id = "gg_coins_1", kind = "consumable", shelf = "coins", credits = 7500, referenceUsdCents = 199 },
-                    new StoreProductDto { id = "gg_offer_1", kind = "consumable", shelf = "offers", credits = 5000, gems = 300, referenceUsdCents = 99 },
+                    new StoreProductDto { id = "gg_offer_1", kind = "consumable", shelf = "offers", credits = 10000, gems = 300, referenceUsdCents = 99 },
                     new StoreProductDto { id = "gg_offer_7", kind = "consumable", shelf = "offers", credits = 560000, gems = 17000, referenceUsdCents = 7999 },
                 },
             };
@@ -357,7 +357,7 @@ namespace GlimmerGrove.Tests
             var catalog = StoreCatalog.Resolve(dto, problems);
             CollectionAssert.IsEmpty(problems);
 
-            Assert.AreEqual(330, OfferValue.Extra(catalog.Find("gg_offer_1"), catalog));
+            Assert.AreEqual(460, OfferValue.Extra(catalog.Find("gg_offer_1"), catalog));
             Assert.AreEqual(290, OfferValue.Extra(catalog.Find("gg_offer_7"), catalog));
             Assert.AreEqual(0, OfferValue.Extra(catalog.Find("gg_gems_1"), catalog), "the base pack is worth itself");
         }
