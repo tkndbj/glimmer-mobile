@@ -38,6 +38,15 @@ namespace GlimmerGrove
         /// <summary>Run once the panel has gone: the next unlock, or nothing.</summary>
         public Action OnDone;
 
+        /// <summary>
+        /// The build that unlocked it: an ascension gathers the school's cards it holds (MODES.md
+        /// 59r). Null gathers the school's catalog cards instead.
+        /// </summary>
+        public ShuffleBuild Held;
+
+        /// <summary>The most cards an ascension gathers round its emblem: its keystone and six of its school.</summary>
+        const int MostGathered = 7;
+
         Layout.ShuffleUnlockLayout L => Layout.ShuffleUnlockLayout.Default;
 
         RectTransform _stage, _emblemRt, _fanRt, _fan2Rt, _fan3Rt, _okRt;
@@ -49,14 +58,17 @@ namespace GlimmerGrove
 
         int _grand;
         Color _kind, _tint;
-        bool _settled, _done;
+        bool _settled, _done, _ascension;
         float _age;
 
         protected override void Build()
         {
             if (Bond == null) { Close(); return; }
 
-            _grand = Bond.Tier == ShuffleTier.Legendary ? 3 : Bond.Tier == ShuffleTier.Epic ? 2 : 1;
+            // **An ascension breaks one step past a legendary** (MODES.md 59r): the rarest thing a
+            // run can earn, so the room's every figure that climbs with the tier climbs once more.
+            _ascension = Bond.IsAscension;
+            _grand = _ascension ? 4 : Bond.Tier == ShuffleTier.Legendary ? 3 : Bond.Tier == ShuffleTier.Epic ? 2 : 1;
             _kind = ShuffleChoiceOverlay.GlowOf(Bond); // each secret's own colour, the evolutions' purple
             _tint = ShuffleChoiceOverlay.TintOf(Bond.Tier);
 
@@ -153,17 +165,50 @@ namespace GlimmerGrove
             _emblemRt.localScale = Vector3.zero;
 
             // The cards that made it, standing round the middle before they gather: every part of
-            // a secret, or the one card as many times as it was taken for an evolution.
-            int count = Bond.IsSecret ? Bond.Parts.Length : Bond.Needs;
-            _parts = new RectTransform[count];
+            // a secret, the one card as many times as it was taken for an evolution, or an
+            // ascension's keystone and the cards of its school the build holds.
+            var gathered = Gathered();
+            _parts = new RectTransform[gathered.Count];
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < gathered.Count; i++)
             {
-                var card = Card(Bond.Parts[Bond.IsSecret ? i : 0]);
-                var spot = at + Around(i, count, L.Gather);
-                _parts[i] = Picture("Part", _stage, card, L.PartSize, spot);
+                var spot = at + Around(i, gathered.Count, L.Gather);
+                _parts[i] = Picture("Part", _stage, gathered[i], L.PartSize, spot);
                 _parts[i].localScale = Vector3.zero;
             }
+        }
+
+        /// <summary>The cards that stand round the emblem before they gather, in the order they stand.</summary>
+        System.Collections.Generic.List<ShuffleCard> Gathered()
+        {
+            var cards = new System.Collections.Generic.List<ShuffleCard>(MostGathered);
+
+            if (Bond.IsSecret)
+            {
+                for (int i = 0; i < Bond.Parts.Length; i++) cards.Add(Card(Bond.Parts[i]));
+                return cards;
+            }
+
+            if (Bond.IsEvolution)
+            {
+                for (int i = 0; i < Bond.Needs; i++) cards.Add(Card(Bond.Parts[0]));
+                return cards;
+            }
+
+            cards.Add(Card(Bond.Parts[0]));
+
+            // The school's cards the build holds (each once), else the school's catalog cards.
+            var seen = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal) { Bond.Parts[0] };
+            if (Held != null)
+                foreach (var card in Held.Taken)
+                    if (cards.Count < MostGathered && ShuffleSchools.Of(card) == Bond.School && seen.Add(card.Id))
+                        cards.Add(card);
+
+            foreach (var card in ShuffleCards.All)
+                if (cards.Count < MostGathered && ShuffleSchools.Of(card) == Bond.School && seen.Add(card.Id))
+                    cards.Add(Card(card.Id));
+
+            return cards;
         }
 
         /// <summary>Where the <paramref name="index"/>th of <paramref name="count"/> things stands on a circle, the first at the top.</summary>
@@ -199,7 +244,9 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ the words
         void BuildWords()
         {
-            string headline = Loc.Get(Bond.IsSecret ? "ui.shuffle.secret_unlocked" : "ui.shuffle.evolution_unlocked").Upper();
+            string headline = Loc.Get(Bond.IsSecret ? "ui.shuffle.secret_unlocked"
+                                      : Bond.IsEvolution ? "ui.shuffle.evolution_unlocked"
+                                      : "ui.shuffle.ascension_unlocked").Upper();
 
             _title = UIKit.Shrinkable(
                 UIKit.Titled("Title", _stage, headline, L.TitleSize, Color.Lerp(_kind, Color.white, .35f),
@@ -226,7 +273,14 @@ namespace GlimmerGrove
             Hide(_note);
 
             // The recipe: the cards it took, with a plus between two for a secret and the count
-            // under the one card for an evolution - pictures, so it reads in every language.
+            // under the one card for an evolution - pictures, so it reads in every language. An
+            // ascension's is its keystone, a plus, and its school's gem with the points it took.
+            if (_ascension)
+            {
+                AscensionRecipe();
+                return;
+            }
+
             int parts = Bond.Parts.Length;
             _recipe = new RectTransform[parts];
 
@@ -257,6 +311,45 @@ namespace GlimmerGrove
         }
 
         readonly System.Collections.Generic.List<Text> _plusSigns = new System.Collections.Generic.List<Text>(3);
+
+        /// <summary>An ascension's recipe: its keystone, a plus, and its school's gem times the points it took.</summary>
+        void AscensionRecipe()
+        {
+            _recipe = new RectTransform[2];
+
+            var first = new Vector2(L.RecipeX(0, 2), L.RecipeY);
+            _recipe[0] = Picture("Recipe", _stage, Card(Bond.Parts[0]), L.RecipeIcon, first);
+            _recipe[0].localScale = Vector3.zero;
+
+            var plus = UIKit.Titled("Plus", _stage, "+", 56, Pal.Cream, TextAnchor.MiddleCenter,
+                                    new Vector2(L.RecipeGap, L.RecipeIcon), new Vector2(.5f, .5f),
+                                    first + new Vector2((L.RecipeIcon + L.RecipeGap) * .5f, 0f), outline: 3f, shadow: 3f);
+            plus.raycastTarget = false;
+            Hide(plus);
+            _plusSigns.Add(plus);
+
+            var second = new Vector2(L.RecipeX(1, 2), L.RecipeY);
+            var seat = UIKit.Img("Recipe", _stage, Art.S("Ui/" + Skins.Slot), Color.white, Vector2.one * L.RecipeIcon,
+                                 new Vector2(.5f, .5f), second);
+            seat.type = Image.Type.Sliced;
+            seat.raycastTarget = false;
+            UIKit.Halo(seat.transform, _kind, L.RecipeIcon * 1.6f, .45f);
+
+            var gem = Art.S("Ui/" + Bond.Mark);
+            var img = UIKit.Img("Gem", seat.transform, gem, Color.white, Vector2.one * L.RecipeIcon * .7f,
+                                new Vector2(.5f, .5f), Vector2.zero);
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            img.enabled = gem != null;
+
+            var times = UIKit.Titled("Times", seat.transform, Loc.Format("ui.shuffle.times", Bond.Needs), 44, _kind,
+                                     TextAnchor.MiddleCenter, new Vector2(L.RecipeIcon, 56f), new Vector2(.5f, .5f),
+                                     new Vector2(L.RecipeIcon * .62f, -L.RecipeIcon * .38f), outline: 4f, shadow: 4f);
+            times.raycastTarget = false;
+
+            _recipe[1] = (RectTransform)seat.transform;
+            _recipe[1].localScale = Vector3.zero;
+        }
 
         static void Hide(Graphic g)
         {
@@ -528,6 +621,18 @@ namespace GlimmerGrove
             }
 
             if (_grand < 3) return;
+
+            // **An ascension glows in its own element**, breathing from its colour to white,
+            // rather than walking the legendary's rainbow: the room says which school ascended.
+            if (_ascension)
+            {
+                float beat = .5f + .5f * Mathf.Sin(_age * 3.2f);
+                var lit = Color.Lerp(_kind, Color.white, .35f * beat);
+                if (_halo) _halo.color = Pal.A(lit, .75f);
+                if (_glow) _glow.color = Pal.A(_kind, .45f + .15f * beat);
+                if (_title && _settled) _title.color = Color.Lerp(_kind, Color.white, .45f + .55f * beat);
+                return;
+            }
 
             float walk = _age * 1.6f;
             int a = Mathf.FloorToInt(walk) % Rainbow.Length;

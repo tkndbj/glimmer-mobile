@@ -30,6 +30,9 @@ namespace GlimmerGrove
         public const float HeadRoom = 132f, HeaderH = 52f, RowH = 80f, RowGap = 10f;
         public const float FloorH = 60f, NoteH = 84f, FootRoom = 196f;
 
+        /// <summary>The line saying how a started school leans its cards (MODES.md 59r), under the note, when it does.</summary>
+        public const float LeanH = 96f;
+
         // The three columns across the body, as centres and widths.
         public const float RarityX = -240f, RarityW = 280f;
         public const float ChanceX = 30f, ChanceW = 240f;
@@ -40,8 +43,12 @@ namespace GlimmerGrove
         static readonly Color Amber = new Color(.78f, .42f, .10f);
 
         /// <summary>How tall the panel is: four rows always, the promise line only when there is one.</summary>
-        public static float Height(bool floor)
-            => HeadRoom + HeaderH + ShuffleOdds.Tiers * (RowH + RowGap) + (floor ? FloorH : 0f) + NoteH + FootRoom;
+        public static float Height(bool floor) => Height(floor, false);
+
+        /// <summary>How tall the panel is: four rows, the promise line when there is one, and the lean's line when a school leans.</summary>
+        public static float Height(bool floor, bool leaning)
+            => HeadRoom + HeaderH + ShuffleOdds.Tiers * (RowH + RowGap) + (floor ? FloorH : 0f) + NoteH
+               + (leaning ? LeanH : 0f) + FootRoom;
 
         float _y;
 
@@ -53,7 +60,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            MakePanel(new Vector2(PanelW, Height(Odds.Floor.HasValue)), Loc.Get("ui.shuffle.odds_title"));
+            MakePanel(new Vector2(PanelW, Height(Odds.Floor.HasValue, Odds.Leaning)), Loc.Get("ui.shuffle.odds_title"));
             _y = -HeadRoom;
 
             Header("Rarity", "ui.shuffle.odds_rarity", RarityX, RarityW);
@@ -70,7 +77,15 @@ namespace GlimmerGrove
                      30, Ink, FloorH, outline: 0f, floorSize: 20);
             }
 
-            Line("Note", Loc.Get("ui.shuffle.odds_equal"), 28, Ink, NoteH, outline: 0f, floorSize: 18, wrap: true);
+            // **Every card of a rarity equally likely - unless a school leans** (MODES.md 59r), when
+            // that sentence would be untrue and the lean is said in its place, with its figures read
+            // off the deck's own rule, so the chance a refresh is sold at is the chance it deals.
+            if (Odds.Leaning)
+                Line("Lean", Loc.Format("ui.shuffle.odds_lean", ShuffleSchools.AffinityStep,
+                                        ShuffleSchools.AffinityStep * ShuffleSchools.AffinityMostPoints),
+                     26, Ink, NoteH + LeanH, outline: 0f, floorSize: 17, wrap: true);
+            else
+                Line("Note", Loc.Get("ui.shuffle.odds_equal"), 28, Ink, NoteH, outline: 0f, floorSize: 18, wrap: true);
 
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.got_it"), 44,
                              new Vector2(560f, 120f), new Vector2(.5f, 0f),

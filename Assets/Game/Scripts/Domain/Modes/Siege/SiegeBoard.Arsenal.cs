@@ -423,6 +423,9 @@ namespace GlimmerGrove.Modes
 
             // And what an unlocked secret makes of it (`SiegeBoard.Secrets`).
             Mourned(fallen, ward);
+
+            // And the schools: contagion, and the dead rising (`SiegeBoard.Schools`).
+            Departed(fallen, ward);
         }
 
         /// <summary>

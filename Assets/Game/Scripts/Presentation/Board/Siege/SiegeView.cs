@@ -210,6 +210,16 @@ namespace GlimmerGrove
 
             public bool Hexed;
 
+            /// <summary>
+            /// The schools on this body (<c>SiegeView.Schools</c>): the venom glow under it and when
+            /// it next drips, and the crystal it is frozen in, its glow and how long it has stood.
+            /// Read off <see cref="Modes.SiegeRaider.Envenomed"/> and <see cref="Modes.SiegeRaider.Encased"/>
+            /// every frame, never tweened out (invariant 37ek).
+            /// </summary>
+            public Image Venom, Ice, IceGlow;
+
+            public float VenomDrip, Iced;
+
 
             /// <summary>The warlord's, and null for everything else.</summary>
             public bool Boss;

@@ -97,6 +97,11 @@ namespace GlimmerGrove.Modes
             // is at least a hundred.
             if (raider.Hexed > 0f) damage = SiegeTuning.Hexing(damage);
 
+            // **And the schools' afflictions, here for the hex's reason** (`SiegeBoard.Schools`): a
+            // poisoned body under the blight and a frozen one under brittle take more from every
+            // source. The damage itself on every board whose build holds neither.
+            damage = Afflict(raider, damage);
+
             int took = damage < raider.Health ? damage : raider.Health;
 
             raider.Health -= took;

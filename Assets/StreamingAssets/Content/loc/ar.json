@@ -8442,6 +8442,10 @@
       "text": "البطاقات من نفس الندرة لها نفس الفرصة."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "ضمن الندرة نفسها، كل بطاقة تملكها من عنصر تجعل بطاقاته أكثر احتمالا بنسبة {0}% حتى {1}%."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "سهام ثقيلة"
     },
@@ -8962,6 +8966,134 @@
       "text": "يحول برجا إلى ليزر يرتد بين المهاجمين بنسبة {0}% من الضرر."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "عدسة التركيز"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "إصابة المهاجم نفسه تبني شعاعا يصل إلى {0}% من الضرر."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "المنكسر"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "كل بضع طلقات تنقسم إلى أشعة نحو أقوى المهاجمين."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "قلب الفوتون"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "كل طلقة تكمل كليزر عبر مهاجمين آخرين اثنين."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "رؤوس سامة"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "الطلقات تضيف سما يتراكم على المهاجمين."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "التعفن"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "المهاجمون المسمومون يضربون الأبراج أضعف بنسبة {0}%."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "العدوى"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "المهاجم المسموم ينقل سمه عندما يموت."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "قلب الوباء"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "الطلقات تضيف سما والمهاجمون المسمومون يتلقون ضررا أكثر بنسبة {0}%."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "أثر النار"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "الطلقات تترك نيرانا على الأرض."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "الاحتراق"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "المهاجم الذي يحترق مدة كافية ينفجر."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "قلب الجحيم"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "الطلقات تشعل المهاجمين والنار تقفز بينهم."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "لسعة البرد"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "كل بضع طلقات تجمد مهاجما."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "الهشاشة"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "المهاجمون البطيئون يتلقون ضررا أكثر بنسبة {0}%."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "قلب الشتاء"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "الطلقات تبرد المهاجمين والبرد الكافي يجمدهم."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "شحنة ساكنة"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "كل بضع إصابات تصعق المهاجم ومن حوله."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "قصف الرعد"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "كل بضع طلقات تستدعي صاعقة تشل مجموعة."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "قلب العاصفة"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "كل طلقة تقفز إلى مهاجم آخر والبرق يشل."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },
@@ -8990,12 +9122,20 @@
       "text": "تم فتح تطور!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "ارتقاء!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "حسنا"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "منشور يطلق 6 أشعة على أقوى المهاجمين."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "شبكة الليزر"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "سياج ليزر يقطع المهاجمين وليزر من السماء يضرب أقواهم."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "استحضار الموتى"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "المهاجمون الذين يقتلهم السم ينهضون غيلانا وينفجرون في الحشد."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "البركان"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "بركان يثور وسط الحشد ويسكب الحمم على التل."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "العصر الجليدي"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "يتجمد التل كله بين حين وآخر ويتحطم المهاجمون الضعفاء."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "إعصار البرق"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "إعصار من البرق يكتسح أكثر المسارات ازدحاما."
     },
     {
       "key": "shuffle.grade.d",

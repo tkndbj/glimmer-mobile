@@ -158,6 +158,16 @@ def crest_name(code):
 #: it met black, and feathered by `CREST_SOFT`.
 CREST_SMOOTH, CREST_GROW, CREST_SOFT = 14, 3, 1.2
 
+#: **A card whose picture is turned to its school's colour** (MODES.md 59r), in degrees: the pack has
+#: no crimson beam and no violet storm-crowned figure, so the nearest picture is hue-rotated
+#: before its keyline (`make_siege_art.tile_of`). Keyed by card id; every card not listed is cut as
+#: the pack painted it.
+CARD_TURNS = {
+    "focus_lens": 220,      # 45, the green streak, turned to the laser school's crimson
+    "photon_heart": 220,    # 51, the light bow, turned crimson
+    "storm_heart": 230,     # 30, the crowned figure, turned to the storm's violet
+}
+
 ROW = re.compile(r'new ShuffleCard\("([a-z_]+)",\s*ShuffleTier\.(\w+),\s*ShuffleEffect\.\w+,'
                  r'\s*-?\d+,\s*-?\d+,\s*\d+,\s*(\d+)\)')
 
@@ -262,13 +272,16 @@ def marks():
     stem = re.search(r'SecretMarkStem = "(\w+)", EvolutionMark = "(\w+)"', text)
     evo = re.search(r"EvolutionHue = (\d+), EvolutionSaturation = (\d+)", text)
     secrets = re.findall(r'ShuffleBond\.Secret\("(\w+)", SiegePower\.\w+, (\d+), (\d+),', text)
-    if not stem or not evo or not secrets:
+    # An ascension wears its own diamond too (MODES.md 59r), in its school's colour: the same
+    # stem, so the hand, the badge and the unlock panel read it as they read a secret's.
+    ascensions = re.findall(r'ShuffleBond\.Ascension\("(\w+)", SiegePower\.\w+, ShuffleSchool\.\w+, (\d+), (\d+),', text)
+    if not stem or not evo or not secrets or not ascensions:
         sys.exit("cannot read the diamonds' colours out of %s" % BONDS_CS)
 
     def pillow(deg):
         return int(round(int(deg) % 360 * 256 / 360.0)) % 256
 
-    rows = [(stem.group(1) + sid, pillow(h), int(sat) / 100.0) for sid, h, sat in secrets]
+    rows = [(stem.group(1) + sid, pillow(h), int(sat) / 100.0) for sid, h, sat in secrets + ascensions]
     rows.append((stem.group(2), pillow(evo.group(1)), int(evo.group(2)) / 100.0))
     return rows
 
@@ -306,7 +319,7 @@ def cut():
 
     if root is not None:
         for cid, _tier, pic in catalog():
-            tile = tile_of(root, pic, TILE, ROUND)
+            tile = tile_of(root, pic, TILE, ROUND, CARD_TURNS.get(cid, 0))
             if tile is None:
                 sys.exit("card '%s' names picture %d, which the pack does not carry" % (cid, pic))
             made[OUT / ("%s.png" % cid)] = (raw(tile), meta_for(ICON_TEMPLATE, cid, "glimmer.ui.shuffle."))

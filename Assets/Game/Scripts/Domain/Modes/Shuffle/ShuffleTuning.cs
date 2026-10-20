@@ -614,6 +614,16 @@ namespace GlimmerGrove.Shuffle
                 // A pact's cost is a share taken away, and a miser's gain is one too.
                 case ShuffleEffect.Miser:
                     return 90;
+
+                // The schools' shares (MODES.md 59r): a rot is a share of a blow taken away, and
+                // the board holds every one of these under a ceiling of its own besides
+                // (`SiegeSchools.MostRot`, `MostBrittle`).
+                case ShuffleEffect.Rot:
+                    return 45;
+                case ShuffleEffect.Brittle:
+                    return 60;
+                case ShuffleEffect.Blight:
+                    return 100;
                 default:
                     return int.MaxValue;
             }
@@ -676,6 +686,9 @@ namespace GlimmerGrove.Shuffle
                 if (b.ExecutePercent > 90) return $"{at} executes under {b.ExecutePercent}% health; the most is 90%";
                 if (b.DesperateBelow > 90) return $"{at} stands its last under {b.DesperateBelow}% health; the most is 90%";
                 if (b.NukePercent > 90) return $"{at} nukes {b.NukePercent}% of health; the most is 90%";
+                if (b.FocusPercent * b.FocusMost > 1000) return $"{at} focuses a beam of {b.FocusPercent * b.FocusMost}%; the most is 1000%";
+                if (b.VenomMost > 30) return $"{at} stacks {b.VenomMost} venom; the most is 30";
+                if (b.CombustTenths > 60) return $"{at} combusts at {b.CombustTenths} tenths; the most is 60";
             }
 
             return null;

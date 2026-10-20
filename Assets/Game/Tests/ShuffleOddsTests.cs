@@ -82,7 +82,8 @@ namespace GlimmerGrove.Tests
                 int expected = 0;
                 foreach (var card in run.Tuning.Cards)
                 {
-                    if (card.Tier != (ShuffleTier)t || !run.Build.Takeable(card)) continue;
+                    // What the deck may deal: a keystone waits on its school (MODES.md 59r).
+                    if (card.Tier != (ShuffleTier)t || !ShuffleSchools.Dealable(card, run.Build)) continue;
                     bool offered = false;
                     foreach (var shown in hand) offered |= ReferenceEquals(shown, card);
                     if (!offered) expected++;
@@ -131,6 +132,9 @@ namespace GlimmerGrove.Tests
         public void ThePanelFitsTheShortestCanvas()
         {
             Assert.LessOrEqual(ShuffleOddsOverlay.Height(true), Layout.PanelStack.TallestPanel);
+
+            // And with a school's lean said under the note (MODES.md 59r), its tallest.
+            Assert.LessOrEqual(ShuffleOddsOverlay.Height(true, true), Layout.PanelStack.TallestPanel, "the lean's line runs off the canvas");
             Assert.GreaterOrEqual(ShuffleOddsOverlay.RarityX - ShuffleOddsOverlay.RarityW * .5f, -ShuffleOddsOverlay.BodyW * .5f, "rarity runs past the body");
             Assert.LessOrEqual(ShuffleOddsOverlay.RarityX + ShuffleOddsOverlay.RarityW * .5f, ShuffleOddsOverlay.ChanceX - ShuffleOddsOverlay.ChanceW * .5f, "rarity and chance overlap");
             Assert.LessOrEqual(ShuffleOddsOverlay.ChanceX + ShuffleOddsOverlay.ChanceW * .5f, ShuffleOddsOverlay.LeftX - ShuffleOddsOverlay.LeftW * .5f, "chance and cards left overlap");

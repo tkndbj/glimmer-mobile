@@ -289,6 +289,10 @@ namespace GlimmerGrove.Modes
             // round, bomblets, a swarm. Nothing on a build that has unlocked no power.
             Empowered(ward, index, target, damage);
 
+            // **And what the school cards add** (`SiegeBoard.Schools`, MODES.md 59r): a focused beam,
+            // a prism, venom, a flame, a snap of frost, static. Nothing on a build holding none.
+            Schooled(ward, index, target, damage);
+
             if (boosts.SplashTenths > 0)
                 Spread(ward, index, target, Share(damage, boosts.SplashTenths), boosts.SplashReach,
                        SiegeVia.Splash);

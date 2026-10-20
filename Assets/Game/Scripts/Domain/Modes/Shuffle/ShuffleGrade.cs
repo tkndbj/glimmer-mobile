@@ -157,6 +157,9 @@ namespace GlimmerGrove.Shuffle
         public static bool IsTop(ShuffleGrade grade) => grade >= ShuffleGrade.S;
 
         // ------------------------------------------------------------------ the score
+        /// <summary>What an unlocked ascension is worth: above the grandest secret's 700.</summary>
+        public const int AscensionPoints = 1000;
+
         /// <summary>What one copy of a card of <paramref name="tier"/> is worth.</summary>
         public static int CardPoints(ShuffleTier tier)
         {
@@ -178,6 +181,10 @@ namespace GlimmerGrove.Shuffle
         public static int BondPoints(ShuffleBond bond)
         {
             if (bond == null) return 0;
+
+            // **An ascension is worth more than any secret** (MODES.md 59r): a keystone, seven
+            // cards of one school and a run that lived long enough to be dealt them.
+            if (bond.IsAscension) return AscensionPoints;
 
             bool secret = bond.IsSecret;
             switch (bond.Tier)

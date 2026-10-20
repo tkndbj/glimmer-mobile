@@ -173,21 +173,40 @@ namespace GlimmerGrove.Shuffle
                                 IReadOnlyList<ShuffleCard> spare, ShuffleTier tier, Func<int> roll)
         {
             var pool = new List<ShuffleCard>(16);
+            int total = 0;
+            bool leaning = false;
 
             for (int i = 0; i < all.Count; i++)
             {
                 var card = all[i];
-                if (card.Tier != tier || !build.Takeable(card)) continue;
+                if (card.Tier != tier || !ShuffleSchools.Dealable(card, build)) continue;
+                if (Holds(hand, card) || Holds(spare, card)) continue;
 
-                if (!Holds(hand, card) && !Holds(spare, card)) pool.Add(card);
+                pool.Add(card);
+
+                int weight = ShuffleSchools.Weight(card, build);
+                total += weight;
+                leaning |= weight != ShuffleSchools.PlainWeight;
             }
 
             if (pool.Count == 0) return null;
 
-            // Two rolls under a hundred make a number under ten thousand, so a pool of up to a
-            // hundred cards is drawn from evenly rather than off the low end of one roll.
-            int pick = (roll() * 100 + roll()) % pool.Count;
-            return pool[pick];
+            // **A build of no school is dealt exactly as the deck always dealt** (59r): two rolls
+            // under a hundred make a number under ten thousand, so a pool of up to a hundred cards
+            // is drawn from evenly rather than off the low end of one roll.
+            if (!leaning) return pool[(roll() * 100 + roll()) % pool.Count];
+
+            // **The lean** (`ShuffleSchools.Weight`): a card of a school the build has started
+            // weighs more within this tier. Three rolls make a number under a million, so a pool's
+            // whole weight is drawn from evenly.
+            int at = ((roll() * 100 + roll()) * 100 + roll()) % total;
+            for (int i = 0; i < pool.Count; i++)
+            {
+                at -= ShuffleSchools.Weight(pool[i], build);
+                if (at < 0) return pool[i];
+            }
+
+            return pool[pool.Count - 1];
         }
 
         /// <summary>
@@ -201,7 +220,7 @@ namespace GlimmerGrove.Shuffle
 
             var all = (tuning ?? ShuffleTuning.Shipped).Cards;
             for (int i = 0; i < all.Count; i++)
-                if (build.Takeable(all[i]) && !Holds(open, all[i])) return true;
+                if (ShuffleSchools.Dealable(all[i], build) && !Holds(open, all[i])) return true;
 
             return false;
         }

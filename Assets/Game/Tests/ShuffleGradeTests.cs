@@ -543,7 +543,9 @@ namespace GlimmerGrove.Tests
                     if (bond.IsSecret && build.CopiesOf(card.Id) > 0) continue;
 
                     int held = bond.Parts.Count(p => build.CopiesOf(p) >= bond.Needs);
-                    int missing = bond.IsSecret ? bond.Parts.Length - held : bond.Needs - build.CopiesOf(card.Id);
+                    int missing = bond.IsSecret ? bond.Parts.Length - held
+                                : bond.IsAscension ? AscensionMissing(bond, build)
+                                : bond.Needs - build.CopiesOf(card.Id);
                     if (missing <= 0) continue;
 
                     worth += ShuffleGrades.BondPoints(bond) / (double)missing;
@@ -554,6 +556,18 @@ namespace GlimmerGrove.Tests
             }
 
             return best;
+        }
+
+        /// <summary>
+        /// The steps an ascension still wants (MODES.md 59r): its points short, and its keystone if
+        /// not held; past reach when the run already holds two other keystones.
+        /// </summary>
+        static int AscensionMissing(ShuffleBond ascension, ShuffleBuild build)
+        {
+            if (!ShuffleSchools.Reachable(build, ascension.School)) return 0;
+
+            int points = Math.Max(0, ascension.Needs - ShuffleSchools.Points(build, ascension.School));
+            return points + (ShuffleSchools.HoldsKeystone(build, ascension.School) ? 0 : 1);
         }
 
         /// <summary>Each run's score and grade after every hand, for <see cref="Runs"/> seeded runs.</summary>

@@ -41,6 +41,15 @@ namespace GlimmerGrove.Modes
         DiamondDust = 26,
         CometStorm = 27,
         PrismLance = 28,
+
+        // ------------------------------------------------------------ ascensions (MODES.md 59r)
+        // A school's keystone held with its points (`ShuffleSchools`); the rules are
+        // `SiegeBoard.Schools`, the clocks `SiegeSchools`.
+        LaserGrid = 29,
+        Necromancy = 30,
+        Volcano = 31,
+        IceAge = 32,
+        Tempest = 33,
     }
 
     /// <summary>

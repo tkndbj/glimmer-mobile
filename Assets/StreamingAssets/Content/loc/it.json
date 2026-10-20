@@ -8442,6 +8442,10 @@
       "text": "Le carte della stessa rarità hanno la stessa probabilità."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "Nella stessa rarità, ogni carta di un elemento che possiedi rende le sue carte il {0}% più probabili, fino al {1}%."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Dardi Pesanti"
     },
@@ -8962,6 +8966,134 @@
       "text": "Trasforma una torretta in un laser che rimbalza tra i predoni con il {0}% dei danni."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Lente focale"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Colpire lo stesso predone crea un raggio, fino al {0}% di danno."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Rifrattore"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Ogni pochi colpi si dividono in raggi verso i predoni più resistenti."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Cuore fotonico"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Ogni colpo prosegue come laser attraverso altri 2 predoni."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Punte velenose"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "I colpi aggiungono veleno che si accumula sui predoni."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Marciume"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "I predoni avvelenati colpiscono le torrette il {0}% più piano."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Contagio"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "Un predone avvelenato passa il veleno quando muore."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Cuore della piaga"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "I colpi aggiungono veleno e i predoni avvelenati subiscono il {0}% di danni in più."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Scia di fuoco"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "I colpi lasciano fiamme a terra."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Combustione"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "Un predone che brucia abbastanza a lungo esplode."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Cuore infernale"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "I colpi incendiano i predoni e il fuoco salta tra loro."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Gelata"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Ogni pochi colpi un predone si congela."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Fragile"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "I predoni rallentati subiscono il {0}% di danni in più."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Cuore d'inverno"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "I colpi raffreddano, e abbastanza freddo congela un predone."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Carica statica"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Ogni pochi colpi un predone e i vicini prendono la scossa."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Tuono"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Ogni pochi colpi un fulmine stordisce un gruppo."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Cuore della tempesta"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Ogni colpo salta su un altro predone e i fulmini stordiscono."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },
@@ -8990,12 +9122,20 @@
       "text": "Evoluzione sbloccata!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "Ascensione!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "OK"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Un prisma spara 6 raggi sui predoni più forti."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Griglia laser"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "Una barriera laser taglia i predoni e un laser dal cielo colpisce i più resistenti."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Negromanzia"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "I predoni uccisi dal veleno risorgono come ghoul ed esplodono sull'orda."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Vulcano"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "Un vulcano erutta tra la folla e riversa lava sulla collina."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Era glaciale"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "Ogni tanto tutta la collina si congela e i predoni deboli vanno in frantumi."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Tornado elettrico"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "Un tornado di fulmini spazza la corsia più affollata."
     },
     {
       "key": "shuffle.grade.d",

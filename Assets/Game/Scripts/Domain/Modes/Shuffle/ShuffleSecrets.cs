@@ -4,11 +4,15 @@ using GlimmerGrove.Modes;
 
 namespace GlimmerGrove.Shuffle
 {
-    /// <summary>Whether a bond is a secret (several cards held together) or an evolution (one card held to its most).</summary>
+    /// <summary>
+    /// Whether a bond is a secret (several cards held together), an evolution (one card held to
+    /// its most) or an ascension (a school's keystone held with its points, MODES.md 59r).
+    /// </summary>
     public enum ShuffleBondKind
     {
         Secret = 0,
         Evolution = 1,
+        Ascension = 2,
     }
 
     /// <summary>
@@ -44,6 +48,9 @@ namespace GlimmerGrove.Shuffle
 
         public readonly SiegePower Power;
 
+        /// <summary>The school an ascension is the summit of; <see cref="ShuffleSchool.None"/> for every other bond.</summary>
+        public readonly ShuffleSchool School;
+
         /// <summary>
         /// <b>The colour of its diamond</b>: a hue in degrees and a saturation in percent of the
         /// kit gem's own. <b>Every secret has its own</b> (owner, 2026-10-14), so a green-only
@@ -61,7 +68,7 @@ namespace GlimmerGrove.Shuffle
         public const string SecretMarkStem = "shuffle_secret_", EvolutionMark = "shuffle_evolution";
 
         ShuffleBond(string id, ShuffleBondKind kind, ShuffleTier tier, string[] parts, int needs, SiegePower power,
-                    int hue, int saturation)
+                    int hue, int saturation, ShuffleSchool school = ShuffleSchool.None)
         {
             Id = id ?? string.Empty;
             Kind = kind;
@@ -71,6 +78,7 @@ namespace GlimmerGrove.Shuffle
             Power = power;
             Hue = ((hue % 360) + 360) % 360;
             Saturation = saturation < 0 ? 0 : saturation;
+            School = school;
         }
 
         /// <summary>
@@ -89,23 +97,44 @@ namespace GlimmerGrove.Shuffle
             => new ShuffleBond(id, ShuffleBondKind.Evolution, tier, new[] { card }, needs, power,
                                EvolutionHue, EvolutionSaturation);
 
+        /// <summary>
+        /// <b>An ascension</b> (MODES.md 59r): the summit of <paramref name="school"/>, unlocked by
+        /// its keystone held beside <see cref="ShuffleSchools.AscendAt"/> points - legendary, its
+        /// diamond its own colour. <see cref="Parts"/> is the keystone alone, so the unlock panel
+        /// and the art tool read it as they read any bond; <see cref="Needs"/> is the points.
+        /// </summary>
+        public static ShuffleBond Ascension(string id, SiegePower power, ShuffleSchool school, int hue, int saturation,
+                                            string keystone)
+            => new ShuffleBond(id, ShuffleBondKind.Ascension, ShuffleTier.Legendary, new[] { keystone },
+                               ShuffleSchools.AscendAt, power, hue, saturation, school);
+
         public bool IsSecret => Kind == ShuffleBondKind.Secret;
 
-        /// <summary>Its diamond's picture, under <c>Ui/</c>. Derived from the id (8c), never authored.</summary>
-        public string Mark => IsSecret ? SecretMarkStem + Id : EvolutionMark;
+        public bool IsEvolution => Kind == ShuffleBondKind.Evolution;
 
-        /// <summary><c>shuffle.secret.{id}.name</c> or <c>shuffle.evolution.{id}.name</c>. Derived (5a).</summary>
+        public bool IsAscension => Kind == ShuffleBondKind.Ascension;
+
+        /// <summary>Its diamond's picture, under <c>Ui/</c>: its own for a secret or an ascension, one for every evolution. Derived (8c).</summary>
+        public string Mark => IsEvolution ? EvolutionMark : SecretMarkStem + Id;
+
+        /// <summary><c>shuffle.secret.{id}.name</c>, <c>shuffle.evolution.{id}.name</c> or <c>shuffle.ascension.{id}.name</c>. Derived (5a).</summary>
         public string NameKey => Stem + ".name";
 
         /// <summary>The one line saying what it does.</summary>
         public string NoteKey => Stem + ".note";
 
-        string Stem => "shuffle." + (IsSecret ? "secret." : "evolution.") + Id;
+        string Stem => "shuffle." + (IsSecret ? "secret." : IsEvolution ? "evolution." : "ascension.") + Id;
 
-        /// <summary>Whether <paramref name="build"/> holds every part, each <see cref="Needs"/> times.</summary>
+        /// <summary>
+        /// Whether <paramref name="build"/> completes it: every part, each <see cref="Needs"/> times -
+        /// or, for an ascension, the keystone and <see cref="Needs"/> points in its school.
+        /// </summary>
         public bool Completes(ShuffleBuild build)
         {
             if (build == null || Parts.Length == 0) return false;
+
+            if (IsAscension)
+                return build.CopiesOf(Parts[0]) > 0 && ShuffleSchools.Points(build, School) >= Needs;
 
             for (int i = 0; i < Parts.Length; i++)
                 if (build.CopiesOf(Parts[i]) < Needs) return false;
@@ -113,10 +142,14 @@ namespace GlimmerGrove.Shuffle
             return true;
         }
 
-        /// <summary>Whether <paramref name="card"/> is one of this bond's parts.</summary>
+        /// <summary>
+        /// Whether <paramref name="card"/> is one of this bond's parts - for an ascension, any card of
+        /// its school, because every one is a step toward it.
+        /// </summary>
         public bool Names(ShuffleCard card)
         {
             if (card == null) return false;
+            if (IsAscension) return ShuffleSchools.Of(card) == School;
 
             for (int i = 0; i < Parts.Length; i++)
                 if (string.Equals(Parts[i], card.Id, StringComparison.Ordinal)) return true;
@@ -170,6 +203,15 @@ namespace GlimmerGrove.Shuffle
             ShuffleBond.Evolution("diamond_dust", ShuffleTier.Epic, "shatter", 2, SiegePower.DiamondDust),
             ShuffleBond.Evolution("comet_storm", ShuffleTier.Legendary, "meteor_call", 2, SiegePower.CometStorm),
             ShuffleBond.Evolution("prism_lance", ShuffleTier.Legendary, "laser_core", 4, SiegePower.PrismLance),
+
+            // ------------------------------------------------------------ ascensions: a school's summit (59r)
+            // Last in the catalog, so an ascension unlocked on the same take as a secret is the
+            // grandest thing shown and is shown last (`ShuffleBuild.Unlocked`).
+            ShuffleBond.Ascension("laser_grid", SiegePower.LaserGrid, ShuffleSchool.Laser, 340, 115, "photon_heart"),
+            ShuffleBond.Ascension("necromancy", SiegePower.Necromancy, ShuffleSchool.Poison, 100, 120, "blight_heart"),
+            ShuffleBond.Ascension("volcano", SiegePower.Volcano, ShuffleSchool.Fire, 14, 125, "inferno_heart"),
+            ShuffleBond.Ascension("ice_age", SiegePower.IceAge, ShuffleSchool.Frost, 196, 95, "winter_heart"),
+            ShuffleBond.Ascension("tempest", SiegePower.Tempest, ShuffleSchool.Storm, 268, 115, "storm_heart"),
         };
 
         /// <summary>Ids spent by bonds that were withdrawn, for <see cref="ShuffleCards.Retired"/>'s reason. None yet.</summary>
@@ -202,13 +244,31 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public static int Advanced(ShuffleCard card, ShuffleBuild build, List<ShuffleBond> into)
         {
-            if (card == null || build == null || build.CopiesOf(card.Id) > 0 || !build.Takeable(card)) return 0;
+            if (card == null || build == null || !build.Takeable(card)) return 0;
 
             int found = 0;
+            bool fresh = build.CopiesOf(card.Id) == 0;
+
             for (int b = 0; b < All.Length; b++)
             {
                 var bond = All[b];
-                if (!bond.IsSecret || !bond.Names(card) || bond.Completes(build)) continue;
+                if (bond.IsEvolution || !bond.Names(card) || bond.Completes(build)) continue;
+
+                // **An ascension the build has started**: a point or the keystone in this card's
+                // school, and room left to ascend it - every further copy is a step, so a card
+                // already held is marked again.
+                if (bond.IsAscension)
+                {
+                    if (Started(bond, build) && ShuffleSchools.Reachable(build, bond.School))
+                    {
+                        found++;
+                        into?.Add(bond);
+                    }
+
+                    continue;
+                }
+
+                if (!fresh) continue;
 
                 for (int p = 0; p < bond.Parts.Length; p++)
                 {
@@ -223,6 +283,9 @@ namespace GlimmerGrove.Shuffle
 
             return found;
         }
+
+        static bool Started(ShuffleBond ascension, ShuffleBuild build)
+            => ShuffleSchools.Points(build, ascension.School) > 0 || build.CopiesOf(ascension.Parts[0]) > 0;
 
         /// <summary>
         /// <b>The purple diamond</b>: whether taking <paramref name="card"/> would bring its
@@ -240,7 +303,7 @@ namespace GlimmerGrove.Shuffle
             for (int b = 0; b < All.Length; b++)
             {
                 var bond = All[b];
-                if (bond.IsSecret || !bond.Names(card)) continue;
+                if (!bond.IsEvolution || !bond.Names(card)) continue;
 
                 if (held < bond.Needs && card.Most >= bond.Needs) return true;
             }

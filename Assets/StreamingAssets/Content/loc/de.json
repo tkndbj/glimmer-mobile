@@ -8442,6 +8442,10 @@
       "text": "Karten gleicher Seltenheit sind gleich wahrscheinlich."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "Innerhalb einer Seltenheit macht jede Karte eines Elements, die du hast, dessen Karten {0}% wahrscheinlicher, bis zu {1}%."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Schwere Bolzen"
     },
@@ -8962,6 +8966,134 @@
       "text": "Macht einen Turm zum Laser, der zwischen Plünderern springt, mit {0}% Schaden."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Fokuslinse"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Treffer auf denselben Plünderer bauen einen Strahl auf, bis zu {0}% Schaden."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Refraktor"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Alle paar Schüsse teilen sich in Strahlen auf die zähesten Plünderer."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Photonenherz"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Jeder Schuss geht als Laser durch 2 weitere Plünderer."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Giftspitzen"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "Schüsse fügen Gift hinzu, das sich auf Plünderern stapelt."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Fäulnis"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "Vergiftete Plünderer treffen Türme {0}% schwächer."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Ansteckung"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "Ein vergifteter Plünderer gibt sein Gift beim Sterben weiter."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Seuchenherz"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "Schüsse fügen Gift hinzu, und vergiftete Plünderer nehmen {0}% mehr Schaden."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Feuerspur"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "Schüsse hinterlassen Flammen am Boden."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Verbrennung"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "Ein Plünderer, der lange genug brennt, explodiert."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Infernoherz"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "Schüsse setzen Plünderer in Brand, und das Feuer springt über."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Kälteeinbruch"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Alle paar Schüsse friert ein Plünderer ein."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Spröde"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "Verlangsamte Plünderer nehmen {0}% mehr Schaden."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Winterherz"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "Schüsse kühlen, und genug Kälte friert einen Plünderer ein."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Statische Ladung"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Alle paar Treffer schocken einen Plünderer und seine Nachbarn."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Donnerschlag"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Alle paar Schüsse betäubt ein Blitz eine Gruppe."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Sturmherz"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Jeder Schuss springt auf einen weiteren Plünderer, und Blitze betäuben."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },
@@ -8990,12 +9122,20 @@
       "text": "Evolution freigeschaltet!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "Aufstieg!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "OK"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Ein Prisma feuert 6 Strahlen auf die stärksten Plünderer."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Lasergitter"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "Ein Laserzaun zerschneidet Plünderer, und ein Himmelslaser trifft die zähesten."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Nekromantie"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "Durch Gift getötete Plünderer erheben sich als Ghule und explodieren in der Horde."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Vulkan"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "Ein Vulkan bricht in der Menge aus und gießt Lava den Hügel hinab."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Eiszeit"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "Ab und zu friert der ganze Hügel ein, und schwache Plünderer zerspringen."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Blitztornado"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "Ein Blitz-Tornado fegt durch die vollste Bahn."
     },
     {
       "key": "shuffle.grade.d",

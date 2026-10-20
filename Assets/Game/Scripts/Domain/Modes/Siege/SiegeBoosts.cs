@@ -369,6 +369,112 @@ namespace GlimmerGrove.Modes
         /// <summary>How many raiders one laser shot passes through, the first included.</summary>
         public int LaserHits { get; private set; }
 
+        // ------------------------------------------------------------------ the schools
+        // **The element cards** (MODES.md 59r, `SiegeBoard.Schools`). Every figure is nought on the
+        // plain line and on a build holding none of them, and every rule that reads one asks it
+        // first, so an empty build plays the plain board (`TheIdentityBoostChangesNothing`).
+
+        /// <summary>Focus lens: per cent of the bolt a beam adds for each hit in a row on one raider, and the most hits it counts.</summary>
+        public int FocusPercent { get; private set; }
+
+        public int FocusMost { get; private set; }
+
+        /// <summary>Refractor: every <see cref="RefractEvery"/>-th shot splits into beams at the toughest raiders, each tenths of the bolt.</summary>
+        public int RefractEvery { get; private set; }
+
+        public int RefractBeams { get; private set; }
+
+        public int RefractTenths { get; private set; }
+
+        /// <summary>Photon heart: every shot goes on as a laser through <see cref="PhotonHits"/> more raiders, each tenths of the bolt.</summary>
+        public int PhotonTenths { get; private set; }
+
+        public int PhotonHits { get; private set; }
+
+        /// <summary>Venom tips: a stack's bite in plain tenths, and the most stacks a body carries. Nought is no venom card.</summary>
+        public int VenomTenths { get; private set; }
+
+        public int VenomMost { get; private set; }
+
+        /// <summary>Rot: per cent softer a poisoned raider's blow lands.</summary>
+        public int RotPercent { get; private set; }
+
+        /// <summary>Contagion: raiders a poisoned body's death passes its venom to, within <see cref="ContagionReach"/> boxes.</summary>
+        public int ContagionCount { get; private set; }
+
+        public int ContagionReach { get; private set; }
+
+        /// <summary>Blight heart: per cent more a poisoned raider takes from everything.</summary>
+        public int BlightPercent { get; private set; }
+
+        /// <summary>Fire trail: a flame's bite in plain tenths, and the seconds it burns on the ground.</summary>
+        public int TrailTenths { get; private set; }
+
+        public float TrailFor { get; private set; }
+
+        /// <summary>Combust: a burst's plain tenths, and the seconds a body must burn first.</summary>
+        public int CombustTenths { get; private set; }
+
+        public float CombustAfter { get; private set; }
+
+        /// <summary>Inferno heart: how far fire leaps between bodies (boxes), and how often.</summary>
+        public int InfernoReach { get; private set; }
+
+        public float InfernoEvery { get; private set; }
+
+        /// <summary>Cold snap: every <see cref="ColdSnapEvery"/>-th shot freezes its raider for <see cref="ColdSnapFor"/> seconds.</summary>
+        public int ColdSnapEvery { get; private set; }
+
+        public float ColdSnapFor { get; private set; }
+
+        /// <summary>Brittle: per cent more a slowed or frozen raider takes from everything.</summary>
+        public int BrittlePercent { get; private set; }
+
+        /// <summary>Winter heart: the chill every shot lays (tenths of the march), and the chills that pile into a freeze.</summary>
+        public int WinterTenths { get; private set; }
+
+        public int WinterStacks { get; private set; }
+
+        /// <summary>Static: the discharge's plain tenths, the hits on one raider that charge it, and the arcs off it.</summary>
+        public int StaticTenths { get; private set; }
+
+        public int StaticHits { get; private set; }
+
+        public int StaticArcs { get; private set; }
+
+        /// <summary>Thunderclap: every <see cref="ThunderEvery"/>-th shot strikes its raider's box at plain tenths.</summary>
+        public int ThunderEvery { get; private set; }
+
+        public int ThunderTenths { get; private set; }
+
+        /// <summary>Storm heart: the stun every lightning hit lays, in tenths of a second. Nought is no storm heart.</summary>
+        public int ConductTenths { get; private set; }
+
+        /// <summary>The venom a stack bites with: the card's, or the school's own when only contagion or the blight carries it.</summary>
+        public int VenomBite => VenomTenths > 0 ? VenomTenths : SiegeSchools.BaseVenomTenths;
+
+        /// <summary>The most venom a body carries: the card's, or the school's own.</summary>
+        public int VenomCap => VenomMost > 0 ? VenomMost : SiegeSchools.BaseVenomMost;
+
+        /// <summary>
+        /// Whether this build holds any element card or ascension the board's school rules read.
+        /// Never on the plain line, and false on every build that holds none, which is the whole
+        /// cost of <c>SiegeBoard.Schools</c> on such a board.
+        /// </summary>
+        public bool AnySchool
+            => !_frozen && (FocusPercent > 0 || RefractEvery > 0 || PhotonHits > 0 || VenomTenths > 0 || RotPercent > 0
+                            || ContagionCount > 0 || BlightPercent > 0 || TrailTenths > 0 || CombustTenths > 0
+                            || InfernoReach > 0 || ColdSnapEvery > 0 || BrittlePercent > 0 || WinterStacks > 0
+                            || StaticHits > 0 || ThunderEvery > 0 || ConductTenths > 0 || Ascended);
+
+        /// <summary>The power bits the five ascensions own (<see cref="SiegePower.LaserGrid"/> to <see cref="SiegePower.Tempest"/>).</summary>
+        const ulong AscensionBits = (1UL << (int)SiegePower.LaserGrid) | (1UL << (int)SiegePower.Necromancy)
+                                    | (1UL << (int)SiegePower.Volcano) | (1UL << (int)SiegePower.IceAge)
+                                    | (1UL << (int)SiegePower.Tempest);
+
+        /// <summary>Whether this build has ascended any school. Never on the plain line.</summary>
+        public bool Ascended => !_frozen && (Powers & AscensionBits) != 0UL;
+
         // ------------------------------------------------------------------ the secrets
         /// <summary>
         /// The secret and evolution powers this build has unlocked (<see cref="SiegePower"/>), one
@@ -411,6 +517,13 @@ namespace GlimmerGrove.Modes
             KineticPercent = 0; IronPercent = 0; OverflowPercent = 0; ChainFuelPercent = 0;
             BlastGems = 0; PowerGems = false;
             LaserGuns = 0; LaserTenths = 0; LaserHits = 0;
+            FocusPercent = 0; FocusMost = 0; RefractEvery = 0; RefractBeams = 0; RefractTenths = 0;
+            PhotonTenths = 0; PhotonHits = 0; VenomTenths = 0; VenomMost = 0; RotPercent = 0;
+            ContagionCount = 0; ContagionReach = 0; BlightPercent = 0; TrailTenths = 0; TrailFor = 0f;
+            CombustTenths = 0; CombustAfter = 0f; InfernoReach = 0; InfernoEvery = 0f;
+            ColdSnapEvery = 0; ColdSnapFor = 0f; BrittlePercent = 0; WinterTenths = 0; WinterStacks = 0;
+            StaticTenths = 0; StaticHits = 0; StaticArcs = 0; ThunderEvery = 0; ThunderTenths = 0;
+            ConductTenths = 0;
             Powers = 0UL;
         }
 
@@ -507,6 +620,87 @@ namespace GlimmerGrove.Modes
             LaserGuns = guns < 0 ? 0 : guns;
             LaserTenths = tenths < 1 ? 1 : tenths;
             LaserHits = hits < 1 ? 1 : hits;
+        }
+
+        // The schools' doors (MODES.md 59r). Each clamps to what the board was shown running, so a
+        // live retune (59l) cannot hand it a figure no test ever played.
+        public void SetFocus(int percent, int most) { Guard(); FocusPercent = Math.Max(0, percent); FocusMost = Math.Max(1, most); }
+
+        public void SetRefract(int every, int beams, int tenths)
+        {
+            Guard();
+            RefractEvery = Math.Max(SiegeSchools.RefractLeast, every);
+            RefractBeams = Math.Max(1, beams);
+            RefractTenths = Math.Max(1, tenths);
+        }
+
+        public void SetPhoton(int tenths, int hits) { Guard(); PhotonTenths = Math.Max(1, tenths); PhotonHits = Math.Max(1, hits); }
+        public void SetVenom(int tenths, int most) { Guard(); VenomTenths = Math.Max(1, tenths); VenomMost = Math.Max(1, most); }
+        public void AddRot(int percent) { Guard(); RotPercent = Math.Min(SiegeSchools.MostRot, RotPercent + Math.Max(0, percent)); }
+        public void SetContagion(int count, int reach) { Guard(); ContagionCount = Math.Max(1, count); ContagionReach = Math.Max(1, reach); }
+        public void SetBlight(int percent) { Guard(); BlightPercent = Math.Max(0, percent); }
+        public void SetTrail(int tenths, float seconds) { Guard(); TrailTenths = Math.Max(1, tenths); TrailFor = Math.Max(.5f, seconds); }
+
+        public void SetCombust(int tenths, float after)
+        {
+            Guard();
+            CombustTenths = Math.Max(1, tenths);
+            CombustAfter = Math.Max(SiegeSchools.LeastCombust, after);
+        }
+
+        public void SetInferno(int reach, float every) { Guard(); InfernoReach = Math.Max(1, reach); InfernoEvery = Math.Max(.5f, every); }
+
+        public void SetColdSnap(int every, float seconds)
+        {
+            Guard();
+            ColdSnapEvery = Math.Max(SiegeSchools.ColdSnapLeast, every);
+            ColdSnapFor = Math.Max(.1f, seconds);
+        }
+
+        public void SetBrittle(int percent) { Guard(); BrittlePercent = Math.Min(SiegeSchools.MostBrittle, Math.Max(0, percent)); }
+        public void SetWinter(int tenths, int stacks) { Guard(); WinterTenths = Math.Min(9, Math.Max(1, tenths)); WinterStacks = Math.Max(2, stacks); }
+
+        public void SetStatic(int tenths, int hits, int arcs)
+        {
+            Guard();
+            StaticTenths = Math.Max(1, tenths);
+            StaticHits = Math.Max(SiegeSchools.StaticLeast, hits);
+            StaticArcs = Math.Max(0, arcs);
+        }
+
+        public void SetThunder(int every, int tenths)
+        {
+            Guard();
+            ThunderEvery = Math.Max(SiegeSchools.ThunderLeast, every);
+            ThunderTenths = Math.Max(1, tenths);
+        }
+
+        public void SetConduct(int tenths) { Guard(); ConductTenths = Math.Max(1, tenths); }
+
+        /// <summary>
+        /// What a hit worth <paramref name="damage"/> takes off a body under the schools'
+        /// afflictions - the blight on a poisoned one, brittle on a slowed or frozen one - the two
+        /// added and multiplied once, integer, never less than the hit. The hit itself on the plain
+        /// line and on every build holding neither.
+        /// </summary>
+        public int Afflicted(int damage, bool poisoned, bool chilled)
+        {
+            if (_frozen || damage <= 0) return damage;
+
+            int percent = (poisoned ? BlightPercent : 0) + (chilled ? BrittlePercent : 0);
+            if (percent <= 0) return damage;
+
+            long hit = (long)damage * (100 + percent) / 100;
+            return hit > int.MaxValue ? int.MaxValue : (int)hit;
+        }
+
+        /// <summary>What a poisoned raider's blow lands at under the rot: never under one once it was anything.</summary>
+        public int Rotted(int damage)
+        {
+            if (_frozen || damage <= 0 || RotPercent <= 0) return damage;
+
+            int hit = damage * (100 - RotPercent) / 100;
+            return hit < 1 ? 1 : hit;
         }
 
         /// <summary>Unlocks <paramref name="power"/> on this build. <see cref="SiegePower.None"/> is nothing.</summary>

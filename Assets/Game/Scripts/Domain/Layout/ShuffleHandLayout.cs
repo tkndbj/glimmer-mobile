@@ -76,6 +76,18 @@ namespace GlimmerGrove.Layout
         /// <summary>The most diamonds one card wears: a card can go with several started secrets and its evolution.</summary>
         public int MostDiamonds = 4;
 
+        /// <summary>
+        /// A school card's badge (MODES.md 59r): its element's gem on the seat's top-right corner,
+        /// down from the card's top, its size, and the points under it - their centre down, height,
+        /// size and floor. Inside the card's inset and above the name, held by <see cref="IsClear"/>.
+        /// </summary>
+        public float BadgeSize = 54f, BadgeDown = 44f, BadgeTextDown = 94f, BadgeTextHeight = 34f;
+
+        public int BadgeText = 28, BadgeTextFloor = 18;
+
+        /// <summary>The badge's centre across a card: in its top-right corner, inside the inset.</summary>
+        public float BadgeX => CardWidth * .5f - Inset - BadgeSize * .5f;
+
         public float TierHeight = 60f, TierDown = 570f;
 
         public int TierSize = 30, TierFloor = 18;
@@ -221,6 +233,14 @@ namespace GlimmerGrove.Layout
             }
             if (tierFoot + Inset > CardHeight) { fault = $"the tier ends {tierFoot} down a card {CardHeight} tall"; return false; }
             if (IconSize >= SeatSize) { fault = "the picture does not fit its seat"; return false; }
+
+            if (BadgeDown - BadgeSize * .5f < Inset * .5f) { fault = "the school badge touches the card's top"; return false; }
+            if (BadgeTextDown + BadgeTextHeight * .5f > nameTop)
+            {
+                fault = $"the school's points end {BadgeTextDown + BadgeTextHeight * .5f} down and the name begins {nameTop}";
+                return false;
+            }
+            if (BadgeX + BadgeSize * .75f > CardWidth * .5f) { fault = "the school's points run off the card's edge"; return false; }
 
             if (RefreshWidth + OddsGap + OddsSize + Inset * 2f > PanelWidth)
             {

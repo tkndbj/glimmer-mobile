@@ -66,8 +66,18 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public IReadOnlyList<ShuffleBond> Unlocked => _unlocked;
 
-        /// <summary>Whether another copy of <paramref name="card"/> could still be taken.</summary>
-        public bool Takeable(ShuffleCard card) => card != null && Copies(card) < card.Most;
+        /// <summary>
+        /// Whether another copy of <paramref name="card"/> could still be taken: under its most,
+        /// and <b>a keystone only while the build holds fewer than
+        /// <see cref="ShuffleSchools.MostAscensions"/></b> (MODES.md 59r, the owner: "maximum 2
+        /// ascension per run") - a rule of the build, so the deck, the odds and a refresh all read
+        /// it from here and none of them can offer a third.
+        /// </summary>
+        public bool Takeable(ShuffleCard card)
+        {
+            if (card == null || Copies(card) >= card.Most) return false;
+            return !ShuffleSchools.IsKeystone(card) || ShuffleSchools.Keystones(this) < ShuffleSchools.MostAscensions;
+        }
 
         /// <summary>Distinct cards held, for a readout.</summary>
         public int Distinct => _held.Count;
@@ -373,6 +383,75 @@ namespace GlimmerGrove.Shuffle
                 // One more laser gun a copy, the strongest turret without one first.
                 case ShuffleEffect.Laser:
                     into.SetLaser(n, card.Magnitude, card.Extent);
+                    break;
+
+                // ---------------------------------------------------------- the schools (59r)
+                // Rules with a strength, read off the copy count like the attack cards: a second
+                // copy is the same rule, more of it - a stronger focus, a sooner prism, deeper
+                // venom, a longer flame, a sooner snap, a faster discharge. A keystone is taken once.
+                case ShuffleEffect.Focus:
+                    into.SetFocus(card.Magnitude * n, card.Extent);
+                    break;
+
+                case ShuffleEffect.Refract:
+                    into.SetRefract(card.Extent - (n - 1), SiegeSchools.RefractBeams + (n - 1), card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Photon:
+                    into.SetPhoton(card.Magnitude, card.Extent);
+                    break;
+
+                case ShuffleEffect.Venom:
+                    into.SetVenom(card.Magnitude, card.Extent * n);
+                    break;
+
+                // Two rots are one softer blow, added, under the school's ceiling.
+                case ShuffleEffect.Rot:
+                    into.AddRot(card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Contagion:
+                    into.SetContagion(card.Magnitude * n, card.Extent);
+                    break;
+
+                case ShuffleEffect.Blight:
+                    into.SetBlight(card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Trail:
+                    into.SetTrail(card.Magnitude + (n - 1), (card.Extent + (n - 1) * 5) / 10f);
+                    break;
+
+                case ShuffleEffect.Combust:
+                    into.SetCombust(card.Magnitude + (n - 1) * 4, (card.Extent - (n - 1) * 10) / 10f);
+                    break;
+
+                case ShuffleEffect.Inferno:
+                    into.SetInferno(card.Magnitude, card.Extent / 10f);
+                    break;
+
+                case ShuffleEffect.ColdSnap:
+                    into.SetColdSnap(card.Extent - (n - 1), (card.Magnitude + (n - 1)) / 10f);
+                    break;
+
+                case ShuffleEffect.Brittle:
+                    into.SetBrittle(card.Magnitude * n);
+                    break;
+
+                case ShuffleEffect.Winter:
+                    into.SetWinter(card.Magnitude, card.Extent);
+                    break;
+
+                case ShuffleEffect.Static:
+                    into.SetStatic(card.Magnitude, card.Extent - (n - 1), 2 + (n - 1));
+                    break;
+
+                case ShuffleEffect.Thunderclap:
+                    into.SetThunder(card.Extent - (n - 1), card.Magnitude + (n - 1) * 5);
+                    break;
+
+                case ShuffleEffect.Conduct:
+                    into.SetConduct(card.Magnitude);
                     break;
 
                 default:

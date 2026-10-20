@@ -59,7 +59,19 @@ def odds_for(hand):
     return table, floor
 
 
-def draw(lang, hand, cards):
+#: `ShuffleSchools.AffinityStep` and its ceiling, the figures the lean's line prints (MODES.md 59r).
+SCHOOLS = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Modes" / "Shuffle" / "ShuffleSchool.cs"
+
+
+def lean_figures():
+    import re
+    text = SCHOOLS.read_text(encoding="utf-8")
+    step = int(re.search(r"AffinityStep = (\d+);", text).group(1))
+    most = int(re.search(r"AffinityMostPoints = (\d+);", text).group(1))
+    return step, step * most
+
+
+def draw(lang, hand, cards, leaning=False):
     F = figures()
     s = strings(lang)
     table, floor = odds_for(hand)
@@ -70,7 +82,8 @@ def draw(lang, hand, cards):
         if px <= low:
             floored.append(f"{lang} {key} '{text}' at its floor {low}")
 
-    ph = F["HeadRoom"] + F["HeaderH"] + 4 * (F["RowH"] + F["RowGap"]) + (F["FloorH"] if floor else 0) + F["NoteH"] + F["FootRoom"]
+    ph = (F["HeadRoom"] + F["HeaderH"] + 4 * (F["RowH"] + F["RowGap"]) + (F["FloorH"] if floor else 0) + F["NoteH"]
+          + (F["LeanH"] if leaning else 0) + F["FootRoom"])
     pw = F["PanelW"]
 
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
@@ -104,7 +117,13 @@ def draw(lang, hand, cards):
         caption("odds_floor", line, cx, y + F["FloorH"] / 2, F["BodyW"], F["FloorH"], 30, 20, INK)
         y += F["FloorH"]
 
-    caption("odds_equal", s["ui.shuffle.odds_equal"], cx, y + F["NoteH"] / 2, F["BodyW"], F["NoteH"], 28, 18, INK)
+    # `ShuffleOddsOverlay`: the lean's line in the note's place when a school leans (MODES.md 59r).
+    if leaning:
+        tall = F["NoteH"] + F["LeanH"]
+        caption("odds_lean", s["ui.shuffle.odds_lean"].format(*lean_figures()), cx, y + tall / 2,
+                F["BodyW"], tall, 26, 17, INK)
+    else:
+        caption("odds_equal", s["ui.shuffle.odds_equal"], cx, y + F["NoteH"] / 2, F["BodyW"], F["NoteH"], 28, 18, INK)
 
     btn_y = top + ph - 92
     K.paste(sheet, K.skin("btn_green", 560, 120), cx, btn_y)
@@ -119,6 +138,7 @@ def main():
     ap.add_argument("--hand", type=int, default=5, help="hand number: 1 opening, 6+ heated, 10+ wild; 3/5 carry a promise")
     ap.add_argument("--cards", default="22,22,13,8", help="cards left per rarity, lowest first")
     ap.add_argument("--measure", action="store_true", help="every language and the promise line; fail on a caption at its floor")
+    ap.add_argument("--lean", action="store_true", help="draw the line a started school's lean adds (MODES.md 59r)")
     ap.add_argument("--out", type=Path, default=REPO / "Tools" / "out" / "shuffle_odds.png")
     args = ap.parse_args()
 
@@ -128,13 +148,14 @@ def main():
         floored = []
         for lang in sorted(p.stem for p in LOC.glob("*.json")):
             for hand in (1, 3, 5):
-                floored += draw(lang, hand, cards)[1]
+                for leaning in (False, True):
+                    floored += draw(lang, hand, cards, leaning)[1]
         if floored:
             sys.exit("captions at their floor:\n  " + "\n  ".join(sorted(set(floored))))
         print("odds panel: every caption fits in every language")
         return
 
-    out, floored = draw(args.lang, args.hand, cards)
+    out, floored = draw(args.lang, args.hand, cards, args.lean)
     for f in floored:
         print("  !!", f)
     args.out.parent.mkdir(parents=True, exist_ok=True)

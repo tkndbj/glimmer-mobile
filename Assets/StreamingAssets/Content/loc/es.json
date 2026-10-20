@@ -8442,6 +8442,10 @@
       "text": "Las cartas de la misma rareza tienen la misma probabilidad."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "Dentro de una rareza, cada carta que tienes de un elemento hace sus cartas un {0}% más probables, hasta un {1}%."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Rayos Pesados"
     },
@@ -8962,6 +8966,134 @@
       "text": "Convierte una torre en un láser que rebota entre invasores con un {0}% de daño."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Lente de enfoque"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Disparar al mismo invasor crea un rayo, hasta un {0}% de daño."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Refractor"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Cada pocos disparos se dividen en rayos hacia los invasores más duros."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Corazón de fotones"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Cada disparo sigue como láser a través de 2 invasores más."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Puntas de veneno"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "Los disparos añaden veneno que se acumula en los invasores."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Podredumbre"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "Los invasores envenenados golpean a las torres un {0}% más flojo."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Contagio"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "Un invasor envenenado pasa su veneno al morir."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Corazón de plaga"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "Los disparos añaden veneno y los invasores envenenados reciben un {0}% más de daño."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Rastro de fuego"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "Los disparos dejan llamas en el suelo."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Combustión"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "Un invasor que arde lo suficiente explota."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Corazón infernal"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "Los disparos prenden fuego a los invasores y el fuego salta entre ellos."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Golpe de frío"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Cada pocos disparos congelan a un invasor."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Quebradizo"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "Los invasores ralentizados reciben un {0}% más de daño."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Corazón invernal"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "Los disparos enfrían, y con suficiente frío el invasor se congela."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Carga estática"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Cada pocos impactos electrocutan al invasor y a los cercanos."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Trueno"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Cada pocos disparos llaman un rayo que aturde a un grupo."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Corazón de tormenta"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Cada disparo salta a otro invasor y los rayos aturden."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },
@@ -8990,12 +9122,20 @@
       "text": "¡Evolución desbloqueada!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "¡Ascensión!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "OK"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Un prisma dispara 6 rayos a los invasores más fuertes."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Red láser"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "Una valla láser corta a los invasores y un láser del cielo golpea a los más duros."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Nigromancia"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "Los invasores muertos por veneno se alzan como necrófagos y explotan en la horda."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Volcán"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "Un volcán entra en erupción en la multitud y derrama lava por la colina."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Era glacial"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "Toda la colina se congela de vez en cuando y los invasores débiles se rompen."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Torbellino eléctrico"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "Un tornado de rayos arrasa el carril más lleno."
     },
     {
       "key": "shuffle.grade.d",

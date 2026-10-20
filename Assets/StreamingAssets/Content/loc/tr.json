@@ -8442,6 +8442,10 @@
       "text": "Aynı nadirlikteki kartların şansı eşittir."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "Aynı nadirlikte, bir elementten elindeki her kart o elementin kartlarını %{0} daha olası yapar, en fazla %{1}."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Ağır Kurşunlar"
     },
@@ -8962,6 +8966,134 @@
       "text": "Bir kuleyi akıncılar arasında seken bir lazere çevirir, %{0} hasarla."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Odak Merceği"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Aynı akıncıya vuran kurşunlar bir ışın biriktirir, %{0} hasara kadar."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Kırıcı Prizma"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Birkaç kurşunda bir, en dayanıklı akıncılara ışınlar ayrılır."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Foton Kalbi"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Her kurşun lazer olarak 2 akıncıdan daha geçer."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Zehirli Uçlar"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "Kurşunlar akıncılarda biriken zehir ekler."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Çürüme"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "Zehirli akıncılar kulelere %{0} daha zayıf vurur."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Bulaşma"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "Zehirli bir akıncı ölünce zehrini yakındakilere geçirir."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Veba Kalbi"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "Kurşunlar zehir ekler ve zehirli akıncılar %{0} daha fazla hasar alır."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Ateş İzi"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "Kurşunlar yerde alevler bırakır."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Tutuşma"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "Yeterince uzun yanan akıncı patlar."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Cehennem Kalbi"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "Kurşunlar akıncıları tutuşturur ve ateş aralarında sıçrar."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Ani Ayaz"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Birkaç kurşunda bir, bir akıncı donar."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Kırılgan"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "Yavaşlayan akıncılar %{0} daha fazla hasar alır."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Kış Kalbi"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "Kurşunlar soğutur, yeterince soğuk akıncıyı dondurur."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Statik Yük"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Birkaç isabette bir, akıncı ve yakınındakiler çarpılır."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Gök Gürültüsü"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Birkaç kurşunda bir, yıldırım bir grubu sersemletir."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Fırtına Kalbi"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Her kurşun başka bir akıncıya sıçrar ve yıldırım sersemletir."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-%{0}"
     },
@@ -8990,12 +9122,20 @@
       "text": "Evrim açıldı!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "Yükseliş!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "Tamam"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Bir prizma en güçlü akıncılara 6 ışın atar."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Lazer Ağı"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "Lazer çit akıncıları keser, gökten bir lazer en dayanıklılara vurur."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Ölü Çağırma"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "Zehirle ölen akıncılar gulyabani olarak kalkar ve sürüde patlar."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Volkan"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "Kalabalığın ortasında bir volkan patlar ve tepeye lav döker."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Buzul Çağı"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "Tüm tepe ara sıra donar ve zayıf akıncılar parçalanır."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Yıldırım Hortumu"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "Bir yıldırım hortumu en kalabalık şeridi süpürür."
     },
     {
       "key": "shuffle.grade.d",

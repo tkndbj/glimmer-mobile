@@ -526,7 +526,9 @@ namespace GlimmerGrove.Modes
             if (_timeClock < SiegeSecrets.TimeEvery) return;
             _timeClock = SiegeSecrets.TimeEvery;
 
-            if (!Peopled()) return;
+            // **Never on a hill that has only just started walking again** (`SiegeBoard.Schools`,
+            // `MayStill`): the stop waits, full, for the thaw's walk to pass.
+            if (!Peopled() || !MayStill) return;
 
             _timeClock = 0f;
             _timeStop = SiegeSecrets.TimeFor;

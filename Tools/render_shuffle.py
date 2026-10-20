@@ -102,7 +102,8 @@ def glow_of(bid):
     saturation; every evolution the kit's foxglove. Figures read out of `ShuffleSecrets.cs`."""
     import colorsys
     text = BONDS.read_text(encoding="utf-8")
-    m = re.search(r'ShuffleBond\.Secret\("%s", SiegePower\.\w+, (\d+), (\d+),' % re.escape(bid), text)
+    m = (re.search(r'ShuffleBond\.Secret\("%s", SiegePower\.\w+, (\d+), (\d+),' % re.escape(bid), text)
+         or re.search(r'ShuffleBond\.Ascension\("%s", SiegePower\.\w+, ShuffleSchool\.\w+, (\d+), (\d+),' % re.escape(bid), text))
     if not m:
         return (180, 120, 255)
     r, g, b = colorsys.hsv_to_rgb(int(m.group(1)) / 360.0, min(1.0, int(m.group(2)) / 100.0) * .85, 1.0)
@@ -110,8 +111,57 @@ def glow_of(bid):
 
 
 def mark_of(bid):
-    """`ShuffleBond.Mark`: one picture per secret, one for every evolution."""
-    return "shuffle_secret_" + bid if bonds()[bid][0] == "secret" else "shuffle_evolution"
+    """`ShuffleBond.Mark`: one picture per secret and per ascension, one for every evolution."""
+    return "shuffle_evolution" if bonds()[bid][0] == "evolution" else "shuffle_secret_" + bid
+
+
+SCHOOLS_CS = REPO / "Assets" / "Game" / "Scripts" / "Domain" / "Modes" / "Shuffle" / "ShuffleSchool.cs"
+
+#: Points the build holds per school, from `--points fire=3,...`: what `ShuffleChoiceOverlay.School`
+#: prints under a school card's gem. Empty draws the gem alone, as a build of no school does.
+POINTS = {}
+
+
+def schools():
+    """`ShuffleSchools.Of`: effect -> school, read off the C# switch; and the points an ascension asks."""
+    text = SCHOOLS_CS.read_text(encoding="utf-8")
+    body = text[text.index("public static ShuffleSchool Of(ShuffleEffect effect)"):]
+    body = body[:body.index("default:")]
+    found = {}
+    pending = []
+    for line in body.splitlines():
+        m = re.search(r"case ShuffleEffect\.(\w+):", line)
+        if m:
+            pending.append(m.group(1))
+        m = re.search(r"return ShuffleSchool\.(\w+);", line)
+        if m:
+            for effect in pending:
+                found[effect] = m.group(1).lower()
+            pending = []
+    ascend = int(re.search(r"public const int AscendAt = (\d+);", text).group(1))
+    return found, ascend
+
+
+def school_of(cid):
+    """The school a card belongs to (lower-case), or None."""
+    m = re.search(r'new ShuffleCard\("%s",\s*ShuffleTier\.\w+,\s*ShuffleEffect\.(\w+)' % re.escape(cid),
+                  CATALOG.read_text(encoding="utf-8"))
+    return schools()[0].get(m.group(1)) if m else None
+
+
+def ascension_of(school):
+    """The ascension id of a school (lower-case name), read off `ShuffleBonds.All`."""
+    for bid, row in bonds_with_school().items():
+        if row[4] == school:
+            return bid
+    return None
+
+
+def bonds_with_school():
+    text = BONDS.read_text(encoding="utf-8")
+    return {bid: ("ascension", "Legendary", [cid], schools()[1], school.lower())
+            for bid, school, cid in re.findall(
+                r'ShuffleBond\.Ascension\("([a-z_]+)",\s*SiegePower\.\w+,\s*ShuffleSchool\.(\w+),\s*\d+,\s*\d+,\s*"([a-z_]+)"', text)}
 
 
 def catalog():
@@ -231,6 +281,20 @@ def card(sheet, L, cid, tier, cx, top, strings, held, marks=""):
         dy = top + L["DiamondDown"]
         K.paste(sheet, K.glow(L["DiamondSize"] * L["DiamondGlow"], 2.1, hue, .6), dx, dy)
         K.paste(sheet, K.fit(K.load(pic)[0], (L["DiamondSize"], L["DiamondSize"])), dx, dy)
+
+    # `ShuffleChoiceOverlay.School`: the school's gem on the seat's corner, the points under it.
+    school = school_of(cid)
+    if school:
+        aid = ascension_of(school)
+        bx, by = cx + L["CardWidth"] * .5 - L["Inset"] - L["BadgeSize"] * .5, top + L["BadgeDown"]   # `BadgeX`
+        hue = glow_of(aid)
+        K.paste(sheet, K.glow(L["BadgeSize"] * L["DiamondGlow"], 2.1, hue, .55), bx, by)
+        K.paste(sheet, K.fit(K.load(mark_of(aid))[0], (L["BadgeSize"], L["BadgeSize"])), bx, by)
+        if POINTS.get(school):
+            text = strings.get("ui.shuffle.school_points", "{0}/{1}").format(POINTS[school], schools()[1])
+            px = K.shrunk(sheet, text, bx, top + L["BadgeTextDown"], L["BadgeSize"] * 1.5, L["BadgeTextHeight"],
+                          int(L["BadgeText"]), int(L["BadgeTextFloor"]), fill=hue, outline=3)
+            print("  %-16s school %-8s %r at %dpx" % ("", school, text, px))
 
     K.paste(sheet, K.skin("Hud/trough", cw - L["Inset"] * 2, L["TierHeight"]), cx, top + L["TierDown"])
     word = strings.get("ui.shuffle.tier.%s" % tier.lower(), tier).upper()
@@ -395,6 +459,8 @@ def bonds():
     for bid, tier, cid, needs in re.findall(
             r'ShuffleBond\.Evolution\("([a-z_]+)",\s*ShuffleTier\.(\w+),\s*"([a-z_]+)",\s*(\d+)', text):
         found[bid] = ("evolution", tier, [cid], int(needs))
+    for bid, row in bonds_with_school().items():
+        found[bid] = row[:4]
     if not found:
         sys.exit("no bonds read out of %s - the row shape moved" % BONDS)
     return found
@@ -415,7 +481,8 @@ def unlock(bid, lang, art=True):
     strings = table(lang)
     tiers = catalog()
     secret = kind == "secret"
-    grand = 3 if tier == "Legendary" else 2 if tier == "Epic" else 1
+    ascension = kind == "ascension"
+    grand = 4 if ascension else 3 if tier == "Legendary" else 2 if tier == "Epic" else 1
     hue = glow_of(bid)
     tint = TINTS[tier]
     floored = []
@@ -449,19 +516,39 @@ def unlock(bid, lang, art=True):
             floored.append("%s %s %s" % (bid, lang, what))
         print("  %-8s %-44r at %dpx (floor %d)%s" % (what, s[:44], px, floor, flag))
 
-    head = strings["ui.shuffle.secret_unlocked" if secret else "ui.shuffle.evolution_unlocked"]
+    head = strings["ui.shuffle.secret_unlocked" if secret else "ui.shuffle.ascension_unlocked" if ascension
+                   else "ui.shuffle.evolution_unlocked"]
     caption("headline", upper(head, lang), y(U["TitleY"]), U["Wide"], U["TitleH"], U["TitleSize"], U["TitleFloor"],
             tuple(int(c + (255 - c) * .35) for c in hue), 5)
     caption("tier", upper(strings["ui.shuffle.tier.%s" % tier.lower()], lang), y(U["TierY"]), U["Wide"], U["TierH"],
             U["TierSize"], U["TierFloor"], tint, 3)
 
-    stem = "shuffle.%s.%s" % ("secret" if secret else "evolution", bid)
+    stem = "shuffle.%s.%s" % (kind, bid)
     caption("name", strings[stem + ".name"], y(U["NameY"]), U["Wide"], U["NameH"], U["NameSize"], U["NameFloor"],
             K.GOLD, 4)
     caption("note", strings[stem + ".note"], y(U["NoteY"]), U["NoteWide"], U["NoteH"], U["NoteSize"], U["NoteFloor"],
             K.CREAM, 3)
 
-    # `ShuffleUnlockLayout.RecipeX`: the cards it took, a plus between two for a secret.
+    # `ShuffleUnlockLayout.RecipeX`: the cards it took, a plus between two for a secret. An
+    # ascension's is its keystone, a plus, and its school's gem times the points it took.
+    if ascension:
+        n, ry = 2, y(U["RecipeY"])
+        width = n * U["RecipeIcon"] + (n - 1) * U["RecipeGap"]
+        for i in range(n):
+            rx = cx - width / 2 + U["RecipeIcon"] / 2 + i * (U["RecipeIcon"] + U["RecipeGap"])
+            K.paste(sheet, K.glow(U["RecipeIcon"] * 1.6, 2.1, TINTS["Legendary"] if i == 0 else hue, .45), rx, ry)
+            K.paste(sheet, K.skin("Hud/slot", U["RecipeIcon"], U["RecipeIcon"]), rx, ry)
+            if i == 0:
+                pic = ART / "Ui" / "Shuffle" / ("%s.png" % parts[0])
+                if pic.exists():
+                    K.paste(sheet, K.fit(Image.open(pic).convert("RGBA"), (U["RecipeIcon"] * .86,) * 2), rx, ry)
+                K.text(sheet, "+", rx + (U["RecipeIcon"] + U["RecipeGap"]) / 2, ry, 56, outline=3)
+            else:
+                K.paste(sheet, K.fit(K.load(mark_of(bid))[0], (U["RecipeIcon"] * .7,) * 2), rx, ry)
+                K.text(sheet, strings["ui.shuffle.times"].format(needs), rx + U["RecipeIcon"] * .62,
+                       ry + U["RecipeIcon"] * .38, 44, fill=hue, outline=4)
+        parts = []
+
     n = len(parts)
     width = n * U["RecipeIcon"] + (n - 1) * U["RecipeGap"]
     for i, cid in enumerate(parts):
@@ -704,6 +791,7 @@ def main():
     ap.add_argument("--wave", type=int, default=3)
     ap.add_argument("--refreshes", type=int, default=0, help="refreshes this run has bought (the key's price); -1 draws no key")
     ap.add_argument("--marks", default="", help="card=secret+secret+e: a diamond per secret id, e for the evolution's")
+    ap.add_argument("--points", default="", help="school=points, comma separated: printed under a school card's gem")
     ap.add_argument("--unlock", default="", help="a bond id, or 'all': the unlock panel instead of a hand")
     ap.add_argument("--measure", action="store_true", help="with --unlock all or --report all: every language, fail on a floor")
     ap.add_argument("--report", default="", help="a grade id (d .. s_plus_plus), or 'all': the graded run (MODES.md 59o)")
@@ -714,6 +802,10 @@ def main():
     for part in filter(None, args.held.split(",")):
         cid, n = part.split("=")
         held[cid] = int(n)
+
+    for part in filter(None, args.points.split(",")):
+        school, n = part.split("=")
+        POINTS[school.lower()] = int(n)
 
     if args.report:
         grades = GRADE_IDS if args.report == "all" else [args.report]

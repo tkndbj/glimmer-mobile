@@ -91,6 +91,11 @@ namespace GlimmerGrove.Modes
         Storm, Steam, Blade, Plague, Comet, Rainbow, Permafrost, Horizon, Dragon, Dome, Solar,
         Armageddon, TimeStop,
         Shell, Snipe, Fortress, Reflect, Bomblet, Orb, Swarm, Dust, Shard, Prism,
+
+        // The schools (`SiegeBoard.Schools`, MODES.md 59r): the element cards, then the
+        // ascensions. Appended, never renumbered.
+        Focus, Refract, Venom, Contagion, Flame, Combust, Inferno, Freeze, Static, Thunderclap, Jolt,
+        Grid, Orbital, Ghoul, Volcano, Lava, IceAge, Tempest,
     }
 
     /// <summary>

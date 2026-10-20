@@ -31,7 +31,7 @@
   ],
 
   "schema": 1,
-  "revision": 3,
+  "revision": 4,
 
   "ramp": {
     "firstWave": 4,
@@ -166,6 +166,22 @@
     { "id": "wild_magic"      , "magnitude": 100, "extent": 0, "most": 1, "enabled": true },
     { "id": "bullet_hell"     , "magnitude": 100, "extent": 50, "most": 1, "enabled": true },
     { "id": "grand_hand"      , "magnitude": 2, "extent": 0, "most": 1, "enabled": true },
-    { "id": "laser_core"      , "magnitude": 7, "extent": 4, "most": 4, "enabled": true }
+    { "id": "laser_core"      , "magnitude": 7, "extent": 4, "most": 4, "enabled": true },
+    { "id": "focus_lens"      , "magnitude": 20, "extent": 5, "most": 3, "enabled": true },
+    { "id": "refractor"       , "magnitude": 8, "extent": 6, "most": 2, "enabled": true },
+    { "id": "photon_heart"    , "magnitude": 6, "extent": 2, "most": 1, "enabled": true },
+    { "id": "venom_tips"      , "magnitude": 2, "extent": 3, "most": 3, "enabled": true },
+    { "id": "rot"             , "magnitude": 20, "extent": 0, "most": 2, "enabled": true },
+    { "id": "contagion"       , "magnitude": 2, "extent": 1, "most": 2, "enabled": true },
+    { "id": "blight_heart"    , "magnitude": 30, "extent": 0, "most": 1, "enabled": true },
+    { "id": "fire_trail"      , "magnitude": 2, "extent": 25, "most": 3, "enabled": true },
+    { "id": "combust"         , "magnitude": 12, "extent": 30, "most": 2, "enabled": true },
+    { "id": "inferno_heart"   , "magnitude": 1, "extent": 10, "most": 1, "enabled": true },
+    { "id": "cold_snap"       , "magnitude": 6, "extent": 6, "most": 3, "enabled": true },
+    { "id": "brittle"         , "magnitude": 20, "extent": 0, "most": 2, "enabled": true },
+    { "id": "winter_heart"    , "magnitude": 3, "extent": 5, "most": 1, "enabled": true },
+    { "id": "static_charge"   , "magnitude": 10, "extent": 4, "most": 3, "enabled": true },
+    { "id": "thunderclap"     , "magnitude": 15, "extent": 5, "most": 2, "enabled": true },
+    { "id": "storm_heart"     , "magnitude": 4, "extent": 0, "most": 1, "enabled": true }
   ]
 }

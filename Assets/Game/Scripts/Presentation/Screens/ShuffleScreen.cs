@@ -244,6 +244,7 @@ namespace GlimmerGrove
             {
                 v.Bond = bonds[at];
                 v.CardOf = tuning.Find;
+                v.Held = _run.Build;
                 v.OnDone = () => Celebrate(bonds, at + 1);
             });
         }

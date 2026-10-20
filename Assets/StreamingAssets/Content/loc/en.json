@@ -8442,6 +8442,10 @@
       "text": "Cards of the same rarity are equally likely."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "Within a rarity, each card you hold of an element makes its cards {0}% more likely, up to {1}%."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Heavy Bolts"
     },
@@ -8962,6 +8966,134 @@
       "text": "Turns a turret into a laser that bounces between raiders for {0}% damage."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Focus Lens"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Shots on the same raider build a beam, up to {0}% damage."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Refractor"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Every few shots split into beams at the toughest raiders."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Photon Heart"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Every shot goes on as a laser through 2 more raiders."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Venom Tips"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "Shots add venom that stacks on raiders."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Rot"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "Poisoned raiders hit turrets {0}% softer."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Contagion"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "A poisoned raider passes its venom on when it dies."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Blight Heart"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "Shots add venom, and poisoned raiders take {0}% more damage."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Fire Trail"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "Shots leave flames on the ground."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Combust"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "A raider that burns long enough explodes."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Inferno Heart"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "Shots set raiders on fire, and fire jumps between them."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Cold Snap"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Every few shots freeze a raider solid."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Brittle"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "Slowed raiders take {0}% more damage."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Winter Heart"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "Shots chill, and enough chill freezes a raider solid."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Static Charge"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Every few hits on a raider zap it and raiders nearby."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Thunderclap"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Every few shots call lightning that stuns a group."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Storm Heart"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Every shot arcs to another raider, and lightning stuns."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },
@@ -8990,12 +9122,20 @@
       "text": "Evolution unlocked!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "Ascension!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "Okay"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "A prism fires 6 beams at the strongest raiders."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Laser Grid"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "A laser fence cuts raiders, and a sky laser strikes the toughest."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Necromancy"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "Raiders killed by poison rise as ghouls and explode on the horde."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Volcano"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "A volcano erupts in the crowd and pours lava down the hill."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Ice Age"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "The whole hill freezes now and then, and weak raiders shatter."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Lightning Twister"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "A lightning tornado tears down the busiest lane."
     },
     {
       "key": "shuffle.grade.d",

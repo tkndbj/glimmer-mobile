@@ -8442,6 +8442,10 @@
       "text": "Les cartes de même rareté ont la même chance."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "Dans une même rareté, chaque carte d'un élément que tu possèdes rend ses cartes {0} % plus probables, jusqu'à {1} %."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Tirs Lourds"
     },
@@ -8962,6 +8966,134 @@
       "text": "Change une tourelle en laser qui rebondit entre les pillards pour {0} % des dégâts."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Lentille focale"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Frapper le même pillard crée un rayon, jusqu'à {0} % de dégâts."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Réfracteur"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Tous les quelques tirs, des rayons partent vers les pillards les plus coriaces."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Cœur photonique"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Chaque tir continue en laser à travers 2 pillards de plus."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Pointes venimeuses"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "Les tirs ajoutent du venin qui s'accumule sur les pillards."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Pourriture"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "Les pillards empoisonnés frappent les tourelles {0} % moins fort."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Contagion"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "Un pillard empoisonné transmet son venin en mourant."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Cœur de fléau"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "Les tirs ajoutent du venin, et les pillards empoisonnés subissent {0} % de dégâts en plus."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Traînée de feu"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "Les tirs laissent des flammes au sol."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Combustion"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "Un pillard qui brûle assez longtemps explose."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Cœur infernal"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "Les tirs enflamment les pillards, et le feu saute de l'un à l'autre."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Coup de froid"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Tous les quelques tirs, un pillard gèle sur place."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Fragilité"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "Les pillards ralentis subissent {0} % de dégâts en plus."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Cœur d'hiver"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "Les tirs refroidissent, et assez de froid gèle un pillard."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Charge statique"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Tous les quelques coups, un pillard et ses voisins sont électrocutés."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Coup de tonnerre"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Tous les quelques tirs, la foudre étourdit un groupe."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Cœur d'orage"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Chaque tir rebondit sur un autre pillard, et la foudre étourdit."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0} %"
     },
@@ -8990,12 +9122,20 @@
       "text": "Évolution débloquée !"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "Ascension !"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "OK"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Un prisme tire 6 rayons sur les pillards les plus forts."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Grille laser"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "Une barrière laser tranche les pillards, et un laser du ciel frappe les plus coriaces."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Nécromancie"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "Les pillards tués par le poison reviennent en goules et explosent sur la horde."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Volcan"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "Un volcan entre en éruption dans la foule et déverse de la lave sur la colline."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Ère glaciaire"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "Toute la colline gèle de temps en temps, et les pillards affaiblis volent en éclats."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Tornade électrique"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "Une tornade de foudre déferle sur le couloir le plus chargé."
     },
     {
       "key": "shuffle.grade.d",

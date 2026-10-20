@@ -37,13 +37,16 @@ namespace GlimmerGrove.Tests
 
         const uint ShippedSeed = 948309542u;
 
-        internal static SiegeLayout Lane(int gold = 24)
+        internal static SiegeLayout Lane(int gold = 24) => Lane(gold, "plsfha");
+
+        /// <summary>The lane with its own charm roster: <paramref name="charms"/>, the shipped body's letters.</summary>
+        internal static SiegeLayout Lane(int gold, string charms)
         {
             Assert.IsTrue(ProtoGrid.TryRead(Field, 8, 5, SiegeLayout.Cells, out var grid, out string error), error);
 
             // Cogs at nought, as the shipped body authors them: nothing drops on this hill.
             var layout = new SiegeLayout(grid, "rgby", "rgby", new string[0], "", 0,
-                                         new ShuffleRamp("rgby", gold, .5f), 0, "plsfha", true, true);
+                                         new ShuffleRamp("rgby", gold, .5f), 0, charms, true, true);
             Assert.IsNull(layout.Fault, layout.Fault);
             return layout;
         }
@@ -471,8 +474,15 @@ namespace GlimmerGrove.Tests
         public void ADeckRunsOutWhenEveryCardIsHeldToItsMost()
         {
             var run = new ShuffleRun(5u);
-            int most = 0;
-            foreach (var card in ShuffleCards.All) most += card.Most;
+            int most = 0, keystones = 0;
+            foreach (var card in ShuffleCards.All)
+            {
+                most += card.Most;
+                if (ShuffleSchools.IsKeystone(card)) keystones++;
+            }
+
+            // A run holds at most two keystones (MODES.md 59r): the rest are never dealt.
+            most -= keystones - ShuffleSchools.MostAscensions;
 
             int taken = 0;
             for (int i = 0; i < most + 5; i++)
@@ -600,6 +610,12 @@ namespace GlimmerGrove.Tests
                 b.PactDamage, b.PactFire, b.PactFuelShot, b.PactGuard,
                 b.KineticPercent, b.IronPercent, b.OverflowPercent, b.ChainFuelPercent,
                 b.BlastGems, b.PowerGems, b.LaserGuns, b.LaserTenths, b.LaserHits,
+                b.FocusPercent, b.FocusMost, b.RefractEvery, b.RefractBeams, b.RefractTenths,
+                b.PhotonTenths, b.PhotonHits, b.VenomTenths, b.VenomMost, b.RotPercent,
+                b.ContagionCount, b.ContagionReach, b.BlightPercent, b.TrailTenths, b.TrailFor,
+                b.CombustTenths, b.CombustAfter, b.InfernoReach, b.InfernoEvery,
+                b.ColdSnapEvery, b.ColdSnapFor, b.BrittlePercent, b.WinterTenths, b.WinterStacks,
+                b.StaticTenths, b.StaticHits, b.StaticArcs, b.ThunderEvery, b.ThunderTenths, b.ConductTenths,
                 b.Powers,
             });
 

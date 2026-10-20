@@ -65,6 +65,10 @@ namespace GlimmerGrove.Modes
             // **And what a build's unlocked secrets and evolutions do on theirs**
             // (`SiegeBoard.Secrets`). Shut on every build that has unlocked none.
             Secrets(dt);
+
+            // **And the schools' venom, flames, fire and ascensions** (`SiegeBoard.Schools`). Shut
+            // on every build holding no element card.
+            Schools(dt);
             Age(dt);
 
             for (int i = _raiders.Count - 1; i >= 0; i--)
@@ -582,7 +586,7 @@ namespace GlimmerGrove.Modes
                     if (redeemed) _report.Redeemed.Add(w);
                 }
 
-            if (_boosts.WaveStill > 0f && _boosts.WaveStill > _still)
+            if (_boosts.WaveStill > 0f && _boosts.WaveStill > _still && MayStill)
             {
                 _still = _boosts.WaveStill;
                 _report.Stilled = _boosts.WaveStill;
@@ -655,7 +659,17 @@ namespace GlimmerGrove.Modes
             // **The hourglass runs down here for the roar's reason**: one number on the board, so
             // nothing can be left standing still after the window has closed, and the frame it
             // reaches nought is the frame the hill walks again.
-            if (_still > 0f) _still = Math.Max(0f, _still - dt);
+            if (_thaw > 0f) _thaw = Math.Max(0f, _thaw - dt);
+
+            if (_still > 0f)
+            {
+                _still = Math.Max(0f, _still - dt);
+
+                // **The hill thaws into a walk** (`SiegeBoard.Schools`): a stopped hill that starts
+                // again is given its steadiness, so no stun lands on the frame it ends. Nothing on
+                // the plain line.
+                if (_still <= 0f) Thawed();
+            }
 
             // **And a wall's, for the same reason** (`SiegeBoard.Rampart`): the frame it reaches
             // nought is the frame the bodies behind it walk again.
@@ -1452,6 +1466,10 @@ namespace GlimmerGrove.Modes
 
                 var ward = _wards[w];
                 int damage = _boosts.Blow(raider.Surge.Blow(SiegeTuning.BlowOf(raider.Kind)));
+
+                // A poisoned swinger under the rot (`SiegeBoard.Schools`). The blow itself on every
+                // build without it.
+                damage = Rot(raider, damage);
                 bool felled = Bear(ward, damage);
 
                 _report.Blows.Add(new SiegeBlow(w, raider.Id, damage, felled));

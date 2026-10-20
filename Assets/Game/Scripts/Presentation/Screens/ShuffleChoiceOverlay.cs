@@ -213,6 +213,10 @@ namespace GlimmerGrove
             // they read as a fact about this card and never as part of its tier.
             Diamonds(t, card, top, L);
 
+            // **Its school** (MODES.md 59r): the element's gem on the seat's corner, and how far the
+            // build has gone toward its ascension.
+            School(t, card, top, L);
+
             // The tier on the kit's trough, in its own colour - and how many copies the build
             // already holds, because a second copy is a different offer from a first.
             var trough = UIKit.Img("Tier", t, Art.S("Ui/" + Skins.Trough), Color.white,
@@ -343,7 +347,7 @@ namespace GlimmerGrove
         /// </summary>
         public static Color GlowOf(ShuffleBond bond)
         {
-            if (bond == null || !bond.IsSecret) return EvolutionGlow;
+            if (bond == null || bond.IsEvolution) return EvolutionGlow;
             float s = Mathf.Clamp01(bond.Saturation / 100f) * .85f;
             return Color.HSVToRGB(bond.Hue / 360f, s, 1f);
         }
@@ -362,6 +366,10 @@ namespace GlimmerGrove
 
             _marks.Clear();
             ShuffleBonds.Advanced(card, Held, _marks);
+
+            // An ascension is said by the school's gem on the seat's corner (`School`), with its
+            // points; a diamond for it here would say the same thing twice.
+            _marks.RemoveAll(b => b.IsAscension);
             bool evolve = ShuffleBonds.Evolves(card, Held);
 
             int secrets = Mathf.Min(_marks.Count, L.MostDiamonds - (evolve ? 1 : 0));
@@ -396,6 +404,45 @@ namespace GlimmerGrove
 
             Tween.Breathe(img.transform, .12f, 1.4f);
             Tween.Breathe(halo.transform, .2f, 1.4f);
+        }
+
+        /// <summary>
+        /// The school badge on a card of an element (MODES.md 59r): the school's own gem at the
+        /// seat's corner, breathing in its colour, and under it the points the build holds toward
+        /// the ascension - or nothing under it once the school has ascended or can no longer.
+        /// Nothing at all for a card of no school, or when the gem has not arrived (7b).
+        /// </summary>
+        void School(Transform t, ShuffleCard card, float top, Layout.ShuffleHandLayout L)
+        {
+            var school = ShuffleSchools.Of(card);
+            if (school == ShuffleSchool.None) return;
+
+            var ascension = ShuffleSchools.AscensionOf(school);
+            var sprite = ascension != null ? Art.S("Ui/" + ascension.Mark) : null;
+            if (sprite == null) return;
+
+            var at = new Vector2(L.BadgeX, top - L.BadgeDown);
+            var glow = GlowOf(ascension);
+
+            var halo = UIKit.Halo(t, glow, L.BadgeSize * L.DiamondGlow, .55f, at);
+            halo.raycastTarget = false;
+
+            var gem = UIKit.Img("School", t, sprite, Color.white, Vector2.one * L.BadgeSize, new Vector2(.5f, .5f), at);
+            gem.preserveAspect = true;
+            gem.raycastTarget = false;
+            Tween.Breathe(gem.transform, .1f, 1.6f);
+
+            if (Held == null || ascension.Completes(Held) || !ShuffleSchools.Reachable(Held, school)) return;
+
+            int points = ShuffleSchools.Points(Held, school);
+            if (points <= 0 && !ShuffleSchools.HoldsKeystone(Held, school)) return;
+
+            var count = UIKit.Titled("Points", t, Loc.Format("ui.shuffle.school_points", points, ascension.Needs),
+                                     L.BadgeText, glow, TextAnchor.MiddleCenter,
+                                     new Vector2(L.BadgeSize * 1.5f, L.BadgeTextHeight), new Vector2(.5f, .5f),
+                                     new Vector2(L.BadgeX, top - L.BadgeTextDown), 3f, 3f);
+            UIKit.Shrinkable(count, L.BadgeTextFloor);
+            count.raycastTarget = false;
         }
 
         void Pick(ShuffleCard card)

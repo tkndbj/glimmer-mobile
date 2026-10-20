@@ -5,7 +5,8 @@ namespace GlimmerGrove.Shuffle
     /// <summary>
     /// <b>What a refresh can deal, said before it is bought</b> (MODES.md 59p): each card's chance
     /// of each tier, the promise on the first card when this hand carries one, and how many cards
-    /// each tier holds, among which every card is equally likely.
+    /// each tier holds - among which every card is equally likely, unless the build has started a
+    /// school (MODES.md 59r), whose cards then lean within their tier (<see cref="Leaning"/>).
     ///
     /// <para>
     /// <b>Read off what the deck deals with, never written as copy</b> (<c>ChestOddsOverlay</c>'s
@@ -41,6 +42,13 @@ namespace GlimmerGrove.Shuffle
         public ShuffleTier? Floor { get; }
 
         /// <summary>
+        /// Whether some card a refresh could deal weighs more than the rest of its tier
+        /// (<see cref="ShuffleSchools.Weight"/>): the panel then says so beside "equally likely".
+        /// A rarity's chance never moves, so every figure above is still the figure.
+        /// </summary>
+        public bool Leaning { get; private set; }
+
+        /// <summary>
         /// The odds of refreshing <paramref name="run"/>'s open hand, or null when it has none.
         /// A refresh deals the same hand number again, so these are that hand's odds.
         /// </summary>
@@ -60,14 +68,14 @@ namespace GlimmerGrove.Shuffle
             var cards = new int[Tiers];
             if (build != null)
                 foreach (var card in tuning.Cards)
-                    if (build.Takeable(card) && !Holds(spare, card)) cards[(int)card.Tier]++;
+                    if (ShuffleSchools.Dealable(card, build) && !Holds(spare, card)) cards[(int)card.Tier]++;
 
             // Every card offered last time and nothing else left: the refresh deals from them.
             bool any = false;
             foreach (int n in cards) any |= n > 0;
             if (!any && build != null)
                 foreach (var card in tuning.Cards)
-                    if (build.Takeable(card)) cards[(int)card.Tier]++;
+                    if (ShuffleSchools.Dealable(card, build)) cards[(int)card.Tier]++;
 
             var weights = deck.Table(hand);
             var percent = new int[Tiers];
@@ -92,7 +100,13 @@ namespace GlimmerGrove.Shuffle
                 if (!kept) floor = null;
             }
 
-            return new ShuffleOdds(percent, cards, floor);
+            bool leaning = false;
+            if (build != null)
+                foreach (var card in tuning.Cards)
+                    if (ShuffleSchools.Dealable(card, build) && ShuffleSchools.Weight(card, build) != ShuffleSchools.PlainWeight)
+                        leaning = true;
+
+            return new ShuffleOdds(percent, cards, floor) { Leaning = leaning };
         }
 
         /// <summary>

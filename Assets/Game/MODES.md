@@ -1227,7 +1227,7 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `content.py`). **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
    kept as a typed read for the readers that only ever meant the Infinite lane, and `Tune` and the
    validator read the ramp.
-59d. **A card is a row of code and never content** (20): sixty-five of them (and the bonds they make, 59n) in four tiers (59m), told
+59d. **A card is a row of code and never content** (20): eighty-one of them (and the bonds they make, 59n, 59r) in four tiers (59m), told
    apart by *what they take* (37z asked of upgrades) - a common moves a number the player already
    has, a rare grants an ability the shelf sells or a new way to attack, an epic changes a rule, a
    legendary changes the shape of the run. One damage card and not three (5d). An id, a tier and a
@@ -1469,6 +1469,62 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    require a catalog-known level on both sides. Counts remain client-reported gameplay: neither
    arithmetic validation nor a merge proves that a wave was played. Held by `ShuffleRewardTests`,
    `SaveWiringTests`, and `functions/test/shuffle-rewards.mjs` over the same generated vectors.
+
+59r. **Schools: laser, poison, fire, frost and storm builds, each with a keystone and an ascension**
+   (2026-10-20, the owner: "players can go laser builds, poison builds, fire builds, frost builds ...
+   formed very hard ... truly rewarding once assembled ... maximum 2 ascension per run ... nothing
+   should make a run go infinite ... no raider ... 100% slowed and cannot walk ... truly rare"). **A
+   card's school is read off its effect** (`ShuffleSchools.Of`), so the shipped element cards count
+   with nothing written (kindling, wildfire, meteor; frostbite, shatter, slow march; toxic rounds;
+   pierce, death ray, laser core; chain arc, tesla, stunning blows). Sixteen cards were added, three
+   or four a school and one **keystone** each (legendary, once): focus lens, refractor, photon heart;
+   venom tips, rot, contagion, blight heart; fire trail, combust, inferno heart; cold snap, brittle,
+   winter heart; static charge, thunderclap, storm heart. **A build forms in three steps, each a
+   function of the cards held (59e)**: every copy of a school's ordinary card is a *point*; at
+   `AttuneAt` (3) points the keystone may be *dealt* (`ShuffleSchools.Dealable` - what the deck, the
+   odds and a refresh all ask); the keystone held with `AscendAt` (7) points unlocks the school's
+   **ascension**, a third kind of bond (`ShuffleBondKind.Ascension`, legendary, 1000 grade points):
+   the **laser grid** (a fence of light that cuts every body crossing it, a sky laser on the three
+   toughest), **necromancy** (a poisoned body rises as a ghoul - the fallen raider's own picture,
+   washed green - that climbs the hill and bursts on the horde), the **volcano** (it rumbles under
+   the thickest crowd, erupts lava bombs and pours a river down the crater's lane), the **ice age**
+   (the hill freezes solid and every body under a quarter of its health shatters) and the **lightning
+   twister** (`tempest`: a tornado of lightning down the busiest lane). **At most two keystones a
+   run** (`ShuffleBuild.Takeable`, a rule of the build), so at most two ascensions.
+   **The lean** (`ShuffleSchools.Weight`): within the tier a hand rolled, a card of a school the build
+   holds points in weighs 20% more per point, to +60% at three - measured at x1.54 for fire among
+   rares (`TheLeanMovesCardsWithinATierAndNeverATier`). **Within a tier only**, so a rarity's odds
+   never move, and a build of no school is dealt exactly as before (one pick, two rolls). The refresh's
+   odds panel (59p) says the lean in place of "equally likely" whenever it applies (`ShuffleOdds.Leaning`).
+   **Rare, calibrated, held** (`ShuffleSchoolTests.TheAscensionTableIsPrintedAndAscensionsStayRare`,
+   600 seeded runs): a run taking the first or a random card ascends almost never before wave 120
+   (0.5% by wave 60); a player chasing a school with every pick, 6.5% by wave 40, ~37% by 60, ~75% by
+   80; two ascensions ~2% by wave 60, ~25% by 80. **Never endless**: every school hit is struck in
+   tenths of a plain bolt or a share of the bolt that set it off, so it climbs with the damage cards
+   and never past the ramp - measured, every strike x1.75 under +75% damage
+   (`EverySchoolStrikeIsMeasuredOffTheBolt`); the one finishing blow (the ice age's shatter) takes a
+   body already under a quarter of its health. **Never a frozen hill**: every school hold is a
+   `SiegeRaider.Daze` (refused while a body still recovers, then `SiegeSchools.HoldRest` of walking,
+   twice a stun turret's), a chill never passes nine tenths, and on a build holding an element card
+   or a power a build's own stop (a wave's hourglass, a time stop) neither starts while another runs
+   nor inside the walk a thaw grants (`Thawed`, `MayStill`); the player's own hourglass charm is
+   theirs and never asked. Measured on immortal bodies under the coldest, stormiest build the deck can
+   deal: the longest hold 5.25 s, the most of a life held 53% (`NoBuildHoldsTheHillStill`). **The
+   Shuffle lane's alone, by the arsenal's locks** (59i): `SiegeBoard.Schools` returns on
+   `SiegeBoosts.AnySchool`, every raider field it writes is nought elsewhere, every roll is the build's
+   stream (41); shared code gained guarded hooks only (`Schooled` in `Augment`, `Afflict` in `Wound`,
+   `Rot` in `Swing`, `Departed` in `Perished`, `Schools` on the clock, `Thawed` in `Walk`). **Drawn by**
+   `SiegeView.Schools` through the arsenal's doors (`SchoolHit`, `SchoolVolley`): set pieces built once
+   and moved, transient light on the batched particle layer (`ShuffleFx`). **The hand** wears the
+   school's gem on the seat's corner and the points toward its ascension (`ShuffleChoiceOverlay.School`,
+   `ShuffleHandLayout.Badge*`); **the unlock** breaks one step past a legendary, in its element's
+   colour, gathering the keystone and the school's cards (`ShuffleUnlockOverlay`). Art: three pictures
+   hue-turned to their school by the tool (`make_shuffle_art.CARD_TURNS`, before the keyline), one
+   diamond per ascension. **Held by** `ShuffleSchoolTests`, `ShuffleSecretTests`, `ShuffleOddsTests`,
+   `render_shuffle.py --unlock all --measure`, `--points`, `render_shuffle_odds.py --measure`.
+   `firebase/seed/shuffle.json` revision 4 (the sixteen rows at their shipped figures, nothing else
+   moved) was **published 2026-10-20** after a snapshot of revision 3; an older client skips the
+   unknown cards (59l), so live builds play what they played. Next retune is revision 5.
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the

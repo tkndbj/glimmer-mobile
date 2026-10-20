@@ -4559,12 +4559,14 @@ def haloed(size):
     return Image.fromarray(out, "RGBA")
 
 
-def tile_of(root, number, size, round_to):
+def tile_of(root, number, size, round_to, turn=0):
     """One of the pack's skill icons, squared, rounded and keylined.
 
     **One cutter for every caller**, because the overcharge glyph and the hub's three marks are the
     same shape at two sizes - and two copies of a rounding is two answers to how a bought icon is
-    seated in this kit.
+    seated in this kit. `turn` rotates the picture's hue by that many degrees **before** the
+    keyline goes on (CLAUDE.md 44g: hue-rotate in the tool), so a picture recoloured for its card
+    still sits in the kit's own navy frame; nought, every caller before it, cuts what it always cut.
     """
     if root is None:
         return None
@@ -4579,6 +4581,14 @@ def tile_of(root, number, size, round_to):
     im = im.crop(((im.width - side) // 2, (im.height - side) // 2,
                   (im.width - side) // 2 + side, (im.height - side) // 2 + side))
     im = im.resize((size, size), Image.LANCZOS)
+
+    if turn % 360:
+        alpha = im.split()[3]
+        h, sat, v = im.convert("RGB").convert("HSV").split()
+        shift = int(round(turn % 360 * 256 / 360.0))
+        h = h.point(lambda x: (x + shift) % 256)
+        im = Image.merge("HSV", (h, sat, v)).convert("RGB")
+        im.putalpha(alpha)
 
     # A rounded mask, and a keyline in the interface kit's navy so it sits on a bright chassis the
     # way every other badge in this game does (44h's rule about a flat render on a cartoon board).

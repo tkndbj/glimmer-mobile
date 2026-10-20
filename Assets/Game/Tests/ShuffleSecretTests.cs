@@ -56,6 +56,16 @@ namespace GlimmerGrove.Tests
                     sorted.Sort(StringComparer.Ordinal);
                     Assert.IsTrue(recipes.Add(string.Join("+", sorted.ToArray())), $"secret {bond.Id} is another secret's recipe");
                 }
+                else if (bond.IsAscension)
+                {
+                    // An ascension names its school's keystone and asks for the school's points
+                    // (MODES.md 59r); `ShuffleSchoolTests` holds the rest of its shape.
+                    Assert.AreEqual(1, bond.Parts.Length, $"ascension {bond.Id} names {bond.Parts.Length} cards");
+                    Assert.IsTrue(ShuffleSchools.IsKeystone(ShuffleCards.Find(bond.Parts[0])), $"ascension {bond.Id} is not named for a keystone");
+                    Assert.AreEqual(bond.School, ShuffleSchools.Of(ShuffleCards.Find(bond.Parts[0])), $"ascension {bond.Id} names another school's keystone");
+                    Assert.AreEqual(ShuffleSchools.AscendAt, bond.Needs, bond.Id);
+                    Assert.AreEqual(ShuffleTier.Legendary, bond.Tier, bond.Id);
+                }
                 else
                 {
                     Assert.AreEqual(1, bond.Parts.Length, $"evolution {bond.Id} names {bond.Parts.Length} cards");
@@ -74,7 +84,8 @@ namespace GlimmerGrove.Tests
                 foreach (var bond in ShuffleBonds.All)
                 {
                     if (bond.Tier != tier) continue;
-                    if (bond.IsSecret) secret = true; else evolution = true;
+                    if (bond.IsSecret) secret = true;
+                    else if (bond.IsEvolution) evolution = true;
                 }
 
                 Assert.IsTrue(secret, $"no {tier} secret");
@@ -86,7 +97,7 @@ namespace GlimmerGrove.Tests
         public void EveryBondIsWordedInEveryLanguage()
         {
             string root = Path.Combine(TestJson.RepoRoot(), "Assets", "StreamingAssets", "Content", "loc");
-            string[] ui = { "ui.shuffle.secret_unlocked", "ui.shuffle.evolution_unlocked", "ui.shuffle.okay" };
+            string[] ui = { "ui.shuffle.secret_unlocked", "ui.shuffle.evolution_unlocked", "ui.shuffle.ascension_unlocked", "ui.shuffle.okay" };
 
             foreach (string file in Directory.GetFiles(root, "*.json"))
             {
@@ -205,14 +216,28 @@ namespace GlimmerGrove.Tests
 
             Take(build, "frostbite");
             Assert.IsTrue(ShuffleBonds.Advances(kindling, build), "kindling goes with frostbite and was not marked");
-            Assert.IsFalse(ShuffleBonds.Advances(frost, build), "a part already held was marked");
+            Assert.IsFalse(SecretMarked(frost, build), "a secret's part already held was marked for it");
             Assert.IsFalse(ShuffleBonds.Advances(heavy, build), "a card in no started secret was marked");
+
+            // **A second frostbite is marked for the frost ascension** (MODES.md 59r): every copy
+            // of a school's card is a step toward it, so a card held is marked again - for the
+            // school, never for a secret it already counts toward.
+            var into = new List<ShuffleBond>();
+            ShuffleBonds.Advanced(frost, build, into);
+            CollectionAssert.AreEqual(new[] { "ice_age" }, into.ConvertAll(b => b.Id), "a held frost card is marked for its ascension");
 
             // Shatter and slow march go with frostbite too (permafrost).
             Assert.IsTrue(ShuffleBonds.Advances(ShuffleCards.Find("shatter"), build));
 
             Take(build, "kindling");
-            Assert.IsFalse(ShuffleBonds.Advances(kindling, build), "an unlocked secret still marked its part");
+            Assert.IsFalse(SecretMarked(kindling, build), "an unlocked secret still marked its part");
+        }
+
+        static bool SecretMarked(ShuffleCard card, ShuffleBuild build)
+        {
+            var into = new List<ShuffleBond>();
+            ShuffleBonds.Advanced(card, build, into);
+            return into.Exists(b => b.IsSecret);
         }
 
         /// <summary>
@@ -230,12 +255,14 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, ShuffleBonds.Advanced(kindling, build, into));
             Assert.AreEqual("frostfire", into[0].Id);
 
+            // Wildfire starts two things kindling goes with: the fire dragon, and the fire school's
+            // ascension - in the catalog's order, the ascension last.
             Take(build, "wildfire");
             into.Clear();
-            Assert.AreEqual(2, ShuffleBonds.Advanced(kindling, build, into), "kindling goes with two started secrets");
-            CollectionAssert.AreEqual(new[] { "frostfire", "fire_dragon" }, into.ConvertAll(b => b.Id));
+            Assert.AreEqual(3, ShuffleBonds.Advanced(kindling, build, into), "kindling goes with two started secrets and its school");
+            CollectionAssert.AreEqual(new[] { "frostfire", "fire_dragon", "volcano" }, into.ConvertAll(b => b.Id));
 
-            Assert.AreEqual(2, ShuffleBonds.Advanced(kindling, build, null), "the count needs no list");
+            Assert.AreEqual(3, ShuffleBonds.Advanced(kindling, build, null), "the count needs no list");
         }
 
         /// <summary>
@@ -256,7 +283,7 @@ namespace GlimmerGrove.Tests
             {
                 Assert.IsTrue(File.Exists(Path.Combine(ui, bond.Mark + ".png")), $"{bond.Id}'s diamond '{bond.Mark}' was never cut");
 
-                if (!bond.IsSecret)
+                if (bond.IsEvolution)
                 {
                     Assert.AreEqual(ShuffleBond.EvolutionMark, bond.Mark, bond.Id);
                     continue;
@@ -316,6 +343,11 @@ namespace GlimmerGrove.Tests
                 { SiegePower.DiamondDust, SiegeVia.Dust },
                 { SiegePower.CometStorm, SiegeVia.Shard },
                 { SiegePower.PrismLance, SiegeVia.Prism },
+                { SiegePower.LaserGrid, SiegeVia.Orbital },
+                { SiegePower.Necromancy, SiegeVia.Ghoul },
+                { SiegePower.Volcano, SiegeVia.Lava },
+                { SiegePower.IceAge, SiegeVia.IceAge },
+                { SiegePower.Tempest, SiegeVia.Tempest },
             };
 
             var silent = new List<string>();
@@ -325,7 +357,8 @@ namespace GlimmerGrove.Tests
                 Assert.IsTrue(tags.TryGetValue(bond.Power, out var via), $"no tag named for {bond.Power}");
 
                 var run = new ShuffleRun(5u);
-                foreach (string part in bond.Parts) ShuffleTests.Load(run, part);
+                if (bond.IsAscension) ShuffleSchoolTests.Ascend(run, bond);
+                else foreach (string part in bond.Parts) ShuffleTests.Load(run, part);
                 Assert.IsTrue(run.Build.Boosts.Has(bond.Power), $"{bond.Id}'s cards did not unlock it");
 
                 var board = SiegeBoard.Build(ShuffleTests.Lane(), ShuffleTests.Breakers());
@@ -422,11 +455,19 @@ namespace GlimmerGrove.Tests
         {
             string Trace()
             {
+                // Every secret and evolution, and the two ascensions a run may hold (MODES.md 59r).
                 var run = new ShuffleRun(7u);
+                int ascended = 0;
                 foreach (var bond in ShuffleBonds.All)
-                    foreach (string part in bond.Parts) ShuffleTests.Load(run, part);
+                {
+                    if (!bond.IsAscension) foreach (string part in bond.Parts) ShuffleTests.Load(run, part);
+                    else if (ascended++ < ShuffleSchools.MostAscensions) ShuffleSchoolTests.Ascend(run, bond);
+                }
 
-                Assert.AreEqual(ShuffleBonds.All.Length, run.Build.Bonds.Count, "not every bond unlocked");
+                int ascensions = 0;
+                foreach (var bond in ShuffleBonds.All) if (bond.IsAscension) ascensions++;
+                Assert.AreEqual(ShuffleBonds.All.Length - ascensions + ShuffleSchools.MostAscensions, run.Build.Bonds.Count,
+                                "not every bond unlocked");
 
                 var board = SiegeBoard.Build(ShuffleTests.Lane(), ShuffleTests.Breakers());
                 board.Boosts = run.Build.Boosts;

@@ -49,6 +49,14 @@ namespace GlimmerGrove.Shuffle
 
         // The legendaries of this drop: a bigger hand, and a turret made a laser gun.
         Hand, Laser,
+
+        // The schools (MODES.md 59r, `ShuffleSchools`): each element's own cards, then its
+        // keystone - the one card its ascension names. Laser, poison, fire, frost, storm.
+        Focus, Refract, Photon,
+        Venom, Rot, Contagion, Blight,
+        Trail, Combust, Inferno,
+        ColdSnap, Brittle, Winter,
+        Static, Thunderclap, Conduct,
     }
 
     /// <summary>
@@ -123,7 +131,7 @@ namespace GlimmerGrove.Shuffle
     /// the board does, and a rule is a build (invariant 20).
     ///
     /// <para>
-    /// <b>Sixty-five cards in four tiers, and what separates them is <em>what they take</em></b>
+    /// <b>Eighty-one cards in four tiers, and what separates them is <em>what they take</em></b>
     /// (invariant 37z's rule about bosses, asked of upgrades): the common tier moves a number the
     /// player already has - weight, cadence, fuel, health; the rare tier grants the turrets an
     /// ability the shelf sells or a new way to attack; the epic tier changes a <em>rule</em> - a
@@ -249,6 +257,41 @@ namespace GlimmerGrove.Shuffle
             // (`SiegeBoard.Lasered`): magnitude is each bounce's share in tenths, extent how many
             // raiders one shot passes through.
             new ShuffleCard("laser_core",   ShuffleTier.Legendary, ShuffleEffect.Laser,       7, 4, 4, 2),
+
+            // ------------------------------------------------------------ the schools (MODES.md 59r)
+            // **Each element's own cards and its keystone** (the owner, 2026-10-20: laser, poison,
+            // fire, frost and storm builds, "formed very hard ... truly rewarding"). A card's school
+            // is read off its effect (`ShuffleSchools.Of`), so the shipped cards that already were
+            // an element - kindling, frostbite, toxic rounds, the laser core - count toward it with
+            // nothing written here. A keystone is legendary and taken once; it is dealt only once
+            // its school is attuned, and a run holds at most two (`ShuffleSchools`).
+
+            // laser: a beam that grows on one target, a prism off every few shots, every shot a laser.
+            // Three pictures are turned to their school's colour by the art tool (`CARD_TURNS`).
+            new ShuffleCard("focus_lens",    ShuffleTier.Rare,      ShuffleEffect.Focus,       20, 5, 3, 45),
+            new ShuffleCard("refractor",     ShuffleTier.Epic,      ShuffleEffect.Refract,      8, 6, 2, 1),
+            new ShuffleCard("photon_heart",  ShuffleTier.Legendary, ShuffleEffect.Photon,       6, 2, 1, 51),
+
+            // poison: venom that stacks, a weaker swing, a death that spreads it, a body that rots
+            new ShuffleCard("venom_tips",    ShuffleTier.Rare,      ShuffleEffect.Venom,        2, 3, 3, 52),
+            new ShuffleCard("rot",           ShuffleTier.Rare,      ShuffleEffect.Rot,         20, 0, 2, 49),
+            new ShuffleCard("contagion",     ShuffleTier.Epic,      ShuffleEffect.Contagion,    2, 1, 2, 43),
+            new ShuffleCard("blight_heart",  ShuffleTier.Legendary, ShuffleEffect.Blight,      30, 0, 1, 54),
+
+            // fire: burning ground, a body that bursts, a fire that leaps
+            new ShuffleCard("fire_trail",    ShuffleTier.Rare,      ShuffleEffect.Trail,        2, 25, 3, 99),
+            new ShuffleCard("combust",       ShuffleTier.Epic,      ShuffleEffect.Combust,     12, 30, 2, 24),
+            new ShuffleCard("inferno_heart", ShuffleTier.Legendary, ShuffleEffect.Inferno,      1, 10, 1, 22),
+
+            // frost: a freeze every few shots, a slowed body that breaks, a chill that piles up
+            new ShuffleCard("cold_snap",     ShuffleTier.Rare,      ShuffleEffect.ColdSnap,     6, 6, 3, 64),
+            new ShuffleCard("brittle",       ShuffleTier.Epic,      ShuffleEffect.Brittle,     20, 0, 2, 77),
+            new ShuffleCard("winter_heart",  ShuffleTier.Legendary, ShuffleEffect.Winter,       3, 5, 1, 78),
+
+            // storm: static that discharges, a thunderclap, lightning everywhere
+            new ShuffleCard("static_charge", ShuffleTier.Rare,      ShuffleEffect.Static,      10, 4, 3, 4),
+            new ShuffleCard("thunderclap",   ShuffleTier.Epic,      ShuffleEffect.Thunderclap, 15, 5, 2, 25),
+            new ShuffleCard("storm_heart",   ShuffleTier.Legendary, ShuffleEffect.Conduct,      4, 0, 1, 30),
         };
 
         /// <summary>

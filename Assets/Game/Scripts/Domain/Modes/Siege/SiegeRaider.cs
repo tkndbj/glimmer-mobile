@@ -462,6 +462,91 @@ namespace GlimmerGrove.Modes
             return true;
         }
 
+        // ------------------------------------------------------------------ the schools (MODES.md 59r)
+        // **What the Shuffle lane's element cards leave on a body** (`SiegeBoard.Schools`). Every
+        // field is nought on a body nothing of a school has touched, which is every body on every
+        // board but a Shuffle run holding one - so a chapter's raider is the raider it always was.
+
+        /// <summary>
+        /// Stacks of venom on this body, the seconds the dose has left, and the seconds until it
+        /// next bites (<see cref="SiegeSchools.VenomTick"/>, armed on the edge for <see cref="Sear"/>'s
+        /// reason). <b>Stacked, unlike a burn</b>, and that is the poison school: each stack bites,
+        /// so a body under steady fire carries more - up to the build's cap, so it is bounded.
+        /// </summary>
+        public int Venom;
+
+        public float Venomed, VenomSear;
+
+        /// <summary>Whether venom is on it right now. What the view drips green off.</summary>
+        public bool Envenomed => Alive && Venom > 0 && Venomed > 0f;
+
+        /// <summary>
+        /// Adds <paramref name="stacks"/> of venom, up to <paramref name="most"/>, and keeps the longer
+        /// of the dose's seconds. Refused for a body still in the wings, for <see cref="Hex"/>'s reason.
+        /// </summary>
+        public bool Envenom(int stacks, int most, float seconds)
+        {
+            if (!Alive || !OnTheHill || stacks <= 0 || most <= 0 || seconds <= 0f) return false;
+
+            if (Venom <= 0 || Venomed <= 0f)
+            {
+                Venom = 0;
+                VenomSear = SiegeSchools.VenomTick;
+            }
+
+            Venom = Math.Min(most, Venom + stacks);
+            if (seconds > Venomed) Venomed = seconds;
+            return true;
+        }
+
+        /// <summary>Seconds this body has burned without a break (<c>combust</c>), and whether it has burst already - a body bursts once.</summary>
+        public float Alit;
+
+        public bool Combusted;
+
+        /// <summary>Chills the winter heart has piled on this body since its last freeze.</summary>
+        public int Rime;
+
+        /// <summary>Static the storm cards have built on this body since its last discharge.</summary>
+        public int Charge;
+
+        /// <summary>
+        /// Seconds left of a freeze a frost card or the ice age laid - a stun, drawn as ice. What the
+        /// view encases a body in; a rule reads <see cref="Stun"/>, never this.
+        /// </summary>
+        public float Encased;
+
+        /// <summary>
+        /// Freezes it solid for <paramref name="seconds"/> - a <see cref="Stagger"/>, so refused while
+        /// it is still recovering from the last hold, which is what keeps a hill of frost walking -
+        /// answering whether it took.
+        /// </summary>
+        public bool Encase(float seconds)
+        {
+            if (!Daze(seconds)) return false;
+
+            Encased = seconds;
+            return true;
+        }
+
+        /// <summary>
+        /// <b>A school's hold</b> (MODES.md 59r): a stun for <paramref name="seconds"/>, refused while
+        /// the body is still recovering from the last hold of any kind - <see cref="Stagger"/>'s rule -
+        /// and followed by <see cref="SiegeSchools.HoldRest"/> of walking rather than
+        /// <c>SiegeTuning.StunRest</c>, because a school lays its holds on every hit and from the
+        /// sky as well: twice the rest is what keeps a hill of frost and lightning walking
+        /// (<c>ShuffleSchoolTests.NoBuildHoldsTheHillStill</c>). A stun turret's own stun is the
+        /// <see cref="Stagger"/> it always was.
+        /// </summary>
+        public bool Daze(float seconds)
+        {
+            if (!Alive || seconds <= 0f || Steady > 0f) return false;
+
+            Stun = seconds;
+            Steady = seconds + SiegeSchools.HoldRest;
+            return true;
+        }
+
         /// <summary>
         /// Drives this body back up the slope by <paramref name="share"/> of the hill, or as far
         /// as the crest, whichever is less.

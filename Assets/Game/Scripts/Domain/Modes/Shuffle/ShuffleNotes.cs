@@ -130,6 +130,13 @@ namespace GlimmerGrove.Shuffle
             { "bullet_hell", new Note(WB) },                // "twice as fast ... half the fuel"
             { "grand_hand", new Note(WM) },                 // "5 cards instead of 3"
             { "laser_core", new Note(None, M10) },
+
+            // the schools (MODES.md 59r)
+            { "focus_lens", new Note(None, ME) },           // the beam at its fullest
+            { "photon_heart", new Note(WE) },               // "2 more raiders"
+            { "rot", new Note(None, M) },
+            { "blight_heart", new Note(None, M) },
+            { "brittle", new Note(None, M) },
         };
 
         /// <summary>The figures <paramref name="card"/>'s note prints, slot by slot.</summary>

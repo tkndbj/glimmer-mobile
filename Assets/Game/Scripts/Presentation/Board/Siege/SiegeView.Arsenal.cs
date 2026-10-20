@@ -211,6 +211,9 @@ namespace GlimmerGrove
             // **A hit an unlocked power dealt** is drawn as the power (`SiegeView.Secrets`).
             if (SecretHit(shot, mob, to, source, tint, land)) return;
 
+            // **And one a school dealt**, as the element it is (`SiegeView.Schools`).
+            if (SchoolHit(shot, mob, to, source, tint, land)) return;
+
             switch (shot.Via)
             {
                 case SiegeVia.Splash:
@@ -523,9 +526,10 @@ namespace GlimmerGrove
                     Fused();
                     break;
 
-                // Every place an unlocked power set something off (`SiegeView.Secrets`).
+                // Every place an unlocked power or a school set something off
+                // (`SiegeView.Secrets`, `SiegeView.Schools`).
                 default:
-                    SecretVolley(volley);
+                    if (!SecretVolley(volley)) SchoolVolley(volley);
                     break;
             }
         }
@@ -1027,6 +1031,9 @@ namespace GlimmerGrove
 
             // And what an unlocked secret or evolution leaves standing (`SiegeView.Secrets`).
             Secrets(dt);
+
+            // And what a school leaves standing: flames, venom, ice, the ascensions (`SiegeView.Schools`).
+            Schools(dt);
         }
 
         // ------------------------------------------------------------------ the toxic pools

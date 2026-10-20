@@ -8442,6 +8442,10 @@
       "text": "Karty tej samej rzadkości mają równe szanse."
     },
     {
+      "key": "ui.shuffle.odds_lean",
+      "text": "W obrębie rzadkości każda posiadana karta żywiołu zwiększa szansę na jego karty o {0}%, maksymalnie o {1}%."
+    },
+    {
       "key": "shuffle.heavy_bolts.name",
       "text": "Ciężkie Pociski"
     },
@@ -8962,6 +8966,134 @@
       "text": "Zmienia wieżę w laser, który odbija się między najeźdźcami za {0}% obrażeń."
     },
     {
+      "key": "shuffle.focus_lens.name",
+      "text": "Soczewka skupiająca"
+    },
+    {
+      "key": "shuffle.focus_lens.note",
+      "text": "Trafienia w tego samego najeźdźcę tworzą promień, do {0}% obrażeń."
+    },
+    {
+      "key": "shuffle.refractor.name",
+      "text": "Refraktor"
+    },
+    {
+      "key": "shuffle.refractor.note",
+      "text": "Co kilka strzałów rozszczepia się w promienie na najtwardszych najeźdźców."
+    },
+    {
+      "key": "shuffle.photon_heart.name",
+      "text": "Serce fotonów"
+    },
+    {
+      "key": "shuffle.photon_heart.note",
+      "text": "Każdy strzał leci dalej jako laser przez 2 kolejnych najeźdźców."
+    },
+    {
+      "key": "shuffle.venom_tips.name",
+      "text": "Zatrute groty"
+    },
+    {
+      "key": "shuffle.venom_tips.note",
+      "text": "Strzały dodają jad, który kumuluje się na najeźdźcach."
+    },
+    {
+      "key": "shuffle.rot.name",
+      "text": "Zgnilizna"
+    },
+    {
+      "key": "shuffle.rot.note",
+      "text": "Otruci najeźdźcy uderzają wieże o {0}% słabiej."
+    },
+    {
+      "key": "shuffle.contagion.name",
+      "text": "Zaraza"
+    },
+    {
+      "key": "shuffle.contagion.note",
+      "text": "Otruty najeźdźca przekazuje jad dalej, gdy ginie."
+    },
+    {
+      "key": "shuffle.blight_heart.name",
+      "text": "Serce plagi"
+    },
+    {
+      "key": "shuffle.blight_heart.note",
+      "text": "Strzały dodają jad, a otruci najeźdźcy otrzymują o {0}% więcej obrażeń."
+    },
+    {
+      "key": "shuffle.fire_trail.name",
+      "text": "Ognisty ślad"
+    },
+    {
+      "key": "shuffle.fire_trail.note",
+      "text": "Strzały zostawiają płomienie na ziemi."
+    },
+    {
+      "key": "shuffle.combust.name",
+      "text": "Samozapłon"
+    },
+    {
+      "key": "shuffle.combust.note",
+      "text": "Najeźdźca, który płonie wystarczająco długo, wybucha."
+    },
+    {
+      "key": "shuffle.inferno_heart.name",
+      "text": "Serce piekieł"
+    },
+    {
+      "key": "shuffle.inferno_heart.note",
+      "text": "Strzały podpalają najeźdźców, a ogień przeskakuje między nimi."
+    },
+    {
+      "key": "shuffle.cold_snap.name",
+      "text": "Nagły mróz"
+    },
+    {
+      "key": "shuffle.cold_snap.note",
+      "text": "Co kilka strzałów zamraża najeźdźcę."
+    },
+    {
+      "key": "shuffle.brittle.name",
+      "text": "Kruchość"
+    },
+    {
+      "key": "shuffle.brittle.note",
+      "text": "Spowolnieni najeźdźcy otrzymują o {0}% więcej obrażeń."
+    },
+    {
+      "key": "shuffle.winter_heart.name",
+      "text": "Serce zimy"
+    },
+    {
+      "key": "shuffle.winter_heart.note",
+      "text": "Strzały schładzają, a dość chłodu zamraża najeźdźcę."
+    },
+    {
+      "key": "shuffle.static_charge.name",
+      "text": "Ładunek statyczny"
+    },
+    {
+      "key": "shuffle.static_charge.note",
+      "text": "Co kilka trafień najeźdźca i jego sąsiedzi dostają wstrząs."
+    },
+    {
+      "key": "shuffle.thunderclap.name",
+      "text": "Grom"
+    },
+    {
+      "key": "shuffle.thunderclap.note",
+      "text": "Co kilka strzałów piorun ogłusza grupę."
+    },
+    {
+      "key": "shuffle.storm_heart.name",
+      "text": "Serce burzy"
+    },
+    {
+      "key": "shuffle.storm_heart.note",
+      "text": "Każdy strzał przeskakuje na kolejnego najeźdźcę, a pioruny ogłuszają."
+    },
+    {
       "key": "ui.loadout.discount_badge",
       "text": "-{0}%"
     },
@@ -8990,12 +9122,20 @@
       "text": "Ewolucja odblokowana!"
     },
     {
+      "key": "ui.shuffle.ascension_unlocked",
+      "text": "Wyniesienie!"
+    },
+    {
       "key": "ui.shuffle.okay",
       "text": "OK"
     },
     {
       "key": "ui.shuffle.times",
       "text": "x{0}"
+    },
+    {
+      "key": "ui.shuffle.school_points",
+      "text": "{0}/{1}"
     },
     {
       "key": "ui.shuffle.info_title",
@@ -9196,6 +9336,46 @@
     {
       "key": "shuffle.evolution.prism_lance.note",
       "text": "Pryzmat strzela 6 promieniami w najsilniejszych najeźdźców."
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.name",
+      "text": "Siatka laserowa"
+    },
+    {
+      "key": "shuffle.ascension.laser_grid.note",
+      "text": "Laserowy płot tnie najeźdźców, a laser z nieba trafia najtwardszych."
+    },
+    {
+      "key": "shuffle.ascension.necromancy.name",
+      "text": "Nekromancja"
+    },
+    {
+      "key": "shuffle.ascension.necromancy.note",
+      "text": "Najeźdźcy zabici trucizną powstają jako ghule i wybuchają w hordzie."
+    },
+    {
+      "key": "shuffle.ascension.volcano.name",
+      "text": "Wulkan"
+    },
+    {
+      "key": "shuffle.ascension.volcano.note",
+      "text": "W tłumie wybucha wulkan i zalewa wzgórze lawą."
+    },
+    {
+      "key": "shuffle.ascension.ice_age.name",
+      "text": "Epoka lodowcowa"
+    },
+    {
+      "key": "shuffle.ascension.ice_age.note",
+      "text": "Całe wzgórze co jakiś czas zamarza, a słabi najeźdźcy pękają."
+    },
+    {
+      "key": "shuffle.ascension.tempest.name",
+      "text": "Piorunowe tornado"
+    },
+    {
+      "key": "shuffle.ascension.tempest.note",
+      "text": "Tornado piorunów przechodzi przez najbardziej zatłoczony tor."
     },
     {
       "key": "shuffle.grade.d",
