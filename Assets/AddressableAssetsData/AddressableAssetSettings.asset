@@ -737,6 +737,9 @@ MonoBehaviour:
     - Art/Fx/Siege/wane_muzzle
     - Art/Siege/hollow
     - Art/Fx/Siege/boom_burst
+    - Fx/Bench/Hits
+    - Fx/Bench/Muzzles
+    - Fx/Bench/Projectiles
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}
