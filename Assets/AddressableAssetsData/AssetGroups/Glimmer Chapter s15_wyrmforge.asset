@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s15_wyrmforge
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s15_wyrmforge
+  m_GUID: 8ce5cdd6057d4f04a8756510d9cda0d1
+  m_SerializeEntries:
+  - m_GUID: 40f5e098419f3b644aa62e40dc4f23f2
+    m_Address: Art/Map/map13_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4906c06098ad7bd4eab912d3bb48f1f3
+    m_Address: Art/Map/map13_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b3524b9e70eccf47bab16a7c40ce65e
+    m_Address: Art/Map/map13_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7772022e50149749a4e84df37ba8fd7
+    m_Address: Art/Map/map13_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 83f5053cb529ad745953b07b3f076420, type: 2}
+    - {fileID: 11400000, guid: 2084ede7dec7ae84b9589ad488520b56, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s15_wyrmforge_BundledAssetGroupSchema
+    - Glimmer Chapter s15_wyrmforge_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

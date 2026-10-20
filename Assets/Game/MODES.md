@@ -1151,6 +1151,27 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    (`map12`) is walked along its steel road (`TRACES[12]`, `GROUND[12]` at a tolerance of ten);
    twenty rungs reach over 35 marks, accepted as `map11`'s 31.
 
+37fg. **The thirteenth chapter is harder by the surge the owner named.** Wyrmforge
+   (`s15_wyrmforge`, order 158, levels 171-190, the owner's dragon forge, 2026-10-20) was
+   commissioned as "harder than the previous chapter, 90% health bonus", so its surge is **1.9**
+   (`Traded` row `(12, 19)`, under the 2.1 the ladder derives) and its crowd only leans on it: held
+   above Ironbastion's on every count and under tighter ceilings (`Tools/chapters/s15_wyrmforge.py`:
+   903 raiders +1%, 202 brutes +4%, 71 shields +3%, 22 bombers +10%). Measured: three-star embers
+   **19 of 180** against Ironbastion's 21, the strongest line **97** against 118, nothing walled;
+   the one-star line 3 against 12 is printed, not compared. `TheThirteenthChapterIsHarder` holds it
+   (`ForgeShare` 30, the owner's step share for the twelfth). **A shield column is the most
+   field-bound shape in the mode**: at 1.9 the strongest line held it 0 of 9 on eleven of fourteen
+   fields at any colours or surge (Ironbastion's own column holds 4 on its field), so a column is
+   probed on its field before it ships. **A sunlord walls a duel at 1.9**: never felled beside a
+   bonecaller or a thunderer, 1-2 of 9 beside a blightcaller whatever the colours or the lead-in -
+   so the doom sits this chapter out, and the duels are gravemaw + gorgon, warlord + colossus,
+   overlord + shackler and hollowking + warbringer, falling 8, 6, 6 and 3 of 9 (the middle two
+   brought from 2 and 1 by cogs). **The cast is the court again**: the table would otherwise wrap
+   onto the insects, and the court swings on every body and had not been drawn since the sixth
+   chapter. The curse and the void stone carry on. Its map (`map13`) is walked along its flagstone
+   road (`TRACES[13]`, read off the road mask's row runs; `GROUND[13]` at a tolerance of ten);
+   twenty rungs reach over 32 marks, accepted as `map12`'s 35.
+
 ## The Shuffle lane - the third track
 
 The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a

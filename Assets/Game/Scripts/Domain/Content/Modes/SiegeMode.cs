@@ -1212,9 +1212,17 @@ namespace GlimmerGrove.Content
         /// (every brute and bulwark swings), two chapters after Windwreck drew it. Appending it
         /// moves no shipped chapter onto a new cast and costs no art.
         /// </para>
+        /// <para>
+        /// <b>Thirteen, and the thirteenth is the court again.</b> Left alone the table would wrap
+        /// onto the insects a second time, the lightest crowd on the ladder for its hardest hill;
+        /// the court is the one whole cast every brute and bulwark of which swings that no chapter
+        /// has drawn since the sixth, and its skeleton knights in bone plate are the crowd the
+        /// dragon forge's painting asks for. Appending it moves no shipped chapter onto a new cast
+        /// and costs no art.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
                                             Insects, Reunion, Gathering, Armada, Vanguard,
-                                            Armada };
+                                            Armada, Court };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.

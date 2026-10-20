@@ -308,6 +308,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Armada, SiegeMode.CastFor(GameTrack.Main, 11),
                             "Ironbastion does not draw the armada");
 
+            // And the thirteenth wraps onto the court rather than the insects: the one whole cast
+            // that swings on every body and that no chapter had drawn since the sixth.
+            Assert.AreEqual(SiegeMode.Court, SiegeMode.CastFor(GameTrack.Main, 12),
+                            "Wyrmforge does not draw the court");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
 

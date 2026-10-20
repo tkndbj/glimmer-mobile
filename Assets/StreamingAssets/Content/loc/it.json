@@ -7838,6 +7838,170 @@
       "text": "Un signore del sole e un devastatore, insieme"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Fucina del drago"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Porta runica"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "Scudi e bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Cascata di lava"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "Una grande folla, bruti in ogni ondata"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Scala delle braci"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "Due colori, poi altri due, poi tutti e quattro"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Sporgenza della balista"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Bombardieri in ogni ondata"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Conca delle catene"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "Le fauci della tomba e una gorgone, insieme"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Pietra marchiata"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "Un colore alla volta, a valanga"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Roccia dell'incudine"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Quattro ondate sull'incudine"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Rastrelliera di spade"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Tre scudi in testa a ogni ondata"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "Torre del faro"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Quattro ondate, con bruti in ognuna"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Cuore della fornace"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "Un condottiero e un colosso, insieme"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Colata di scorie"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Due scudi in ogni ondata"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Guardia dello stendardo"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Scudi e bombe su una lunga salita"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Ponte di cenere"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Bombe e armature in ogni ondata"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Guglia runica"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "Bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "Martello del re"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "Un signore supremo e un incatenatore, insieme"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Guardiano di pietra"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Bruti di un colore, poi scudi dello stesso"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Ossa del drago"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Quattro ondate lungo le ossa del drago"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Fauci del drago"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "Un bombardiere guida ogni ondata"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Corona della fornace"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Tutto ciò che ha la fucina, in una volta"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Corona del drago"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "Un re vuoto e un portatore di guerra, insieme"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Favilla"
     },

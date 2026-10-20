@@ -7838,6 +7838,170 @@
       "text": "Pan słońca i niszczyciel, razem"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Smocza kuźnia"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Runiczna brama"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "Tarcze i osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Lawospad"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "Duży tłum, osiłki w każdej fali"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Schody żaru"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "Dwa kolory, potem dwa kolejne, potem wszystkie cztery"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Półka balisty"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Bombowcy w każdej fali"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Kotlina łańcuchów"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "Paszcza grobu i gorgona, razem"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Kamień piętna"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "Jeden kolor naraz, lawiną"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Skała kowadła"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Cztery fale przez kowadło"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Stojak na miecze"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Trzy tarcze na czele każdej fali"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "Wieża sygnałowa"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Cztery fale, osiłki w każdej"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Serce pieca"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "Wódz i kolos, razem"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Potok żużlu"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Dwie tarcze w każdej fali"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Straż sztandaru"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Tarcze i bomby na długiej wspinaczce"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Popielny most"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Bomby i pancerz w każdej fali"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Runiczna iglica"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "Osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "Młot króla"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "Władca i skuwacz, razem"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Kamienny strażnik"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Osiłki jednego koloru, potem tarcze tego koloru"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Kości smoka"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Cztery fale obok kości smoka"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Smocza paszcza"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "Bombowiec prowadzi każdą falę"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Korona kuźni"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Wszystko, co ma kuźnia, naraz"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Smocza korona"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "Pusty król i zwiastun wojny, razem"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Iskierka"
     },

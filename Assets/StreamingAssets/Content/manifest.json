@@ -441,6 +441,36 @@
       ]
     },
     {
+      "id": "s15_wyrmforge",
+      "version": 1,
+      "order": 158,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s15_runegate",
+        "s15_lavafall",
+        "s15_emberstair",
+        "s15_ballistaledge",
+        "s15_chainhollow",
+        "s15_brandstone",
+        "s15_anvilrock",
+        "s15_bladerack",
+        "s15_beacontower",
+        "s15_kilnheart",
+        "s15_slagrun",
+        "s15_bannerwatch",
+        "s15_ashbridge",
+        "s15_runespire",
+        "s15_kingshammer",
+        "s15_stonewarden",
+        "s15_wyrmbones",
+        "s15_dragonsjaw",
+        "s15_furnacecrown",
+        "s15_wyrmcrown"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

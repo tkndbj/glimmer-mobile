@@ -96,6 +96,14 @@ s12_neonhaven	neonhaven_map.png
 # saved as `ironbastion_map.png` - pass the folder it was saved in as --source. Drawn by
 # s14_ironbastion, and by whatever twelfth chapter comes next.
 s14_ironbastion	ironbastion_map.png
+# map13 - four strips, the owner's own painting (2026-10-20): a dragon forge in the sky - floating
+# rocks carrying smelting kilns, anvils and sword racks, watchtowers burning at the crest, a stone
+# king leaning on his hammer and a dragon's skeleton across the upper rocks, with lava falling off
+# every edge, joined by a flagstone road edged in bronze that crosses arched bridges between them.
+# One flattened 2048x8256 picture, supplied as `map2.png` and saved as `wyrmforge_map.png` - pass
+# the folder it was saved in as --source. Drawn by s15_wyrmforge, and by whatever thirteenth
+# chapter comes next.
+s15_wyrmforge	wyrmforge_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

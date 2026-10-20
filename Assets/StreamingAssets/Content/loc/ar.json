@@ -7838,6 +7838,170 @@
       "text": "سيد الشمس وحاصد، معا"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "مصهر التنين"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "بوابة الرونات"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "حواجز وعمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "شلال الحمم"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "حشد كبير، وعمالقة في كل موجة"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "درج الجمر"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "لونان، ثم لونان آخران، ثم الأربعة"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "حافة المنجنيق"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "مفجرون في كل موجة"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "وادي السلاسل"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "فم القبور وغرغون، معا"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "حجر الوسم"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "لون واحد في كل مرة، كالسيل"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "صخرة السندان"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "أربع موجات عبر السندان"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "رف السيوف"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "ثلاثة حواجز في مقدمة كل موجة"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "برج المنارة"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "أربع موجات، وعمالقة في كل منها"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "قلب الفرن"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "أمير حرب وعملاق أعظم، معا"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "مجرى الخبث"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "حاجزان في كل موجة"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "حراسة الراية"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "حواجز وقنابل في صعود طويل"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "جسر الرماد"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "قنابل ودروع في كل موجة"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "مسلة الرونات"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "عمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "مطرقة الملك"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "سيد أعظم ومقيد، معا"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "الحارس الحجري"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "عمالقة من لون واحد، ثم حواجز من لونه"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "عظام التنين"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "أربع موجات بجوار عظام التنين"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "فك التنين"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "مفجر يقود كل موجة"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "تاج الأتون"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "كل ما يملكه المصهر، دفعة واحدة"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "تاج التنين"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "ملك أجوف وجالب حرب، معا"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "شرارة الجمر"
     },

@@ -7838,6 +7838,170 @@
       "text": "Um senhor do sol e um devastador, juntos"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Forja do Dragão"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Portão rúnico"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "Escudos e brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Cascata de lava"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "Uma grande multidão, brutos em cada onda"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Escada de brasas"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "Duas cores, depois outras duas, depois as quatro"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Beiral da balista"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Bombardeiros em cada onda"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Vale das correntes"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "Uma boca da cova e uma górgona, juntas"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Pedra marcada"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "Uma cor por vez, em avalanche"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Rocha da bigorna"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Quatro ondas sobre a bigorna"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Suporte de espadas"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Três escudos à frente de cada onda"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "Torre do farol"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Quatro ondas, com brutos em cada uma"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Coração do forno"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "Um senhor da guerra e um colosso, juntos"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Rio de escória"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Dois escudos em cada onda"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Vigia do estandarte"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Escudos e bombas numa longa subida"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Ponte de cinzas"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Bombas e armadura em cada onda"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Agulha rúnica"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "Brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "Martelo do rei"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "Um soberano e um acorrentador, juntos"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Guardião de pedra"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Brutos de uma cor, depois escudos dessa cor"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Ossos do dragão"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Quatro ondas junto aos ossos do dragão"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Mandíbula do dragão"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "Um bombardeiro lidera cada onda"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Coroa da fornalha"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Tudo o que a forja tem, de uma vez"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Coroa do dragão"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "Um rei oco e um arauto da guerra, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Faisquinha"
     },

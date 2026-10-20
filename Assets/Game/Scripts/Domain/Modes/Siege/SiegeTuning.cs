@@ -2979,9 +2979,16 @@ namespace GlimmerGrove.Modes
         /// <c>TheTwelfthChapterIsHarder</c> holds the pair: under Neonhaven on the good line and
         /// the strongest, and not a wall.
         /// </para>
+        /// <para>
+        /// <b>A sixth row: the thirteenth chapter deals 1.9</b>, two tenths over the twelfth and
+        /// under the 2.1 the ladder would give it - the owner's brief on 2026-10-20 named the
+        /// figure: "harder than the previous chapter, 90% health bonus", on a crowd heavier than
+        /// Ironbastion's on every count. <c>TheThirteenthChapterIsHarder</c> holds the pair: under
+        /// Ironbastion on the good line and the strongest, and not a wall.
+        /// </para>
         /// </summary>
         public static readonly (int Ordinal, int Tenths)[] Traded =
-            { (7, 14), (8, 15), (9, 16), (10, 15), (11, 17) };
+            { (7, 14), (8, 15), (9, 16), (10, 15), (11, 17), (12, 19) };
 
         /// <summary>
         /// A health figure at a share of itself, in per cent, never under one - the one place a

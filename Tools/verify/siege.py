@@ -331,7 +331,10 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: it at 1.5 the owner found it "a little easy", and chose 1.7 over the measured 1.6. At 1.7
 #: three-star embers hold 21 of 180 and the strongest line 118, against Neonhaven's 64 and 151
 #: (`TheTwelfthChapterIsHarder`).
-TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17}
+#: The thirteenth deals 1.9, two tenths over the twelfth and under the 2.1 the ladder derives: the
+#: owner's brief of 2026-10-20 named the figure - "harder than the previous chapter, 90% health
+#: bonus" - on a crowd held above Ironbastion's on every count (`TheThirteenthChapterIsHarder`).
+TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19}
 
 
 def toughness_for(ordinal):
@@ -476,6 +479,12 @@ STAR_FACTORS = {
     #: and the crowd, so the same share asks for the same quality of play on a bigger hill.
     #: Provisional until the owner's sweep reads `TheTwelfthChapterIsHarder`.
     12: (0.38, 0.52),
+
+    #: Wyrmforge, a heavier crowd again at 1.9 of surge. **The same lines, for Ironbastion's
+    #: reason**: a line is a share of par, and par carries the surge and the crowd, so the same
+    #: share asks for the same quality of play on a bigger hill.
+    #: Provisional until the owner's sweep reads `TheThirteenthChapterIsHarder`.
+    13: (0.38, 0.52),
 }
 
 

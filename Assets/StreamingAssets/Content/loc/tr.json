@@ -7838,6 +7838,170 @@
       "text": "Bir güneş efendisi ve bir yıkıcı, birlikte"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Ejder Ocağı"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Rün Kapısı"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "İlk aşamadan itibaren kalkanlar ve devler"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Lav Şelalesi"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "Büyük bir kalabalık, her aşamada devler"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Kor Merdiveni"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "İki renk, sonra iki renk daha, sonra dördü birden"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Mancınık Çıkıntısı"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Her aşamada bombacılar"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Zincir Çukuru"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "Bir mezar ağzı ve bir gorgon, birlikte"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Damga Taşı"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "Her seferinde bir renk, sel gibi"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Örs Kayası"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Örsün üstünden dört aşama"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Kılıç Rafı"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Her aşamanın başında üç kalkan"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "İşaret Kulesi"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Dört aşama, her birinde devler"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Fırın Yüreği"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "Bir savaş beyi ve bir dev heykel, birlikte"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Cüruf Akıntısı"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Her aşamada iki kalkan"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Sancak Nöbeti"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Uzun bir tırmanışta kalkanlar ve bombalar"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Kül Köprüsü"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Her aşamada bombalar ve zırh"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Rün Sivrisi"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "İlk aşamadan itibaren devler"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "Kral Çekici"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "Bir büyük efendi ve bir zincirci, birlikte"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Taş Muhafız"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Tek renkten devler, sonra o renkten kalkanlar"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Ejder Kemikleri"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Ejderin kemiklerinin yanından dört aşama"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Ejder Çenesi"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "Her aşamayı bir bombacı yönetir"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Ocak Tacı"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Ocağın elindeki her şey, bir arada"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Ejder Tacı"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "Bir oyuk kral ve bir savaş habercisi, birlikte"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Kıvılcımcık"
     },

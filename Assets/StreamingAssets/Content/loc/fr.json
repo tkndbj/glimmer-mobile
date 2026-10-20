@@ -7838,6 +7838,170 @@
       "text": "Un seigneur soleil et un ravageur, ensemble"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Forge du dragon"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Porte runique"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "Des boucliers et des brutes dès la première vague"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Chute de lave"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "Une grande foule, des brutes dans chaque vague"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Escalier des braises"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "Deux couleurs, puis deux autres, puis les quatre"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Corniche de la baliste"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Des bombardiers dans chaque vague"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Creux des chaînes"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "Une gueule du tombeau et une gorgone, ensemble"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Pierre marquée"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "Une couleur à la fois, en avalanche"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Rocher de l'enclume"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Quatre vagues sur l'enclume"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Râtelier d'épées"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Trois boucliers en tête de chaque vague"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "Tour du phare"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Quatre vagues, des brutes dans chacune"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Cœur du four"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "Un chef de guerre et un colosse, ensemble"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Coulée de scories"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Deux boucliers dans chaque vague"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Guet de la bannière"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Boucliers et bombes sur une longue montée"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Pont de cendres"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Bombes et armure dans chaque vague"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Flèche runique"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "Des brutes dès la première vague"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "Marteau du roi"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "Un seigneur suprême et un enchaîneur, ensemble"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Gardien de pierre"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Des brutes d'une couleur, puis des boucliers de cette couleur"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Os du dragon"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Quatre vagues le long des os du dragon"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Mâchoire du dragon"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "Un bombardier mène chaque vague"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Couronne du fourneau"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Tout ce que la forge a, d'un coup"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Couronne du dragon"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "Un roi creux et un porte-guerre, ensemble"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Flammèche"
     },

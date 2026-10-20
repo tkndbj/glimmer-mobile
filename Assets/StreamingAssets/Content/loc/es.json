@@ -7838,6 +7838,170 @@
       "text": "Un señor del sol y un devastador, juntos"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Forja del dragón"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Puerta rúnica"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "Escudos y brutos desde la primera oleada"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Cascada de lava"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "Una gran multitud, brutos en cada oleada"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Escalera de brasas"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "Dos colores, luego otros dos, luego los cuatro"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Cornisa de la balista"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Bombarderos en cada oleada"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Hondonada de cadenas"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "Una fauce de la tumba y una gorgona, juntas"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Piedra marcada"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "Un color cada vez, en avalancha"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Roca del yunque"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Cuatro oleadas sobre el yunque"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Estante de espadas"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Tres escudos al frente de cada oleada"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "Torre del faro"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Cuatro oleadas, con brutos en cada una"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Corazón del horno"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "Un caudillo y un coloso, juntos"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Río de escoria"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Dos escudos en cada oleada"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Guardia del estandarte"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Escudos y bombas en una larga subida"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Puente de ceniza"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Bombas y armadura en cada oleada"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Aguja rúnica"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "Brutos desde la primera oleada"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "Martillo del rey"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "Un señor supremo y un encadenador, juntos"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Guardián de piedra"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Brutos de un color, y luego escudos de ese color"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Huesos del dragón"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Cuatro oleadas junto a los huesos del dragón"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Fauces del dragón"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "Un bombardero encabeza cada oleada"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Corona del horno"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Todo lo que tiene la forja, a la vez"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Corona del dragón"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "Un rey hueco y un heraldo de guerra, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Chispita"
     },

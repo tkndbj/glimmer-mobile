@@ -7838,6 +7838,170 @@
       "text": "A sunlord and a harrower, together"
     },
     {
+      "key": "chapter.s15_wyrmforge.name",
+      "text": "Wyrmforge"
+    },
+    {
+      "key": "level.s15_runegate.name",
+      "text": "Rune Gate"
+    },
+    {
+      "key": "level.s15_runegate.tagline",
+      "text": "Shields and brutes from the first wave"
+    },
+    {
+      "key": "level.s15_lavafall.name",
+      "text": "Lavafall"
+    },
+    {
+      "key": "level.s15_lavafall.tagline",
+      "text": "A big crowd, brutes in every wave"
+    },
+    {
+      "key": "level.s15_emberstair.name",
+      "text": "Ember Stair"
+    },
+    {
+      "key": "level.s15_emberstair.tagline",
+      "text": "Two colours, then two more, then all four"
+    },
+    {
+      "key": "level.s15_ballistaledge.name",
+      "text": "Ballista Ledge"
+    },
+    {
+      "key": "level.s15_ballistaledge.tagline",
+      "text": "Bombers in every wave"
+    },
+    {
+      "key": "level.s15_chainhollow.name",
+      "text": "Chain Hollow"
+    },
+    {
+      "key": "level.s15_chainhollow.tagline",
+      "text": "A gravemaw and a gorgon, together"
+    },
+    {
+      "key": "level.s15_brandstone.name",
+      "text": "Brand Stone"
+    },
+    {
+      "key": "level.s15_brandstone.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s15_anvilrock.name",
+      "text": "Anvil Rock"
+    },
+    {
+      "key": "level.s15_anvilrock.tagline",
+      "text": "Four waves across the anvil"
+    },
+    {
+      "key": "level.s15_bladerack.name",
+      "text": "Blade Rack"
+    },
+    {
+      "key": "level.s15_bladerack.tagline",
+      "text": "Three shields at the head of every wave"
+    },
+    {
+      "key": "level.s15_beacontower.name",
+      "text": "Beacon Tower"
+    },
+    {
+      "key": "level.s15_beacontower.tagline",
+      "text": "Four waves, brutes in every one"
+    },
+    {
+      "key": "level.s15_kilnheart.name",
+      "text": "Kiln Heart"
+    },
+    {
+      "key": "level.s15_kilnheart.tagline",
+      "text": "A warlord and a colossus, together"
+    },
+    {
+      "key": "level.s15_slagrun.name",
+      "text": "Slag Run"
+    },
+    {
+      "key": "level.s15_slagrun.tagline",
+      "text": "Two shields in every wave"
+    },
+    {
+      "key": "level.s15_bannerwatch.name",
+      "text": "Banner Watch"
+    },
+    {
+      "key": "level.s15_bannerwatch.tagline",
+      "text": "Shields and bombs on a long climb"
+    },
+    {
+      "key": "level.s15_ashbridge.name",
+      "text": "Ash Bridge"
+    },
+    {
+      "key": "level.s15_ashbridge.tagline",
+      "text": "Bombs and plate in every wave"
+    },
+    {
+      "key": "level.s15_runespire.name",
+      "text": "Rune Spire"
+    },
+    {
+      "key": "level.s15_runespire.tagline",
+      "text": "Brutes from the very first wave"
+    },
+    {
+      "key": "level.s15_kingshammer.name",
+      "text": "King's Hammer"
+    },
+    {
+      "key": "level.s15_kingshammer.tagline",
+      "text": "An overlord and a shackler, together"
+    },
+    {
+      "key": "level.s15_stonewarden.name",
+      "text": "Stone Warden"
+    },
+    {
+      "key": "level.s15_stonewarden.tagline",
+      "text": "Brutes of one colour, then shields of it"
+    },
+    {
+      "key": "level.s15_wyrmbones.name",
+      "text": "Wyrm Bones"
+    },
+    {
+      "key": "level.s15_wyrmbones.tagline",
+      "text": "Four waves past the dragon's bones"
+    },
+    {
+      "key": "level.s15_dragonsjaw.name",
+      "text": "Dragon's Jaw"
+    },
+    {
+      "key": "level.s15_dragonsjaw.tagline",
+      "text": "A bomber leads every wave"
+    },
+    {
+      "key": "level.s15_furnacecrown.name",
+      "text": "Furnace Crown"
+    },
+    {
+      "key": "level.s15_furnacecrown.tagline",
+      "text": "Everything the forge has, at once"
+    },
+    {
+      "key": "level.s15_wyrmcrown.name",
+      "text": "Wyrm Crown"
+    },
+    {
+      "key": "level.s15_wyrmcrown.tagline",
+      "text": "A hollow king and a warbringer, together"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },

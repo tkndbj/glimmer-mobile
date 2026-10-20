@@ -3155,6 +3155,8 @@ CHAPTER_CASTS = {
     "s12_neonhaven": "vanguard",
     # The twelfth chapter wraps onto the armada again: no sixth square exists (`SiegeMode.MainCasts`).
     "s14_ironbastion": "armada",
+    # The thirteenth wraps onto the court rather than the insects (`SiegeMode.MainCasts`).
+    "s15_wyrmforge": "court",
     "s02_endlesswatch": "medley",
 }
 

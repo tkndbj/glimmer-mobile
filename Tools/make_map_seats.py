@@ -292,6 +292,9 @@ NUDGE = {
 #:
 #: **`map12` accepts every rung for the same reason**: its steel road switches back across the
 #: middle of four strips a dozen times and crosses six decks, so twenty rungs cannot all clear.
+#:
+#: **`map13` accepts every rung for the same reason**: its flagstone road switches back across the
+#: middle of four strips eighteen times, so twenty rungs on it cannot all keep their marks clear.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
@@ -301,6 +304,7 @@ ACCEPTED_OVERLAPS = {
     10: True,
     11: True,
     12: True,
+    13: True,
 }
 
 
@@ -459,6 +463,20 @@ TRACES = {
             (840, 760), (600, 530), (1260, 160), (1040, 0),
         ),
     ),
+    #: `map13` is the owner's dragon forge (2026-10-20): a road of grey flagstones edged in
+    #: bronze, switching back eighteen times up a stack of floating rocks - kilns, anvils, a stone
+    #: king and a dragon's skeleton beside it, lava falling off every edge - and crossing between
+    #: them on arched stone bridges and one short stair. Only the flagstone is listed as ground
+    #: (`GROUND[13]`); the bends were read off the mask's own row runs, one corner each, and the
+    #: samples snap to the middle of the stone between its two bronze edges.
+    13: dict(
+        size=(2048, 8256),
+        bends=(
+            (300, 8256), (1150, 7700), (1620, 7480), (600, 6850), (1430, 6300), (740, 5900),
+            (1480, 5300), (720, 4750), (1490, 4300), (1030, 3990), (1490, 3700), (590, 3220),
+            (1620, 2500), (700, 1800), (1530, 1180), (630, 520), (1250, 110), (1066, 0),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -584,6 +602,13 @@ GROUND = {
     # along `TRACES[12]` and never further than eight from one of these. The rock tops beside it
     # are warm, (138, 114, 108), twenty-four apart in red, so it is read at a tolerance of ten.
     12: [(114, 109, 119), (117, 114, 126)],
+
+    # `map13` is the dragon forge, and its ground is its **flagstone road** and nothing else: one
+    # flat grey, (145, 118, 109) where the lava lights it at the foot and (137, 117, 110) under the
+    # storm at the head - sampled at the middle of every leg of `TRACES[13]`, every one within four
+    # of these. The statue, the bones and the runestones carry the same grey in patches and are
+    # never near the line; the sky's nearest dusk, (126, 101, 94), is sixteen off it.
+    13: [(145, 118, 109), (137, 117, 110)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -619,6 +644,7 @@ STREAM = {
     10: [],
     11: [],
     12: [],
+    13: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -691,6 +717,12 @@ VOID = {
     # searched); the mauve nearest the plate, (128, 105, 113), is thirteen from it in red.
     12: [(80, 86, 111), (93, 98, 119), (91, 78, 88), (128, 105, 113), (151, 110, 106),
          (196, 116, 88), (210, 117, 81)],
+
+    # `map13`'s void is a sky running storm teal at the head through dusk and ember orange to
+    # blood red at the foot. Subtracted from the road at its own tolerance only, for `map9`'s
+    # reason (it is walked, not searched).
+    13: [(54, 74, 81), (67, 89, 93), (103, 98, 93), (119, 100, 86), (126, 101, 94),
+         (148, 87, 68), (135, 66, 59), (98, 41, 43), (118, 35, 31), (131, 38, 34)],
 }
 
 #: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
@@ -724,7 +756,7 @@ ENCLOSED = {10}
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10}
+TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10}
 DEFAULT_TOLERANCE = 26
 
 

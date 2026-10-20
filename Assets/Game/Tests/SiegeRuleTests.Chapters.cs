@@ -299,6 +299,37 @@ namespace GlimmerGrove.Tests
             new Rung("s14_highcommand", new[] { "yrgybbry", "rbggrybg", "ryybbgrr", "byrgbyrg", "ygbrgrby" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#ggrbyRGbyrg", "rgbyRGbyrgbyRG" }, "sunlord:g+harrower:r", 50, 17, 38, 52, "plsfha", true, true),
         };
 
+        /// <summary>
+        /// Wyrmforge, the thirteenth chapter: the owner's dragon forge in the sky, twenty rungs, a
+        /// duel on every fifth, nine tenths of surge (the owner's "90% health bonus", two over
+        /// Ironbastion) and a crowd heavier than Ironbastion's on every count, the court cast again,
+        /// and the curse and the void stone carried on - every rung deals both. Held to
+        /// `s15_wyrmforge.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Wyrmforge =
+        {
+            new Rung("s15_runegate", new[] { "ybygbrgr", "ygrrgybr", "ggybyrry", "brrgbbrg", "bgbggbyy" }, "rgby", "rgby", new[] { "rgbyRGby#rgbyrgb", "rgby#bRGby!rgbyRG", "rgBY#y#grgbyRGbyr" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_lavafall", new[] { "rrgbbyrb", "rygrbgrr", "bgybgyby", "bybgyrgb", "gryrrbgg" }, "rgby", "rgby", new[] { "rgby#rgbyRGbyrgby", "rgbyRGby#rrgbyRGby", "rgbyRGbyrgBY#grgb" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_emberstair", new[] { "rgyygryr", "ybrbggbg", "grybyrgb", "yybrgbyy", "rbgrbrrb" }, "rgby", "rgby", new[] { "rrggRGrrgg#rrg", "bbyyBYbbyy#bby", "rgbyRGBY#r#bgyrgby" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_ballistaledge", new[] { "gbgybrgb", "yrygrbyr", "ggygbrgy", "grbryggr", "bybrbryr" }, "rgby", "rgby", new[] { "rgbyRGby!rRGbyrg", "rgBY#g!bRGby!yrg", "rgby!g#rRGbyRGby!b" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_chainhollow", new[] { "ggyrgrgb", "ybrbgbyg", "rrgbrrgb", "gbgyybyr", "yryrrbby" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#b!gRGbyRGb", "rgBY#y#gRGbyrg" }, "gravemaw:r+gorgon:y", 35, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_brandstone", new[] { "bbgyyrgy", "grrbyggr", "yygbrbyb", "bbrgyrbr", "rryybryb" }, "rgby", "rgby", new[] { "bbBBBbbbbb#brrr", "yyYYYyyyyy#yggg", "rrRR#rrrrGGG#gggg" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_anvilrock", new[] { "gyyrgrbb", "rrgbyyby", "bggrbygr", "ygrygrry", "yrbrbgbg" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#r#yRGbyRGb", "rgby!bbgRG#grrby", "rgbyRGby#rgbyRG" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_bladerack", new[] { "rggyryby", "yyrbrgry", "ybrybgbg", "bggbbryy", "rrbrygyr" }, "rgby", "rgby", new[] { "#y#r#gRGBYrgbyrg", "#g#b#rRGbyrgbyrgb", "#b#y#rRGbyrgbyrg" }, "", 25, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_beacontower", new[] { "gyyrrbby", "rbbyggyr", "rgrrbyrg", "gbgrgryb", "bygybygb" }, "rgby", "rgby", new[] { "rgby#rgbyRGbyrgb", "rgby#brgbyRGbyr", "rgby#g!yrgBYrgby", "rgbyrgbyRGBYrgb" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_kilnheart", new[] { "bgyybbrg", "gbrgbyry", "rybrgygr", "ggybrbgr", "rbyrgrbg" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#rRGbyrgbRG", "rgby#gRGbyrgb" }, "warlord:g+colossus:b", 50, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_slagrun", new[] { "grrbgbrb", "gbggybrg", "ybrryygg", "rgybbrbb", "rrggrbyy" }, "rgby", "rgby", new[] { "rgby#g#bRGby!rgby", "rgby#r#yRGBYrgbyr", "rgBY#y#rRGbyrgby" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_bannerwatch", new[] { "rgybybyb", "ggygbbry", "rbbygrrb", "grbrbygg", "yygyrrbg" }, "rgby", "rgby", new[] { "rgbyrgbyRGby!rgb", "rgBY#b#yrgbyRGbyr", "rgby!g#rRGbyrgBYby" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_ashbridge", new[] { "rgrybgyy", "bygrbgrg", "bggbgbbr", "rryyrrgg", "rbbygyyr" }, "rgby", "rgby", new[] { "rgby#b!yRGbyrgby", "rgby#g#r!yRGbyrgb", "rgBY!r#gRGbyrgBY" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_runespire", new[] { "grybybgb", "byyrgyrg", "ygbbrybg", "rgrygrrb", "rbgybbgr" }, "rgby", "rgby", new[] { "rgbyRGby#rgbyrgb", "rgbyRGby#bRGbyrg", "RGbyrgby#yrgbyrgBY" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_kingshammer", new[] { "gybbyggb", "grgrrbyb", "yygbygyr", "rbrggbrr", "yyrgybby" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#gRGbyRGb", "rgBY#rRGbyrgb" }, "overlord:y+shackler:r", 45, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_stonewarden", new[] { "bygbrbyr", "yrrggryb", "yrrybyrg", "ggbbygby", "brybgbry" }, "rgby", "rgby", new[] { "rrRRR#rrrrggy", "yyYYY#yyyyy#yb", "bbBBB#bbbbgg#gg" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_wyrmbones", new[] { "rrbbgrbg", "ggryrbyy", "gbyybgyr", "ygrbgybg", "byrgyrbg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrb", "rgby#yyrgbyRGby", "rgby#g#b!rrgbyRG", "RGBYrgbyRGbyrg" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_dragonsjaw", new[] { "gryrgbgy", "bbyrbrbb", "rggbygry", "rgryrbyr", "byygbybr" }, "rgby", "rgby", new[] { "!yrgbyRGbyrgbyRG", "!rrgby#gRGby!brgb", "!grgBY#bRGbyrgBYy" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_furnacecrown", new[] { "bybyrgrb", "rgrbgyyg", "rgbyrygg", "gbrgygry", "bygbbrrb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGbyg", "rgby#r#g#yRGby!rgb", "rgby!b#yRGbyrgBYRG" }, "", 20, 19, 38, 52, "plsfha", true, true),
+            new Rung("s15_wyrmcrown", new[] { "yrrybbrg", "gybgrygy", "grbrbggr", "bbrybryr", "ygybggyb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#yyrbyRGbyr", "rgbyRGbyrgbyRG" }, "hollowking:y+warbringer:g", 50, 19, 38, 52, "plsfha", true, true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -523,6 +554,7 @@ namespace GlimmerGrove.Tests
             ("Windwreck", Windwreck),
             ("Neonhaven", Neonhaven),
             ("Ironbastion", Ironbastion),
+            ("Wyrmforge", Wyrmforge),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line, bool walls = true)
@@ -2147,6 +2179,91 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         const int StepShare = 30;
+
+        /// <summary>
+        /// **The thirteenth chapter is harder than the twelfth, and not a wall** - the owner's brief
+        /// of 2026-10-20, "harder than the previous chapter, 90% health bonus", measured as the same
+        /// pair of bounds <see cref="TheTwelfthChapterIsHarder"/> holds the twelfth to.
+        ///
+        /// <para>
+        /// <b>Harder</b>: on three-star embers it holds strictly fewer of its runs than Ironbastion
+        /// does, and on the strongest line no more; both chapters are twenty rungs, so a count is a
+        /// share. <b>Not a wall</b>: each of those lines keeps at least
+        /// <see cref="ForgeShare"/> per cent of what it wins on Ironbastion, and the strongest line
+        /// wins every rung at some rhythm.
+        /// </para>
+        /// <para>
+        /// <b>The one-star workhorse is printed and deliberately not compared</b>, for
+        /// <see cref="TheEleventhChapterIsALittleHarder"/>'s reason.
+        /// </para>
+        /// <para>
+        /// <b>Measured on 2026-10-20</b>, at the shipped surge of 1.9: three-star embers 19 of 180
+        /// against Ironbastion's 21, the strongest line 97 against 118 with nothing walled, and the
+        /// one-star workhorse 3 against 12. The first cut walled one rung (the shield column, 0 of 9
+        /// on the strongest line at any colours or surge on its field), fixed by its field.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheThirteenthChapterIsHarder()
+        {
+            var bought = Play(Wyrmforge, Bought());
+            var before = Play(Ironbastion, Bought());
+            var upgraded = Play(Wyrmforge, Starred(Workhorse, 3));
+            var upgradedBefore = Play(Ironbastion, Starred(Workhorse, 3));
+            var strong = Play(Wyrmforge, Strongest());
+            var strongBefore = Play(Ironbastion, Strongest());
+
+            var faults = new List<string>();
+
+            // Harder: fewer wins than Ironbastion on the good line, and no more on the strongest.
+            if (upgraded.Held >= upgradedBefore.Held)
+                faults.Add($"on three-star '{Workhorse}' turrets Wyrmforge held {upgraded.Held} "
+                           + $"against Ironbastion's {upgradedBefore.Held} - no harder than the "
+                           + "twelfth");
+
+            if (strong.Held > strongBefore.Held)
+                faults.Add($"the strongest line held {strong.Held} against Ironbastion's "
+                           + $"{strongBefore.Held} - easier than the twelfth");
+
+            // Not a wall: a good line still keeps a share of what it wins on Ironbastion.
+            if (upgraded.Held * 100 < upgradedBefore.Held * ForgeShare)
+                faults.Add($"three-star '{Workhorse}' turrets held {upgraded.Held} against "
+                           + $"Ironbastion's {upgradedBefore.Held}, under {ForgeShare}% of it - the "
+                           + "thirteenth chapter is a wall, not a step");
+
+            if (strong.Held * 100 < strongBefore.Held * ForgeShare)
+                faults.Add($"the strongest line held {strong.Held} against Ironbastion's "
+                           + $"{strongBefore.Held}, under {ForgeShare}% of it - the thirteenth "
+                           + "chapter is a wall, not a step");
+
+            if (strong.Walled > 0)
+                faults.Add($"{strong.Walled} rung(s) of Wyrmforge are held at no rhythm at all "
+                           + "on the strongest line");
+
+            string report =
+                $"Wyrmforge on {Workhorse} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred, {bought.Walled} walled):\n" + bought.Table
+                + $"\nWyrmforge on three-star {Workhorse} ({upgraded.Held}/{upgraded.Runs} held, "
+                + $"{upgraded.Starred} three-starred):\n" + upgraded.Table
+                + $"\nWyrmforge on the strongest line ({strong.Held}/{strong.Runs} held, "
+                + $"{strong.Starred} three-starred, {strong.Walled} walled):\n" + strong.Table
+                + $"\nIronbastion for comparison: {Workhorse} {before.Held}/{before.Runs}, "
+                + $"three-star {Workhorse} {upgradedBefore.Held}/{upgradedBefore.Runs}, "
+                + $"strongest {strongBefore.Held}/{strongBefore.Runs} "
+                + $"({strongBefore.Starred} three-starred)\n";
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
+        }
+
+        /// <summary>
+        /// How much of what a line wins on Ironbastion it must still win on Wyrmforge, in per cent:
+        /// the "not a wall" half of <see cref="TheThirteenthChapterIsHarder"/>. Thirty, the share the
+        /// owner accepted for the twelfth chapter's step (<see cref="StepShare"/>), kept as its own
+        /// constant so retuning one step never silently moves the other's floor.
+        /// </summary>
+        const int ForgeShare = 30;
 
         [Test]
         public void AShacklersChainAlwaysRunsOutBeforeTheNextOne()
