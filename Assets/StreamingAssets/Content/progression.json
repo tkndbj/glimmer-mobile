@@ -649,7 +649,7 @@
         "gemPrice": 40,
         "maxHeld": 100,
         "order": 4,
-        "cooldownSeconds": 30
+        "cooldownSeconds": 50
       },
       {
         "id": "gravityhole",
