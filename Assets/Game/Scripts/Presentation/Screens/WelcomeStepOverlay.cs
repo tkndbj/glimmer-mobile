@@ -14,8 +14,9 @@ namespace GlimmerGrove
     /// <summary>
     /// "Well done!" - the welcome bonus's progress, shown at the moment a new player has just earned
     /// a piece of it (a welcome step, <c>FirstStepTable</c>): the turret the quest pays, standing in
-    /// its seat; the row of day boxes, today's box stamped with a tick that slams down onto it; where
-    /// the quest stands; and the reason to come back - tomorrow is the next box.
+    /// its seat under the one line that says it is the prize; the row of day boxes, today's box
+    /// stamped with a tick that slams down onto it; and where the quest stands. Kept lean: no
+    /// sentence explaining the quest and no "come back tomorrow" - the boxes say both.
     ///
     /// <para>
     /// <b>It carries the reminder ask</b> (invariant 50p) when the cadence allows one, because there
@@ -44,17 +45,17 @@ namespace GlimmerGrove
         /// <summary>What to resume when this panel is gone, whichever way it goes.</summary>
         public Action Then { get; set; }
 
-        internal const float PanelW = 880f, PanelH = 1220f;
+        internal const float PanelW = 880f, PanelH = 1140f;
 
         /// <summary>
         /// Where each band sits below the panel's top edge, as a middle: the seat -100..-320, the
-        /// name -337..-393, the sentence -403..-447, the boxes -480..-600, "tomorrow" -606..-638, the
-        /// day line -665..-735, the reason -752..-852 (two lines at 32). The keys stand on the foot
-        /// where <c>ReminderAskOverlay</c> puts its own, the upper one's top edge at -919. Measured
-        /// in every Latin table by <c>render_first_steps.py --measure</c>.
+        /// name -337..-393, the prize line -405..-475, the boxes -500..-620, the day line -665..-735,
+        /// and only for a quest already full the reason -745..-825 (two lines at 30). The keys stand
+        /// on the foot, the upper one's top edge at -839. Measured in every Latin table by
+        /// <c>render_first_steps.py --measure</c>.
         /// </summary>
-        internal const float SeatY = -210f, NameY = -365f, SentenceY = -425f, BoxesY = -540f,
-                             TomorrowY = -622f, DayY = -700f, ReasonY = -802f;
+        internal const float SeatY = -210f, NameY = -365f, UnlockY = -440f, BoxesY = -560f,
+                             DayY = -700f, ReasonY = -785f;
 
         internal const float SeatSize = 220f, BoxMost = 120f, BoxGap = 22f, BoxRow = 760f;
 
@@ -67,7 +68,7 @@ namespace GlimmerGrove
         CeremonyFx _matter, _light;
         Image[] _boxes, _ticks;
         Image _body;
-        Text _day, _reason, _tomorrow;
+        Text _day, _reason;
         Btn _yes, _later, _ok;
         AssetHold _art;
         bool _answered, _waitingOs, _sawBlur, _continued;
@@ -104,9 +105,9 @@ namespace GlimmerGrove
             UIKit.Shrinkable(UIKit.Titled("Name", Panel, Loc.Get(Quest.Ward.NameKey), 50, Pal.Cream,
                                           TextAnchor.MiddleCenter, new Vector2(760f, 56f),
                                           new Vector2(.5f, 1f), new Vector2(0f, NameY), 3f, 3f), 28);
-            UIKit.Shrinkable(UIKit.Titled("Sentence", Panel, Loc.Format(Quest.SentenceKey, Quest.Days), 30, Ink,
-                                          TextAnchor.MiddleCenter, new Vector2(760f, 44f),
-                                          new Vector2(.5f, 1f), new Vector2(0f, SentenceY), 0f, 0f), 18);
+            UIKit.Shrinkable(UIKit.Titled("Unlock", Panel, Loc.Get("ui.steps.unlock_turret"), 54, Pal.Gold,
+                                          TextAnchor.MiddleCenter, new Vector2(760f, 70f),
+                                          new Vector2(.5f, 1f), new Vector2(0f, UnlockY), 4f, 4f), 30);
 
             BuildBoxes();
 
@@ -115,10 +116,14 @@ namespace GlimmerGrove
                                                  new Vector2(.5f, 1f), new Vector2(0f, DayY), 4f, 4f), 30);
             _day.transform.localScale = Vector3.zero;
 
-            _reason = UIKit.Shrinkable(UIKit.Titled("Reason", Panel, Loc.Get(ReasonKey()), 32, Ink,
-                                                    TextAnchor.MiddleCenter, new Vector2(760f, 100f),
-                                                    new Vector2(.5f, 1f), new Vector2(0f, ReasonY), 0f, 0f, wrap: true), 20);
-            _reason.transform.localScale = Vector3.zero;
+            // A quest already full says where to collect it; otherwise the boxes are the whole story.
+            if (Done >= Target)
+            {
+                _reason = UIKit.Shrinkable(UIKit.Titled("Reason", Panel, Loc.Get("ui.steps.welcome_ready"), 30, Ink,
+                                                        TextAnchor.MiddleCenter, new Vector2(760f, 80f),
+                                                        new Vector2(.5f, 1f), new Vector2(0f, ReasonY), 0f, 0f, wrap: true), 18);
+                _reason.transform.localScale = Vector3.zero;
+            }
 
             BuildKeys();
 
@@ -128,17 +133,6 @@ namespace GlimmerGrove
 
             Stamp();
             Load();
-        }
-
-        /// <summary>
-        /// Written out rather than assembled, so the build's string checker sees every key.
-        /// A quest already full says where to collect it; otherwise tomorrow is the reason, with
-        /// the reminder question when there is one to ask.
-        /// </summary>
-        string ReasonKey()
-        {
-            if (Done >= Target) return "ui.steps.welcome_ready";
-            return Route != AskRoute.None ? "ui.steps.come_back_remind" : "ui.steps.come_back";
         }
 
         void BuildBoxes()
@@ -170,18 +164,8 @@ namespace GlimmerGrove
                 _ticks[i] = tick;
             }
 
-            // The box tomorrow fills: breathing, with the word under it.
-            if (Done < n)
-            {
-                var next = _boxes[Done];
-                Tween.Breathe(next.transform, .05f, 1.6f);
-
-                _tomorrow = UIKit.Shrinkable(UIKit.Titled("Tomorrow", Panel, Loc.Get("ui.shop.pass_tomorrow"), 26, Ink,
-                                                          TextAnchor.MiddleCenter, new Vector2(Mathf.Max(size + 60f, 180f), 32f),
-                                                          new Vector2(.5f, 1f),
-                                                          new Vector2(next.rectTransform.anchoredPosition.x, TomorrowY), 0f, 0f), 16);
-                _tomorrow.transform.localScale = Vector3.zero;
-            }
+            // The box tomorrow fills: breathing.
+            if (Done < n) Tween.Breathe(_boxes[Done].transform, .05f, 1.6f);
         }
 
         void BuildKeys()
@@ -202,9 +186,9 @@ namespace GlimmerGrove
             UIKit.Shrinkable(_yes.Label, 26);
             _yes.transform.localScale = Vector3.zero;
 
-            _later = UIKit.TextButton("Later", Panel, "btn_blue", Loc.Get("ui.reminders.not_now"), 42,
-                                      new Vector2(620f, 126f), new Vector2(.5f, 0f), new Vector2(0f, 92f), Later);
-            UIKit.Shrinkable(_later.Label, 24);
+            _later = UIKit.TextButton("Later", Panel, "btn_blue", Loc.Get("ui.reminders.not_now"), 36,
+                                      new Vector2(480f, 108f), new Vector2(.5f, 0f), new Vector2(0f, 96f), Later);
+            UIKit.Shrinkable(_later.Label, 22);
             _later.transform.localScale = Vector3.zero;
         }
 
@@ -253,6 +237,13 @@ namespace GlimmerGrove
             {
                 if (!box || !tick) return;
 
+                // The fall and this beat are two timers ending on the same instant, and the spring
+                // below takes the fall's channel: a fall a frame short of its end would stay frozen
+                // above the box, tilted. Land it exactly where it rests first.
+                trt.anchoredPosition = rest;
+                trt.localRotation = Quaternion.identity;
+                tick.color = Pal.Mint;
+
                 // The tick springs out of its squash to its own size; the box takes the hit.
                 Tween.Run(.36f, Ease.OutBack, t =>
                 {
@@ -283,7 +274,6 @@ namespace GlimmerGrove
         {
             if (_day) Tween.Pop(_day.transform, 0f, .45f);
             if (_reason) Tween.Pop(_reason.transform, 0f, .4f, .12f);
-            if (_tomorrow) Tween.Pop(_tomorrow.transform, 0f, .4f, .2f);
         }
 
         void RevealKeys()

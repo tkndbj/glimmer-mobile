@@ -6310,12 +6310,8 @@
       "text": "Dzień {0} z {1}"
     },
     {
-      "key": "ui.steps.come_back",
-      "text": "Wróć jutro, aby zaznaczyć kolejne pole!"
-    },
-    {
-      "key": "ui.steps.come_back_remind",
-      "text": "Wróć jutro po kolejne pole! Chcesz przypomnienie?"
+      "key": "ui.steps.unlock_turret",
+      "text": "Odblokuj tę wieżę!"
     },
     {
       "key": "ui.steps.welcome_ready",

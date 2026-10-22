@@ -6310,12 +6310,8 @@
       "text": "Jour {0} sur {1}"
     },
     {
-      "key": "ui.steps.come_back",
-      "text": "Reviens demain pour cocher la case suivante !"
-    },
-    {
-      "key": "ui.steps.come_back_remind",
-      "text": "Reviens demain pour la case suivante ! Tu veux un rappel ?"
+      "key": "ui.steps.unlock_turret",
+      "text": "Débloque cette tourelle !"
     },
     {
       "key": "ui.steps.welcome_ready",

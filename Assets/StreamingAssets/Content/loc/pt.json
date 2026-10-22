@@ -6310,12 +6310,8 @@
       "text": "Dia {0} de {1}"
     },
     {
-      "key": "ui.steps.come_back",
-      "text": "Volte amanhã para marcar a próxima caixa!"
-    },
-    {
-      "key": "ui.steps.come_back_remind",
-      "text": "Volte amanhã para a próxima caixa! Quer um lembrete?"
+      "key": "ui.steps.unlock_turret",
+      "text": "Desbloqueie esta torre!"
     },
     {
       "key": "ui.steps.welcome_ready",

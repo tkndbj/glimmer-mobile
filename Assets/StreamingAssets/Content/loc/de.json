@@ -6310,12 +6310,8 @@
       "text": "Tag {0} von {1}"
     },
     {
-      "key": "ui.steps.come_back",
-      "text": "Komm morgen wieder und hak das nächste Kästchen ab!"
-    },
-    {
-      "key": "ui.steps.come_back_remind",
-      "text": "Komm morgen für das nächste Kästchen wieder! Möchtest du eine Erinnerung?"
+      "key": "ui.steps.unlock_turret",
+      "text": "Schalte diesen Turm frei!"
     },
     {
       "key": "ui.steps.welcome_ready",

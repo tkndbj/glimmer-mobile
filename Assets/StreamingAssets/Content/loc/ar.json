@@ -6310,12 +6310,8 @@
       "text": "اليوم {0} من {1}"
     },
     {
-      "key": "ui.steps.come_back",
-      "text": "عد غدا لتضع علامة على المربع التالي!"
-    },
-    {
-      "key": "ui.steps.come_back_remind",
-      "text": "عد غدا للمربع التالي! هل تريد تذكيرا؟"
+      "key": "ui.steps.unlock_turret",
+      "text": "افتح هذا البرج!"
     },
     {
       "key": "ui.steps.welcome_ready",

@@ -6310,12 +6310,8 @@
       "text": "Gün {0} / {1}"
     },
     {
-      "key": "ui.steps.come_back",
-      "text": "Sonraki kutuyu işaretlemek için yarın tekrar gel!"
-    },
-    {
-      "key": "ui.steps.come_back_remind",
-      "text": "Sonraki kutu için yarın tekrar gel! Hatırlatma ister misin?"
+      "key": "ui.steps.unlock_turret",
+      "text": "Bu kuleyi aç!"
     },
     {
       "key": "ui.steps.welcome_ready",

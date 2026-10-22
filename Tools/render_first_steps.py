@@ -63,16 +63,15 @@ C_LINE = (-250.0, 860.0, 90.0, 36, 22)
 C_KEY = (-510.0, 560.0, 150.0, 56, 30)
 
 # WelcomeStepOverlay - bands below the panel's top edge.
-P_W, P_H = 880.0, 1220.0
+P_W, P_H = 880.0, 1140.0
 P_SEAT, P_SEAT_SIZE = 210.0, 220.0
 P_NAME = (365.0, 760.0, 56.0, 50, 28)
-P_SENTENCE = (425.0, 760.0, 44.0, 30, 18)
-P_BOXES, P_BOX_MOST, P_BOX_GAP, P_BOX_ROW = 540.0, 120.0, 22.0, 760.0
-P_TOMORROW = (622.0, 0.0, 32.0, 26, 16)
+P_UNLOCK = (440.0, 760.0, 70.0, 54, 30)
+P_BOXES, P_BOX_MOST, P_BOX_GAP, P_BOX_ROW = 560.0, 120.0, 22.0, 760.0
 P_DAY = (700.0, 760.0, 70.0, 54, 30)
-P_REASON = (802.0, 760.0, 100.0, 32, 20)
+P_REASON = (785.0, 760.0, 80.0, 30, 18)
 P_YES = (232.0, 620.0, 138.0, 46, 26)
-P_LATER = (92.0, 620.0, 126.0, 42, 24)
+P_LATER = (96.0, 480.0, 108.0, 36, 22)
 P_OK = (150.0, 560.0, 138.0, 46, 26)
 KEY_PAD = 60.0                      # a TextButton's label room is its width less the skin's caps
 
@@ -275,13 +274,12 @@ def welcome(lang, ask=True, settings=False, done=1, draw=True):
         return K.shrunk(sheet, text, W / 2, top + dy, w, h, size, floor, fill=fill, outline=outline), floor
 
     sizes["name"] = band(P_NAME, s["ward.%s.name" % quest["ward"]], K.CREAM, 3)
-    sizes["sentence"] = band(P_SENTENCE, fmt(s["ui.welcome.goal.%s" % quest["goal"]], days), INK, 0)
+    sizes["unlock"] = band(P_UNLOCK, s["ui.steps.unlock_turret"], GOLD, 4)
 
     n = days
     size = min(P_BOX_MOST, (P_BOX_ROW - P_BOX_GAP * (n - 1)) / n)
     width = n * size + (n - 1) * P_BOX_GAP
     check, _ = K.load("ic_check")
-    next_x = None
     for i in range(n):
         bx = W / 2 - width / 2 + size / 2 + i * (size + P_BOX_GAP)
         box = K.skin("Hud/slot", size, size)
@@ -290,17 +288,10 @@ def welcome(lang, ask=True, settings=False, done=1, draw=True):
         K.paste(sheet, box, bx, top + P_BOXES)
         if i < done:
             K.paste(sheet, K.tint(K.fit(check, (size * .66, size * .66)), K.MINT), bx, top + P_BOXES - 2)
-        elif next_x is None:
-            next_x = bx
-    if next_x is not None:
-        dy, _, h, fsize, floor = P_TOMORROW
-        sizes["tomorrow"] = (K.shrunk(sheet, s["ui.shop.pass_tomorrow"], next_x, top + dy, max(size + 60, 180), h,
-                                      fsize, floor, fill=INK, outline=0), floor)
 
     sizes["day"] = band(P_DAY, fmt(s["ui.steps.day_of"], max(1, done), days), GOLD, 4)
-    reason = ("ui.steps.welcome_ready" if done >= days else
-              "ui.steps.come_back_remind" if ask else "ui.steps.come_back")
-    sizes["reason"] = band(P_REASON, s[reason], INK, 0)
+    if done >= days:
+        sizes["reason"] = band(P_REASON, s["ui.steps.welcome_ready"], INK, 0)
 
     def foot(b, skin, text, what):
         dy, w, h, fsize, floor = b

@@ -2042,11 +2042,9 @@ FIRST_STEP_KINDS = ("turret", "welcome", "chests")
 #: `WelcomeStepOverlay` and `ChestGiftOverlay`. Listed so a block that ships without its words
 #: fails here rather than as a blank over a new player's first gift.
 FIRST_STEP_KEYS = ("ui.steps.gift_title", "ui.steps.turret_title", "ui.steps.well_done",
-                   "ui.steps.day_of", "ui.steps.come_back", "ui.steps.come_back_remind",
-                   "ui.steps.welcome_ready", "ui.steps.chests_line", "ui.steps.chest_count",
+                   "ui.steps.day_of", "ui.steps.unlock_turret", "ui.steps.welcome_ready", "ui.steps.chests_line", "ui.steps.chest_count",
                    "ui.steps.open", "ui.loadout.stand", "ui.common.got_it", "ui.common.done",
-                   "ui.reminders.ask_yes", "ui.reminders.not_now", "ui.reminders.open_settings",
-                   "ui.shop.pass_tomorrow")
+                   "ui.reminders.ask_yes", "ui.reminders.not_now", "ui.reminders.open_settings")
 
 LEVEL_ID = __import__("re").compile(r"^[a-z0-9](?:[a-z0-9_]{0,46}[a-z0-9])?$")
 
