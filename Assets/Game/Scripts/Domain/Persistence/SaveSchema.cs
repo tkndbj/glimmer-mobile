@@ -657,7 +657,14 @@ namespace GlimmerGrove.Persistence
         ///      inside <c>settings</c>, which the rules do not look inside, so no rules release
         ///      (12a). Absent is "never chosen", the bar every player already had, so no
         ///      migration. The version moves because a nested field changes every checksum (12).
-        public const int Version = 45;
+        /// v46: the first steps (<see cref="TaskStateDto.stepsEarned"/>, <see cref="TaskStateDto.stepsTaken"/>,
+        ///      <c>Progression.FirstStepsLedger</c>): the levels whose first clear earned a step,
+        ///      and what was handed over - a turret's ceremony shown, each chest opened. Two sets
+        ///      joined by union (11b), inside the existing <c>tasks</c> map; the rules bound both
+        ///      lists (12b) in a release that goes out before the client. Absent is empty, so no
+        ///      migration - and an account that cleared the levels before v46 earned nothing, which
+        ///      is the point: the steps are a new player's. The version moves for v45's reason.
+        public const int Version = 46;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1090,6 +1097,18 @@ namespace GlimmerGrove.Persistence
         /// <see cref="lifetime"/>'s reason.
         /// </summary>
         public string[] dealsSeen;
+
+        /// <summary>
+        /// The levels whose first clear earned a first step, sorted. Added in v46; see
+        /// <c>Progression.FirstStepsLedger</c>. Inside this map for <see cref="lifetime"/>'s reason.
+        /// </summary>
+        public string[] stepsEarned;
+
+        /// <summary>
+        /// What the first steps have handed over, sorted: a level id for a turret whose ceremony
+        /// was shown, <c>{level}:{n}</c> for each chest opened. Added in v46; joined by union.
+        /// </summary>
+        public string[] stepsTaken;
     }
 
     /// <summary>The welcome bonus's record. See <c>Tasks.WelcomeLedger</c>.</summary>

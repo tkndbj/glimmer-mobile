@@ -68,7 +68,7 @@ namespace GlimmerGrove.Tests
         public void TheBuiltInTuningReadsStrictly()
         {
             var tuning = OfferTuning.Shipped;
-            Assert.AreEqual(1, tuning.Revision);
+            Assert.GreaterOrEqual(tuning.Revision, 1, "a built-in tuning is a published revision, so it counts from 1");
             Assert.IsTrue(tuning.Enabled);
             Assert.Greater(tuning.Offers.Count, 0);
             Assert.AreEqual(tuning.Describe(), Read(OfferTuning.ShippedJson).Describe());
@@ -96,12 +96,14 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheSeedFileAtRevisionOneIsTheBuiltInTuning()
+        public void TheSeedFileAtTheBuiltInRevisionIsTheBuiltInTuning()
         {
             var published = Read(File.ReadAllText(SeedPath()));
-            if (published.Revision != 1) Assert.Pass($"the seed file is revision {published.Revision}; only revision 1 is pinned");
+            int builtIn = OfferTuning.Shipped.Revision;
+            if (published.Revision != builtIn)
+                Assert.Pass($"the seed file is revision {published.Revision}; only revision {builtIn} is built in");
             Assert.AreEqual(OfferTuning.Shipped.Describe(), published.Describe(),
-                            "revision 1 of offers.json is not OfferTuning.ShippedJson - change both together");
+                            $"revision {builtIn} of offers.json is not OfferTuning.ShippedJson - change both together");
         }
 
         [Test]

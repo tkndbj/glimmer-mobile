@@ -6294,6 +6294,46 @@
       "text": "Récupéré"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "UN CADEAU POUR TOI !"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "Nouvelle tourelle débloquée !"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "BRAVO !"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Jour {0} sur {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Reviens demain pour cocher la case suivante !"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Reviens demain pour la case suivante ! Tu veux un rappel ?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "Ta tourelle est prête ! Récupère-la dans le Bonus de bienvenue."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "Tu es en feu ! Ouvre tes coffres."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "OUVRIR"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "REGARDE UNE VIDÉO POUR RÉCUPÉRER"
     },

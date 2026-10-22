@@ -6294,6 +6294,46 @@
       "text": "Alındı"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "SANA BİR HEDİYE!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "Yeni kule açıldı!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "AFERİN!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Gün {0} / {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Sonraki kutuyu işaretlemek için yarın tekrar gel!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Sonraki kutu için yarın tekrar gel! Hatırlatma ister misin?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "Kulen hazır! Hoş geldin bonusundan al."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "Harika gidiyorsun! Sandıklarını aç."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "AÇ"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "ALMAK İÇİN VİDEO İZLE"
     },

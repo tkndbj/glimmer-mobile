@@ -142,7 +142,8 @@ namespace GlimmerGrove
             && Application.isFocused
             && LaunchCalm.IsSettled
             && !AdPrivacy.Owed
-            && !AdPrivacy.IsAsking;
+            && !AdPrivacy.IsAsking
+            && !FirstStepsMoment.Hushed;
 
         static void Show(DealTrigger trigger, List<ShopDeal> deals, int today)
         {

@@ -256,6 +256,7 @@ function buildProgressionConfig() {
           tasks,
           streak: readStreak(progression, tierIds),
           keeperMilestones: readKeeperMilestones(progression, tierIds),
+          firstSteps: readFirstSteps(progression, tierIds, levelChapters),
           referral: readReferral(progression, tasks.tiers.map((t) => t.id), levelChapters),
         };
       })(),
@@ -809,6 +810,74 @@ function readKeeperMilestones(progression, tierIds) {
 
   console.log(`  keeperMilestones: ${out.length} chest(s) between levels ${out[0].level} and ${last}`);
   return { rows: out };
+}
+
+/**
+ * The first steps (`FirstStepTable`): what a new player is handed the first time they clear a
+ * named level. Only the chest steps are published - a turret step hands over an entitlement with
+ * no server and a welcome step hands over nothing - but every rule `FirstStepTable.Resolve`
+ * enforces is enforced here on every step, because a block the client would refuse whole is a
+ * set of chests nobody is ever shown, while one this side read differently is a claim paid
+ * against a table nobody authored. Each level must be one this catalog ships: a step on a level
+ * nobody can clear never pays, and nothing else can see both files. Absent publishes nothing,
+ * and `claimAwards` then leaves a step's claim unconfirmed rather than paying a guess.
+ */
+function readFirstSteps(progression, tierIds, levelChapters) {
+  const MAX_STEPS = 16, MAX_CHESTS = 4;
+  const KINDS = new Set(["turret", "welcome", "chests"]);
+  const LEVEL = /^[a-z0-9](?:[a-z0-9_]{0,46}[a-z0-9])?$/;
+
+  const block = progression.firstSteps;
+  if (!block) return undefined;
+
+  const rows = Array.isArray(block.steps) ? block.steps : [];
+  if (rows.length === 0) throw new Error("firstSteps carries no steps; leave the block out to switch the feature off");
+  if (rows.length > MAX_STEPS) throw new Error(`firstSteps lists ${rows.length} steps; at most ${MAX_STEPS} are supported`);
+
+  const models = new Map((progression.wards?.models ?? []).map((m) => [m.id, m]));
+  const seen = new Set();
+  const chests = [];
+
+  rows.forEach((row, i) => {
+    const where = `firstSteps step ${i}`;
+    if (typeof row?.level !== "string" || !LEVEL.test(row.level)) throw new Error(`${where} names a bad level '${row?.level}'`);
+    if (!(row.level in levelChapters)) throw new Error(`${where} stands on level '${row.level}', which no shipped chapter holds`);
+    if (seen.has(row.level)) throw new Error(`${where} names level '${row.level}' a second time; one step a level`);
+    seen.add(row.level);
+
+    if (!KINDS.has(row?.kind)) throw new Error(`${where} is of kind '${row?.kind}'; a step is 'turret', 'welcome' or 'chests'`);
+
+    const hasWard = Boolean(row.ward) || Boolean(row.colour);
+    const hasTier = Boolean(row.tier) || (row.count !== undefined && row.count !== 0);
+
+    if (row.kind === "turret") {
+      if (hasTier) throw new Error(`${where} is a turret step and names a chest tier or count`);
+      const model = models.get(row.ward);
+      if (!model) throw new Error(`${where} hands over turret '${row.ward}', which the roster does not hold`);
+      if (Math.floor(Number(model.coinPrice ?? 0)) <= 0 && Math.floor(Number(model.gemPrice ?? 0)) <= 0) {
+        throw new Error(`${where} hands over turret '${row.ward}', which is the free starter`);
+      }
+      if (typeof row.colour !== "string" || row.colour.length !== 1 || !"rgby".includes(row.colour)) {
+        throw new Error(`${where} hands its turret over on seat '${row.colour}'; a step names one of 'rgby'`);
+      }
+    } else if (row.kind === "welcome") {
+      if (hasWard || hasTier) throw new Error(`${where} is a welcome step and names a turret or a chest`);
+    } else {
+      if (hasWard) throw new Error(`${where} is a chest step and names a turret or a seat`);
+      if (typeof row.tier !== "string" || !tierIds.has(row.tier)) {
+        throw new Error(`${where} pays chest tier '${row.tier}', which the tasks block does not define`);
+      }
+      const count = Number(row.count);
+      if (!Number.isInteger(count) || count < 1 || count > MAX_CHESTS) {
+        throw new Error(`${where} pays ${row.count} chests, outside 1..${MAX_CHESTS}`);
+      }
+      chests.push({ level: row.level, tier: row.tier, count });
+    }
+  });
+
+  console.log(`  firstSteps: ${rows.length} step(s); chests published: `
+              + (chests.length ? chests.map((c) => `${c.count} ${c.tier} on ${c.level}`).join(", ") : "none"));
+  return { steps: chests };
 }
 
 /**

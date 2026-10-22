@@ -6294,6 +6294,46 @@
       "text": "Recogido"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "¡UN REGALO PARA TI!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "¡Nueva torre desbloqueada!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "¡BIEN HECHO!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Día {0} de {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "¡Vuelve mañana para marcar la siguiente casilla!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "¡Vuelve mañana por la siguiente casilla! ¿Quieres un recordatorio?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "¡Tu torre está lista! Recógela en el Bono de bienvenida."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "¡Vas genial! Abre tus cofres."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "ABRIR"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "MIRA UN VÍDEO PARA RECOGER"
     },

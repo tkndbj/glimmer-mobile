@@ -841,15 +841,13 @@ namespace GlimmerGrove.EditorTools
                 int free = HeartStake.FreeLevelsIn(index, chapter.Id, hearts);
                 if (free <= 0) continue;
 
-                // Only worth saying of a chapter with something to cover. A mode still finding
-                // its shape ships one board, and "the window is longer than this chapter" is
-                // then a fact about how much content exists rather than about the tuning - a
-                // warning on every build for something that fixes itself when the second board
-                // lands is a warning nobody reads.
+                // A window covering the whole first chapter is the owner's decision (2026-10-22:
+                // nobody loses a heart in chapter one), so it is said every run rather than
+                // warned: a standing warning for a deliberate setting is a warning nobody reads,
+                // and the gate still holds from the second chapter on.
                 if (free >= chapter.LevelCount && chapter.LevelCount > 1)
-                    result.Warnings.Add($"the free opening covers all {chapter.LevelCount} level(s) of " +
-                                        $"'{chapter.Id}', so the heart gate does not exist anywhere on " +
-                                        $"the {index.Modes[i]} map");
+                    Debug.Log($"[Glimmer] hearts: the free opening covers all {chapter.LevelCount} level(s) of " +
+                              $"'{chapter.Id}'; the heart gate begins at the {index.Modes[i]} ladder's second chapter");
                 else if (verbose)
                     Debug.Log($"[Glimmer] hearts: the first {free} of '{chapter.Id}' cost nothing");
             }

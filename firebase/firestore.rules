@@ -231,7 +231,16 @@ service cloud.firestore {
                                        // `DealSeen.MaxIds`, invariant 60c). Shape only: it pays
                                        // nothing and decides only whether a popup is raised.
                                        && (!('dealsSeen' in d.tasks) || (d.tasks.dealsSeen is list
-                                                                         && d.tasks.dealsSeen.size() <= 64))))
+                                                                         && d.tasks.dealsSeen.size() <= 64))
+                                       // The first steps (save v46, `FirstStepsLedger`): the
+                                       // levels whose first clear earned a step, and what was
+                                       // handed over. Shape only - a step's chests are re-rolled
+                                       // and proved against `levels` by `claimAwards`. Bounds
+                                       // match `MaxEarned` (16) and `MaxTaken` (64).
+                                       && (!('stepsEarned' in d.tasks) || (d.tasks.stepsEarned is list
+                                                                           && d.tasks.stepsEarned.size() <= 16))
+                                       && (!('stepsTaken' in d.tasks) || (d.tasks.stepsTaken is list
+                                                                          && d.tasks.stepsTaken.size() <= 64))))
 
                // The turrets the player bought and the line they stand in. Client-owned and
                // forgeable, and accounted for the way the companion set is: a forged turret buys

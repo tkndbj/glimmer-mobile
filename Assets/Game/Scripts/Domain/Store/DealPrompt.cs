@@ -41,8 +41,13 @@ namespace GlimmerGrove.Store
     /// </summary>
     public static class DealPrompt
     {
-        /// <summary>The levels a player must have cleared before any deal is raised outside the shop.</summary>
-        public const int MinClearedLevels = 3;
+        /// <summary>
+        /// The levels a player must have cleared before any deal is raised outside the shop: the
+        /// whole of the first chapter. The owner, 2026-10-22: the first chapter is for the game -
+        /// free to fail (<c>hearts.graceLevels</c>) and free of money popups - so a deal first
+        /// meets a player once they are into the second.
+        /// </summary>
+        public const int MinClearedLevels = 10;
 
         /// <summary>A deal this close to its end is raised on the hub without waiting for a win.</summary>
         public const long LastHoursSeconds = 3L * 3600L;

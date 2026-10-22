@@ -320,36 +320,50 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------ when
         static List<ShopDeal> Live(long secondsLeft) => new List<ShopDeal> { new ShopDeal(Id, 1, 1, Now - 60, Now + secondsLeft) };
 
+        /// <summary>Enough levels cleared that the new-player gate is not what a test is about.</summary>
+        const int Seasoned = DealPrompt.MinClearedLevels + 5;
+
         [Test]
         public void ANewPlayerIsNeverPrompted()
         {
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(2, false, true, true, true, true, Live(60), Now));
-            Assert.AreEqual(DealTrigger.Shortfall, DealPrompt.Choose(3, false, true, true, true, true, Live(60), Now));
+            const int gate = DealPrompt.MinClearedLevels;
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(gate - 1, false, true, true, true, true, Live(60), Now));
+            Assert.AreEqual(DealTrigger.Shortfall, DealPrompt.Choose(gate, false, true, true, true, true, Live(60), Now));
+        }
+
+        [Test]
+        public void TheFirstChapterRaisesNoDeal()
+        {
+            // The owner, 2026-10-22: the first chapter (ten levels) is free of money popups.
+            Assert.AreEqual(10, DealPrompt.MinClearedLevels);
+            for (int cleared = 0; cleared < 10; cleared++)
+                Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(cleared, false, true, true, true, true, Live(60), Now),
+                                $"a deal was raised with {cleared} level(s) cleared");
         }
 
         [Test]
         public void OnePopupADayAndOnlyWithSomethingLive()
         {
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, true, true, true, true, true, Live(60), Now), "one a day");
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, true, true, true, true, new List<ShopDeal>(), Now));
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(Seasoned, true, true, true, true, true, Live(60), Now), "one a day");
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(Seasoned, false, true, true, true, true, new List<ShopDeal>(), Now));
         }
 
         [Test]
         public void TheTriggersAreAskedInOrderAndWhereTheyBelong()
         {
             var day = Live(86400);
-            Assert.AreEqual(DealTrigger.Shortfall, DealPrompt.Choose(9, false, true, true, false, true, day, Now),
+            Assert.AreEqual(DealTrigger.Shortfall, DealPrompt.Choose(Seasoned, false, true, true, false, true, day, Now),
                             "a shortfall is answered on the screen it happened on");
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, true, false, true, day, Now),
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(Seasoned, false, false, true, false, true, day, Now),
                             "a win waits for the hub");
-            Assert.AreEqual(DealTrigger.Win, DealPrompt.Choose(9, false, false, true, true, true, day, Now));
-            Assert.AreEqual(DealTrigger.Daily, DealPrompt.Choose(9, false, false, false, true, true, day, Now),
+            Assert.AreEqual(DealTrigger.Win, DealPrompt.Choose(Seasoned, false, false, true, true, true, day, Now));
+            Assert.AreEqual(DealTrigger.Daily, DealPrompt.Choose(Seasoned, false, false, false, true, true, day, Now),
                             "a calm hub is the day's showing");
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, false, true, day, Now),
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(Seasoned, false, false, false, false, true, day, Now),
                             "the day's showing waits for the hub");
-            Assert.AreEqual(DealTrigger.LastHours, DealPrompt.Choose(9, false, false, false, true, true,
+            Assert.AreEqual(DealTrigger.LastHours, DealPrompt.Choose(Seasoned, false, false, false, true, true,
                                                                      Live(DealPrompt.LastHoursSeconds), Now));
-            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, false, true,
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(Seasoned, false, false, false, false, true,
                                                                 Live(60), Now), "the last hours wait for the hub");
             Assert.AreEqual("shortfall", DealPrompt.Id(DealTrigger.Shortfall));
             Assert.AreEqual("win", DealPrompt.Id(DealTrigger.Win));

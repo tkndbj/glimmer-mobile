@@ -359,6 +359,12 @@ namespace GlimmerGrove
                 // the wall, so a frame that raised it is a frame that asks nothing.
                 ConsentMoment.Tick();
 
+                // And a first step's ceremony still owed - a turret whose report a killed process
+                // never showed, chests that had no account to claim under - on a calm hub. Before
+                // the gift, so a frame that raised one is covered; a ceremony also hushes the hub's
+                // popups behind it until the next run (`FirstStepsMoment.Hushed`).
+                FirstStepsMoment.Tick();
+
                 // And a gift the owner sent, on an idle hub once the consent questions are behind
                 // the player (invariant 63). Before the deals popup, because it is the player's own
                 // money and costs nothing to take; a frame that raised it is covered, so the deal
@@ -392,6 +398,7 @@ namespace GlimmerGrove
                     // what covers the gap no callback could have reported.
                     Referral.ReferralLedger.Paused();
                     GiftMoment.Paused();
+                    FirstStepsMoment.Paused();
                     DealMoment.Paused();
                     OfferMoment.Paused();
                     ReminderMoment.Paused();
@@ -400,6 +407,7 @@ namespace GlimmerGrove
                 {
                     Referral.ReferralLedger.Resumed();
                     GiftMoment.Resumed();
+                    FirstStepsMoment.Resumed();
                     DealMoment.Resumed();
                     OfferMoment.Resumed();
 

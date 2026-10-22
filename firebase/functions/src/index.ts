@@ -106,6 +106,8 @@ import {
   isWelcomeGrantId, judgeWelcomeClaim, parseWelcomeClaim, usableWelcomeConfig, welcomeCoinedOf,
 } from "./welcome";
 import type { WelcomeClaim } from "./welcome";
+import { isStepGrantId, judgeStepClaim, parseStepClaim, stepChestValue, usableFirstSteps } from "./steps";
+import type { StepClaim } from "./steps";
 import {
   DEAL_GRACE_SECONDS, DEAL_HISTORY, DEAL_HISTORY_PAGE, DEAL_MAX_CREDITS, DEAL_MAX_GEMS, DEAL_MAX_LIVE, DEAL_MAX_SECONDS,
   DEAL_MIN_SECONDS, DEAL_REASON, DEALS_PATH, DEALS_SCHEMA, createDeal, dealGrantId, endDeal,
@@ -648,6 +650,7 @@ type CleanAward =
   | (CleanCommon & { kind: "endless"; claim: EndlessClaim })
   | (CleanCommon & { kind: "milestone"; claim: MilestoneClaim })
   | (CleanCommon & { kind: "welcome"; claim: WelcomeClaim })
+  | (CleanCommon & { kind: "steps"; claim: StepClaim })
   | (CleanCommon & { kind: "deal"; claim: DealClaim })
   | (CleanCommon & { kind: "gift"; claim: GiftClaim });
 
@@ -842,6 +845,19 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [{ ...common, kind: "welcome", claim: welcome, currency: welcome.currency as CurrencyId }];
     }
 
+    // A first step's chest (`steps.ts`): re-rolled from the account, the level and the chest's
+    // index, and paid only once the save shows the level cleared. No window - a level, once
+    // cleared, stays cleared - and nothing refused past the parse, because every other reason
+    // can become true.
+    if (isStepGrantId(id)) {
+      const step = parseStepClaim(id);
+      if (!step) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(step.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      return [{ ...common, kind: "steps", claim: step, currency: step.currency as CurrencyId }];
+    }
+
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
 
@@ -891,7 +907,9 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const wantsStreak = clean.some((award) => award.kind === "streak");
     const wantsMilestone = clean.some((award) => award.kind === "milestone");
     const wantsWelcome = clean.some((award) => award.kind === "welcome");
-    const saveDoc = wantsStreak || wantsMilestone || wantsWelcome
+    // A first step's chest is judged against the levels the save shows cleared - the same read.
+    const wantsSteps = clean.some((award) => award.kind === "steps");
+    const saveDoc = wantsStreak || wantsMilestone || wantsWelcome || wantsSteps
       ? ((await transaction.get(db.doc(PATHS.player(uid)))).data() as Record<string, unknown> | undefined)
       : undefined;
     const saved = wantsStreak ? readSavedStreak(saveDoc) : null;
@@ -924,6 +942,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const challenges = usableChallengesConfig((config as { challenges?: unknown }).challenges);
     const milestones = usableKeeperMilestones((config as { keeperMilestones?: unknown }).keeperMilestones, tasks);
     const welcome = usableWelcomeConfig((config as { welcome?: unknown }).welcome);
+    const firstSteps = usableFirstSteps((config as { firstSteps?: unknown }).firstSteps, tasks);
 
     // Which task ids this server has paid per period. Threaded through the loop like the
     // streak floor, because a batch pays several and each one narrows the allowance.
@@ -976,6 +995,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
                   : award.kind === "challenge" ? challenges
                   : award.kind === "milestone" ? milestones
                   : award.kind === "welcome" ? welcome
+                  : award.kind === "steps" ? firstSteps
                   : daily;
 
       if (!table) {
@@ -1190,6 +1210,21 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
         amount = milestoneChestValue(verdict.tier.chest, uid, award.claim.level, award.currency);
         detail = { level: award.claim.level, tier: verdict.tier.id };
+      } else if (award.kind === "steps") {
+        // Re-rolled from the account, the level and the chest's index, and paid only once the
+        // save this server holds shows the level cleared. Left unconfirmed on every other answer,
+        // because each can become true: the save syncs, or the seeder runs (13a).
+        const verdict = judgeStepClaim(firstSteps, tasks, award.claim, saveDoc);
+
+        if (verdict.kind === "unknown") {
+          logger.info("a first step chest cannot be paid yet; leaving it unconfirmed", {
+            uid, id: award.id, level: award.claim.level, chest: award.claim.chest, why: verdict.why,
+          });
+          continue;
+        }
+
+        amount = stepChestValue(verdict.tier.chest, uid, award.claim.level, award.claim.chest, award.currency);
+        detail = { level: award.claim.level, chest: award.claim.chest, tier: verdict.tier.id };
       } else if (award.kind === "welcome") {
         // Re-priced off the published roster and paid only when the save records the choice.
         // Unconfirmed on every answer that can become true (13a); refused only for a currency the

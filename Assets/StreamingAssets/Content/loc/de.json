@@ -6294,6 +6294,46 @@
       "text": "Eingesammelt"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "EIN GESCHENK FÜR DICH!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "Neuer Turm freigeschaltet!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "GUT GEMACHT!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Tag {0} von {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Komm morgen wieder und hak das nächste Kästchen ab!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Komm morgen für das nächste Kästchen wieder! Möchtest du eine Erinnerung?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "Dein Turm ist bereit! Hol ihn dir im Willkommensbonus."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "Du bist nicht zu bremsen! Öffne deine Truhen."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "ÖFFNEN"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "ZUM EINSAMMELN VIDEO ANSEHEN"
     },

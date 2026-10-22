@@ -405,6 +405,19 @@ namespace GlimmerGrove.Persistence
         public const string KeeperMilestoneReason = "keeper_milestone";
 
         /// <summary>
+        /// One chest of a first step, in one currency: <c>steps:{levelId}:{chest}:{currency}</c>.
+        /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason - two devices that
+        /// open the same chest mint one string and are paid once - and parsed back by
+        /// <c>functions/src/steps.ts</c>, which re-rolls the chest and pays it only once the save
+        /// shows the level cleared. The format is a wire contract.
+        /// </summary>
+        public static string FirstStepId(string levelId, int chest, string currency)
+            => $"steps:{levelId}:{chest}:{currency}";
+
+        /// <summary>What every first-step chest grant records as its cause.</summary>
+        public const string FirstStepReason = "first_steps";
+
+        /// <summary>
         /// A welcome quest taken as its turret's price: <c>welcome:{questId}:{currency}</c>
         /// (invariant 58). Derived from what earned it, for <see cref="DailyChestId"/>'s reason,
         /// and parsed back by <c>functions/src/welcome.ts</c>, which re-prices it off the

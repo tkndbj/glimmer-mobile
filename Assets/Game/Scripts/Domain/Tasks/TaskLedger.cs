@@ -464,6 +464,7 @@ namespace GlimmerGrove.Tasks
             LifetimeTally.LoadFrom(dto?.tasks?.lifetime);
             WelcomeLedger.LoadFrom(dto?.tasks?.welcome);
             Store.DealSeen.LoadFrom(dto?.tasks?.dealsSeen);
+            Progression.FirstStepsLedger.LoadFrom(dto?.tasks?.stepsEarned, dto?.tasks?.stepsTaken);
             Raise();
         }
 
@@ -511,6 +512,8 @@ namespace GlimmerGrove.Tasks
                 lifetime = LifetimeTally.Write(),
                 welcome = WelcomeLedger.Write(),
                 dealsSeen = Store.DealSeen.Write(),
+                stepsEarned = Progression.FirstStepsLedger.WriteEarned(),
+                stepsTaken = Progression.FirstStepsLedger.WriteTaken(),
             };
         }
 
@@ -563,6 +566,11 @@ namespace GlimmerGrove.Tasks
 
                 // The deals already shown: the newest 64 of the union. See `DealSeen.Join`.
                 dealsSeen = Store.DealSeen.Join(mine?.dealsSeen, other?.dealsSeen),
+
+                // What the first steps earned and handed over, both by union. See
+                // `FirstStepsLedger.JoinEarned`.
+                stepsEarned = Progression.FirstStepsLedger.JoinEarned(mine?.stepsEarned, other?.stepsEarned),
+                stepsTaken = Progression.FirstStepsLedger.JoinTaken(mine?.stepsTaken, other?.stepsTaken),
             };
 
         static TaskPeriodDto JoinPeriod(TaskPeriodDto a, TaskPeriodDto b)
@@ -592,6 +600,7 @@ namespace GlimmerGrove.Tasks
             LifetimeTally.Reset();
             WelcomeLedger.Reset();
             Store.DealSeen.Reset();
+            Progression.FirstStepsLedger.Reset();
         }
     }
 }

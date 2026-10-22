@@ -6294,6 +6294,46 @@
       "text": "Collected"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "A GIFT FOR YOU!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "New turret unlocked!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "WELL DONE!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Day {0} of {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Come back tomorrow to tick the next box!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Come back tomorrow for the next box! Want a reminder?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "Your turret is ready! Collect it from the Welcome bonus."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "You're on a roll! Open your chests."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "OPEN"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "WATCH A VIDEO TO COLLECT"
     },

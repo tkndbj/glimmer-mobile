@@ -2034,6 +2034,114 @@ def check_welcome(progression, keys, warnings):
 TASK_ID = __import__("re").compile(r"^[a-z0-9_]{1,32}$")
 
 
+#: `FirstStepTable.MaxSteps` and `MaxChests`, and the kinds `FirstStepKinds` spells.
+FIRST_STEPS_MAX, FIRST_STEPS_MAX_CHESTS = 16, 4
+FIRST_STEP_KINDS = ("turret", "welcome", "chests")
+
+#: The copy the three ceremonies say, every one a literal in `WardGiftOverlay`,
+#: `WelcomeStepOverlay` and `ChestGiftOverlay`. Listed so a block that ships without its words
+#: fails here rather than as a blank over a new player's first gift.
+FIRST_STEP_KEYS = ("ui.steps.gift_title", "ui.steps.turret_title", "ui.steps.well_done",
+                   "ui.steps.day_of", "ui.steps.come_back", "ui.steps.come_back_remind",
+                   "ui.steps.welcome_ready", "ui.steps.chests_line", "ui.steps.chest_count",
+                   "ui.steps.open", "ui.loadout.stand", "ui.common.got_it", "ui.common.done",
+                   "ui.reminders.ask_yes", "ui.reminders.not_now", "ui.reminders.open_settings",
+                   "ui.shop.pass_tomorrow")
+
+LEVEL_ID = __import__("re").compile(r"^[a-z0-9](?:[a-z0-9_]{0,46}[a-z0-9])?$")
+
+
+def check_first_steps(progression, manifest, tasks, keys, warnings):
+    """The first steps (`FirstStepTable.Resolve`, offline) - and the one thing the reader cannot
+    see: that every step stands on a level a shipped chapter holds. A step on a level nobody can
+    clear never pays, and nothing else in the project can see both files. Printed rather than
+    checked: where each step stands in its chapter, so a reshuffle of the opening is visible."""
+    errors = []
+    block = progression.get("firstSteps")
+    if not block:
+        warnings.append("progression.json has no 'firstSteps' block; a new player is handed nothing")
+        return errors
+
+    steps = block.get("steps") or []
+    if not steps:
+        errors.append("firstSteps carries no steps; leave the block out to switch the feature off")
+        return errors
+    if len(steps) > FIRST_STEPS_MAX:
+        errors.append(f"firstSteps lists {len(steps)} steps; at most {FIRST_STEPS_MAX} are supported")
+        return errors
+
+    for key in FIRST_STEP_KEYS:
+        if key not in keys:
+            errors.append(f"the first steps say '{key}', which loc/en.json does not define")
+
+    where_is = {}
+    for chapter in manifest.get("chapters") or []:
+        if chapter.get("disabled"):
+            continue
+        for i, level in enumerate(chapter.get("levels") or []):
+            where_is[level] = (chapter.get("id"), i + 1)
+
+    roster = (progression.get("wards") or {}).get("models")
+    models = {m.get("id"): m for m in roster} if roster else None
+    tier_ids = set((tasks or {}).get("tiers") or [])
+
+    seen = set()
+    for i, step in enumerate(steps):
+        where = f"firstSteps step {i}"
+        level = step.get("level") or ""
+        kind = step.get("kind") or ""
+
+        if not LEVEL_ID.match(level):
+            errors.append(f"{where} names a bad level '{level}'")
+        elif level in seen:
+            errors.append(f"{where} names level '{level}' a second time; one step a level")
+        elif level not in where_is:
+            errors.append(f"{where} stands on '{level}', which no shipped chapter holds")
+        seen.add(level)
+
+        has_ward = bool(step.get("ward")) or bool(step.get("colour"))
+        has_tier = bool(step.get("tier")) or bool(step.get("count"))
+
+        if kind not in FIRST_STEP_KINDS:
+            errors.append(f"{where} is of kind '{kind}'; a step is one of {', '.join(FIRST_STEP_KINDS)}")
+            continue
+
+        if kind == "turret":
+            if has_tier:
+                errors.append(f"{where} is a turret step and names a chest tier or count")
+            ward = step.get("ward") or ""
+            if models is not None:
+                model = models.get(ward)
+                if model is None:
+                    errors.append(f"{where} hands over turret '{ward}', which the roster does not hold")
+                elif model.get("coinPrice", 0) <= 0 and model.get("gemPrice", 0) <= 0:
+                    errors.append(f"{where} hands over turret '{ward}', which is the free starter")
+            colour = step.get("colour")
+            if not isinstance(colour, str) or len(colour) != 1 or colour not in WARD_SEATS:
+                errors.append(f"{where} hands its turret over on seat '{colour}'; a step names one of '{WARD_SEATS}'")
+            what = f"turret {ward} ({colour})"
+        elif kind == "welcome":
+            if has_ward or has_tier:
+                errors.append(f"{where} is a welcome step and names a turret or a chest")
+            what = "the welcome bonus's day"
+        else:
+            if has_ward:
+                errors.append(f"{where} is a chest step and names a turret or a seat")
+            tier = step.get("tier")
+            if tier not in tier_ids:
+                errors.append(f"{where} pays chest tier '{tier}', which the tasks block does not define")
+            count = step.get("count", 0)
+            if not isinstance(count, int) or count < 1 or count > FIRST_STEPS_MAX_CHESTS:
+                errors.append(f"{where} pays {count} chests, outside 1..{FIRST_STEPS_MAX_CHESTS}")
+            what = f"{count} {tier} chest(s)"
+
+        if level in where_is:
+            chapter, n = where_is[level]
+            print(f"  first step: {what} on {level} (level {n} of {chapter})")
+
+    return errors
+
+
 def check_tasks(progression, keys, utilities, art, warnings):
     """The task slates and their chest ladder. `ContentValidation.ValidateTasks`, offline.
 
@@ -4888,6 +4996,10 @@ def main():
     # The welcome bonus (invariant 58). Read after the roster because it hands four of its
     # turrets over, and the reader refuses a block naming one the shelf does not hold.
     errors.extend(check_welcome(progression, keys, warnings))
+
+    # The first steps. After the roster and the tasks block, whose turrets and tiers a step hands
+    # over, and against the manifest, whose levels the steps stand on.
+    errors.extend(check_first_steps(progression, manifest, tasks, keys, warnings))
 
     # The lanes. Their copy is derived from the track id, so `loc.py` cannot see it either - and
     # a lane with no ladder draws a whole screen out of strings nothing else names.

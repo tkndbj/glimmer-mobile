@@ -567,7 +567,8 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    `spendLog` by `dealId` with `count()` (the one indexed field of the exempt `spendLog`, collection
    group); a settled count is stored and never recounted. `adminListDeals` backfills a missing record.
 60c. **A deal is raised outside the shop by `DealMoment` alone, once a UTC day** (rules in
-   `DealPrompt`): 3 levels cleared; one popup a day carrying every live unbought deal; a coin shortfall
+   `DealPrompt`): 10 levels cleared (chapter one is free of money popups; offers'
+   `minClearedLevels` matches at `config/offers` rev 2); one popup a day carrying every live unbought deal; a coin shortfall
    (turret, star, keeper level) is answered on the screen it happened on, otherwise the calm hub (the
    trigger names a win, the last 3 hours, or `daily`); only after the consent questions. The day is
    device-local (`glimmer.deals.shownDay`), marked at open. `tasks.dealsSeen` (v41) is still written
@@ -638,6 +639,20 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    for a loss or near miss (`OfferMoment.AfterDefeat`: once per defeat, top panel only, never while the panel
    sells hearts; the continue offer always comes first); the shop's band re-opens the standing offer. Held by `OfferTuningTests`, `OfferRulesTests`, `test/payer.mjs`, `content.py`;
    `render_offers.py --measure` and `make_offer_art.py --check`.
+
+### First steps
+
+65. **A first step is what a new player is handed the first time they clear a named level**
+   (`firstSteps` in progression.json, `FirstStepTable`): a turret on one seat, the welcome bonus's
+   day stamped, or chests. Earned only by a first clear noted on a build that knows it
+   (`RunLedger.Win` -> `FirstStepsLedger.NoteFirstClear`, before the record's save), so returning
+   players get nothing; the turret is granted at the clear and the ceremony is only its report.
+   Save holds `tasks.stepsEarned`/`stepsTaken` (v46), joined by union. A chest is taken before it
+   pays; its currency is `steps:{level}:{n}:{currency}`, re-rolled by `steps.ts` and paid only once
+   the save shows the level cleared. Every victory exit goes through `WinOverlay.Leave`: one step
+   ceremony, else the chapter's account ask, else nothing, and either hushes the hub's popups
+   (`FirstStepsMoment.Hushed`) until the next run. Held by `FirstStepsTests`, `GiftTempoTests`,
+   `test/steps.mjs`, the live `first-steps.mjs`; `render_first_steps.py --measure`.
 
 ### Art credits
 
@@ -771,7 +786,7 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 **Renders** (the gate for anything judged by eye; share `Tools/hudkit.py`): `render_home`, `render_shop`
 (`--measure` holds `ProductCardBadges` to the sprite; `--deal` draws a live shop deal), `render_tasks`, `render_season`, `render_streak`,
 `render_keeper`, `render_keeper_ladder`, `render_deals` (`--welcome`), `render_shop --pass claim`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
-`render_standing` (the map's corner readings; `--locked`, `--lang`, `--contact`, `--measure` the same gate),
+`render_first_steps` (the three gift ceremonies; `--scene`, `--lang`, `--measure`), `render_standing` (the map's corner readings; `--locked`, `--lang`, `--contact`, `--measure` the same gate),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
 `render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`, `render_reminders`
 (`--settings`, `--lang`, `--measure` fails on a caption at its floor), `render_ad_offers` (the video continue
@@ -783,7 +798,8 @@ and the turret discount where they are sold; `--contact`, `--lang`, `--measure` 
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
 `ward-seats.mjs`, `keeper-spend.mjs`, `daily-pass.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
 removes only those, preconditioned; players on a deals build can see them for the minute it runs),
-`admin-gift.mjs` (writes a gift onto its own new account's wallet with the owner token and claims it).
+`admin-gift.mjs` (writes a gift onto its own new account's wallet with the owner token and claims it),
+`first-steps.mjs` (a step chest waits for the save, then pays the re-rolled amount once; deletes its account).
 
 **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, Test Runner (EditMode). Reload the
 domain before believing a failure after a play-mode session.
@@ -885,7 +901,7 @@ gates print the derived totals.
 
 - **Live on the App Store (id `6804516450`) and Google Play.** Ads via LevelPlay (ironSource, AdMob partner
   bidding, Unity Ads); `app-ads.txt` live at `tekoworld.com` (repo root and website `public/` byte-identical).
-- **Save schema v45**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
+- **Save schema v46**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
 - **Cloud**: Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22, `europe-west1`; anonymous by
   default with Apple/Google linking and per-account local archives. `gcloud functions list` is the authority
   on deployed functions. Firebase Unity SDK 13.15.0 as vendored tarballs under `GooglePackages/` (gitignored;

@@ -421,6 +421,8 @@ namespace GlimmerGrove.Tests
                 ("tasks.welcome.claimed", "d.tasks.welcome.claimed", Tasks.WelcomeLedger.MaxRows),
                 ("tasks.welcome.coined",  "d.tasks.welcome.coined",  Tasks.WelcomeLedger.MaxRows),
                 ("tasks.dealsSeen",       "d.tasks.dealsSeen",       Store.DealSeen.MaxIds),
+                ("tasks.stepsEarned",     "d.tasks.stepsEarned",     Progression.FirstStepsLedger.MaxEarned),
+                ("tasks.stepsTaken",      "d.tasks.stepsTaken",      Progression.FirstStepsLedger.MaxTaken),
                 ("challenges.today",  "d.challenges.today",  Challenges.ChallengeLedger.MaxTodayRows),
                 ("challenges.clears", "d.challenges.clears", Challenges.ChallengeLedger.MaxClearRows),
                 ("challenges.tiers",  "d.challenges.tiers",  Challenges.ChallengeLedger.MaxTierRows),

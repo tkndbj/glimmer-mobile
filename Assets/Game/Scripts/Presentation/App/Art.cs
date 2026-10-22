@@ -697,6 +697,94 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// A puff of smoke or dust: a lumpy, billowing silhouette with a soft edge, lit from above
+        /// so it reads as a volume rather than a disc.
+        ///
+        /// <para>
+        /// <b>Painted in grey and tinted by the image</b>, so one puff is warm dust under a slam,
+        /// cool mist over a chest and soot round a fire: the tint multiplies a light top into a
+        /// darker belly. <b>The lumps are a seeded noise field</b>, never a product of sines, which
+        /// tiles into a lattice (the anvil's lesson, CRAFT.md); <paramref name="seed"/> picks one of
+        /// a few silhouettes so a cloud of them is not one puff stamped many times.
+        /// </para>
+        /// <para>
+        /// Generated rather than addressed for the rule every ceremony keeps (invariant 7b): a
+        /// slam over a run screen and a slam over the hub must both have their dust, whatever
+        /// scope happens to be loaded.
+        /// </para>
+        /// </summary>
+        public static Sprite Smoke(int size = 128, int seed = 0)
+        {
+            float h = size * .5f;
+            float ox = seed * 7.31f, oy = seed * 3.17f;
+
+            return MakeRGBA($"smoke{size}_{seed}", size, size, (x, y) =>
+            {
+                float u = (x - h) / h, v = (y - h) / h;
+                float d = Mathf.Sqrt(u * u + v * v);
+
+                // The silhouette: a radius that wanders with a low-frequency field, so the rim is
+                // a run of lobes rather than a circle.
+                float lumps = Fbm(u * 1.9f + ox, v * 1.9f + oy, 3);
+                float edge = .58f + .34f * lumps;
+                float body = Mathf.Clamp01((edge - d) / .30f);
+                body = body * body * (3f - 2f * body);
+
+                // Inside it, a finer field thins the cloud in places, which is what separates
+                // smoke from a soft ball.
+                float wisp = .58f + .42f * Fbm(u * 4.3f - ox, v * 4.3f + oy, 3);
+                float a = body * wisp;
+
+                // Lit from above and a little from the left: a pale crown over a darker belly.
+                float shade = Mathf.Lerp(.56f, 1f, Mathf.Clamp01(.55f + .45f * (v * .85f - u * .25f)));
+                shade *= .86f + .14f * lumps;
+
+                byte g = (byte)(Mathf.Clamp01(shade) * 255f + .5f);
+                return new Color32(g, g, g, (byte)(Mathf.Clamp01(a) * 255f + .5f));
+            });
+        }
+
+        /// <summary>Value noise in [0, 1] on an integer lattice, smoothly interpolated. Deterministic.</summary>
+        static float ValueNoise(float x, float y)
+        {
+            int ix = Mathf.FloorToInt(x), iy = Mathf.FloorToInt(y);
+            float fx = x - ix, fy = y - iy;
+            float sx = fx * fx * (3f - 2f * fx), sy = fy * fy * (3f - 2f * fy);
+
+            float a = Lattice(ix, iy), b = Lattice(ix + 1, iy);
+            float c = Lattice(ix, iy + 1), d = Lattice(ix + 1, iy + 1);
+
+            return Mathf.Lerp(Mathf.Lerp(a, b, sx), Mathf.Lerp(c, d, sx), sy);
+        }
+
+        /// <summary>A lattice point's value: an integer hash, so the field is the same on every device.</summary>
+        static float Lattice(int x, int y)
+        {
+            unchecked
+            {
+                uint h = (uint)x * 374761393u + (uint)y * 668265263u;
+                h = (h ^ (h >> 13)) * 1274126177u;
+                h ^= h >> 16;
+                return (h & 0xFFFFFF) / (float)0xFFFFFF;
+            }
+        }
+
+        /// <summary>A few octaves of <see cref="ValueNoise"/>, normalised back to [0, 1].</summary>
+        static float Fbm(float x, float y, int octaves)
+        {
+            float sum = 0f, amp = 1f, total = 0f;
+            for (int i = 0; i < octaves; i++)
+            {
+                sum += ValueNoise(x, y) * amp;
+                total += amp;
+                x *= 2.03f;
+                y *= 2.03f;
+                amp *= .5f;
+            }
+            return total > 0f ? sum / total : 0f;
+        }
+
+        /// <summary>
         /// A bolt's cross-section: full in the middle, falling to nothing at both edges.
         ///
         /// <b>Wide and four pixels tall, because it is read across and never along.</b>

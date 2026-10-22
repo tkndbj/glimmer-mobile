@@ -1226,7 +1226,7 @@ The optional `hearts` block. How many hearts a player holds and how fast they co
   "boostedRefillSeconds": 14400,
   "maxBoostHours": 72,
   "defeatCost": 1,
-  "graceLevels": 3
+  "graceLevels": 10
 }
 ```
 
@@ -1244,8 +1244,9 @@ Two numbers, and the difference between them is the feature:
   Keep a healthy gap: an ad pays 2 and a chest can pay 3, so a ceiling within a few of the
   cap means collected hearts are routinely thrown away. `Validate Content` warns about it.
 
-**`graceLevels` is where the gate does not apply.** The first three levels of the first
-chapter of *each mode* cost no heart at all - lose them, restart them or walk away from
+**`graceLevels` is where the gate does not apply.** The first ten levels of the first
+chapter of *each mode* - the whole of Thornwatch's first chapter (the owner, 2026-10-22: most
+new players left before the sixth level) - cost no heart at all - lose them, restart them or walk away from
 them as often as you like. It is per mode rather than once per account because a mode
 shipped a year from now is somebody's first board of that mode: Thornwatch is matched
 rather than turned and is lost on a ward line rather than on moves, so a player meeting it
@@ -1254,8 +1255,8 @@ window is counted inside the first chapter and stops at that chapter's end, so t
 three means three of ten on a full chapter and all of a one-glade one. Nought switches it
 off and is a legal value; unwritten inherits three. `HeartStake` owns the rule, nothing
 about a free run is written to the save, and `Validate Content` prints where the window
-lands in every mode - and warns if it swallows a whole first chapter of more than one
-level, because the heart gate then does not exist anywhere on that map.
+lands in every mode, and says so when it covers a whole first chapter - the shipped setting,
+so the gate begins at the second chapter.
 
 **Every field here is safe to lower, and that is a designed property rather than a
 coincidence.** Lowering `refillCap` stops the clock earlier and leaves anybody above it
@@ -1360,6 +1361,36 @@ unconfirmed if `config/progression` has no usable tasks block, so a retune that 
 stops the chests paying out rather than paying the wrong amount. The generator exists **three**
 times for this block - `ChestSeed.cs`, `functions/src/tasks.ts` and `Tools/make_task_vectors.py`,
 which writes the `taskChestCases` vectors both harnesses run.
+
+### The first steps
+
+What a new player is handed the first time they clear a named level (`FirstStepTable`,
+invariant 65). One step a level, keyed on the level id (invariant 1), never a position:
+
+```json
+"firstSteps": {
+  "steps": [
+    { "level": "s01_ironward",   "kind": "turret",  "ward": "siphon", "colour": "r" },
+    { "level": "s01_stonewatch", "kind": "welcome" },
+    { "level": "s03_blightfen",  "kind": "chests",  "tier": "royal",  "count": 2 }
+  ]
+}
+```
+
+- **`turret`** hands the turret over on its one seat at the clear (`WardLedger.Grant`, no
+  server), then `WardGiftOverlay` slams it down with an EQUIP key.
+- **`welcome`** hands over nothing: `WelcomeStepOverlay` shows the welcome bonus's first open
+  quest with today's box stamped, and carries the reminder ask when the cadence allows one.
+- **`chests`** pays `count` chests of a tasks-block tier (1-4), each opened through the chest
+  ceremony; the currency is a claim `steps:{level}:{n}:{currency}` the server re-rolls and pays
+  only once the save shows the level cleared (`steps.ts`). The block is published by
+  `seed-config.mjs`, so **re-seed after any change**.
+
+Only a first clear made on a build that knows the step earns it (`stepsEarned` in the save), so
+a returning player is handed nothing for boards finished before. A field a kind does not read
+is refused, and so is the whole block on any fault; absent is the feature off. `content.py`
+proves every level is shipped and prints where each step stands; `render_first_steps.py
+--measure` holds the captions.
 
 ### Daily chests
 

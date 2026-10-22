@@ -6294,6 +6294,46 @@
       "text": "Odebrano"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "PREZENT DLA CIEBIE!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "Nowa wieża odblokowana!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "BRAWO!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Dzień {0} z {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Wróć jutro, aby zaznaczyć kolejne pole!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Wróć jutro po kolejne pole! Chcesz przypomnienie?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "Twoja wieża jest gotowa! Odbierz ją w Bonusie powitalnym."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "Świetnie ci idzie! Otwórz skrzynie."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "OTWÓRZ"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "OBEJRZYJ FILM, BY ODEBRAĆ"
     },

@@ -1,10 +1,10 @@
 {
   "_comment": "The offer engine's tuning (invariant 64), published as config/offers by node firebase/seed/seed-offers.mjs [--check]. Raise revision for every publish. Revision 1 must equal OfferTuning.ShippedJson (OfferTuningTests). The stop is enabled: false. Measures, moments and looks are code; thresholds, segments, offers, products and pacing are content. Every product must sit on the offers shelf of progression.json and be registered in both stores.",
   "schema": 1,
-  "revision": 1,
+  "revision": 2,
   "enabled": true,
   "holdoutPercent": 10,
-  "minClearedLevels": 3,
+  "minClearedLevels": 10,
   "perDay": 2,
   "perSession": 1,
   "gapMinutes": 90,

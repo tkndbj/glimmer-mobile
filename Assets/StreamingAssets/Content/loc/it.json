@@ -6294,6 +6294,46 @@
       "text": "Riscosso"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "UN REGALO PER TE!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "Nuova torretta sbloccata!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "BEN FATTO!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Giorno {0} di {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Torna domani per spuntare la prossima casella!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Torna domani per la prossima casella! Vuoi un promemoria?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "La tua torretta è pronta! Ritirala nel Bonus di benvenuto."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "Sei in gran forma! Apri i tuoi forzieri."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "APRI"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "GUARDA UN VIDEO PER RISCUOTERE"
     },

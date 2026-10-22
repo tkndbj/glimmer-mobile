@@ -97,7 +97,8 @@ namespace GlimmerGrove.Progression
                          RankLadder ranks, KeeperLadder keeperLevels,
                          KeeperMilestoneTable keeperMilestones,
                          EndlessCheckpointTable endlessCheckpoints,
-                         WelcomeTable welcome)
+                         WelcomeTable welcome,
+                         FirstStepTable firstSteps)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -123,6 +124,7 @@ namespace GlimmerGrove.Progression
             KeeperMilestones = keeperMilestones ?? KeeperMilestoneTable.Empty;
             EndlessCheckpoints = endlessCheckpoints ?? EndlessCheckpointTable.Empty;
             Welcome = welcome ?? WelcomeTable.Empty;
+            FirstSteps = firstSteps ?? FirstStepTable.Empty;
         }
 
         /// <summary>
@@ -205,6 +207,14 @@ namespace GlimmerGrove.Progression
         /// entitlement that buys no currency (invariant 15), so there is nothing to adjudicate.
         /// </summary>
         public WelcomeTable Welcome { get; }
+
+        /// <summary>
+        /// What a new player is handed the first time they clear a named level.
+        /// <see cref="FirstStepTable.Empty"/> - nothing handed over - when the file carries no
+        /// block or the block has a fault in it. Published to the server, which re-rolls a chest
+        /// step's chests (10a).
+        /// </summary>
+        public FirstStepTable FirstSteps { get; }
 
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
@@ -694,11 +704,16 @@ namespace GlimmerGrove.Progression
             // is worse than no page.
             var welcome = WelcomeTable.Resolve(dto.welcome, wards, problems);
 
+            // And the first steps. Read against the roster, whose turrets a step hands over, and
+            // against the tasks block, whose tiers a chest step pays. Absent is the feature off,
+            // and so is a block with a fault in it - a step that cannot pay must not be shown.
+            var firstSteps = FirstStepTable.Resolve(dto.firstSteps, wards, tasks, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
                           endless, xpBoost, ranks, keeperLevels, keeperMilestones,
-                          endlessCheckpoints, welcome);
+                          endlessCheckpoints, welcome, firstSteps);
             return true;
         }
 
@@ -717,7 +732,8 @@ namespace GlimmerGrove.Progression
                                       KeeperLadder keeperLevels = null,
                                       KeeperMilestoneTable keeperMilestones = null,
                                       EndlessCheckpointTable endlessCheckpoints = null,
-                                      WelcomeTable welcome = null)
+                                      WelcomeTable welcome = null,
+                                      FirstStepTable firstSteps = null)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -738,7 +754,7 @@ namespace GlimmerGrove.Progression
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
                                         endless, xpBoost, ranks, keeperLevels, keeperMilestones,
-                                        endlessCheckpoints, welcome);
+                                        endlessCheckpoints, welcome, firstSteps);
         }
     }
 }

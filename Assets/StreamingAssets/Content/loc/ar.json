@@ -6294,6 +6294,46 @@
       "text": "تم الاستلام"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "هدية لك!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "تم فتح برج جديد!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "أحسنت!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "اليوم {0} من {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "عد غدا لتضع علامة على المربع التالي!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "عد غدا للمربع التالي! هل تريد تذكيرا؟"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "برجك جاهز! استلمه من مكافأة الترحيب."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "أنت تبلي بلاء حسنا! افتح صناديقك."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "افتح"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "شاهد فيديو للاستلام"
     },

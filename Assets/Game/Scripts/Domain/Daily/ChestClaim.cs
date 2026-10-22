@@ -106,6 +106,19 @@ namespace GlimmerGrove.Daily
                 () => Progression.KeeperMilestoneLedger.TryCollect(level, out var drops) ? drops : null);
         }
 
+        /// <summary>
+        /// One chest of a first step (<c>FirstStepsLedger</c>). Invalid for anything that is not a
+        /// chest step, or for a chest index the step does not hand over.
+        /// </summary>
+        public static ChestClaim ForFirstStep(Progression.FirstStep step, int chest)
+        {
+            if (step == null || step.Kind != Progression.FirstStepKind.Chests || step.Tier == null) return default;
+            if (chest < 0 || chest >= step.Count) return default;
+
+            return new ChestClaim(step.Tier,
+                () => Progression.FirstStepsLedger.TryOpen(step, chest, out var drops) ? drops : null);
+        }
+
         /// <summary>One rung of a season's ladder, on one of its two tracks.</summary>
         public static ChestClaim ForSeason(GroveEvent season, EventMilestone rung, SeasonTrack track)
         {

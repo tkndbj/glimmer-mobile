@@ -1349,8 +1349,8 @@ namespace GlimmerGrove
             // Offered here and nowhere else. A player who has just finished a chapter has
             // something worth keeping, which is exactly when asking them to protect it is a
             // service rather than an obstacle - and the answer costs nothing either way.
-            bool offerAccount = FinishedAChapter(index)
-                                && AccountPrompts.ShouldOffer(AccountPromptTrigger.Chapter);
+            _offerAccount = FinishedAChapter(index)
+                            && AccountPrompts.ShouldOffer(AccountPromptTrigger.Chapter);
 
             // The tap, written out rather than nested three lambdas deep: it now asks a
             // question before it agrees to get out of the way.
@@ -1368,27 +1368,14 @@ namespace GlimmerGrove
                     return;
                 }
 
-                Close(() =>
+                // What the tap meant, whether or not something borrows it first. Handed on rather
+                // than dropped: a nudge that eats a Next is a button that did nothing, which is how
+                // a player learns to distrust the button rather than the panel.
+                Close(() => Leave(() =>
                 {
-                    // What the tap meant, whether or not the nudge borrows it first. Handed to
-                    // the panel rather than dropped: a nudge that eats a Next is a button that
-                    // did nothing, which is how a player learns to distrust the button rather
-                    // than the panel.
-                    void Onward()
-                    {
-                        if (last) Flow.Go<LevelsScreen>();
-                        else PlayRoute.Open(nextId);
-                    }
-
-                    // Asked again rather than trusting the flag measured when the row was laid
-                    // out: a sync can link this device while the panel is up, and Offer is the
-                    // only thing that spends the budget, so the two can never disagree.
-                    if (offerAccount
-                        && AccountPrompts.Offer(AccountPromptTrigger.Chapter, Onward))
-                        return;
-
-                    Onward();
-                });
+                    if (last) Flow.Go<LevelsScreen>();
+                    else PlayRoute.Open(nextId);
+                }));
             }
 
             var nextButton = UIKit.TextButton("Next", Panel, "btn_green",
@@ -1400,15 +1387,48 @@ namespace GlimmerGrove
             var replayId = Run.Level;
             UIKit.IconButton("Replay", Panel, "sq_orange", "ic_restart", new Vector2(138f, 138f),
                              new Vector2(.5f, 0f), new Vector2(-SideButtonX, ButtonY),
-                             () => Close(() => PlayRoute.Open(replayId)));
+                             () => Close(() => Leave(() => PlayRoute.Open(replayId))));
 
             // Skins.Nav rather than the literal, so this panel moves with the rule the rest of
             // the chrome now follows. Replay keeps its own orange: only the greys moved.
             UIKit.IconButton("Map", Panel, Skins.Nav, "ic_home", new Vector2(138f, 138f),
                              new Vector2(.5f, 0f), new Vector2(SideButtonX, ButtonY),
-                             () => Close(() => Flow.Go<LevelsScreen>()));
+                             () => Close(() => Leave(() => Flow.Go<LevelsScreen>())));
 
             return nextButton;
+        }
+
+        /// <summary>Whether this run finished a chapter the account panel may still ask about.</summary>
+        bool _offerAccount;
+
+        /// <summary>
+        /// Every exit from this panel - next, replay, the map, the back key - goes through here once
+        /// the panel has closed, carrying what the player tapped. One thing at most borrows the tap
+        /// before it is honoured, so a new player meets one moment after a run, never a stack:
+        ///
+        /// <list type="number">
+        /// <item>a first step this run earned (<see cref="FirstStepsMoment.AfterVictory"/>) - the
+        /// turret delivered, the welcome bonus's day stamped, the chests delivered;</item>
+        /// <item>else, at a chapter's end, the account panel (<see cref="AccountPrompts.Offer"/>),
+        /// which hushes the hub's popups behind it as a step does;</item>
+        /// <item>else nothing, and the tap goes straight through.</item>
+        /// </list>
+        /// Each resumes <paramref name="onward"/> exactly once however it ends.
+        /// </summary>
+        void Leave(Action onward)
+        {
+            if (FirstStepsMoment.AfterVictory(Run, onward)) return;
+
+            // Asked again rather than trusting the flag measured when the row was laid out: a sync
+            // can link this device while the panel is up, and Offer is the only thing that spends
+            // the budget, so the two can never disagree.
+            if (_offerAccount && AccountPrompts.Offer(AccountPromptTrigger.Chapter, onward))
+            {
+                FirstStepsMoment.Hush();
+                return;
+            }
+
+            onward();
         }
 
         /// <summary>Where the button row sits above the frame's bottom edge, and how far out.</summary>
@@ -1456,7 +1476,7 @@ namespace GlimmerGrove
         {
             if (_bubble) { CloseRouteInfo(); return true; }
 
-            Close(() => Flow.Go<LevelsScreen>());
+            Close(() => Leave(() => Flow.Go<LevelsScreen>()));
             return true;
         }
     }

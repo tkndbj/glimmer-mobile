@@ -142,7 +142,8 @@ namespace GlimmerGrove
             && Application.isFocused
             && LaunchCalm.IsSettled
             && !AdPrivacy.Owed
-            && !AdPrivacy.IsAsking;
+            && !AdPrivacy.IsAsking
+            && !FirstStepsMoment.Hushed;
 
         /// <summary>
         /// Analytics spelling. Permanent once a dashboard reads it. No default answer (44e): a

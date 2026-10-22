@@ -82,6 +82,13 @@
       { "id": "w4_glacier",    "ward": "glacier",    "colour": "y", "goal": "streak",         "days": 10 }
     ]
   },
+  "firstSteps": {
+    "steps": [
+      { "level": "s01_ironward",   "kind": "turret",  "ward": "siphon", "colour": "r" },
+      { "level": "s01_stonewatch", "kind": "welcome" },
+      { "level": "s03_blightfen",  "kind": "chests",  "tier": "royal",  "count": 2 }
+    ]
+  },
   "xpBoost": {
     "watchedPercent": 50,
     "watchedHours": 2,
@@ -267,7 +274,7 @@
     "defeatCost": 1,
     "rescueGems": 20,
     "rescueHearts": 2,
-    "graceLevels": 3
+    "graceLevels": 10
   },
   "hints": {
     "refillCap": 3,

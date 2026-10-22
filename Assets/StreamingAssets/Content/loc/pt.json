@@ -6294,6 +6294,46 @@
       "text": "Coletado"
     },
     {
+      "key": "ui.steps.gift_title",
+      "text": "UM PRESENTE PARA VOCÊ!"
+    },
+    {
+      "key": "ui.steps.turret_title",
+      "text": "Nova torre desbloqueada!"
+    },
+    {
+      "key": "ui.steps.well_done",
+      "text": "MUITO BEM!"
+    },
+    {
+      "key": "ui.steps.day_of",
+      "text": "Dia {0} de {1}"
+    },
+    {
+      "key": "ui.steps.come_back",
+      "text": "Volte amanhã para marcar a próxima caixa!"
+    },
+    {
+      "key": "ui.steps.come_back_remind",
+      "text": "Volte amanhã para a próxima caixa! Quer um lembrete?"
+    },
+    {
+      "key": "ui.steps.welcome_ready",
+      "text": "Sua torre está pronta! Pegue no Bônus de boas-vindas."
+    },
+    {
+      "key": "ui.steps.chests_line",
+      "text": "Você está mandando bem! Abra seus baús."
+    },
+    {
+      "key": "ui.steps.chest_count",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.steps.open",
+      "text": "ABRIR"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "ASSISTA A UM VÍDEO PARA PEGAR"
     },

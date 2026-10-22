@@ -241,15 +241,17 @@ namespace GlimmerGrove.Offers
         }
 
         /// <summary>
-        /// Revision 1 of <c>firebase/seed/offers.json</c>, built in. Kept equal to it by
-        /// <c>OfferTuningTests.TheSeedFileAtRevisionOneIsTheBuiltInTuning</c>; change both together.
+        /// The current revision of <c>firebase/seed/offers.json</c>, built in, so a device that has
+        /// not read the published one deals by the same rules. Kept equal to the seed file at this
+        /// revision by <c>OfferTuningTests.TheSeedFileAtTheBuiltInRevisionIsTheBuiltInTuning</c>;
+        /// change both together. Revision 2 opens offers after the first chapter (ten levels).
         /// </summary>
         public const string ShippedJson = @"{
   ""schema"": 1,
-  ""revision"": 1,
+  ""revision"": 2,
   ""enabled"": true,
   ""holdoutPercent"": 10,
-  ""minClearedLevels"": 3,
+  ""minClearedLevels"": 10,
   ""perDay"": 2,
   ""perSession"": 1,
   ""gapMinutes"": 90,

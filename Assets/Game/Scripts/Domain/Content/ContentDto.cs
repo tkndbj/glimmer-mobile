@@ -1160,6 +1160,17 @@ namespace GlimmerGrove.Content
         public WelcomeDto welcome;
 
         /// <summary>
+        /// The first steps: what a new player is handed the first time they clear a named level -
+        /// a turret, the welcome bonus's progress, chests. Optional; see
+        /// <see cref="Progression.FirstStepTable"/>.
+        ///
+        /// <b>Published by <c>seed-config.mjs</c></b>, because a chest step's currency is a claim
+        /// the server re-rolls (10a) and a step it has never heard of is a claim it cannot price.
+        /// <b>Absent switches the feature off</b>: nothing handed over, nothing confiscated.
+        /// </summary>
+        public FirstStepsDto firstSteps;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -2586,5 +2597,43 @@ namespace GlimmerGrove.Content
 
         /// <summary>How many distinct days the verb has to happen on. 2 to <c>WelcomeTable.MaxDays</c>.</summary>
         public int days;
+    }
+
+    /// <summary>The first steps block. See <see cref="Progression.FirstStepTable"/>.</summary>
+    [Serializable]
+    public sealed class FirstStepsDto
+    {
+        /// <summary>The steps, in the order a player meets their levels.</summary>
+        public FirstStepDto[] steps;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => steps != null && steps.Length > 0;
+    }
+
+    /// <summary>
+    /// One first step: a level, and what clearing it for the first time hands over. Which fields
+    /// a step carries depends on its <see cref="kind"/>; a field a kind does not read is refused
+    /// rather than ignored (5f), so a step cannot quietly promise what it never pays.
+    /// </summary>
+    [Serializable]
+    public sealed class FirstStepDto
+    {
+        /// <summary>The level whose first clear earns it, by permanent id (invariant 1).</summary>
+        public string level;
+
+        /// <summary><c>turret</c>, <c>welcome</c> or <c>chests</c>. See <see cref="Progression.FirstStepKinds"/>.</summary>
+        public string kind;
+
+        /// <summary>A turret step: the turret handed over, by roster id. Never a starter.</summary>
+        public string ward;
+
+        /// <summary>A turret step: the one seat it is handed over on (r, g, b or y).</summary>
+        public string colour;
+
+        /// <summary>A chest step: the chest tier, one of the tasks block's.</summary>
+        public string tier;
+
+        /// <summary>A chest step: how many chests of that tier. 1 to <c>FirstStepTable.MaxChests</c>.</summary>
+        public int count;
     }
 }

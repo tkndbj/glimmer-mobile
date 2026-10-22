@@ -917,6 +917,12 @@ namespace GlimmerGrove.Cloud
                 // lifetime tally's reason, and it has to travel: a deal dismissed on one phone is a
                 // popup the other phone must not raise again.
                 { "dealsSeen", Ids(tasks?.dealsSeen) },
+
+                // The first steps (save v46): the levels whose first clear earned a step and what
+                // was handed over. Inside this map for the lifetime tally's reason, and it has to
+                // travel: a chest opened on one phone is a chest the other must not open again.
+                { "stepsEarned", Ids(tasks?.stepsEarned) },
+                { "stepsTaken", Ids(tasks?.stepsTaken) },
             };
 
         /// <summary>A list of non-empty ids, as written. Drops exactly what the reader drops.</summary>
@@ -1033,6 +1039,8 @@ namespace GlimmerGrove.Cloud
                 lifetime = new TaskCountDto[0],
                 welcome = ReadWelcome(null),
                 dealsSeen = new string[0],
+                stepsEarned = new string[0],
+                stepsTaken = new string[0],
             };
             if (!(Map(doc, "tasks") is IDictionary<string, object> map)) return tasks;
 
@@ -1041,6 +1049,8 @@ namespace GlimmerGrove.Cloud
             tasks.lifetime = ReadCounts(map, "lifetime");
             tasks.welcome = ReadWelcome(Map(map, "welcome") as IDictionary<string, object>);
             tasks.dealsSeen = ReadIds(map, "dealsSeen");
+            tasks.stepsEarned = ReadIds(map, "stepsEarned");
+            tasks.stepsTaken = ReadIds(map, "stepsTaken");
             return tasks;
         }
 

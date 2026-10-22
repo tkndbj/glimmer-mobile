@@ -156,6 +156,29 @@ namespace GlimmerGrove
         /// </param>
         public static CeremonyFx Attach(RectTransform parent, string name,
                                         params (Sprite sprite, int count)[] warm)
+            => Attach(parent, name, true, warm);
+
+        /// <summary>
+        /// A layer of <em>matter</em> rather than light: smoke, dust and rubble, drawn with the
+        /// ordinary blend so a puff can be darker than what is behind it. The same pool, loop and
+        /// recipes as <see cref="Attach(RectTransform, string, (Sprite, int)[])"/>.
+        ///
+        /// <para>
+        /// <b>Sorting by sprite is still free here, and that is a looser argument than the light's.</b>
+        /// Ordinary blending is not commutative, so the order two puffs are drawn in does change
+        /// the pixel where they overlap - but puffs of one cloud are one tone at one alpha, and
+        /// which of two identical grey lobes is in front is not a difference anybody can see.
+        /// What the layer must not do is interleave matter with light, which is why it is a
+        /// layer of its own: place it below the additive one and dust is lit by the flash, never
+        /// drawn over it.
+        /// </para>
+        /// </summary>
+        public static CeremonyFx AttachSoft(RectTransform parent, string name,
+                                            params (Sprite sprite, int count)[] warm)
+            => Attach(parent, name, false, warm);
+
+        static CeremonyFx Attach(RectTransform parent, string name, bool additive,
+                                 (Sprite sprite, int count)[] warm)
         {
             var node = UIKit.Node(name, parent);
 
@@ -165,7 +188,7 @@ namespace GlimmerGrove
 
             var fx = node.gameObject.AddComponent<CeremonyFx>();
             fx._node = node;
-            fx._material = Additive.Material;
+            fx._material = additive ? Additive.Material : null;
 
             if (warm != null)
                 foreach (var (sprite, count) in warm)
@@ -556,6 +579,77 @@ namespace GlimmerGrove
                 FadeIn = .1f,
                 FadePower = .9f,
             });
+        }
+
+        /// <summary>
+        /// Smoke rolled out along the ground from a point, both ways at once - what a heavy thing
+        /// landing throws sideways. Each puff is fast at birth and dragged to a stop, swelling as
+        /// it slows, so the cloud reads as pushed air rather than as particles flying.
+        /// </summary>
+        /// <param name="sprites">A few <see cref="Art.Smoke"/> silhouettes, dealt round so the cloud is not one puff repeated.</param>
+        /// <param name="spread">The ground's half-depth: how far above and below the line a puff may start.</param>
+        public void Billow(Sprite[] sprites, Vector2 at, Color colour, int count, float slow, float fast,
+                           float size, float life, float spread = 26f, float lift = 60f, float delay = 0f)
+        {
+            if (sprites == null || sprites.Length == 0) return;
+
+            for (int i = 0; i < count; i++)
+            {
+                float side = i % 2 == 0 ? 1f : -1f;
+                float speed = UnityEngine.Random.Range(slow, fast);
+                float rise = UnityEngine.Random.Range(.05f, lift);
+
+                Emit(new Mote
+                {
+                    Sprite = sprites[i % sprites.Length],
+                    Colour = colour,
+                    At = at + new Vector2(UnityEngine.Random.Range(-40f, 40f), UnityEngine.Random.Range(-spread, spread)),
+                    Velocity = new Vector2(side * speed, rise),
+                    Life = life * UnityEngine.Random.Range(.75f, 1.25f),
+                    Delay = delay + UnityEngine.Random.Range(0f, .06f),
+                    Size = size * UnityEngine.Random.Range(.55f, .9f),
+                    SizeEnd = size * UnityEngine.Random.Range(1.6f, 2.4f),
+                    Grow = Ease.OutQuint,
+                    Drag = 3.1f,
+                    Gravity = -18f,
+                    Rotation = UnityEngine.Random.Range(0f, 360f),
+                    Spin = UnityEngine.Random.Range(-40f, 40f),
+                    FadeIn = .06f,
+                    FadePower = 1.25f,
+                });
+            }
+        }
+
+        /// <summary>
+        /// A column of smoke climbing slowly off a point and spreading as it goes - the dust a
+        /// slam leaves hanging behind the thing that made it.
+        /// </summary>
+        public void Plume(Sprite[] sprites, Vector2 at, Color colour, int count, float width, float size,
+                          float life, float speed = 150f, float delay = 0f)
+        {
+            if (sprites == null || sprites.Length == 0) return;
+
+            for (int i = 0; i < count; i++)
+            {
+                Emit(new Mote
+                {
+                    Sprite = sprites[(i + 1) % sprites.Length],
+                    Colour = colour,
+                    At = at + new Vector2(UnityEngine.Random.Range(-width, width), UnityEngine.Random.Range(0f, 30f)),
+                    Velocity = new Vector2(UnityEngine.Random.Range(-60f, 60f), speed * UnityEngine.Random.Range(.6f, 1.3f)),
+                    Life = life * UnityEngine.Random.Range(.8f, 1.2f),
+                    Delay = delay + i * .025f,
+                    Size = size * UnityEngine.Random.Range(.6f, 1f),
+                    SizeEnd = size * UnityEngine.Random.Range(1.7f, 2.3f),
+                    Grow = Ease.OutQuint,
+                    Drag = 1.4f,
+                    Rotation = UnityEngine.Random.Range(0f, 360f),
+                    Spin = UnityEngine.Random.Range(-25f, 25f),
+                    Sway = UnityEngine.Random.Range(6f, 18f),
+                    FadeIn = .1f,
+                    FadePower = 1.4f,
+                });
+            }
         }
 
         void OnDestroy()

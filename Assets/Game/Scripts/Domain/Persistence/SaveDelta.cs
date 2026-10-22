@@ -496,7 +496,9 @@ namespace GlimmerGrove.Persistence
             && SamePeriod(a?.weekly, b?.weekly)
             && SameCounts(a?.lifetime, b?.lifetime)
             && SameWelcome(a?.welcome, b?.welcome)
-            && SameIds(a?.dealsSeen, b?.dealsSeen);
+            && SameIds(a?.dealsSeen, b?.dealsSeen)
+            && SameIds(a?.stepsEarned, b?.stepsEarned)
+            && SameIds(a?.stepsTaken, b?.stepsTaken);
 
         /// <summary>
         /// A sorted id list, walked in order - <c>DealSeen.Write</c> writes it sorted. It has to

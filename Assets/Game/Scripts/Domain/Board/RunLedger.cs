@@ -217,6 +217,13 @@ namespace GlimmerGrove
                                      before.BestMoves, !before.IsCleared, before.Clears + 1,
                                      lit, wanted, hintsUsed, seconds, route);
 
+            // A first step (`FirstStepsLedger`) is noted *before* the record, so whatever it hands
+            // over lands in the save the record writes: a turret granted and a clear recorded are
+            // one file, never two. A clear is a run that leaves stars behind, which is exactly what
+            // `IsCleared` will read once the record is in.
+            if (!before.IsCleared && stars > 0)
+                Progression.FirstStepsLedger.NoteFirstClear(level.Id);
+
             PlayerProgress.RecordRun(level.Id, stars, moves, tuning.Climbs);
 
             // Counted here and in the loss, which are the two places a run actually ends.
