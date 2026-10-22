@@ -2190,6 +2190,22 @@
       "text": "ACORRENTADOR"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Ainda de pé? Então enfrente todos!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "Um guardião? Este bosque é meu."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Aproveite sua pequena vitória. Eu voltarei."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Saqueadores! Tomem a luz deles!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "ENCOURAÇADO"
     },

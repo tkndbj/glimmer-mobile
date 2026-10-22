@@ -1376,6 +1376,12 @@ namespace GlimmerGrove.Modes
             // A revive's barrier is the same cover on one post (`SiegeWard.Barrier`).
             if (Sheltered || Mantled || ward.Barrier > 0f) return false;
 
+            if (Layout.Introduction)
+            {
+                ward.Health = SiegeIntroduction.HealthAfter(ward.Health, ward.Full, damage);
+                return false;
+            }
+
             ward.Health -= damage;
             return ward.Health <= 0 && Topple(ward);
         }
@@ -1391,6 +1397,7 @@ namespace GlimmerGrove.Modes
         bool Topple(SiegeWard ward)
         {
             if (Sheltered || Mantled || ward.Barrier > 0f) return false;
+            if (Layout.Introduction) return false;
 
             ward.Health = 0;
             ward.Alive = false;
@@ -1470,6 +1477,8 @@ namespace GlimmerGrove.Modes
                 // A poisoned swinger under the rot (`SiegeBoard.Schools`). The blow itself on every
                 // build without it.
                 damage = Rot(raider, damage);
+                if (Layout.Introduction)
+                    damage = SiegeIntroduction.Damage(ward.Health, ward.Full, damage);
                 bool felled = Bear(ward, damage);
 
                 _report.Blows.Add(new SiegeBlow(w, raider.Id, damage, felled));

@@ -373,6 +373,8 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The opening field, exactly as it is dealt. Authored settled - no run of three.</summary>
         public readonly ProtoGrid Grid;
+        /// <summary>The authored opening encounter; ordinary sieges keep their existing rules.</summary>
+        public readonly bool Introduction;
 
         /// <summary>
         /// The colours the field refills from, in the order they are written.
@@ -768,9 +770,11 @@ namespace GlimmerGrove.Modes
 
         public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
                            int cogs = 0, SiegeRamp endless = null, int tough = 0,
-                           string charms = null, bool obsidian = false, bool singularity = false)
+                           string charms = null, bool obsidian = false, bool singularity = false,
+                           bool introduction = false)
         {
             Grid = grid;
+            Introduction = introduction;
             Ramp = endless;
             Cursed = obsidian;
             Singular = singularity;
@@ -1072,6 +1076,8 @@ namespace GlimmerGrove.Modes
         string Check(string boss, string charms)
         {
             if (Grid == null) return "no field";
+            if (Introduction && (IsEndless || HasBoss))
+                return "the opening scene summons ordinary waves, never a combat boss or an endless lane";
 
             // Refused by name, for the boss token's reason one line down: a body naming a charm
             // this build does not have would otherwise deal the ones it recognised and ship a

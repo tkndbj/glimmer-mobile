@@ -2190,6 +2190,22 @@
       "text": "ENCADENADOR"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "¿Sigues en pie? ¡Pues enfréntate a todos!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "¿Un guardián? Esta arboleda es mía."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Disfruta de tu pequeña victoria. Volveré."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "¡Asaltantes! ¡Tomad su luz!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "ACORAZADO"
     },

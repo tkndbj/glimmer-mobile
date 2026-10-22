@@ -2190,6 +2190,22 @@
       "text": "SHACKLER"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Still standing? Then face them all!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "A keeper? This grove belongs to me."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Keep your little victory. I will return."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Raiders! Take their light!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "IRONCLAD"
     },

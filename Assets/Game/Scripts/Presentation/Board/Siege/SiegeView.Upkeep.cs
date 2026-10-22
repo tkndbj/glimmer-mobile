@@ -117,7 +117,8 @@ namespace GlimmerGrove
 
                 Over = true;
                 Finishing?.Invoke();
-                StartCoroutine(Triumph());
+                if (_introduction != null) StartCoroutine(IntroductionTriumph());
+                else StartCoroutine(Triumph());
                 return;
             }
 

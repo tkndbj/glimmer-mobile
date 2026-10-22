@@ -2190,6 +2190,22 @@
       "text": "DER FESSLER"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Noch auf den Beinen? Dann stell dich allen!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "Ein Hüter? Dieser Hain gehört mir."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Genieß deinen kleinen Sieg. Ich komme wieder."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Räuber! Nehmt ihr Licht!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "DER GEPANZERTE"
     },

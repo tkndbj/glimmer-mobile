@@ -110,7 +110,8 @@ namespace GlimmerGrove
         /// </summary>
         void Foresight()
         {
-            if (_layout == null) return;
+            // Firstwatch is narrated by its scene actor, including the gaps between summons.
+            if (_layout == null || _layout.Introduction) return;
 
             _forecast = UIKit.Node("Forecast", _hill);
             _forecast.anchorMin = _forecast.anchorMax = new Vector2(.5f, .5f);

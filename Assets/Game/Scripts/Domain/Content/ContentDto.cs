@@ -599,6 +599,9 @@ namespace GlimmerGrove.Content
     [Serializable]
     public sealed class SiegeDto
     {
+        /// <summary>Opt-in cinematic encounter. Absent on every ordinary siege and both lanes.</summary>
+        public bool introduction;
+
         public int width;
         public int height;
 

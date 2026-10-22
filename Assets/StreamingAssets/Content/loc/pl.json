@@ -2190,6 +2190,22 @@
       "text": "SKUWACZ"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Wciąż stoisz? Zmierz się więc ze wszystkimi!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "Strażnik? Ten gaj należy do mnie."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Ciesz się małym zwycięstwem. Jeszcze wrócę."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Najeźdźcy! Zabierzcie im światło!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "OPANCERZONY"
     },

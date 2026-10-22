@@ -2190,6 +2190,22 @@
       "text": "المقيد"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "ما زلت صامدًا؟ واجههم جميعًا إذن!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "حارس؟ هذا البستان ملكي."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "استمتع بانتصارك الصغير. سأعود."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "أيها الغزاة! اسلبوا نورهم!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "المدرع"
     },

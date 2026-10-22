@@ -12,9 +12,9 @@ constants in code, one place, retuned for every level at once.
 
 **What each rung adds, in order.**
 
-  1. *First Watch* - the verb, and nothing else. Fifteen creepers in two waves, **three** wards and
-     three colours, no brutes, no cogs and no boss. It is the one rung with nothing on the hill but
-     raiders and nothing on the field but gems.
+  1. *First Watch* - the cinematic introduction. The warlord emerges from a portal and summons
+     fifteen creepers in two waves. Three wards, three colours, no cogs or charms; the warlord is
+     a scene actor rather than an additional combat wave. Only this encounter protects the line.
   2. *The Ironward* - the **cog**. A raider the line kills leaves one lying on the hill and a
      finger takes it, so what this rung teaches is that the hill is somewhere a finger goes. One
      brute, so the ramp adds a mechanic and a monster in different levels.
@@ -134,7 +134,7 @@ WIDE, TALL = 8, 5
 #: where they stood by `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only instrument
 #: that can see any of it (invariant 37j).
 LEVELS = (
-    dict(id="s01_firstwatch", seed=9753, swaps=14, charms="",
+    dict(id="s01_firstwatch", seed=9753, swaps=14, charms="", introduction=True,
          wards="rgb", gems="rgb", cogs=0, boss="",
          waves=["rgbrgb", "rgbrgbrgb"]),
 
@@ -225,6 +225,9 @@ def level(index, rung):
     # one fact, so only one of them is written down.
     if rung["charms"]:
         block["charms"] = rung["charms"]
+
+    if rung.get("introduction", False):
+        block["introduction"] = True
 
     return {
         "id": rung["id"],

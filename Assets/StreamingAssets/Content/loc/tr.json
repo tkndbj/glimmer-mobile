@@ -2190,6 +2190,22 @@
       "text": "ZİNCİRCİ"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Hâlâ ayakta mısın? O zaman hepsiyle yüzleş!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "Bir muhafız mı? Bu koru benim."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Bu küçük zafer senin olsun. Geri döneceğim."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Akıncılar! Işıklarını alın!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "ZIRHLI"
     },

@@ -2190,6 +2190,22 @@
       "text": "L'INCATENATORE"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Resisti ancora? Allora affrontali tutti!"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "Un custode? Questo boschetto è mio."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Goditi questa piccola vittoria. Tornerò."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Predoni! Prendete la loro luce!"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "IL CORAZZATO"
     },

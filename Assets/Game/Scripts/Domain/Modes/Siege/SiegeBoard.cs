@@ -282,7 +282,8 @@ namespace GlimmerGrove.Modes
             // downstream has to remember which slots are real.
             _worked = new bool[_wards.Length];
 
-            _rest = SiegeTuning.FirstWaveAfter;
+            // The introduction provides its own count-in before advancing this board.
+            _rest = layout.Introduction ? 0f : SiegeTuning.FirstWaveAfter;
 
             // **A checkpoint, honoured only where the waves never stop** (`SiegeStart`). The
             // index moves and nothing else about the hill does: every wave is a pure function of

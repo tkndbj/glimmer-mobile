@@ -2190,6 +2190,22 @@
       "text": "L'ENCHAÎNEUR"
     },
     {
+      "key": "mode.siege.intro.challenge",
+      "text": "Tu tiens encore ? Alors affronte-les tous !"
+    },
+    {
+      "key": "mode.siege.intro.claim",
+      "text": "Un gardien ? Ce bosquet est à moi."
+    },
+    {
+      "key": "mode.siege.intro.retreat",
+      "text": "Savoure ta petite victoire. Je reviendrai."
+    },
+    {
+      "key": "mode.siege.intro.summon",
+      "text": "Pillards ! Prenez leur lumière !"
+    },
+    {
       "key": "mode.siege.ironclad",
       "text": "LE CUIRASSÉ"
     },

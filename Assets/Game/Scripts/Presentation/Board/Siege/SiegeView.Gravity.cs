@@ -425,6 +425,7 @@ namespace GlimmerGrove
         Vector2 Standing(Mob mob, SiegeRaider raider)
         {
             var at = new Vector2(LaneX(raider.Lane + raider.Drift), MarchY(raider.March));
+            if (_introduction != null) at = IntroductionPosition(raider, at);
             if (mob.Orbit <= 0f) return at;
 
             float turn = mob.Id * 2.39996f - _orbit * OrbitSpeed;

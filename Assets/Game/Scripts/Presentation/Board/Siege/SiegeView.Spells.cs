@@ -1013,6 +1013,7 @@ namespace GlimmerGrove
         void Arrival(int wave)
         {
             _wave = wave + 1;
+            if (IntroductionWave(wave)) return;
 
             if (_waveLabel == null) return;
 

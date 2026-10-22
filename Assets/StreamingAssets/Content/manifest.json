@@ -152,7 +152,7 @@
     },
     {
       "id": "s01_thornwatch",
-      "version": 2,
+      "version": 3,
       "order": 140,
       "disabled": false,
       "minAppVersion": 0,

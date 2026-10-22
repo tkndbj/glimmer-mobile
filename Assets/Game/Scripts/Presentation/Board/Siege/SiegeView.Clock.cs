@@ -53,6 +53,9 @@ namespace GlimmerGrove
 
         void Update()
         {
+            // This actor exists only on the authored introduction. The normal run latch still
+            // owns pause, lessons and app suspension; the opening holds only the combat clock.
+            bool introducing = TickIntroduction(Time.unscaledDeltaTime);
             // **Before the gate, deliberately.** A board nobody may touch has to put the idle
             // clock back to nought rather than freeze it, and everything that stops a run being
             // touched - a cascade, a lesson, the pause menu, a panel over the board - reads as
@@ -92,7 +95,7 @@ namespace GlimmerGrove
             // bolt that stopped beating the moment the panel opened would freeze at whatever size
             // it happened to be. `Ready` only reads the board, and the tap it enables is still
             // refused by `Tappable` while the run is held.
-            if (!Live)
+            if (!Live || introducing)
             {
                 Ready();
                 return;

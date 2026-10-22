@@ -181,6 +181,7 @@ namespace GlimmerGrove
             // board's own quiet every frame the run is allowed to advance. See `CountIn`.
             _counted = 0;
             _counting = 0f;
+            ComposeIntroduction();
         }
 
         /// <summary>
@@ -676,6 +677,7 @@ namespace GlimmerGrove
         /// </summary>
         void CountIn()
         {
+            if (_introduction != null) return;
             if (_counted >= Beats || _board == null || _fx == null) return;
 
             // The quiet the board says is left, not the seconds this screen has been up. It does

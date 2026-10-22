@@ -1601,6 +1601,9 @@ namespace GlimmerGrove.Content
                     list.AddRange(VoidArt);
                 }
 
+                if (sends != null && sends.Introduction && seen.Add(SiegeKind.Boss))
+                    Bosses(SiegeKind.Boss, list);
+
                 if (sends == null || !sends.HasBoss) continue;
 
                 // **Every boss the rung sends, not the first**: a duel stands two
@@ -1640,6 +1643,13 @@ namespace GlimmerGrove.Content
             rules = null;
 
             var block = dto.siege;
+
+            // This is one authored encounter, not a difficulty option for chapters or lanes.
+            if (block.introduction && id.Value != "s01_firstwatch")
+            {
+                problems.Add($"{id}: the cinematic introduction belongs only to s01_firstwatch");
+                return false;
+            }
 
             // **The retired cog cell is refused by name rather than by falling through.** A `*`
             // was a cog standing on the field; cogs are dropped by felled raiders now, so a body
@@ -1718,7 +1728,7 @@ namespace GlimmerGrove.Content
 
             var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss,
                                          block.cogs, endless, block.tough, block.charms,
-                                         block.obsidian, block.singularity);
+                                         block.obsidian, block.singularity, block.introduction);
 
             if (layout.Fault != null)
             {
