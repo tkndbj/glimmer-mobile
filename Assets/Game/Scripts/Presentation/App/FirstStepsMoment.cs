@@ -52,18 +52,19 @@ namespace GlimmerGrove
         /// Whether a ceremony or the chapter's account ask has just had the player's attention.
         /// Asked by every moment that would lay a popup over the hub (<c>GiftMoment</c>,
         /// <c>DealMoment</c>, <c>OfferMoment</c>, <c>ReminderMoment</c>).
+        /// The quiet is lifted by <see cref="Tick"/>, never by this read: every one of those moments
+        /// stops at "not on the hub" before asking, so a read could never see the run that ends it.
         /// </summary>
-        public static bool Hushed
+        public static bool Hushed => _hushed;
+
+        /// <summary>
+        /// A new run is the player moving on, and the end of the quiet: the screen that was current
+        /// when the hush began was the run that earned it, so a different run screen is a run begun
+        /// since. Watched every frame, because no popup asks while a run is up.
+        /// </summary>
+        static void LiftOnNewRun(View current)
         {
-            get
-            {
-                // A new run is the player moving on, and the end of the quiet: the screen that was
-                // current when the hush began was the run that earned it, so a different run screen
-                // is a run begun since.
-                if (_hushed && Flow.Current is RunScreen && !ReferenceEquals(Flow.Current, _hushedOver))
-                    Lift();
-                return _hushed;
-            }
+            if (_hushed && current is RunScreen && !ReferenceEquals(current, _hushedOver)) Lift();
         }
 
         /// <summary>Keeps the hub quiet until the next run or the next session. Idempotent.</summary>
@@ -128,6 +129,8 @@ namespace GlimmerGrove
         /// </summary>
         public static void Tick()
         {
+            LiftOnNewRun(Flow.Current);
+
             if (!(Flow.Current is HomeScreen) || !Calm())
             {
                 _calmSince = -1f;
