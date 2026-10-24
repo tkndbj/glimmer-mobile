@@ -29,8 +29,27 @@ namespace GlimmerGrove.Analytics
             };
             // ironSource Exchange was not observed in the available callbacks/configuration.
             // It, standard AdMob and any future/unrecognized instance remain excluded.
+#elif UNITY_IOS && !UNITY_EDITOR
+            // Verified on a live iPhone (store build 1.1.2 (34)) on 2026-10-24: Google is a Partner
+            // Bidding instance here too, with its own iOS partner ad-unit ID. All eight units' load
+            // callbacks reported network="admob", instance="Bidding" and this ID, and a watched
+            // coin_bonus impression reported the identical triple (logged UnverifiedSource
+            // before this entry existed). ironSource, Unity Ads and standard AdMob were not
+            // observed and remain excluded; never authorize by network name alone.
+            const string partner = "ca-app-pub-4604184534032643/5402954156";
+            return new[]
+            {
+                new AdRevenueSource(AdConfig.IosHeartRefill, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosCoinBonus, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosWinBonus, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosHintRefill, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosXpBoost, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosChallengePlay, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosTurretDiscount, "admob", partner, AdRevenueOwner.LevelPlay),
+                new AdRevenueSource(AdConfig.IosContinueVideo, "admob", partner, AdRevenueOwner.LevelPlay)
+            };
 #else
-            // iOS ownership has not been audited; Editor mocks must never emit monetary events.
+            // Editor mocks must never emit monetary events.
             return Array.Empty<AdRevenueSource>();
 #endif
         }
