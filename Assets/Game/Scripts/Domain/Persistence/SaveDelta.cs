@@ -159,6 +159,10 @@ namespace GlimmerGrove.Persistence
             // something the server does not.
             if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;
             if (!SameShuffle(remote.shuffleBest, merged.shuffleBest)) return true;
+
+            // The builds this account has run (v47). Analytics reads them off the server's copy, so
+            // a launch on a newer build is worth a push of its own.
+            if (remote.firstBuild != merged.firstBuild || remote.lastBuild != merged.lastBuild) return true;
             if (!SameStars(remote.wardStars, merged.wardStars)) return true;
 
             // The daily challenges. Today's rows travel for the ad allowance's reason - the cap

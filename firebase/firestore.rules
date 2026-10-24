@@ -73,6 +73,7 @@ service cloud.firestore {
                  'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
                  'endlessBest',
                  'shuffleBest',
+                 'firstBuild', 'lastBuild',
                  'wardStars',
                  'tasks',
                  'challenges',
@@ -291,6 +292,15 @@ service cloud.firestore {
                // every save write (12a).
                && (!('shuffleBest' in d) || (d.shuffleBest is list
                                              && d.shuffleBest.size() <= 64))
+               // The builds this account has run (save v47, `BuildStamp`): the oldest and the
+               // newest, as `AppVersion`'s integer (1.1.3 is 10103), nought for none. For
+               // analytics; they buy nothing. Bounded at 99.99.99, which `BuildStamp.MaxBuild`
+               // matches and the client never writes past. **This ships before the v47 client**
+               // (12a).
+               && (!('firstBuild' in d) || (d.firstBuild is int
+                                            && d.firstBuild >= 0 && d.firstBuild <= 999999))
+               && (!('lastBuild' in d) || (d.lastBuild is int
+                                           && d.lastBuild >= 0 && d.lastBuild <= 999999))
                // How far each turret has been upgraded: twenty turrets on four seats is eighty,
                // and the bound matches `WardStarLedger.MaxRows` for the reason above it.
                && (!('wardStars' in d) || (d.wardStars is list

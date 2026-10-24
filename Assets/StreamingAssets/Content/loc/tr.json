@@ -3846,6 +3846,18 @@
       "text": "Al"
     },
     {
+      "key": "ui.assist.title",
+      "text": "Küçük Bir Yardım!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Bir sonraki denemen için al!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Al"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Birinci Nöbet"
     },

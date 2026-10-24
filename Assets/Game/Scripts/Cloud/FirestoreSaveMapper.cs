@@ -148,6 +148,11 @@ namespace GlimmerGrove.Cloud
                 // pays nothing. A top-level key, so `hasOnly` names it (12a).
                 { "shuffleBest", ShuffleRows(dto.shuffleBest) },
 
+                // The builds this account has run (v47), for analytics. Top-level keys, so
+                // `hasOnly` names them, and bounded there (12b) by what `BuildStamp` writes.
+                { "firstBuild", dto.firstBuild },
+                { "lastBuild", dto.lastBuild },
+
                 // How far each turret has been upgraded. A count that may be stored only
                 // because it cannot fall, so the merge is a per-key max (invariant 11b).
                 { "wardStars", Stars(dto.wardStars) },
@@ -631,6 +636,11 @@ namespace GlimmerGrove.Cloud
             // Absent on every document written before v42, which reads back as no Shuffle run
             // ever recorded - the same fact as a fresh account.
             dto.shuffleBest = ReadShuffle(doc);
+
+            // Absent on every document written before v47, which reads back as nought - no build
+            // recorded, the value the joins treat as knowing nothing.
+            dto.firstBuild = Build(doc, "firstBuild");
+            dto.lastBuild = Build(doc, "lastBuild");
             dto.wardStars = ReadStars(doc);
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)
@@ -1341,6 +1351,13 @@ namespace GlimmerGrove.Cloud
         /// through one converter means a hand-edited document loads rather than
         /// throwing halfway through a sync.
         /// </summary>
+        /// <summary>A build figure, or nought for an absent or impossible one (<c>BuildStamp.IsBuild</c>).</summary>
+        static int Build(IDictionary<string, object> map, string key)
+        {
+            long value = Long(map, key, 0L);
+            return value > 0L && value <= BuildStamp.MaxBuild ? (int)value : 0;
+        }
+
         static long Long(IDictionary<string, object> map, string key, long fallback)
         {
             if (map == null || !map.TryGetValue(key, out object value) || value == null) return fallback;

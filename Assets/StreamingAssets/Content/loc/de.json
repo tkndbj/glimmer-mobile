@@ -3846,6 +3846,18 @@
       "text": "Abholen"
     },
     {
+      "key": "ui.assist.title",
+      "text": "Kleine Hilfe!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Nimm das für deinen nächsten Versuch!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Abholen"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Die erste Wacht"
     },

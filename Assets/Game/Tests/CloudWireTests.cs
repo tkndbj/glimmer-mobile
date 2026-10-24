@@ -176,6 +176,11 @@ namespace GlimmerGrove.Tests
                 },
                 wardLoadoutSetUnix = 1_699_001_000,
 
+                // The builds this account has run (v47): two plain integers, so the fixture only
+                // has to carry something that is not nought.
+                firstBuild = 10103,
+                lastBuild = 10204,
+
                 endlessBest = new[]
                 {
                     new EndlessBestDto { level = "s02_endless", wave = 23 },

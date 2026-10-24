@@ -403,6 +403,12 @@ namespace GlimmerGrove
             if (!Flow.IsTopModal(this) || Flow.Busy || !Application.isFocused) return;
 
             _offerAsked = true;
+
+            // The helping hand's gift first (invariant 66), and a defeat that raised it asks for no
+            // offer: one panel over a loss, and the free one. Asked even while this panel sells its
+            // own way back - the gift costs nothing and is the thing that loss earned.
+            if (AssistMoment.AfterDefeat()) return;
+
             if (_selling) return;
 
             try { OfferMoment.AfterDefeat(); }

@@ -3846,6 +3846,18 @@
       "text": "Reclamar"
     },
     {
+      "key": "ui.assist.title",
+      "text": "¡Una ayudita!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "¡Llévate esto para tu próximo intento!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Reclamar"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La primera guardia"
     },

@@ -176,8 +176,10 @@ namespace GlimmerGrove.Modes
 
         /// <param name="sharePercent">What share of its own health it stands with - a hundred
         /// except for a boss of an authored duel (<see cref="SiegeLayout.ShareAt"/>).</param>
+        /// <param name="keptPercent">What share of that its board lets it keep - a hundred except on
+        /// a level the helping hand has eased (<see cref="SiegeBoard.KeptPercent"/>).</param>
         public SiegeRaider(int id, int colour, SiegeKind kind, int lane, float wait,
-                           SiegeSurge surge = default, int sharePercent = 100)
+                           SiegeSurge surge = default, int sharePercent = 100, int keptPercent = 100)
         {
             Id = id;
             Colour = colour;
@@ -186,13 +188,22 @@ namespace GlimmerGrove.Modes
             Wait = wait;
             Hold = SiegeTuning.HoldOf(kind);
             Surge = surge.HealthTenths <= 0 ? SiegeSurge.None : surge;
-            MaxHealth = SiegeTuning.Shared(Surge.Health(SiegeTuning.HealthOf(kind)), sharePercent);
+            MaxHealth = Kept(SiegeTuning.Shared(Surge.Health(SiegeTuning.HealthOf(kind)), sharePercent),
+                             keptPercent);
             Health = MaxHealth;
             Blow = SiegeTuning.BlowEvery * .5f;
             // A boss's first spell is decided when its first phase opens (`SiegeBoard.OpenPhase`),
             // which resets this; the value here is only what a boss stood on its ground by hand
             // would read. Nothing else casts, so nothing else reads it.
             Spell = SiegeTuning.PhaseWake;
+        }
+
+        /// <summary>Health after an easing, never below one: an eased raider is lighter, never absent.</summary>
+        static int Kept(int health, int keptPercent)
+        {
+            if (keptPercent >= 100 || health <= 0) return health;
+            int kept = (int)((long)health * keptPercent / 100);
+            return kept < 1 ? 1 : kept;
         }
 
         public bool Brute => Kind == SiegeKind.Brute;

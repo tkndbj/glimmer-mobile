@@ -156,7 +156,10 @@ LEVELS = (
     # has learnt the lock on three meets the widest version of it here.
     dict(id="s01_thornhollow", seed=4176, swaps=9, charms="p",
          wards="rgby", gems="rgby", cogs=25, boss="",
-         waves=["rrrgggbb", "YYYY!rrrr", "GGBBYY"]),
+         # Two of the yellow brutes and two of the last wave's are creepers since 2026-10-25: this
+         # was the rung the most new players lost on and left the game after, on the one rung
+         # where the line has just grown a fourth colour to learn.
+         waves=["rrrgggbb", "YYyy!rrrr", "GGbbYY"]),
 
     dict(id="s01_warlordsgate", seed=4510, swaps=9, charms="p",
          wards="rgby", gems="rgby", cogs=25, boss="warlord:r",
@@ -168,7 +171,10 @@ LEVELS = (
     # wears is not. It is the one raider a relief valve does not answer.
     dict(id="s01_bramblerun", seed=3603, swaps=8, charms="p",
          wards="rgby", gems="rgby", cogs=25, boss="",
-         waves=["RGby#rby", "RGBY!yRGby", "RGBYRG#gRGby"]),
+         # Ten brutes rather than sixteen since 2026-10-25, for the fourth rung's reason: the second
+         # rung players most often lost on and left after. The bulwarks and the bomber it is here
+         # to teach are untouched.
+         waves=["RGby#rby", "RGby!yrGby", "RGbyRG#gRgby"]),
 
     # Three bulwarks, and one of them in the opening wave, so the rung starts on the question
     # rather than working up to it.

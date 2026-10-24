@@ -664,7 +664,14 @@ namespace GlimmerGrove.Persistence
         ///      lists (12b) in a release that goes out before the client. Absent is empty, so no
         ///      migration - and an account that cleared the levels before v46 earned nothing, which
         ///      is the point: the steps are a new player's. The version moves for v45's reason.
-        public const int Version = 46;
+        /// v47: the app builds this account has run (<see cref="SaveFileDto.firstBuild"/>,
+        ///      <see cref="SaveFileDto.lastBuild"/>, <c>BuildStamp</c>), so analytics can split
+        ///      players by build. Stamped on every launch from <c>AppVersion.Running</c>; joined by
+        ///      the lowest non-zero and the highest (11b), nought being "absent" because no
+        ///      readable version is nought. Two new top-level keys, so the whole of 12a: the rules
+        ///      release goes out before the client. Absent is nought, so no migration - an account
+        ///      first stamped on v47 records the build it was on then. No gameplay reads either.
+        public const int Version = 47;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -991,6 +998,19 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public ShuffleBestDto[] shuffleBest;
+
+        /// <summary>
+        /// The oldest app build this account has run since v47, in <c>AppVersion</c>'s integer
+        /// (1.1.3 is 10103), or nought for none recorded. Joined by the lowest non-zero value
+        /// (<c>BuildStamp.JoinFirst</c>). For analytics only; nothing in the game reads it.
+        /// </summary>
+        public int firstBuild;
+
+        /// <summary>
+        /// The newest app build this account has run, in the same integer, or nought for none
+        /// recorded. Joined by the highest (<c>BuildStamp.JoinLast</c>). For analytics only.
+        /// </summary>
+        public int lastBuild;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before

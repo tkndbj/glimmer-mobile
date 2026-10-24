@@ -305,14 +305,21 @@ namespace GlimmerGrove
 
         /// <summary>
         /// What this screen makes of a level's own rules before a board is dealt from them: the
-        /// Infinite lane's checkpoint, and nothing on a chapter. <b>The one seam a lane of this
-        /// mode that plays by rules of its own overrides</b> (<see cref="ShuffleScreen"/>), so the
-        /// line a board stands and where it opens are decided in one place per screen.
+        /// Infinite lane's checkpoint, and on a chapter the helping hand's quiet easing of a level
+        /// the player keeps losing (invariant 66). <b>The one seam a lane of this mode that plays by
+        /// rules of its own overrides</b> (<see cref="ShuffleScreen"/>), so the line a board stands
+        /// and where it opens are decided in one place per screen.
         /// </summary>
         protected virtual ProtoLevelRules Ruled(ProtoLevelRules rules)
         {
-            if (rules is SiegeRules siege && siege.Layout != null && siege.Layout.IsEndless)
-                return siege.From(EndlessCheckpoints.StartFor(Level.Id));
+            if (rules is SiegeRules siege && siege.Layout != null)
+            {
+                if (siege.Layout.IsEndless) return siege.From(EndlessCheckpoints.StartFor(Level.Id));
+
+                // Asked once per screen (the rules are held for its life), so a restart keeps the
+                // board the run began on and a retry from the defeat panel - a new screen - asks again.
+                return siege.Eased(AssistLedger.EasePercentFor(Level.Id));
+            }
 
             return rules;
         }
@@ -436,7 +443,9 @@ namespace GlimmerGrove
         /// </summary>
         protected override int Scored(ProtoRun run)
         {
-            if (!Endless) return base.Scored(run);
+            // **An eased board is graded at full strength** (invariant 66): its raiders fell to fewer
+            // matches, so the run is scaled back up and a star means the same on every board.
+            if (!Endless) return AssistTable.FullStrength(base.Scored(run), (Rules as SiegeRules)?.EasePercent ?? 0);
 
             var board = _siege.Siege;
             return board.WavesCleared;

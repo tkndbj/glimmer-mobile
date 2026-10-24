@@ -654,6 +654,20 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    (`FirstStepsMoment.Hushed`) until the next run. Held by `FirstStepsTests`, `GiftTempoTests`,
    `test/steps.mjs`, the live `first-steps.mjs`; `render_first_steps.py --measure`.
 
+### The helping hand
+
+66. **A player stuck on one ladder level is helped, and the help is device-local and pays no currency**
+   (`assist` in progression.json, `AssistTable`/`AssistHistory`/`AssistLedger`). Only a *genuine* loss
+   counts (`IsGenuine`: a share felled and a number of matches; a forfeit never reaches it). The gift
+   (utilities, `UtilityLedger.Grant`, 13's fourth clause) is owed after `openingLosses` in the ladder's
+   first chapter and `giftLosses` later, `giftsPerDay`, raised by `AssistMoment` over the defeat panel
+   ahead of any offer, else on the next calm hub; granted and saved before it is forgotten. After
+   `easeLosses` a level's raiders keep `100 - easePercent`% health (`SiegeRules.Eased`,
+   `SiegeBoard.KeptPercent`) until it is cleared, `easesPerDay` new levels a day; **never said**, and
+   graded at full strength (`AssistTable.FullStrength`) so a star means the same on every board. No
+   save field, no server. Held by `AssistTests`, `SiegeRuleTests.AnEasedBoardDealsLighterRaidersAgainstTheSamePar`,
+   `content.py`; `render_assist.py --measure`.
+
 ### Art credits
 
 46. **An art credit lives on the publisher's site, nowhere in the app.** No shipped vendor compels one.
@@ -901,7 +915,7 @@ gates print the derived totals.
 
 - **Live on the App Store (id `6804516450`) and Google Play.** Ads via LevelPlay (ironSource, AdMob partner
   bidding, Unity Ads); `app-ads.txt` live at `tekoworld.com` (repo root and website `public/` byte-identical).
-- **Save schema v46**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
+- **Save schema v47** (v47: `firstBuild`/`lastBuild`, `BuildStamp`, analytics only; rules deployed 2026-10-25); manifest/chapter bodies v2; `ContentSchema.Version` 3.
 - **Cloud**: Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22, `europe-west1`; anonymous by
   default with Apple/Google linking and per-account local archives. `gcloud functions list` is the authority
   on deployed functions. Firebase Unity SDK 13.15.0 as vendored tarballs under `GooglePackages/` (gitignored;

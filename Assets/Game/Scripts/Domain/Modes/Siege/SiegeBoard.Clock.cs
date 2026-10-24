@@ -381,7 +381,8 @@ namespace GlimmerGrove.Modes
                                            Layout.Wards.Length, roll);
 
                 _raiders.Add(new SiegeRaider(_minted++, caster.Colour, SiegeKind.Creeper, lane,
-                                             i * SiegeTuning.RaiderSpacing, surge));
+                                             i * SiegeTuning.RaiderSpacing, surge,
+                                             keptPercent: KeptPercent));
             }
 
             _report.Spells.Add(new SiegeSpellLanded(caster.Id, -1, SiegeSpell.Raise,
@@ -531,7 +532,7 @@ namespace GlimmerGrove.Modes
 
                 _raiders.Add(new SiegeRaider(_minted++, colour, kind, lane,
                                              i * SiegeTuning.RaiderSpacing, surge,
-                                             Layout.ShareAt(_wave, i)));
+                                             Layout.ShareAt(_wave, i), KeptPercent));
 
                 // Asked here, at the muster, because the question is whether the player banked
                 // the boss's colour *ahead* of the duel rather than whether they reacted once it

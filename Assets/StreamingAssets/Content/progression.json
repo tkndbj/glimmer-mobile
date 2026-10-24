@@ -89,6 +89,20 @@
       { "level": "s03_blightfen",  "kind": "chests",  "tier": "royal",  "count": 2 }
     ]
   },
+  "assist": {
+    "openingLosses": 1,
+    "giftLosses": 2,
+    "giftsPerDay": 1,
+    "gift": [
+      { "id": "firepot",   "count": 1 },
+      { "id": "stormcall", "count": 1 }
+    ],
+    "easeLosses": 2,
+    "easePercent": 7,
+    "easesPerDay": 2,
+    "minFelledPercent": 25,
+    "minMatches": 5
+  },
   "xpBoost": {
     "watchedPercent": 50,
     "watchedHours": 2,

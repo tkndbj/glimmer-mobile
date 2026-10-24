@@ -3846,6 +3846,18 @@
       "text": "استلام"
     },
     {
+      "key": "ui.assist.title",
+      "text": "مساعدة صغيرة!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "خذ هذه لمحاولتك القادمة!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "استلام"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "الحراسة الأولى"
     },

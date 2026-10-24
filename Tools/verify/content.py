@@ -2048,6 +2048,76 @@ FIRST_STEP_KEYS = ("ui.steps.gift_title", "ui.steps.turret_title", "ui.steps.wel
 
 LEVEL_ID = __import__("re").compile(r"^[a-z0-9](?:[a-z0-9_]{0,46}[a-z0-9])?$")
 
+#: The helping hand's bounds (`AssistTable`, invariant 66), mirrored here so a block the game would
+#: refuse - and so switch the feature off in silence - fails the offline gate instead.
+ASSIST_MAX_LOSSES = 10
+ASSIST_MAX_EASE_PERCENT = 30
+ASSIST_MAX_PER_DAY = 5
+ASSIST_MAX_ITEMS = 4
+ASSIST_MAX_COUNT = 5
+
+#: The copy the gift panel says, every one a literal in `AssistGiftOverlay`.
+ASSIST_KEYS = ("ui.assist.title", "ui.assist.body", "ui.assist.claim")
+
+
+def check_assist(progression, keys, warnings):
+    """The helping hand (`AssistTable.Resolve`, offline): every bound the reader holds, every gift
+    row a utility the catalog sells or deals, and the panel's words. Printed: what a stuck player is
+    handed and when, so a retune is visible in the gate's own output."""
+    errors = []
+    block = progression.get("assist")
+    if not block:
+        warnings.append("progression.json has no 'assist' block; a stuck player is handed nothing")
+        return errors
+
+    def ranged(field, least, most):
+        value = block.get(field, 0)
+        if not isinstance(value, int) or isinstance(value, bool) or value < least or value > most:
+            errors.append(f"assist.{field} is {value!r}; it must be {least} to {most}")
+        return value
+
+    opening = ranged("openingLosses", 1, ASSIST_MAX_LOSSES)
+    losses = ranged("giftLosses", 1, ASSIST_MAX_LOSSES)
+    per_day = ranged("giftsPerDay", 0, ASSIST_MAX_PER_DAY)
+    ease_losses = ranged("easeLosses", 1, ASSIST_MAX_LOSSES)
+    ease = ranged("easePercent", 1, ASSIST_MAX_EASE_PERCENT)
+    eases = ranged("easesPerDay", 0, ASSIST_MAX_PER_DAY)
+    felled = ranged("minFelledPercent", 0, 100)
+    matches = ranged("minMatches", 0, 1000)
+
+    known = {(item.get("id") or "") for item in ((progression.get("utilities") or {}).get("items") or [])}
+    rows = block.get("gift") or []
+    if not rows and per_day:
+        errors.append("assist.gift is empty while assist.giftsPerDay allows a gift; a gift has to hold something")
+    if len(rows) > ASSIST_MAX_ITEMS:
+        errors.append(f"assist.gift lists {len(rows)} utilities; at most {ASSIST_MAX_ITEMS} are supported")
+
+    seen = set()
+    for i, row in enumerate(rows):
+        where = f"assist.gift row {i}"
+        item = row.get("id") or ""
+        count = row.get("count", 0)
+        if not item:
+            errors.append(f"{where} names no utility")
+            continue
+        if item not in known:
+            errors.append(f"{where} names utility '{item}', which the catalog does not hold")
+        if item in seen:
+            errors.append(f"{where} names '{item}' a second time; one row a utility")
+        seen.add(item)
+        if not isinstance(count, int) or count < 1 or count > ASSIST_MAX_COUNT:
+            errors.append(f"{where} hands over {count!r} '{item}'; it must be 1 to {ASSIST_MAX_COUNT}")
+
+    for key in ASSIST_KEYS:
+        if key not in keys:
+            errors.append(f"the helping hand's panel says '{key}', which loc/en.json does not define")
+
+    gift = ", ".join(f"{row.get('count')} {row.get('id')}" for row in rows) or "nothing"
+    print(f"  helping hand: {gift} after {opening} loss(es) in chapter one and {losses} later, "
+          f"{per_day} a day; raiders {ease}% lighter after {ease_losses}, {eases} level(s) a day; "
+          f"a loss counts at {felled}% felled and {matches} matches")
+    return errors
+
 
 def check_first_steps(progression, manifest, tasks, keys, warnings):
     """The first steps (`FirstStepTable.Resolve`, offline) - and the one thing the reader cannot
@@ -4998,6 +5068,7 @@ def main():
     # The first steps. After the roster and the tasks block, whose turrets and tiers a step hands
     # over, and against the manifest, whose levels the steps stand on.
     errors.extend(check_first_steps(progression, manifest, tasks, keys, warnings))
+    errors.extend(check_assist(progression, keys, warnings))
 
     # The lanes. Their copy is derived from the track id, so `loc.py` cannot see it either - and
     # a lane with no ladder draws a whole screen out of strings nothing else names.

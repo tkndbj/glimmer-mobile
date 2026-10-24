@@ -3846,6 +3846,18 @@
       "text": "Riscuoti"
     },
     {
+      "key": "ui.assist.title",
+      "text": "Un aiutino!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Prendi questi per il prossimo tentativo!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Riscuoti"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La prima veglia"
     },

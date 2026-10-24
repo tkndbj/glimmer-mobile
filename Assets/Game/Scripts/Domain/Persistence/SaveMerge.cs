@@ -140,6 +140,11 @@ namespace GlimmerGrove.Persistence
                 // level record's `bestMoves`, which this merge joins by the smaller (`JoinLevels`).
                 shuffleBest = GlimmerGrove.Shuffle.ShuffleLedger.Join(mine.shuffleBest, other.shuffleBest),
 
+                // The builds this account has run (v47): the oldest falls and the newest rises, so
+                // each is a join with nothing to decide (11b), nought being "absent".
+                firstBuild = BuildStamp.JoinFirst(mine.firstBuild, other.firstBuild),
+                lastBuild = BuildStamp.JoinLast(mine.lastBuild, other.lastBuild),
+
                 // A star cannot be given back, so the further of the two is the answer
                 // whichever device is asking - invariant 11b's one legal shape for a count.
                 wardStars = Wards.WardStarLedger.Join(mine.wardStars, other.wardStars),

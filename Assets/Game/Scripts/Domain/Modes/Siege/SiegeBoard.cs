@@ -238,9 +238,10 @@ namespace GlimmerGrove.Modes
             }
         }
 
-        SiegeBoard(SiegeLayout layout, WardLine line, SiegeStart start)
+        SiegeBoard(SiegeLayout layout, WardLine line, SiegeStart start, int keptPercent)
         {
             Layout = layout;
+            KeptPercent = keptPercent < 1 ? 1 : keptPercent > 100 ? 100 : keptPercent;
             _cells = layout.Grid.Copy();
 
             // **A field opens with no charms on it, and that is the rule rather than the default.**
@@ -306,14 +307,29 @@ namespace GlimmerGrove.Modes
         /// mirror and every rule test plays against - the weakest line a player could bring.
         /// </summary>
         public static SiegeBoard Build(SiegeLayout layout, WardLine line = null)
-            => new SiegeBoard(layout, line, SiegeStart.Opening);
+            => new SiegeBoard(layout, line, SiegeStart.Opening, 100);
 
         /// <summary>
         /// Builds a board that opens at <paramref name="start"/> - an endless checkpoint. A
         /// laddered layout ignores the start and opens at wave one (<see cref="SiegeStart"/>).
         /// </summary>
         public static SiegeBoard Build(SiegeLayout layout, WardLine line, SiegeStart start)
-            => new SiegeBoard(layout, line, start);
+            => new SiegeBoard(layout, line, start, 100);
+
+        /// <summary>
+        /// Builds a board whose raiders keep <paramref name="keptPercent"/> of their health - the
+        /// helping hand's quiet easing of a level a player keeps losing (invariant 66). A hundred is
+        /// every other board. Par is the layout's and never this board's (<c>SiegeTuning.Par</c>), so
+        /// what the run is graded against does not move.
+        /// </summary>
+        public static SiegeBoard Build(SiegeLayout layout, WardLine line, SiegeStart start, int keptPercent)
+            => new SiegeBoard(layout, line, start, keptPercent);
+
+        /// <summary>
+        /// The share of its health every raider this board musters keeps, in per cent: a hundred,
+        /// except on a level the helping hand has eased. Read by nothing a player sees.
+        /// </summary>
+        public int KeptPercent { get; }
 
         // ------------------------------------------------------------------ the field
         public int Width => Layout.Grid.Width;

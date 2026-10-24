@@ -3846,6 +3846,18 @@
       "text": "Odbierz"
     },
     {
+      "key": "ui.assist.title",
+      "text": "Mała pomoc!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Weź to na następną próbę!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Odbierz"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Pierwsza warta"
     },

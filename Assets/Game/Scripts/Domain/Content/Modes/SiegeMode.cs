@@ -41,22 +41,40 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly SiegeStart Start;
 
+        /// <summary>
+        /// How much health this level's raiders give up, in per cent: nought on every board but a
+        /// level the helping hand has eased (invariant 66). Carried on the rules for
+        /// <see cref="Start"/>'s reason - a restart and a retry deal the board the run began on.
+        /// </summary>
+        public readonly int EasePercent;
+
         public SiegeRules(SiegeLayout layout) : this(layout, null) { }
 
-        public SiegeRules(SiegeLayout layout, Wards.WardLine line) : this(layout, line, SiegeStart.Opening) { }
+        public SiegeRules(SiegeLayout layout, Wards.WardLine line) : this(layout, line, SiegeStart.Opening, 0) { }
 
-        SiegeRules(SiegeLayout layout, Wards.WardLine line, SiegeStart start) : base(0)
+        SiegeRules(SiegeLayout layout, Wards.WardLine line, SiegeStart start, int easePercent) : base(0)
         {
             Layout = layout;
             _line = line;
             Start = layout != null && layout.IsEndless ? start : SiegeStart.Opening;
+            EasePercent = easePercent > 0 ? easePercent : 0;
         }
 
         /// <summary>
         /// The same level opened at <paramref name="start"/>. A laddered layout answers rules
         /// that open at wave one whatever it is asked, so a start can never reach a chapter.
         /// </summary>
-        public SiegeRules From(SiegeStart start) => new SiegeRules(Layout, _line, start);
+        public SiegeRules From(SiegeStart start) => new SiegeRules(Layout, _line, start, EasePercent);
+
+        /// <summary>
+        /// The same level with its raiders <paramref name="easePercent"/> per cent lighter. Only a
+        /// laddered layout is ever eased: an endless lane is graded on how far it gets, so lighter
+        /// raiders there would be a longer run on a public board.
+        /// </summary>
+        public SiegeRules Eased(int easePercent)
+            => Layout == null || Layout.IsEndless || easePercent <= 0
+                 ? this
+                 : new SiegeRules(Layout, _line, Start, easePercent);
 
         public override GameMode Mode => GameMode.Siege;
         public override ProtoGrid Grid => Layout.Grid;
@@ -71,7 +89,8 @@ namespace GlimmerGrove.Content
         /// never come to depend on whatever loadout the developer running it happens to have.
         /// </para>
         /// </summary>
-        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line, Start);
+        public override IProtoBoard Fresh()
+            => SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line, Start, AssistTable.KeptPercent(EasePercent));
 
         /// <summary>
         /// Nothing to search.

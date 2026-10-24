@@ -98,7 +98,8 @@ namespace GlimmerGrove.Progression
                          KeeperMilestoneTable keeperMilestones,
                          EndlessCheckpointTable endlessCheckpoints,
                          WelcomeTable welcome,
-                         FirstStepTable firstSteps)
+                         FirstStepTable firstSteps,
+                         AssistTable assist)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -125,6 +126,7 @@ namespace GlimmerGrove.Progression
             EndlessCheckpoints = endlessCheckpoints ?? EndlessCheckpointTable.Empty;
             Welcome = welcome ?? WelcomeTable.Empty;
             FirstSteps = firstSteps ?? FirstStepTable.Empty;
+            Assist = assist ?? AssistTable.Empty;
         }
 
         /// <summary>
@@ -215,6 +217,13 @@ namespace GlimmerGrove.Progression
         /// step's chests (10a).
         /// </summary>
         public FirstStepTable FirstSteps { get; }
+
+        /// <summary>
+        /// The helping hand for a player stuck on one level (invariant 66).
+        /// <see cref="AssistTable.Empty"/> - the feature off - when the file carries no block or the
+        /// block has a fault in it. Read by nothing on a server.
+        /// </summary>
+        public AssistTable Assist { get; }
 
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
@@ -709,11 +718,15 @@ namespace GlimmerGrove.Progression
             // and so is a block with a fault in it - a step that cannot pay must not be shown.
             var firstSteps = FirstStepTable.Resolve(dto.firstSteps, wards, tasks, problems);
 
+            // And the helping hand. Read against the utility catalog, whose items the gift hands
+            // over. Absent is the feature off, and so is a block with a fault in it.
+            var assist = AssistTable.Resolve(dto.assist, utilities, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
                           endless, xpBoost, ranks, keeperLevels, keeperMilestones,
-                          endlessCheckpoints, welcome, firstSteps);
+                          endlessCheckpoints, welcome, firstSteps, assist);
             return true;
         }
 
@@ -733,7 +746,8 @@ namespace GlimmerGrove.Progression
                                       KeeperMilestoneTable keeperMilestones = null,
                                       EndlessCheckpointTable endlessCheckpoints = null,
                                       WelcomeTable welcome = null,
-                                      FirstStepTable firstSteps = null)
+                                      FirstStepTable firstSteps = null,
+                                      AssistTable assist = null)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -754,7 +768,7 @@ namespace GlimmerGrove.Progression
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
                                         endless, xpBoost, ranks, keeperLevels, keeperMilestones,
-                                        endlessCheckpoints, welcome, firstSteps);
+                                        endlessCheckpoints, welcome, firstSteps, assist);
         }
     }
 }

@@ -3846,6 +3846,18 @@
       "text": "Récupérer"
     },
     {
+      "key": "ui.assist.title",
+      "text": "Un coup de pouce !"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Prends ça pour ton prochain essai !"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Récupérer"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La première garde"
     },

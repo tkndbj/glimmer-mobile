@@ -114,6 +114,11 @@ namespace GlimmerGrove
             // it is cheap enough to be worth having ready before anything draws.
             SaveService.Load();
 
+            // And which build this account is now running (save v47), for analytics. Right after
+            // the load, so it lands in the file every later write and sync carries; it writes
+            // nothing when the build is one the save already records.
+            Persistence.BuildStamp.Stamp(Release.AppVersion.Running);
+
             // Then settle any run the last launch never finished - a force-quit, a crash, a
             // flat battery. Immediately after the save loads, because the heart has to come
             // out of a wallet that exists, and before anything can start a new run, because
@@ -374,6 +379,11 @@ namespace GlimmerGrove
                 // moment below offers nothing on it.
                 GiftMoment.Tick();
 
+                // And the helping hand's gift, still owed because the player left the defeat panel
+                // that earned it before it settled (invariant 66). After the owner's gift and before
+                // the deals popup: it costs nothing to take, and a frame that raised it is covered.
+                AssistMoment.Tick();
+
                 // And the one limited-time deals popup a session may raise, on a calm screen once
                 // the consent questions are behind the player (invariant 60c). After the consent
                 // step, so a frame that asked a question is a frame that offers nothing.
@@ -401,6 +411,7 @@ namespace GlimmerGrove
                     // what covers the gap no callback could have reported.
                     Referral.ReferralLedger.Paused();
                     GiftMoment.Paused();
+                    AssistMoment.Paused();
                     FirstStepsMoment.Paused();
                     DealMoment.Paused();
                     OfferMoment.Paused();
@@ -410,6 +421,7 @@ namespace GlimmerGrove
                 {
                     Referral.ReferralLedger.Resumed();
                     GiftMoment.Resumed();
+                    AssistMoment.Resumed();
                     FirstStepsMoment.Resumed();
                     DealMoment.Resumed();
                     OfferMoment.Resumed();

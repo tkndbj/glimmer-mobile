@@ -3846,6 +3846,18 @@
       "text": "Resgatar"
     },
     {
+      "key": "ui.assist.title",
+      "text": "Uma ajudinha!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Leve isto para a próxima tentativa!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Resgatar"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "A primeira vigília"
     },

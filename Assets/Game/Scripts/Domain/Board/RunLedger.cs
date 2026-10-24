@@ -248,6 +248,9 @@ namespace GlimmerGrove
             // screen may answer. A reader of the outcome, never a hand in it.
             Offers.OfferLedger.NoteRun(level.Id.Value, true, lit, wanted, opened != null);
 
+            // And the helping hand (invariant 66): a clear forgets the level's losses and its easing.
+            Progression.AssistLedger.NoteRun(level.Id, true, lit, wanted, moves);
+
             // The star ledger's XP plus whatever else this run earned. Nought on every board but
             // the Infinite lane, and passed in rather than asked for here because this ledger is
             // mode-blind (invariant 20a) - what it is told is "this run also earned N", not which
@@ -336,6 +339,10 @@ namespace GlimmerGrove
 
             // How far the run got is the near-miss reading (invariant 64): `lit` of `wanted`.
             Offers.OfferLedger.NoteRun(level.Id.Value, false, lit, wanted, false);
+
+            // And the helping hand (invariant 66): a genuine loss - how far it got and what it spent
+            // decide that - counts towards the gift and the easing.
+            Progression.AssistLedger.NoteRun(level.Id, false, lit, wanted, run.Moves);
 
             return new LossRecord(run, streak, left, charged, price);
         }

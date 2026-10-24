@@ -3846,6 +3846,18 @@
       "text": "Claim"
     },
     {
+      "key": "ui.assist.title",
+      "text": "A Little Help!"
+    },
+    {
+      "key": "ui.assist.body",
+      "text": "Take these for your next try!"
+    },
+    {
+      "key": "ui.assist.claim",
+      "text": "Claim"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "The First Watch"
     },

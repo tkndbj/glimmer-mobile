@@ -1174,6 +1174,15 @@ namespace GlimmerGrove.Content
         public FirstStepsDto firstSteps;
 
         /// <summary>
+        /// The helping hand for a player stuck on one level: utilities handed over after a loss, and
+        /// a quiet easing after two. Optional; see <see cref="Progression.AssistTable"/>.
+        ///
+        /// <b>Reaches no server</b>: utilities are not currency (invariant 13's fourth clause) and the
+        /// easing is device-local, so nothing here is a claim. <b>Absent switches the feature off</b>.
+        /// </summary>
+        public AssistDto assist;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -2637,6 +2646,52 @@ namespace GlimmerGrove.Content
         public string tier;
 
         /// <summary>A chest step: how many chests of that tier. 1 to <c>FirstStepTable.MaxChests</c>.</summary>
+        public int count;
+    }
+
+    /// <summary>The helping hand block. See <see cref="Progression.AssistTable"/>.</summary>
+    [Serializable]
+    public sealed class AssistDto
+    {
+        /// <summary>Genuine losses in a row on one level of the ladder's first chapter before the gift. 1 to 10.</summary>
+        public int openingLosses;
+
+        /// <summary>Genuine losses in a row on one level of any later chapter before the gift. 1 to 10.</summary>
+        public int giftLosses;
+
+        /// <summary>Gifts a UTC day may hand over, across every level. 0 hands none.</summary>
+        public int giftsPerDay;
+
+        /// <summary>What the gift holds: utilities by catalog id, each with a count.</summary>
+        public AssistItemDto[] gift;
+
+        /// <summary>Genuine losses in a row on one level before its next runs are eased. 1 to 10.</summary>
+        public int easeLosses;
+
+        /// <summary>How much health the raiders of an eased level give up, in per cent. 1 to 30.</summary>
+        public int easePercent;
+
+        /// <summary>Levels a UTC day may newly ease. 0 eases none; a level eased on an earlier day is not counted.</summary>
+        public int easesPerDay;
+
+        /// <summary>The share of a level's raiders a loss must have brought down to count, in per cent. 0 to 100.</summary>
+        public int minFelledPercent;
+
+        /// <summary>The matches a loss must have made to count. 0 or more.</summary>
+        public int minMatches;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => giftLosses > 0 || openingLosses > 0 || easeLosses > 0;
+    }
+
+    /// <summary>One utility in the helping hand's gift.</summary>
+    [Serializable]
+    public sealed class AssistItemDto
+    {
+        /// <summary>The utility, by catalog id.</summary>
+        public string id;
+
+        /// <summary>How many. 1 to <c>AssistTable.MaxCount</c>.</summary>
         public int count;
     }
 }
