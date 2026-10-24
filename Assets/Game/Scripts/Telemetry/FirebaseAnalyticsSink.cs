@@ -8,130 +8,86 @@ using UnityEngine;
 namespace GlimmerGrove.Analytics
 {
     /// <summary>
-    /// Delivers <see cref="Telemetry"/> events to Google Analytics for Firebase.
-    ///
-    /// <para>
-    /// The seam this plugs into has existed since the first level and has never had a sink
-    /// behind it in a shipped build, so every event this project raises has been going
-    /// nowhere on a device. Nothing about that was visible: <see cref="Telemetry.Track"/>
-    /// returns immediately when no sink is attached, and the Editor has always had
-    /// <see cref="DebugAnalyticsSink"/>, so the console showed events on the one machine
-    /// where they were worth nothing.
-    /// </para>
-    /// <para>
-    /// GA4 refuses names it does not like rather than mangling them, and it refuses them
-    /// <em>server-side</em> - the call succeeds, the device logs nothing, and the event is
-    /// simply absent from a report weeks later. So every name and key is forced into the
-    /// legal shape here rather than trusted to call sites: a rule enforced at one boundary
-    /// cannot be forgotten by the ninetieth caller. The costs of the two mistakes are not
-    /// symmetrical - a squashed name is a row with an odd label, a rejected one is data that
-    /// was never collected and cannot be backfilled.
-    /// </para>
-    /// <para>
-    /// Events raised before Firebase has resolved its native dependencies are held rather
-    /// than dropped, because the earliest ones are the most valuable: first launch, the
-    /// tutorial, and the first level are exactly the window a retention test is bought to
-    /// measure, and they all happen while the SDK is still starting. The queue is bounded,
-    /// since a device where Firebase never becomes ready must not accumulate a session's
-    /// worth of events it will never send.
-    /// </para>
+    /// Firebase transport. Eligibility, bounded buffering and retry policy live in
+    /// <see cref="AnalyticsDelivery"/> and can be tested without a native SDK.
     /// </summary>
     public sealed class FirebaseAnalyticsSink : IAnalyticsSink
     {
         /// <summary>GA4 accepts at most 25 parameters on an event; the rest are dropped.</summary>
-        public const int MaxParameters = 25;
+        public const int MaxParameters = AnalyticsDelivery.MaxParameters;
 
         const int MaxNameLength = 40;
         const int MaxStringValueLength = 100;
 
-        /// <summary>
-        /// How many events are held while the SDK starts. Generous enough to cover a launch
-        /// and the opening of a run, small enough that a device where Firebase never resolves
-        /// is holding kilobytes rather than a session.
-        /// </summary>
-        const int MaxQueued = 64;
-
         readonly List<Parameter> _parameters = new List<Parameter>(MaxParameters);
-        readonly Queue<Pending> _queued = new Queue<Pending>(MaxQueued);
+        readonly AnalyticsDelivery _delivery;
 
-        bool _ready;
-        int _dropped;
-
-        readonly struct Pending
+        public FirebaseAnalyticsSink()
         {
-            public readonly string Name;
-            public readonly Dictionary<string, object> Properties;
-
-            public Pending(string name, Dictionary<string, object> properties)
-            {
-                Name = name;
-                Properties = properties;
-            }
+            _delivery = new AnalyticsDelivery(SetCollection,
+                Send, () => Time.realtimeSinceStartupAsDouble, Diagnose);
         }
 
-        /// <summary>
-        /// Called once the native SDK has resolved. Flushes whatever was held, in order.
-        /// </summary>
-        public void MarkReady()
-        {
-            if (_ready) return;
-            _ready = true;
+        // Resolve the Firebase API only at invocation, after the dependency gate has opened.
+        static void SetCollection(bool allowed) => FirebaseAnalytics.SetAnalyticsCollectionEnabled(allowed);
 
-            while (_queued.Count > 0)
-            {
-                var pending = _queued.Dequeue();
-                Send(pending.Name, pending.Properties);
-            }
-
-            if (_dropped > 0)
-            {
-                Debug.LogWarning($"[Analytics] {_dropped} event(s) were dropped before Firebase was ready");
-                _dropped = 0;
-            }
-        }
+        public void MarkReady() => _delivery.MarkReady();
+        public void SetCollectionAllowed(bool allowed) => _delivery.SetCollectionAllowed(allowed);
+        public void Tick() => _delivery.Tick();
 
         public void Track(string eventName, IReadOnlyDictionary<string, object> properties)
         {
             string name = Sanitise(eventName);
-            if (name == null) return;
-
-            if (!_ready)
-            {
-                if (_queued.Count >= MaxQueued) { _dropped++; return; }
-
-                // Telemetry reuses one scratch dictionary for every event, so holding a
-                // reference to it would hand the flush whatever the *last* event happened to
-                // carry. Copy, or every queued event arrives wearing the same properties.
-                var copy = new Dictionary<string, object>(properties?.Count ?? 0);
-                if (properties != null)
-                    foreach (var kv in properties) copy[kv.Key] = kv.Value;
-
-                _queued.Enqueue(new Pending(name, copy));
-                return;
-            }
-
-            Send(name, properties);
+            _delivery.Track(name, properties);
         }
 
-        void Send(string name, IReadOnlyDictionary<string, object> properties)
+        AnalyticsSendResult Send(string name, IReadOnlyDictionary<string, object> properties)
         {
-            _parameters.Clear();
-
-            if (properties != null)
+            Parameter[] parameters;
+            try
             {
-                foreach (var kv in properties)
+                _parameters.Clear();
+                if (properties != null)
                 {
-                    if (_parameters.Count >= MaxParameters) break;
+                    foreach (var kv in properties)
+                    {
+                        if (_parameters.Count >= MaxParameters) break;
 
-                    string key = Sanitise(kv.Key);
-                    if (key == null) continue;
+                        string key = Sanitise(kv.Key);
+                        if (key == null) continue;
 
-                    Parameter parameter = ToParameter(key, kv.Value);
-                    if (parameter != null) _parameters.Add(parameter);
+                        Parameter parameter = ToParameter(key, kv.Value);
+                        if (parameter != null) _parameters.Add(parameter);
+                    }
                 }
+                parameters = _parameters.ToArray();
+            }
+            catch (Exception)
+            {
+                // Nothing has reached LogEvent: retrying cannot duplicate an SDK event.
+                return AnalyticsSendResult.Retry;
             }
 
-            FirebaseAnalytics.LogEvent(name, _parameters.ToArray());
+            try
+            {
+                FirebaseAnalytics.LogEvent(name, parameters);
+                return AnalyticsSendResult.Accepted;
+            }
+            catch (Exception)
+            {
+                // LogEvent has no acknowledgement/idempotency contract. A native exception may
+                // follow acceptance; report the uncertain outcome without replaying revenue.
+                return AnalyticsSendResult.Unconfirmed;
+            }
+        }
+
+        void Diagnose(AnalyticsDeliveryIssue issue, long count)
+        {
+            string message = $"[Analytics] delivery {issue}; count={count}; pending={_delivery.PendingCount}";
+            if (issue == AnalyticsDeliveryIssue.Excluded || issue == AnalyticsDeliveryIssue.CollectionEnabled
+                || issue == AnalyticsDeliveryIssue.CollectionDisabled)
+                Debug.Log(message);
+            else Debug.LogWarning(message);
         }
 
         /// <summary>

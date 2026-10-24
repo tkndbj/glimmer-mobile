@@ -325,6 +325,9 @@ namespace GlimmerGrove
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) Flow.HandleBack();
 
+                // Measurement retries are bounded and independent of whether mediation is installed.
+                AnalyticsSetup.Tick();
+
                 // Connectivity is read here rather than inside the sync, because
                 // Application is a Presentation type and the policy it feeds is meant to
                 // be runnable in the test suite without one. Unscaled, since a paused game

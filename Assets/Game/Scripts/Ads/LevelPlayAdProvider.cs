@@ -1,5 +1,6 @@
 #if GLIMMER_ADS
 using GlimmerGrove.Async;
+using GlimmerGrove.Analytics;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -33,6 +34,10 @@ namespace GlimmerGrove.Ads
     {
         readonly Dictionary<string, LevelPlayRewardedAd> _units =
             new Dictionary<string, LevelPlayRewardedAd>(StringComparer.Ordinal);
+
+        // Bounded configuration diagnostics. Load/info-change callbacks never emit revenue.
+        readonly HashSet<(string Unit, string Network, string Instance)> _reportedRevenueUnits =
+            new HashSet<(string, string, string)>();
 
         readonly Dictionary<string, string> _adUnitIds;
 
@@ -236,13 +241,18 @@ namespace GlimmerGrove.Ads
             }
 
             var unit = new LevelPlayRewardedAd(adUnitId);
+            // Supported per-object ILR event, attached before the first load. Never use reward
+            // completion as revenue, or subscribe to both the global and per-object ILR events.
+            unit.OnAdImpressionDataReady += data => CaptureRevenue(placementId, adUnitId, data);
+            unit.OnAdInfoChanged += info => ReportRevenueSource(placementId, adUnitId, info);
 
-            unit.OnAdLoaded += _ =>
+            unit.OnAdLoaded += info =>
             {
                 _failures[placementId] = 0;
                 Debug.Log($"[Ads] loaded '{placementId}'");
                 Answered(placementId);
                 Raise(placementId);
+                ReportRevenueSource(placementId, adUnitId, info);
             };
 
             unit.OnAdLoadFailed += error =>
@@ -296,6 +306,51 @@ namespace GlimmerGrove.Ads
 
             _units[placementId] = unit;
             _loads.Request(placementId);
+        }
+
+        void ReportRevenueSource(string placementId, string adUnitId, LevelPlayAdInfo info)
+        {
+            try
+            {
+                if (info == null || string.IsNullOrEmpty(info.AdNetwork) || info.AdNetwork.Length > 100
+                    || string.IsNullOrEmpty(info.InstanceId) || info.InstanceId.Length > 100) return;
+                if (!string.IsNullOrEmpty(info.AdUnitId)
+                    && !string.Equals(info.AdUnitId, adUnitId, StringComparison.Ordinal)) return;
+                if (_reportedRevenueUnits.Count >= 64
+                    || !_reportedRevenueUnits.Add((adUnitId, info.AdNetwork, info.InstanceId))) return;
+                // Advertising configuration only: no auction/ad/device/player ID, country, price,
+                // segment or raw SDK JSON. This is evidence for reviewing ownership, never a grant.
+                Debug.Log($"[Analytics] loaded ad source; placement={RevenueLabel(placementId)}; unit={RevenueLabel(adUnitId)}"
+                    + $"; network={RevenueLabel(info.AdNetwork)}; instance={RevenueLabel(info.InstanceName)}"
+                    + $"; instanceId={RevenueLabel(info.InstanceId)}");
+            }
+            catch (Exception) { AdRevenue.CallbackFailed(); }
+        }
+
+        static string RevenueLabel(string value)
+        {
+            if (value == null) return string.Empty;
+            if (value.Length > 100) value = value.Substring(0, 100);
+            return value.Replace('\r', ' ').Replace('\n', ' ').Replace(';', ' ');
+        }
+
+        static void CaptureRevenue(string placementId, string adUnitId, LevelPlayImpressionData data)
+        {
+            // This callback is on an SDK background thread. No Unity, Firebase, or game-state calls.
+            try
+            {
+                if (data == null) { AdRevenue.CallbackFailed(); return; }
+                if (!string.IsNullOrEmpty(data.MediationAdUnitId)
+                    && !string.Equals(data.MediationAdUnitId, adUnitId, StringComparison.Ordinal))
+                { AdRevenue.CallbackFailed(); return; }
+                AdRevenue.Capture(new AdRevenueImpression(adUnitId, data.AuctionId, data.AdNetwork,
+                    data.InstanceId, data.InstanceName, data.AdFormat, data.Revenue, data.Precision, placementId));
+            }
+            catch (Exception)
+            {
+                // Never log raw impression JSON, auction IDs, user identifiers, or exception text.
+                AdRevenue.CallbackFailed();
+            }
         }
 
         /// <summary>Asks for a placement to be loaded again, in its turn.</summary>

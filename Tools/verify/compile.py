@@ -245,6 +245,26 @@ ASSEMBLIES = [
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
     )),
+    ("telemetry-firebase", dict(
+        out="GlimmerGrove.Telemetry.Firebase",
+        src=sources("Assets/Game/Scripts/Telemetry"),
+        # Exercise the actual Firebase binding as well as the package-absent partial methods.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
+        defines=DEFINES + ["GLIMMER_ANALYTICS"],
+        needs=next((p for p in package_plugins() if os.path.basename(p) == "Firebase.Analytics.dll"),
+                   os.path.join(PACKAGE_CACHE, "Firebase.Analytics.dll")),
+    )),
+    ("telemetry-firebase-android", dict(
+        out="GlimmerGrove.Telemetry.Firebase.Android",
+        src=sources("Assets/Game/Scripts/Telemetry"),
+        # Compile the shipping Android ownership rules; Editor builds intentionally exclude them.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
+        defines=DEFINES + ["GLIMMER_ANALYTICS", "UNITY_ANDROID"],
+        needs=next((p for p in package_plugins() if os.path.basename(p) == "Firebase.Analytics.dll"),
+                   os.path.join(PACKAGE_CACHE, "Firebase.Analytics.dll")),
+    )),
     ("notify", dict(
         out="GlimmerGrove.Notifications",
         src=sources("Assets/Game/Scripts/Notifications"),

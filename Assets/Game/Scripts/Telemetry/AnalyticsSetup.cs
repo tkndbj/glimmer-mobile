@@ -46,8 +46,13 @@ namespace GlimmerGrove.Analytics
 #endif
         }
 
+        /// <summary>Bounded main-thread delivery/retry work; never waits for a vendor or network.</summary>
+        public static void Tick() => TickFirebase();
+
         /// <summary>Analytics: what people did once they were here.</summary>
         static partial void InstallFirebase();
+
+        static partial void TickFirebase();
 
         /// <summary>Attribution: which advert they came from.</summary>
         static partial void InstallAttribution();
