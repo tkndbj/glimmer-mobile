@@ -390,10 +390,10 @@ namespace GlimmerGrove.Tests
         /// by an order of magnitude against what ships.
         /// </para>
         /// <para>
-        /// <b>The grove's four lists are deliberately absent from this table and still bounded
-        /// in the rules.</b> Nothing in this build writes them, so there is no client cap to
-        /// pair - but the keys stay allow-listed, because dropping a key a rolled-back client
-        /// still writes costs that client every save write (invariant 12a).
+        /// <b>A bounded list has one shape in the rules</b>, <c>listOf(owner.get('key', []), N)</c>,
+        /// where the owner is <c>d</c> or the <c>let</c> a nested block is bound to - the shape the
+        /// evaluation budget chose (12c), and the one this reads. The level ledger is a map and keeps
+        /// its own <c>d.levels.size() &lt;= N</c>.
         /// </para>
         /// </summary>
         [Test]
@@ -401,41 +401,44 @@ namespace GlimmerGrove.Tests
         {
             string rules = File.ReadAllText(RepoPath("firebase", "firestore.rules"));
 
-            int Bound(string expression)
+            int Bound(string owner, string key)
             {
-                var match = Regex.Match(rules, Regex.Escape(expression) + @"\.size\(\)\s*<=\s*(?<n>\d+)");
-                Assert.IsTrue(match.Success, $"could not find a size bound for '{expression}' in firestore.rules");
+                var match = owner == "d" && key == "levels"
+                    ? Regex.Match(rules, @"d\.levels\.size\(\)\s*<=\s*(?<n>\d+)")
+                    : Regex.Match(rules, @"listOf\(\s*" + Regex.Escape(owner) + @"\.get\(\s*'" + Regex.Escape(key) +
+                                         @"'\s*,\s*\[\]\s*\)\s*,\s*(?<n>\d+)\s*\)");
+                Assert.IsTrue(match.Success, $"could not find a size bound for '{owner}.{key}' in firestore.rules");
                 return int.Parse(match.Groups["n"].Value);
             }
 
-            var pairs = new (string field, string expression, int clientCap)[]
+            var pairs = new (string field, string owner, string key, int clientCap)[]
             {
-                ("tipsSeen",      "d.tipsSeen",      TipLedger.MaxIds),
-                ("utilityStock",  "d.utilityStock",  Utilities.UtilityStock.MaxIds),
-                ("wardsOwned",    "d.wardsOwned",    Wards.WardCatalog.MaxModels * Wards.WardLine.Colours.Length),
-                ("wardLoadout",   "d.wardLoadout",   Wards.WardLine.Colours.Length),
-                ("endlessBest",   "d.endlessBest",   Progression.EndlessLedger.MaxRows),
-                ("shuffleBest",   "d.shuffleBest",   GlimmerGrove.Shuffle.ShuffleLedger.MaxRows),
-                ("wardStars",     "d.wardStars",     Wards.WardStarLedger.MaxRows),
-                ("events",        "d.events",        Events.SeasonLedger.MaxSeasons),
-                ("levels",        "d.levels",        FirestoreSaveMapper.MaxLevelsPerDocument),
-                ("tasks.counts",  "p.counts",        Tasks.TaskLedger.MaxGoals),
-                ("tasks.claimed", "p.claimed",       Tasks.TaskLedger.MaxClaimed),
-                ("tasks.lifetime","d.tasks.lifetime", Tasks.LifetimeTally.MaxGoals),
-                ("tasks.welcome.days",    "d.tasks.welcome.days",    Tasks.WelcomeLedger.MaxRows),
-                ("tasks.welcome.claimed", "d.tasks.welcome.claimed", Tasks.WelcomeLedger.MaxRows),
-                ("tasks.welcome.coined",  "d.tasks.welcome.coined",  Tasks.WelcomeLedger.MaxRows),
-                ("tasks.dealsSeen",       "d.tasks.dealsSeen",       Store.DealSeen.MaxIds),
-                ("tasks.stepsEarned",     "d.tasks.stepsEarned",     Progression.FirstStepsLedger.MaxEarned),
-                ("tasks.stepsTaken",      "d.tasks.stepsTaken",      Progression.FirstStepsLedger.MaxTaken),
-                ("challenges.today",  "d.challenges.today",  Challenges.ChallengeLedger.MaxTodayRows),
-                ("challenges.clears", "d.challenges.clears", Challenges.ChallengeLedger.MaxClearRows),
-                ("challenges.tiers",  "d.challenges.tiers",  Challenges.ChallengeLedger.MaxTierRows),
+                ("tipsSeen",      "d", "tipsSeen",      TipLedger.MaxIds),
+                ("utilityStock",  "d", "utilityStock",  Utilities.UtilityStock.MaxIds),
+                ("wardsOwned",    "d", "wardsOwned",    Wards.WardCatalog.MaxModels * Wards.WardLine.Colours.Length),
+                ("wardLoadout",   "d", "wardLoadout",   Wards.WardLine.Colours.Length),
+                ("endlessBest",   "d", "endlessBest",   Progression.EndlessLedger.MaxRows),
+                ("shuffleBest",   "d", "shuffleBest",   GlimmerGrove.Shuffle.ShuffleLedger.MaxRows),
+                ("wardStars",     "d", "wardStars",     Wards.WardStarLedger.MaxRows),
+                ("events",        "d", "events",        Events.SeasonLedger.MaxSeasons),
+                ("levels",        "d", "levels",        FirestoreSaveMapper.MaxLevelsPerDocument),
+                ("tasks.counts",  "p", "counts",        Tasks.TaskLedger.MaxGoals),
+                ("tasks.claimed", "p", "claimed",       Tasks.TaskLedger.MaxClaimed),
+                ("tasks.lifetime",        "tasks",   "lifetime",    Tasks.LifetimeTally.MaxGoals),
+                ("tasks.welcome.days",    "welcome", "days",        Tasks.WelcomeLedger.MaxRows),
+                ("tasks.welcome.claimed", "welcome", "claimed",     Tasks.WelcomeLedger.MaxRows),
+                ("tasks.welcome.coined",  "welcome", "coined",      Tasks.WelcomeLedger.MaxRows),
+                ("tasks.dealsSeen",       "tasks",   "dealsSeen",   Store.DealSeen.MaxIds),
+                ("tasks.stepsEarned",     "tasks",   "stepsEarned", Progression.FirstStepsLedger.MaxEarned),
+                ("tasks.stepsTaken",      "tasks",   "stepsTaken",  Progression.FirstStepsLedger.MaxTaken),
+                ("challenges.today",  "challenges", "today",  Challenges.ChallengeLedger.MaxTodayRows),
+                ("challenges.clears", "challenges", "clears", Challenges.ChallengeLedger.MaxClearRows),
+                ("challenges.tiers",  "challenges", "tiers",  Challenges.ChallengeLedger.MaxTierRows),
             };
 
-            foreach (var (field, expression, clientCap) in pairs)
+            foreach (var (field, owner, key, clientCap) in pairs)
             {
-                int bound = Bound(expression);
+                int bound = Bound(owner, key);
                 Assert.LessOrEqual(clientCap, bound,
                                    $"the client may write {clientCap} '{field}' rows and the rules allow {bound} - " +
                                    "every save write for an account at the cap would be refused");

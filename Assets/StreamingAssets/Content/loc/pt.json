@@ -3358,10 +3358,6 @@
       "text": "Onda {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Valor: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "ranking"
     },
@@ -6330,20 +6326,20 @@
       "text": "Nova torre desbloqueada!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "Você desbloqueou esta torre!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "MUITO BEM!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Dia {0} de {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Desbloqueie esta torre!"
+      "text": "Você está um passo mais perto de desbloquear esta torre! Continue jogando."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "Sua torre está pronta! Pegue no Bônus de boas-vindas."
+      "key": "ui.steps.claim",
+      "text": "RESGATAR"
     },
     {
       "key": "ui.steps.chests_line",

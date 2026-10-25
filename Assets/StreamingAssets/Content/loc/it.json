@@ -3358,10 +3358,6 @@
       "text": "Ondata {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Valore: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "classifica"
     },
@@ -6330,20 +6326,20 @@
       "text": "Nuova torretta sbloccata!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "Hai sbloccato questa torretta!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "BEN FATTO!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Giorno {0} di {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Sblocca questa torretta!"
+      "text": "Sei un passo più vicino a sbloccare questa torretta! Continua a giocare."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "La tua torretta è pronta! Ritirala nel Bonus di benvenuto."
+      "key": "ui.steps.claim",
+      "text": "RISCATTA"
     },
     {
       "key": "ui.steps.chests_line",

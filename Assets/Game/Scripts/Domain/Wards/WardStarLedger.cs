@@ -45,10 +45,10 @@ namespace GlimmerGrove.Wards
     /// </para>
     /// <para>
     /// <b>Nothing here is adjudicated, for <c>WardLedger</c>'s reason.</b> A forged star buys an
-    /// addition to a bolt and a little health; it can never reach a public number, because a
-    /// grove's worth is derived from what is held in the grove (19a) and the line is not part of
-    /// it. The money half is defended where money always is - <c>submitSpends</c> refuses a debit
-    /// the server-derived balance cannot cover.
+    /// addition to a bolt and a little health; it can never reach a public number, because the
+    /// line on a public card is a picture that orders no board and pays nothing (19t). The money
+    /// half is defended where money always is - <c>submitSpends</c> refuses a debit the
+    /// server-derived balance cannot cover.
     /// </para>
     /// </summary>
     public static class WardStarLedger

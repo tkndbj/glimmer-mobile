@@ -9,7 +9,7 @@ namespace GlimmerGrove.Social
         /// <summary>Position on this board, counting from 1.</summary>
         public readonly int Rank;
 
-        /// <summary>The account, so tapping the row can fetch its grove.</summary>
+        /// <summary>The account, so tapping the row can fetch its card.</summary>
         public readonly string OwnerId;
 
         /// <summary>Already in its public form - see <see cref="GroveNames"/>.</summary>
@@ -17,8 +17,6 @@ namespace GlimmerGrove.Social
 
         public readonly string AvatarId;
         public readonly int KeeperLevel;
-        public readonly long Score;
-        public readonly int Stars;
 
         /// <summary>
         /// The rank this keeper holds, as a rung id - the badge the row draws. Empty for a
@@ -55,8 +53,7 @@ namespace GlimmerGrove.Social
         public readonly int ShuffleWave;
 
         public LeaderboardEntry(int rank, string ownerId, string name, string avatarId,
-                                int keeperLevel, long score, int stars, int wave = 0,
-                                string rungId = null, int shuffleWave = 0)
+                                int keeperLevel, int wave = 0, string rungId = null, int shuffleWave = 0)
         {
             RungId = rungId ?? string.Empty;
             Rank = rank < 1 ? 1 : rank;
@@ -64,8 +61,6 @@ namespace GlimmerGrove.Social
             Name = name ?? string.Empty;
             AvatarId = avatarId ?? string.Empty;
             KeeperLevel = keeperLevel < 1 ? 1 : keeperLevel;
-            Score = score < 0L ? 0L : score;
-            Stars = stars < 0 ? 0 : stars;
             Wave = wave < 0 ? 0 : wave;
             ShuffleWave = shuffleWave < 0 ? 0 : shuffleWave;
         }
@@ -79,28 +74,25 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>Denormalised on purpose, and it is the difference between a feature that scales and
     /// one that does not.</b> The obvious shape is a query - order the player collection by
-    /// score, take the first hundred - which is a hundred document reads every time anybody
+    /// wave, take the first hundred - which is a hundred document reads every time anybody
     /// opens the screen, against a collection that grows for the life of the game, on a
     /// database billed per read. One document holding a hundred rows is one read, cacheable,
     /// the same for everybody, and its cost does not move when the game does. That is the
     /// reason a scheduled job writes it.
     /// </para>
     /// <para>
-    /// <b>There are exactly three boards and each is one of the game's ladders.</b>
-    /// <see cref="Global"/> is the finest groves anywhere (what a keeper has built),
-    /// <see cref="Endless"/> is the Infinite lane's own board: how far anybody has held the
-    /// line (invariant 43), and <see cref="Shuffle"/> is the Shuffle lane's (MODES.md 59). Each
-    /// is one document ordered on one card field, each is exact at any player count, and none
-    /// costs a read that grows with the game - a board is a row in <c>BOARD_FIELD</c>, never a
-    /// code path of its own.
+    /// <b>There are exactly two boards and each is one of the game's ladders.</b>
+    /// <see cref="Endless"/> is the Infinite lane's own board: how far anybody has held the line
+    /// (invariant 43), and <see cref="Shuffle"/> is the Shuffle lane's (MODES.md 59). Each is one
+    /// document ordered on one card field, each is exact at any player count, and none costs a
+    /// read that grows with the game - a board is a row in <c>BOARD_FIELD</c>, never a code path
+    /// of its own.
     /// </para>
     /// <para>
-    /// <b>What was here and is gone is the league board.</b> Nine boards, nine queries and nine
-    /// counts a night bought a second reading of the <em>same</em> number the global board is
-    /// ordered on, cut into bands no screen in the game ever named - and the question it existed
-    /// to answer, "where do I stand", is already answered exactly, at O(1) and at any
-    /// population, by the published distribution (<see cref="GroveRanks"/>, invariant 19c). The
-    /// ids <c>l0</c> to <c>l8</c> are spent and must never be reused.
+    /// <b>Spent board ids, never to be reused:</b> <c>global</c>, the finest groves, ordered on a
+    /// grove's worth and retired with the Grovement; and the nine league boards <c>l0</c> to
+    /// <c>l8</c> that cut its number into bands. "Where do I stand" is answered at O(1) and at any
+    /// population by the published distribution (<see cref="GroveRanks"/>, invariant 19c).
     /// </para>
     /// <para>
     /// What is still deliberately absent is a "keepers near you" board: that needs an exact
@@ -110,18 +102,12 @@ namespace GlimmerGrove.Social
     public sealed class LeaderboardBoard
     {
         /// <summary>
-        /// The board holding the best groves anywhere. A permanent id: it names a document
-        /// the server writes, so invariant 1 applies to it in full.
-        /// </summary>
-        public const string Global = "global";
-
-        /// <summary>
         /// The Infinite lane's board: the furthest wave anybody has held out to.
         ///
         /// <para>
-        /// A permanent id, exactly as <see cref="Global"/> is - it names a document a scheduled
-        /// job writes, so renaming it orphans whatever the last run left behind and shows every
-        /// player an empty list until the next one.
+        /// A permanent id: it names a document a scheduled job writes, so renaming it orphans
+        /// whatever the last run left behind and shows every player an empty list until the next
+        /// one (invariant 1 in full).
         /// </para>
         /// <para>
         /// <b>It is the lane's board rather than a level's</b>, which is what keeps a second
@@ -146,7 +132,7 @@ namespace GlimmerGrove.Social
         /// one no search can find and no gate can check. Mirrored by <c>BOARD_IDS</c> in
         /// <c>functions/src/grove.ts</c>, which is what decides the boards that actually exist.
         /// </summary>
-        public static readonly IReadOnlyList<string> All = new[] { Global, Endless, Shuffle };
+        public static readonly IReadOnlyList<string> All = new[] { Endless, Shuffle };
 
         /// <summary>
         /// How many rows a board carries.
@@ -222,16 +208,15 @@ namespace GlimmerGrove.Social
         ///
         /// Checked before the request rather than after the answer, because an unknown id is
         /// a path this client composed and a request for a document that cannot exist is a
-        /// read nobody should pay for. It is also what makes a retired board id - a league's,
-        /// say, reached through an old deep link - refused rather than merely empty.
+        /// read nobody should pay for. It is also what makes a retired board id - <c>global</c>, or a
+        /// league's, reached through an old deep link - refused rather than merely empty.
         /// </summary>
         public static bool IsKnown(string boardId)
-            => string.Equals(boardId, Global, StringComparison.Ordinal)
-            || string.Equals(boardId, Endless, StringComparison.Ordinal)
+            => string.Equals(boardId, Endless, StringComparison.Ordinal)
             || string.Equals(boardId, Shuffle, StringComparison.Ordinal);
 
         /// <summary>
-        /// Whether this board is ordered on waves rather than on grove worth.
+        /// Whether this board is the Infinite lane's.
         ///
         /// <para>
         /// Asked of the board rather than carried on a row, because it decides what a row
@@ -247,12 +232,9 @@ namespace GlimmerGrove.Social
         public static bool IsShuffle(string boardId)
             => string.Equals(boardId, Shuffle, StringComparison.Ordinal);
 
-        /// <summary>Whether this board is ordered on a wave count of either lane.</summary>
-        public static bool IsWaves(string boardId) => IsEndless(boardId) || IsShuffle(boardId);
-
         /// <summary>
         /// The wave a row prints on this board: the figure the board is ordered on, and no
-        /// other, or the list would read as shuffled. Nought on a board not ordered on waves.
+        /// other, or the list would read as shuffled. Nought on a board this build does not know.
         /// </summary>
         public static int WaveOn(string boardId, LeaderboardEntry entry)
             => IsShuffle(boardId) ? entry.ShuffleWave : IsEndless(boardId) ? entry.Wave : 0;

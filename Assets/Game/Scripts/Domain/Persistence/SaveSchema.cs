@@ -574,6 +574,13 @@ namespace GlimmerGrove.Persistence
         ///      yet. What a device drops is its own local copy, on its next write, which is what
         ///      removing a feature means.
         ///      </para>
+        ///      <para>
+        ///      <b>Superseded on 2026-10-25 (16z).</b> An allow-list entry turned out not to cost
+        ///      nothing: the rules judge the merged document, so every veteran save paid for the
+        ///      eight dead clauses on every write, and the v47 clauses tipped those saves over
+        ///      Firestore's evaluation cap (12c). The keys were swept from every stored save by
+        ///      <c>firebase/seed/retire-grove-keys.mjs</c> and then left <c>hasOnly</c>.
+        ///      </para>
         /// v34 - the daily challenges (<see cref="SaveFileDto.challenges"/>): today's attempts
         ///      and wins per genre, a lifetime tally of levels cleared per genre, and the day
         ///      each deal was last bought.

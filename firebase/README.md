@@ -155,30 +155,21 @@ walling iPhone players out and pointing them at nothing.
 
 ## The public boards
 
-`groves/{uid}` is a player's grove as everybody else may see it, and it exists so the save
-document never has to be readable by a stranger. `players/{uid}` carries the level ledger,
-the streak's dates, the event floors and the ad allowance; a leaderboard row needs a name,
-a number and where the benches are.
+`groves/{uid}` is a keeper's public card (the spelling is permanent, 16y), and it exists so the
+save document never has to be readable by a stranger. `players/{uid}` carries the level ledger,
+the streak's dates, the event floors and the ad allowance; a board row needs a name, a level, a
+badge and a wave.
 
-**The score is recomputed here and never believed.** The three id sets a grove's worth is
-derived from — `homesteadOwned`, `groveLandOwned`, `companionsOwned` — are all written by
-the client, which was fine while a forged entry bought a picture nobody else saw. A board
-changes that, so `publishGrove` opens the save with its own credentials and splits the
-worth in two:
+**Every figure on a card is recomputed or bounded here and never believed.** `publishGrove` opens
+the save with its own credentials: the keeper level is derived from the star ledger (19a), the
+rank badge is climbed again (`rungOf`), the name comes from the reservation (19f), the turret line
+is asked against the roster's gates (`publishedLine`), and the two wave figures — the one thing it
+cannot recompute — are bounded (`bestWave`, `shuffleWave`, 19l).
 
-```
-score = earned + min(bought, earnedCredits + grantedBaseline)
-```
-
-The **earned** half is companions the keeper ladder reached, derived from records this
-server already validates for currency. The **bought** half was paid for in credits, and
-credits are server-derived, so it is clamped to everything the account could ever have had
-to spend. A save awarding itself the whole catalog scores what its owner could afford.
-
-The clamp is deliberately generous — currency *received*, not currency spent on the grove —
-because understating a leaderboard position is a bug and overstating one is an exploit.
-`worth.clamped` is logged, and a sudden run of them means the catalog or the economy moved
-and nobody re-seeded.
+**The Grovement left the card on 2026-10-25.** A card no longer carries `score`, `stars`,
+`dwelling`, `land`, `placed`, `hall`, `hallFacing` or `catalogVersion`, and the `global` board
+ordered on a grove's worth is gone with them (spent ids). `repairGroveCards` rebuilt every card
+built before `CARD_SHAPE_SINCE`, and `pruneRetiredBoards` removed `leaderboards/global`.
 
 **The request body is empty.** No score, no contents, no name. The client decides *when*
 (`GrovePublishPolicy`, debounced over a fingerprint of what a visitor can see) and the
@@ -192,9 +183,9 @@ board document in the same call (`placeOnBoards` in grove.ts, gated by a per-ins
 cutoff so a card that cannot reach the top hundred costs no read), and `withdrawGrove` scrubs
 the row in the same call. `publishGroveBoards` re-reads the top hundred of each board off the
 index every fifteen minutes as the net under that (about two hundred reads a run at any
-population). `publishGroveRanks` runs at 04:00 UTC, takes the two `count()`s and a bounded sample of cards for
-the deciles, and writes the boards again plus `config/groveRanks`. One document read per
-screen open, at any player count.
+population). `publishGroveRanks` runs at 04:00 UTC, takes the two `count()`s and a bounded sample
+of cards for the wave deciles, and writes the boards again plus `config/groveRanks`. One document
+read per screen open, at any player count.
 
 **Names are sanitised here and only here.** `sanitiseName` strips the bidirectional
 controls and the zero-width family — U+202E re-orders the text that *follows* it, so one
@@ -204,19 +195,16 @@ keeps it and appears under a handle derived from their uid, which is also what g
 unnamed keepers rows that differ. `settings.board == 2` opts out, read off the save so the
 refusal cannot be talked past, and `withdrawGrove` takes the card down.
 
-**A card also carries what a public profile draws**: `companions`, the priced companions the
-keeper owns, and `line`, the four seats of the turret loadout. Both are built by the same pass
-that scores the grove — `heldCompanions` is the walk `groveWorth` prices, so the portraits a
-visitor sees and the number under them are one fact rather than two filters. Neither is
-adjudicated the way the score is, and neither needs to be: a line orders no board and pays
-nothing, so it is a *picture*, exactly as `placed` has always been. What the server does check
-is the one forgery a visitor could catch as a lie — the keeper level gate, asked before
-anything else, so a level-two account cannot stand the turret that opens at forty. That needs
-`config/grove.wards`, which the seeder publishes; **a deployment that has not been re-seeded
-publishes no line at all** rather than an unvouched one.
+**A card also carries what a public profile draws**: `line`, the four seats of the turret
+loadout, and `companions` (the roster is inert and published empty, 16ab). A line orders no board
+and pays nothing, so it is a *picture*. What the server does check is the one forgery a visitor
+could catch as a lie — the keeper level gate, asked before anything else, so a level-two account
+cannot stand the turret that opens at forty. That needs `config/grove.wards`, which the seeder
+publishes; **a deployment that has not been re-seeded publishes no line at all** rather than an
+unvouched one.
 
-Four rules exist in both C# and TypeScript — the worth, the keeper level behind it, the
-name and the league — and all four fail silently. `firebase/shared/grove-vectors.json` pins
+The rules that exist in both C# and TypeScript — the keeper level, the public name and the rest
+listed in its header — fail silently when they drift. `firebase/shared/grove-vectors.json` pins
 them; `test/grove.mjs` is this half and `Assets/Game/Tests/GroveBoardTests.cs` is the other.
 
 ## Names are unique because a document id is unique
@@ -301,8 +289,7 @@ Deployed and verified live on 2026-08-15:
 `seed-showcase.mjs` and `showcase-villages.json` wrote ten designed villages so the boards
 would not be empty on launch day. They went with the Grovement on 2026-09-21. **If any were
 ever written to the live project, they are still there** — every one is a `showcase-` account
-id with `synthetic: true` on its card, and `reset-groves.mjs` or a hand delete is what takes
-them down now. They were never seeded to production as far as this file records.
+id with `synthetic: true` on its card, and a hand delete is what takes them down now. They were never seeded to production as far as this file records.
 
 The lesson they bought is worth keeping and is not about groves: **design is a decision about
 where each thing goes, not a probability over where it may.** Two generations of procedural
@@ -347,6 +334,7 @@ state before any real in-app product exists — see *Secrets* below.
 cd firebase
 npm --prefix functions install
 npm --prefix functions run test     # reward vectors: the server must match the client
+node e2e/rules-budget.mjs           # 12c: the save rule's evaluation budget, before every rules release
 firebase deploy --only firestore:rules
 firebase deploy --only firestore:indexes --force   # the index exemptions below; --force drops what the file no longer names
 node seed/seed-config.mjs           # must run before functions serve traffic

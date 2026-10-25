@@ -3358,10 +3358,6 @@
       "text": "Fala {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Wartość: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "ranking"
     },
@@ -6330,20 +6326,20 @@
       "text": "Nowa wieża odblokowana!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "Odblokowano tę wieżę!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "BRAWO!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Dzień {0} z {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Odblokuj tę wieżę!"
+      "text": "Jesteś o krok bliżej odblokowania tej wieży! Graj dalej."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "Twoja wieża jest gotowa! Odbierz ją w Bonusie powitalnym."
+      "key": "ui.steps.claim",
+      "text": "ODBIERZ"
     },
     {
       "key": "ui.steps.chests_line",

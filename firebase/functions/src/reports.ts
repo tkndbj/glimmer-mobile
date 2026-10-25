@@ -1,7 +1,7 @@
 import { Firestore, Transaction } from "firebase-admin/firestore";
 
 import { PATHS } from "./config";
-import { GROVE_PATHS, fallbackName, heldGrove, isGroveDenied, GroveHolding } from "./grove";
+import { GROVE_PATHS, fallbackName } from "./grove";
 import { NameHolding, heldName } from "./names";
 
 /**
@@ -15,25 +15,22 @@ import { NameHolding, heldName } from "./names";
  * conclusion: the filter buys you the obvious cases, and **reporting is what actually holds
  * the line**. It is also the only part of this that gets better on its own.
  *
- * ## Two subjects, one mechanism
+ * ## The subjects
  *
- * A keeper puts two things in front of strangers: a **name**, which is the one piece of free
- * text in this game, and an **arrangement** — 784 tiles of ground sold with walls, gates and
- * fences. `grove.ts`'s header used to argue that the second could not be offensive because
- * every piece is an id from a catalog we ship; that was true of the pre-placed dots the grove
- * shipped with and stopped being true the day land was sold by the region and walls by the
- * bundle. Walls tile. Somebody with enough of them writes whatever they like on the ground, and
- * every gate in this project stays green while they do, because nothing here opens a picture.
+ * A report names a {@link ReportSubject}. The **name** is the one piece of free text in this
+ * game and the one thing a keeper now puts in front of strangers that can be offensive.
  *
- * So a report names a {@link ReportSubject}, and everything else about the mechanism is shared:
- * the pair-keyed idempotency, the distinct-reporter threshold, the daily quota, the audit trail
- * and the review floor. **The two subjects are separate collections and separate counts**,
- * because they are separate judgements — a name three people found offensive says nothing about
- * the benches, and folding them into one tally would hide a grove behind a name's reports.
+ * The **grove** — the arrangement of a keeper's Grovement, walls that tile into words — was the
+ * second subject, and it went with the Grovement on 2026-09-21: no card publishes an arrangement
+ * any more, so a grove report finds nothing to report (`nothingToReport`) and writes nothing.
+ * The subject stays a recognised spelling (16y, 19o) because `groveReports` holds reports already
+ * filed — the audit trail account deletion walks — and a subject this deployment refused would
+ * read to an old client as an error rather than an answer.
  *
- * **The quota is shared**, and that is the other way round on purpose: it is an abuse bound on
- * the *reporter's account*, not a budget per subject, so twenty reports a day is twenty reports
- * a day however they are split.
+ * Every subject shares one mechanism: the pair-keyed idempotency, the distinct-reporter
+ * threshold, the daily quota, the audit trail and the review floor, in a collection and a count
+ * of its own. **The quota is shared**: it is an abuse bound on the *reporter's account*, not a
+ * budget per subject.
  *
  * ## The shape, and why it is a subcollection rather than a counter
  *
@@ -55,18 +52,15 @@ import { NameHolding, heldName } from "./names";
  * ## What a takedown does, and what it deliberately does not
  *
  * A **name** takedown sets `deniedUnix` on the account's name holding and rewrites the live
- * card's name to the generated handle. A **grove** takedown sets `deniedUnix` on the account's
- * grove holding and empties the live card's `placed` map. That is all, in both cases. The
- * player keeps their name and their grove on their own screens, keeps their score, their stars,
- * their row and their currency, and is told nothing — because the alternative, a punishment
- * pipeline, needs an appeals process, a support desk and a lawyer before it is honest, and none
- * of that is bought by the thing this actually prevents, which is one row on a board and one
- * picture behind it.
+ * card's name to the generated handle. That is all. The player keeps their name on their own
+ * screens, keeps their row and their currency, and is told nothing — because the alternative, a
+ * punishment pipeline, needs an appeals process, a support desk and a lawyer before it is honest,
+ * and none of that is bought by the thing this actually prevents, which is one name on a board.
+ * (A wallet may still carry `grove.deniedUnix` from a grove takedown while the Grovement stood:
+ * history, read by nothing.)
  *
  * **Nothing is released.** A denied name's reservation stays held by the account that took it,
- * which is what stops the reported name being immediately claimed by somebody else; a denied
- * grove keeps every piece in it, because a takedown is not a confiscation and the player has to
- * be able to rearrange their way back.
+ * which is what stops the reported name being immediately claimed by somebody else.
  *
  * ## Why the auto-hide is safe to run without a human
  *
@@ -181,14 +175,12 @@ export interface ReportSummary {
   reports: number;
   deniedUnix: number;
 
-  /** The reserved name's key. Written on a name report; absent on a grove one. */
+  /** The reserved name's key. */
   key: string;
 
   /**
    * What was on the board, kept so a moderator reviewing a takedown can see what was actually
-   * published rather than having to reconstruct it from a save. For a name that is the name; for
-   * a grove it is the keeper's name, which is the only thing about an arrangement a line of text
-   * can carry — the arrangement itself is on the card, which the desk can read.
+   * published rather than having to reconstruct it from a save.
    */
   name: string;
 
@@ -231,21 +223,17 @@ export interface ReportSummary {
  * name, or the name they chose was already refused by the filter and the board is showing a
  * generated handle. Reporting a handle the server invented would be reporting us.
  *
- * <b>A grove</b>: the card has to carry at least one placement. An empty floor is not something
- * anybody could have taken offence at, and answering "recorded" for one would let somebody bank
- * reports against an account before it had built anything.
+ * <b>A grove</b>: never anything. No card has published an arrangement since the Grovement was
+ * removed, and answering "recorded" would let somebody bank reports against a picture nobody can
+ * see.
  */
 function nothingToReport(
   subject: ReportSubject,
   card: Record<string, unknown> | undefined,
   name: NameHolding | null
 ): boolean {
-  if (!card) return true;
-
-  if (subject === "name") return !name || name.key.length === 0;
-
-  const placed = card.placed;
-  return !placed || typeof placed !== "object" || Object.keys(placed).length === 0;
+  if (!card || subject !== "name") return true;
+  return !name || name.key.length === 0;
 }
 
 /**
@@ -255,9 +243,8 @@ function nothingToReport(
  * and it is also what makes the threshold test safe: two reporters arriving together are
  * serialised by the transaction rather than both reading "two" and both deciding not to hide.
  *
- * <b>Nothing here trusts the reporter for anything but the target's id and which of two subjects
- * they meant.</b> The name, the key, the arrangement and the count all come from documents this
- * server owns. The request cannot say what was offensive, cannot say how bad it was, and cannot
+ * <b>Nothing here trusts the reporter for anything but the target's id and which subject they
+ * meant.</b> The name, the key and the count all come from documents this server owns. The request cannot say what was offensive, cannot say how bad it was, and cannot
  * report something that is not actually published — which is what keeps the whole surface to
  * "cause one document to be created".
  */
@@ -270,7 +257,7 @@ export async function reportKeeper(
   threshold: number
 ): Promise<ReportResult> {
   // Cheapest possible refusal, and it is a real case rather than a theoretical one: the
-  // report control is on a grove card, and a player can visit their own.
+  // report control is on a public profile, and a player can visit their own.
   if (reporterUid === targetUid) return { outcome: "self", reports: 0 };
 
   const cardRef = db.doc(GROVE_PATHS.card(targetUid));
@@ -285,9 +272,7 @@ export async function reportKeeper(
     const [cardSnapshot, walletSnapshot, summarySnapshot, reporterSnapshot, quotaSnapshot] =
       await tx.getAll(cardRef, walletRef, summaryRef, reporterRef, quotaRef);
 
-    const wallet = walletSnapshot.data();
-    const name: NameHolding | null = heldName(wallet);
-    const grove: GroveHolding | null = heldGrove(wallet);
+    const name: NameHolding | null = heldName(walletSnapshot.data());
 
     const card = cardSnapshot.exists
       ? (cardSnapshot.data() as Record<string, unknown> | undefined)
@@ -297,9 +282,8 @@ export async function reportKeeper(
       return { outcome: "nothing" as ReportOutcome, reports: 0 };
     }
 
-    const alreadyDenied = subject === "name"
-      ? Math.floor(Number(name?.deniedUnix ?? 0)) > 0
-      : isGroveDenied(grove);
+    // Only a name reaches here (`nothingToReport`).
+    const alreadyDenied = Math.floor(Number(name?.deniedUnix ?? 0)) > 0;
 
     const previous = summarySnapshot.exists
       ? (summarySnapshot.data() as Partial<ReportSummary>)
@@ -341,10 +325,9 @@ export async function reportKeeper(
     tx.set(summaryRef, {
       reports,
       subject,
-      key: subject === "name" ? (name?.key ?? "") : "",
+      key: name?.key ?? "",
 
-      // Who it was, as published. For a name that is the thing complained about; for a grove it
-      // is how the desk finds the account whose card it now has to look at.
+      // Who it was, as published: the thing complained about.
       name: name?.public ?? "",
 
       firstUnix: Math.floor(Number(previous?.firstUnix ?? 0)) || nowUnix,
@@ -356,25 +339,12 @@ export async function reportKeeper(
       // Merged rather than set, because this is the wallet — the document holding the
       // account's granted and spent baselines. A whole-document write here would be the most
       // expensive mistake available in this codebase.
-      //
-      // The two subjects write two different fields and neither can reach the other's: a grove
-      // takedown must never be able to hide a name, which is the one way a single mechanism
-      // serving two judgements could quietly become one judgement.
-      tx.set(walletRef, subject === "name"
-        ? { name: { deniedUnix: nowUnix } }
-        : { grove: { deniedUnix: nowUnix } }, { merge: true });
+      tx.set(walletRef, { name: { deniedUnix: nowUnix } }, { merge: true });
 
       // The live card is corrected in the same transaction rather than left for the next
-      // publish. A takedown that waits on the player to open their own grove is a takedown that
-      // may never happen — and the delay is visible to exactly the people who reported it.
-      //
-      // `placed: {}` rather than a delete, because a deleted field on a card reads as "written
-      // by an older deployment" to every client, and an empty map is unambiguous. It is also
-      // precisely what `buildCard` writes from now on for this account, so the corrected card
-      // and the next published one are the same card.
-      tx.update(cardRef, subject === "name"
-        ? { name: fallbackName(targetUid) }
-        : { placed: {} });
+      // publish. A takedown that waits on the player to publish again is a takedown that may
+      // never happen — and the delay is visible to exactly the people who reported it.
+      tx.update(cardRef, { name: fallbackName(targetUid) });
     }
 
     return { outcome: (hide ? "hidden" : "recorded") as ReportOutcome, reports };

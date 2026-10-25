@@ -4,42 +4,27 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Social
 {
     /// <summary>
-    /// What everybody else's grove is worth, as nine numbers.
+    /// Where everybody else's wave stands, as nine numbers.
     ///
     /// <para>
     /// <b>This is the per-glade move-count table's bargain (<c>LevelStats</c>, removed
-    /// 2026-10-07) taken to the leaderboard, and it is why
-    /// there is no global sort anywhere in this feature.</b> The obvious implementation of
-    /// "where do I stand" keeps every player's score in one ordered structure and asks it for
-    /// a rank. That is a write on every purchase and a read that has to walk a list which
-    /// grows with the game - exactly the trade <c>stats.ts</c> refused for move counts, for
-    /// exactly the same reasons. Nine scores published once a day answer the same question to
-    /// within a percentage point, in one document, at O(1), at any player count. There is no
-    /// scale at which the exact version buys a player anything they could notice.
+    /// 2026-10-07) taken to the leaderboard, and it is why there is no global sort anywhere in
+    /// this feature (19c).</b> The obvious implementation of "where do I stand" keeps every
+    /// player's figure in one ordered structure and asks it for a rank. That is a write on every
+    /// run and a read that has to walk a list which grows with the game. Nine figures published
+    /// once a day answer the same question to within a percentage point, in one document, at
+    /// O(1), at any player count.
     /// </para>
     /// <para>
-    /// <b>Higher is better here, which is the one difference from <c>LevelStats</c>.</b>
-    /// A move count is a score you want small, so its reading is "how many keepers took more".
-    /// A grove's worth is a score you want large, so the reading is "how many keepers hold
-    /// less" - <see cref="PercentBelow"/>. The two are not the same function with a sign
-    /// flipped, because the deciles ascend in both cases and only one of them ascends
-    /// <em>towards</em> the good end. Written out separately rather than shared, because a
-    /// shared one would take a flag and the flag would be got wrong exactly once.
+    /// <b>Higher is better here</b>, so the reading is "how many keepers reached less" -
+    /// <see cref="PercentBelow"/>.
     /// </para>
     /// <para>
-    /// <b>Deciles of what population.</b> Every sampled save that has actually done the thing.
-    /// For grove worth that is "keepers who have built something" - groves worth zero are
-    /// excluded deliberately, because on the day the feature ships most accounts have bought
-    /// nothing and including them would put the median at zero and tell the first player who
-    /// bought a fence that they are ahead of ninety per cent of the world. For waves it is
-    /// "keepers who have run the Infinite lane", for the same reason read across.
-    /// </para>
-    /// <para>
-    /// <b>One type, two distributions, and no flag.</b> Grove worth and a wave count are both
-    /// scores you want <em>large</em>, so <see cref="PercentBelow"/> is the same function over
-    /// both and this is used twice rather than being copied or parameterised - the reading that
-    /// genuinely differs is <c>LevelStats</c>', where a move count is a score you want small,
-    /// and that one is written out separately on purpose.
+    /// <b>Deciles of what population.</b> Every sampled card that has actually run the Infinite
+    /// lane. A keeper who never has is excluded deliberately: including them would put the median
+    /// at nought and tell the first player to finish a run that they are ahead of ninety per cent
+    /// of the world. (The grove-worth distribution that used to ride beside this went with the
+    /// Grovement.)
     /// </para>
     /// </summary>
     public readonly struct GroveRankTable
@@ -47,7 +32,7 @@ namespace GlimmerGrove.Social
         /// <summary>How many keepers this was measured over. The claim's own credibility.</summary>
         public readonly int Samples;
 
-        /// <summary>Grove worth at p10 … p90, ascending. Always nine, or empty.</summary>
+        /// <summary>The figure at p10 … p90, ascending. Always nine, or empty.</summary>
         public readonly IReadOnlyList<long> Deciles;
 
         public GroveRankTable(int samples, IReadOnlyList<long> deciles)
@@ -82,14 +67,14 @@ namespace GlimmerGrove.Social
         public bool IsUsable => Samples >= MinimumSamples && Deciles != null && Deciles.Count == 9;
 
         /// <summary>
-        /// What share of keepers hold a grove worth <em>less</em> than
-        /// <paramref name="score"/>, as a percentage. -1 when there is not enough to say.
+        /// What share of keepers reached <em>less</em> than <paramref name="score"/>, as a
+        /// percentage. -1 when there is not enough to say.
         ///
         /// <para>
         /// Linear interpolation between the deciles, which is the honest reading of what a
         /// decile table knows - it says where the boundaries are and nothing about the shape
         /// between them, so a straight line is the least invented answer. A score of zero
-        /// gets -1 rather than a percentile: a player who has built nothing is not in the
+        /// gets -1 rather than a percentile: a player who has never run the lane is not in the
         /// population these deciles describe, and telling them they are behind everybody is
         /// the one thing a percentile line must never say.
         /// </para>
@@ -121,7 +106,7 @@ namespace GlimmerGrove.Social
         }
 
         /// <summary>
-        /// The share of keepers this grove is <em>ahead of</em>, phrased as the "top N%" a
+        /// The share of keepers this figure is <em>ahead of</em>, phrased as the "top N%" a
         /// board draws. -1 when there is not enough to say.
         ///
         /// One method rather than two subtractions at the call sites, because a percentile
@@ -142,24 +127,17 @@ namespace GlimmerGrove.Social
     /// One night's ranking job, as the client reads it.
     ///
     /// <para>
-    /// <b>A named type rather than a tuple, and the second distribution is why.</b> This
-    /// arrived as <c>(result, table, population, builtUnix)</c> and adding waves would have made
-    /// it six positional values threaded through an interface, an implementation, a test double
-    /// and a caller - where the only thing stopping two same-typed members being swapped is
-    /// whoever is reading the diff. Every field here is named at every call site, and a third
-    /// distribution costs one member instead of one more position.
+    /// <b>A named type rather than a tuple</b>, so every field is named at every call site and a
+    /// further distribution costs one member instead of one more position.
     /// </para>
     /// <para>
-    /// Every part of it is optional in the honest sense: a document written before waves were
-    /// published leaves <see cref="Waves"/> at <see cref="GroveRankTable.None"/>, which every
-    /// reader already treats as "nothing to say".
+    /// Every part of it is optional in the honest sense: a document without a wave table leaves
+    /// <see cref="Waves"/> at <see cref="GroveRankTable.None"/>, which every reader already treats
+    /// as "nothing to say".
     /// </para>
     /// </summary>
     public readonly struct GroveRankPublication
     {
-        /// <summary>Where a grove's worth stands against everybody who has built something.</summary>
-        public readonly GroveRankTable Groves;
-
         /// <summary>Where a wave stands against everybody who has run the Infinite lane.</summary>
         public readonly GroveRankTable Waves;
 
@@ -169,10 +147,9 @@ namespace GlimmerGrove.Social
         /// <summary>When the job that produced this ran, as a Unix timestamp. 0 if unknown.</summary>
         public readonly long BuiltUnix;
 
-        public GroveRankPublication(GroveRankTable groves, GroveRankTable waves,
-                                    IReadOnlyDictionary<string, int> population, long builtUnix)
+        public GroveRankPublication(GroveRankTable waves, IReadOnlyDictionary<string, int> population,
+                                    long builtUnix)
         {
-            Groves = groves;
             Waves = waves;
             Population = population;
             BuiltUnix = builtUnix < 0L ? 0L : builtUnix;
@@ -180,7 +157,7 @@ namespace GlimmerGrove.Social
 
         /// <summary>What a failed read, an absent document and a build with no backend all are.</summary>
         public static readonly GroveRankPublication None =
-            new GroveRankPublication(GroveRankTable.None, GroveRankTable.None, null, 0L);
+            new GroveRankPublication(GroveRankTable.None, null, 0L);
     }
 
     /// <summary>
@@ -197,7 +174,6 @@ namespace GlimmerGrove.Social
     /// </summary>
     public static class GroveRanks
     {
-        static GroveRankTable _table = GroveRankTable.None;
         static Dictionary<string, int> _population = new Dictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>Raised when a new table is published, so an open board can repaint.</summary>
@@ -210,40 +186,26 @@ namespace GlimmerGrove.Social
 
         static GroveRankTable _waves = GroveRankTable.None;
 
-        /// <summary>Where a grove's worth stands. Empty until a job has published one.</summary>
-        public static GroveRankTable Table => _table;
-
         /// <summary>
         /// Where a wave stands, against keepers who have run the Infinite lane.
         ///
         /// <b>A hundred rows is a board; this is what answers the same question for everybody
         /// else.</b> At ten million players the Endless Watch reaches 0.001% of them, so without
-        /// this the lane would be ranked for a hundred people and silent for the rest - and it
-        /// costs no reads at all, because it comes out of the sample the worth deciles already
-        /// walk.
+        /// this the lane would be ranked for a hundred people and silent for the rest.
         /// </summary>
         public static GroveRankTable Waves => _waves;
 
         /// <summary>
         /// How many keepers one board was chosen from. Zero for a board nobody is on.
         ///
-        /// Keyed by <see cref="LeaderboardBoard"/> id, so "the finest of N" and "N keepers have
-        /// held the line" are the same reading asked of two boards rather than two fields.
+        /// Keyed by <see cref="LeaderboardBoard"/> id, so "N keepers have held the line" is one
+        /// reading asked of each board rather than a field per board. Deliberately never summed
+        /// across boards: a keeper on both is counted on both.
         /// </summary>
         public static int PopulationOf(string boardId)
             => !string.IsNullOrEmpty(boardId) && _population.TryGetValue(boardId, out int count)
                 ? count
                 : 0;
-
-        /// <summary>
-        /// Every keeper on the global board - which is the game's population of keepers who
-        /// have built something, and not a sum.
-        ///
-        /// <b>Deliberately not added up across the boards.</b> A keeper with a grove and an
-        /// endless best is counted on both, so a total would count them twice and would move when
-        /// a board was added. The global count is the one that means "how many people is this".
-        /// </summary>
-        public static int Population => PopulationOf(LeaderboardBoard.Global);
 
         /// <summary>
         /// Adopts a table. Replaces wholesale rather than merging, so a board that emptied
@@ -258,7 +220,6 @@ namespace GlimmerGrove.Social
                 foreach (var pair in published.Population)
                     if (LeaderboardBoard.IsKnown(pair.Key) && pair.Value > 0) next[pair.Key] = pair.Value;
 
-            _table = published.Groves;
             _waves = published.Waves;
             _population = next;
             BuiltUnix = published.BuiltUnix;
@@ -271,7 +232,6 @@ namespace GlimmerGrove.Social
         /// <summary>Forgets everything. Dev only, and used by the wipe.</summary>
         public static void Clear()
         {
-            _table = GroveRankTable.None;
             _waves = GroveRankTable.None;
             _population = new Dictionary<string, int>(StringComparer.Ordinal);
             BuiltUnix = 0L;

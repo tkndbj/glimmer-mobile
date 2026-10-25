@@ -71,6 +71,19 @@ namespace GlimmerGrove
         /// <summary>Raised after anything lands here, so the shelf behind can repaint.</summary>
         public System.Action Changed { get; set; }
 
+        /// <summary>
+        /// What to resume once this is gone, however it ended - the welcome step's CLAIM hands over
+        /// the victory panel's choice (<c>WelcomeStepOverlay.Then</c>). Run exactly once.
+        /// </summary>
+        public System.Action Then { get; set; }
+
+        void OnDestroy()
+        {
+            var then = Then;
+            Then = null;
+            then?.Invoke();
+        }
+
         // ------------------------------------------------------------------ shape
         /// <summary>
         /// The plate, and the stage standing on it.

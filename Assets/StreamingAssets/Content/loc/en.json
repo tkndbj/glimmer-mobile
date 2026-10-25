@@ -3358,10 +3358,6 @@
       "text": "Wave {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "{0} worth"
-    },
-    {
       "key": "ui.board.title",
       "text": "the boards"
     },
@@ -6330,20 +6326,20 @@
       "text": "New turret unlocked!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "You have unlocked this turret!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "WELL DONE!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Day {0} of {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Unlock this turret!"
+      "text": "You are one step closer to unlocking this turret! Continue to play."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "Your turret is ready! Collect it from the Welcome bonus."
+      "key": "ui.steps.claim",
+      "text": "CLAIM"
     },
     {
       "key": "ui.steps.chests_line",

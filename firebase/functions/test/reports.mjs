@@ -97,10 +97,8 @@ function fakeDb(seed = {}) {
           docs.set(ref.path, options?.merge ? merge(docs.get(ref.path) ?? {}, data) : data);
         },
         // `update` **replaces** each named field, where `set(..., {merge:true})` merges into
-        // it. That is the real difference and it is load-bearing here: a grove takedown writes
-        // `{ placed: {} }`, which has to empty the map rather than leave every row standing —
-        // and a fake that deep-merged both would have reported the takedown as working while
-        // the live card kept the arrangement three people reported.
+        // it - the real difference, kept faithful so a takedown that writes a field is proved
+        // to replace it rather than merely merge into it.
         update: (ref, data) => {
           written = true;
           if (!docs.has(ref.path)) throw new Error("Firestore: update of a missing document");
@@ -119,10 +117,14 @@ const TARGET = "target-uid";
 const CARD = `groves/${TARGET}`;
 const WALLET = `players/${TARGET}/private/wallet`;
 
-/** A deployment in which the target has published a card under a chosen name. */
+/**
+ * A deployment in which the target has published a card under a chosen name. The card still
+ * carries the arrangement a card built before the Grovement's fields left would - what a grove
+ * report could once take down - so the grove cases below prove it is now never touched.
+ */
 function published(extra = {}) {
   return fakeDb({
-    [CARD]: { name: "Fern Willow", score: 4200, placed: { "4,4": "bench", "4,5": "wall" } },
+    [CARD]: { name: "Fern Willow", placed: { "4,4": "bench", "4,5": "wall" } },
     [WALLET]: {
       credits: { granted: 1250, spent: 0 },
       name: { key: "fernwillow", public: "Fern Willow", atUnix: 1000, deniedUnix: 0 },
@@ -292,106 +294,35 @@ console.log("\nthe cases with nothing to hide");
 
 // =========================================================== 6. reporting an arrangement
 
+// No card has published an arrangement since the Grovement went (2026-09-21), so the grove
+// subject has nothing to report. It stays a recognised spelling — `groveReports` holds the
+// reports already filed, and an old client must get an answer rather than an error — but every
+// grove report is "nothing": nothing counted, nothing written, no quota spent, and above all
+// nothing hidden, even against a card built before the repair that still carries `placed`.
 console.log("\nreporting a grovement");
 {
   const db = published();
 
-  const first = await reportKeeper(db, "a", TARGET, "grove", NOW, THRESHOLD);
-  equal("the first report is counted", first.outcome, "recorded");
-  check("the arrangement is untouched",
+  for (const uid of ["a", "b", "c", "d"]) {
+    equal(`a grove report finds nothing to report (${uid})`,
+          (await reportKeeper(db, uid, TARGET, "grove", NOW, THRESHOLD)).outcome, "nothing");
+  }
+
+  check("past the threshold, the old card's arrangement is untouched",
         Object.keys(db.docs.get(CARD).placed).length === 2);
-
-  await reportKeeper(db, "b", TARGET, "grove", NOW, THRESHOLD);
-  const third = await reportKeeper(db, "c", TARGET, "grove", NOW, THRESHOLD);
-  equal("the third crosses the threshold", third.outcome, "hidden");
-
-  // The whole of what a grove takedown does, and deliberately all of it.
-  equal("and the live card's arrangement is emptied in the same transaction",
-        Object.keys(db.docs.get(CARD).placed).length, 0);
-  equal("the wallet records when it happened", db.docs.get(WALLET).grove.deniedUnix, NOW);
+  equal("and so is the name", db.docs.get(CARD).name, "Fern Willow");
+  check("the wallet records no takedown", !("grove" in db.docs.get(WALLET)),
+        JSON.stringify(db.docs.get(WALLET)));
   equal("and nothing else on the wallet moved", db.docs.get(WALLET).credits.granted, 1250);
 
-  // The keeper keeps their name, their score and their row. A takedown is not a punishment
-  // pipeline, which is the argument in reports.ts's header.
-  equal("the name is untouched", db.docs.get(CARD).name, "Fern Willow");
-  equal("and the score with it", db.docs.get(CARD).score, 4200);
-}
+  check("no report is filed", !db.docs.has(REPORT_PATHS.summary("grove", TARGET))
+        && !db.docs.has(REPORT_PATHS.reporter("grove", TARGET, "a")));
+  check("and no reporter's allowance is spent", !db.docs.has(REPORT_PATHS.quota("a")));
 
-// ================================================= 7. the two subjects cannot reach each other
-
-console.log("\ntwo subjects, two judgements");
-{
-  const db = published();
-
-  // Three reporters is the threshold, so this would hide a name. It must hide nothing.
-  for (const uid of ["a", "b", "c"]) await reportKeeper(db, uid, TARGET, "grove", NOW, THRESHOLD);
-
-  equal("hiding a grove does not hide the name", db.docs.get(CARD).name, "Fern Willow");
-  check("and leaves the name's own flag alone",
-        Math.floor(Number(db.docs.get(WALLET).name.deniedUnix ?? 0)) === 0,
-        JSON.stringify(db.docs.get(WALLET).name));
-
-  // And the counts are separate: a grove three people reported says nothing about the name.
-  check("the two counts are separate collections",
-        db.docs.has(REPORT_PATHS.summary("grove", TARGET))
-        && !db.docs.has(REPORT_PATHS.summary("name", TARGET)));
-
-  equal("so a name report starts from nothing",
+  // The name is a separate judgement and is untouched by any of it.
+  equal("a name report afterwards starts from nothing",
         (await reportKeeper(db, "a", TARGET, "name", NOW, THRESHOLD)).reports, 1);
-
-  // A player who reported the grove has not reported the name, so the pair key must differ —
-  // otherwise one tap would be counted against whichever subject was asked about first.
-  check("and one player may report both",
-        db.docs.has(REPORT_PATHS.reporter("grove", TARGET, "a"))
-        && db.docs.has(REPORT_PATHS.reporter("name", TARGET, "a")));
-}
-
-// ===================================================== 8. the quota is the account's, not the subject's
-
-console.log("\none allowance across both subjects");
-{
-  const db = published();
-
-  await reportKeeper(db, "a", TARGET, "name", NOW, THRESHOLD);
-  await reportKeeper(db, "a", TARGET, "grove", NOW, THRESHOLD);
-
-  // Two reports is two of the day's twenty, however they were split. A per-subject allowance
-  // would be forty, which is the bound doubling itself every time a subject is added.
-  equal("both reports spend the same day's allowance",
-        db.docs.get(REPORT_PATHS.quota("a")).filed, 2);
-}
-
-// ==================================================== 9. nothing to report about an empty floor
-
-console.log("\nan arrangement with nothing on it");
-{
-  const bare = fakeDb({
-    [CARD]: { name: "Fern Willow", score: 0, placed: {} },
-    [WALLET]: { name: { key: "fernwillow", public: "Fern Willow", atUnix: 1, deniedUnix: 0 } },
-  });
-
-  equal("an empty floor has nothing anybody could have taken offence at",
-        (await reportKeeper(bare, "a", TARGET, "grove", NOW, THRESHOLD)).outcome, "nothing");
-  check("and that costs the reporter nothing",
-        !bare.docs.has(REPORT_PATHS.quota("a")));
-
-  // A card written before groves could be reported carries no `placed` at all. It must read as
-  // "nothing here" rather than throwing, which is the only way an older card could break this.
-  const old = fakeDb({
-    [CARD]: { name: "Fern Willow" },
-    [WALLET]: { name: { key: "fernwillow", public: "Fern Willow", atUnix: 1, deniedUnix: 0 } },
-  });
-  equal("and a card with no arrangement field at all",
-        (await reportKeeper(old, "a", TARGET, "grove", NOW, THRESHOLD)).outcome, "nothing");
-
-  // A keeper with no name can still have their grove reported: the two judgements are separate,
-  // and an unnamed keeper's benches are as visible as anybody's.
-  const nameless = fakeDb({
-    [CARD]: { name: fallbackName(TARGET), placed: { "4,4": "wall" } },
-    [WALLET]: { credits: { granted: 0, spent: 0 } },
-  });
-  equal("a keeper published under a generated handle may still have their grove reported",
-        (await reportKeeper(nameless, "a", TARGET, "grove", NOW, THRESHOLD)).outcome, "recorded");
+  equal("and spends one report of the day", db.docs.get(REPORT_PATHS.quota("a")).filed, 1);
 }
 
 // ============================================================= 10. what a subject may be

@@ -3358,10 +3358,6 @@
       "text": "Vague {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Valeur : {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "classement"
     },
@@ -6330,20 +6326,20 @@
       "text": "Nouvelle tourelle débloquée !"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "Tu as débloqué cette tourelle !"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "BRAVO !"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Jour {0} sur {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Débloque cette tourelle !"
+      "text": "Encore un pas vers cette tourelle ! Continue à jouer."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "Ta tourelle est prête ! Récupère-la dans le Bonus de bienvenue."
+      "key": "ui.steps.claim",
+      "text": "RÉCUPÉRER"
     },
     {
       "key": "ui.steps.chests_line",

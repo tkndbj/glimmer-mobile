@@ -228,11 +228,10 @@ namespace GlimmerGrove.Tests
             foreach (string boardId in LeaderboardScreen.Offers)
             {
                 Assert.IsTrue(LeaderboardBoard.IsKnown(boardId), boardId);
-                Assert.IsTrue(LeaderboardBoard.IsWaves(boardId), boardId + " draws rows in waves");
                 Assert.DoesNotThrow(() => LeaderboardScreen.TabLabel(boardId), boardId + " has no tab name");
             }
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => LeaderboardScreen.TabLabel(LeaderboardBoard.Global));
+            Assert.Throws<ArgumentOutOfRangeException>(() => LeaderboardScreen.TabLabel("global"));
         }
     }
 }

@@ -3358,10 +3358,6 @@
       "text": "الموجة {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "القيمة: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "اللوحات"
     },
@@ -6330,20 +6326,20 @@
       "text": "تم فتح برج جديد!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "لقد فتحت هذا البرج!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "أحسنت!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "اليوم {0} من {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "افتح هذا البرج!"
+      "text": "أنت أقرب بخطوة إلى فتح هذا البرج! واصل اللعب."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "برجك جاهز! استلمه من مكافأة الترحيب."
+      "key": "ui.steps.claim",
+      "text": "استلم"
     },
     {
       "key": "ui.steps.chests_line",

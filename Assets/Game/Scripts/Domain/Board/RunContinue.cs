@@ -242,10 +242,10 @@ namespace GlimmerGrove
         /// fourteen, so twenty gems would buy a top-rung clear.
         /// </para>
         /// <para>
-        /// That is not a grading curiosity. Stars derive credits, credits are what a grove is
-        /// worth, and a grove's worth reaches a public board - so a continue that moved the
-        /// grade would let money move a leaderboard, which is the exact thing invariant 19a
-        /// exists to stop. The offer sells a finish, never a grade, in every mode.
+        /// That is not a grading curiosity. Stars derive credits and XP, and the keeper level
+        /// and rank badge that XP climbs are published on a public card - so a continue that
+        /// moved the grade would let money move a public figure, which is the exact thing
+        /// invariant 19a exists to stop. The offer sells a finish, never a grade, in every mode.
         /// </para>
         /// <para>
         /// <b>Charged against the graded count rather than clamped on the star.</b> A cap on the

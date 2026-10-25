@@ -3358,10 +3358,6 @@
       "text": "Welle {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Wert: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "Rangliste"
     },
@@ -6330,20 +6326,20 @@
       "text": "Neuer Turm freigeschaltet!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "Du hast diesen Turm freigeschaltet!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "GUT GEMACHT!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Tag {0} von {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Schalte diesen Turm frei!"
+      "text": "Du bist diesem Turm einen Schritt näher! Spiel weiter."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "Dein Turm ist bereit! Hol ihn dir im Willkommensbonus."
+      "key": "ui.steps.claim",
+      "text": "ABHOLEN"
     },
     {
       "key": "ui.steps.chests_line",

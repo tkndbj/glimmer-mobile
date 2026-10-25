@@ -3358,10 +3358,6 @@
       "text": "Oleada {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Valor: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "clasificación"
     },
@@ -6330,20 +6326,20 @@
       "text": "¡Nueva torre desbloqueada!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "¡Has desbloqueado esta torre!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "¡BIEN HECHO!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Día {0} de {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "¡Desbloquea esta torre!"
+      "text": "¡Estás un paso más cerca de desbloquear esta torre! Sigue jugando."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "¡Tu torre está lista! Recógela en el Bono de bienvenida."
+      "key": "ui.steps.claim",
+      "text": "RECLAMAR"
     },
     {
       "key": "ui.steps.chests_line",

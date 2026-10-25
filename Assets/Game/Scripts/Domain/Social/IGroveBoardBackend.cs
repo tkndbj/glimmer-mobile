@@ -139,7 +139,7 @@ namespace GlimmerGrove.Social
             string ownerId, CancellationToken cancellation = default);
 
         /// <summary>
-        /// Reads one published board: the finest groves, or the Endless Watch.
+        /// Reads one published board: the Endless Watch or the Shuffle board.
         ///
         /// One document, whole, however many rows it carries - see
         /// <see cref="LeaderboardBoard"/> for why it is denormalised rather than queried.
@@ -148,8 +148,7 @@ namespace GlimmerGrove.Social
             string boardId, CancellationToken cancellation = default);
 
         /// <summary>
-        /// Reads the published distributions - grove worth and endless waves - and each board's
-        /// population.
+        /// Reads the published distribution of endless waves, and each board's population.
         ///
         /// Public: it names no player, it is the same for everybody, and every reader treats an absent table as
         /// "nothing to say". One document, whole, once a session.

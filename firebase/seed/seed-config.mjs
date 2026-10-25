@@ -81,10 +81,8 @@ const { resolveRule, buildChapterRules, DEFAULT_RULE } = await import(pathToFile
 /**
  * The keeper-level curve, exactly as the client reads it.
  *
- * Published because the boards need it: the earned half of a grove's worth is decided by
- * which companion gates the star ledger has passed, so the server has to be able to derive
- * a keeper level. Nothing else on the server has ever needed one, which is why this block
- * did not exist until the boards did.
+ * Published because the public card needs it: the card carries a keeper level the server
+ * derives from the star ledger (19a), and every gate a card is asked against reads it.
  *
  * It rides `config/progression` rather than `config/grove` because it is a fact about
  * progression, and because `ProgressionSchema` versions on its own cadence (invariant 9b) —
@@ -112,29 +110,24 @@ function readKeeperCurve(progression) {
 }
 
 /**
- * `config/grove` — what is left of it after the Grovement was removed on 2026-09-21.
+ * `config/grove` — the turret roster, and the (inert) companion roster beside it.
  *
- * **It is the turret roster now, and the name is the only grove left in it.** The document
- * is `groves/{uid}`'s config and the collection spelling is permanent (invariant 19o), so
- * the document keeps its name; what it holds is `wards`, read by `buildCard` and by nothing
- * else. The piece, bundle, region, dwelling, companion and star tables went with
- * `homestead.json` — they existed so the server could score a grove without believing a
- * client, and there is no grove to score.
+ * **The name is the only grove left in it.** The document is `groves/{uid}`'s config and the
+ * spelling is permanent (16y), so it keeps its name; what it holds is `wards`, read by
+ * `publishedLine`, and `companions`, read by `heldCompanions` and published empty (16ab). The
+ * piece, bundle, region, dwelling and star tables and the catalog `version` went with the
+ * Grovement: nothing deployed reads them since the card stopped scoring a grove.
  *
- * **`groveWorth` is still deployed and is not being removed here.** It reads these tables and
- * will now find them empty, so every published card scores nought — which is correct and
- * invisible: the finest-groves board has not been drawn since 2026-09-15, and the Endless
- * Watch is ordered on waves. Re-seeding is therefore safe in either order with the client.
+ * **Re-seed only after the functions that stopped reading them are live.** A deployment older
+ * than that refuses a `config/grove` without the tables (`assertUsableGroveConfig`), and the
+ * server drop order — functions, then the seed — is what keeps that window closed.
  */
 function buildGroveConfig() {
-  const manifest = readJson(join(CONTENT, "manifest.json"));
-
   // The shelf is authored in `progression.json`, which is where the roster is read from.
   const progression = readJson(join(CONTENT, "progression.json"));
 
   // The turret roster, as id -> the keeper level that opens its rung, read out of
-  // `progression.json` rather than out of `homestead.json` because that is where the shelf is
-  // authored. It rides `config/grove` and not `config/progression` for one reason: it is read
+  // `progression.json` because that is where the shelf is authored. It rides `config/grove` and not `config/progression` for one reason: it is read
   // by exactly one thing, `buildCard`, which already has the grove config open — and putting it
   // beside the reward table would be a second document read on every publish to carry twenty
   // numbers that never change between drops.
@@ -182,22 +175,11 @@ function buildGroveConfig() {
                     "an empty line and every public profile would draw four starters");
   }
 
-  // The tables the Grovement used to fill are written **empty rather than omitted**. An
-  // absent key and an empty map read the same to `groveWorth`, but a deployed reader that
-  // indexes one without checking would throw on the first and score nought on the second —
-  // and scoring nought is the answer this change wants. The same reasoning keeps `version`:
-  // it is the only field the deployed code compares, and dropping it would make a re-seeded
-  // document look older than the one it replaced.
+  // The companion roster is written empty rather than omitted: `buildCard` reads it on every
+  // publish (`assertUsableGroveConfig`), and empty is the inert roster's honest answer (16ab).
   return {
-    version: 1,
-    pieces: {},
-    bundles: {},
-    regions: {},
     companions: {},
-    dwellings: {},
-    dwellingLevels: {},
     wards,
-    stars: [],
   };
 }
 
@@ -2013,16 +1995,11 @@ if (products) {
 // The turret roster the boards publish a line from. Written as a full replacement rather
 // than a merge, for `config/products`' reason: a turret removed from the content file must
 // stop being vouched for, and a merge would leave the server publishing seats nobody ships.
-// Since 2026-09-21 the grove half of this document is written empty — see
-// `buildGroveConfig`.
+// The replacement is also what takes the Grovement's old tables out of the document.
 const grove = buildGroveConfig();
 await writeDoc(token, "config/grove", grove, { replace: true });
 
-console.log(
-  `config/grove: v${grove.version} — ${Object.keys(grove.wards).length} turret(s); ` +
-  "the grove tables are empty (the Grovement was removed on 2026-09-21), so every " +
-  "published card now scores nought"
-);
+console.log(`config/grove: ${Object.keys(grove.wards).length} turret(s), companion roster empty (16ab)`);
 
 // ------------------------------------------------------------------- keeper names
 //

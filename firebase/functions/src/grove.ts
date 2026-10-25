@@ -1,46 +1,28 @@
 /**
  * Glimmer Grove — the public boards.
  *
- * This is the file that makes a leaderboard safe in a game whose grove contents are
- * written by the client.
+ * A keeper's public card (`groves/{uid}`, a permanent wire spelling: 16y) and the two boards
+ * ordered on it, the Endless Watch and the Shuffle board. The Grovement this file was written
+ * for was removed on 2026-09-21, and with it everything a card used to say about a grove — its
+ * worth, its stars, its home, its land and its arrangement — and the `global` board ordered on
+ * that worth (spent: never reuse the id).
  *
  * ## Why anything here has to be recomputed
  *
- * `homesteadOwned`, `groveLandOwned` and `companionsOwned` are three id sets the player's
- * own device writes, and `firestore.rules` justifies letting it write them with the
- * sentence "a forged entry buys a picture on a screen nobody else sees". A leaderboard
- * makes that sentence false: the same forged entry now buys a position on a public list.
- *
- * So the client's figure is a prediction and this is the authority. `publishGrove` takes an
- * empty request, opens `players/{uid}` with admin credentials, and recomputes everything it
- * writes. There is nothing in the call for a modified client to put its thumb on.
- *
- * ## The bound, and why the score splits in two
- *
- * A grove's worth is what the player *holds*, and things are held two ways. Something
- * **earned** — a companion whose keeper gate the star ledger has passed — is derived from
- * records this server already validates for currency, so it is unforgeable by construction.
- * Something **bought** was paid for in credits, and credits are server-derived, so the
- * bought half has a ceiling nobody can lie past:
- *
- *     boughtValue <= earnedCredits + grantedBaseline
- *
- * That is invariant 13's fourth clause — a claim bounded so tightly that forging it buys
- * nothing — and it needs no new state on either side. A save awarding itself the whole
- * catalog scores exactly what its owner could have afforded.
- *
- * The clamp is deliberately generous rather than exact: it counts currency ever received
- * rather than currency actually spent on the grove, because a player who bought companions
- * and land legitimately must never be marked down for it. Understating a leaderboard
- * position is a bug; overstating one is an exploit.
+ * Every figure on a card comes out of a save the player's own device writes, and a public card
+ * makes a forged save a forged position on a list. So the client's figure is a prediction and
+ * this is the authority. `publishGrove` takes an empty request, opens `players/{uid}` with admin
+ * credentials, and recomputes or bounds everything it writes: the keeper level from the star
+ * ledger (19a), the rank badge (`rungOf`), the name from the reservation (19f), the line from the
+ * turret roster's gates (`publishedLine`). The two wave figures are the ones it cannot recompute,
+ * so they are bounded instead (`bestWave`, `shuffleWave`, 19l). There is nothing in the call for a
+ * modified client to put its thumb on.
  *
  * ## What is not defended, and why that is right
  *
- * A player can keep their card off the board by never asking for a publish. That is the
- * whole exploit available on the trigger side and it is self-punishing. A player can also
- * arrange their grove however they like — every piece is an id from a catalog we ship, so
- * there is no arrangement that produces anything a moderator would care about. The one
- * piece of free text is the name, and `publicName` is what stands in front of it.
+ * A player can keep their card off the boards by never asking for a publish. That is the whole
+ * exploit available on the trigger side and it is self-punishing. The one piece of free text is
+ * the name, and `publicName` is what stands in front of it.
  */
 
 import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
@@ -48,7 +30,7 @@ import { logger } from "firebase-functions";
 
 import {
   ProgressionConfig, RewardRule, EndlessConfig, XpBoostConfig,
-  MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
+  MAX_STARS, MAX_LEVEL_ID_LENGTH,
 } from "./progression";
 import { PreparedBlocklist, judgeName } from "./profanity";
 import { rungOf } from "./ranks";
@@ -100,93 +82,38 @@ export interface GroveWardEntry {
   legendary?: boolean;
 }
 
-/** The grove catalog, published by the seeder from `homestead.json` and the manifest. */
+/**
+ * `config/grove`: the turret roster and the companion roster, published by the seeder from
+ * `progression.json`. The document keeps its name because `groves/{uid}` is its card (16y); the
+ * Grovement's catalog tables (pieces, bundles, regions, dwellings, the star ladder) went with
+ * the Grovement, and a document still carrying them is read as if it did not.
+ */
 export interface GroveConfig {
-  /** `groveVersion` from the manifest, so a stale seed is visible in the document. */
-  version: number;
-
   /**
-   * Piece id → credits for one purchase. Free pieces are absent rather than zero; they
-   * are worth nothing.
-   *
-   * Since save v20 a purchase of priced decor grants `bundles[id]` copies, so this is the
-   * price of a *bundle* and a single copy is worth `cost / bundle`. Dwellings are in here
-   * too and are never bundled — see `dwellings`.
+   * Companion id → what it costs and what keeper level reaches it. The roster is inert (16ab):
+   * the seeder publishes it empty, so `heldCompanions` publishes nothing - read rather than
+   * dropped because retiring companions is a separate decision.
    */
-  pieces: Record<string, number>;
-
-  /**
-   * Piece id → how many copies one purchase grants. Absent means one.
-   *
-   * Published as a second map rather than by widening `pieces` into an object, because that
-   * keeps this field additive: a config seeded before bundles existed reads as "everything
-   * sells singly", which is exactly what it meant. What it buys is the ability to score a
-   * grove by what was *paid* for it — ten fences bought in one bundle are worth the bundle,
-   * not ten of them — so a bundle retune cannot inflate every existing grove on the boards.
-   */
-  bundles: Record<string, number>;
-
-  /** Region id → credits. Starter land is absent for the same reason. */
-  regions: Record<string, number>;
-
-  /** Companion id → what it costs and what keeper level reaches it. */
   companions: Record<string, { cost: number; level: number }>;
-
-  /**
-   * Dwelling id → its rung on the home ladder.
-   *
-   * Published separately from `pieces` because the home is *derived* rather than placed —
-   * the hall draws the best rung owned — so the server has to know which pieces are homes
-   * and how they order. A rung absent from `pieces` is free, which is how the first one is
-   * held by everybody without appearing in anyone's save.
-   */
-  dwellings: Record<string, number>;
-
-  /**
-   * Dwelling id → the keeper level that opens that rung. Absent means ungated.
-   *
-   * <b>A second map rather than widening `dwellings` into an object</b>, which is `bundles`'
-   * bargain for its reason: it keeps the field additive in both directions. A function
-   * deployed before the ladder was gated ignores it and scores exactly as it did; a function
-   * reading a config seeded before it sees no gates and does the same. Widening the existing
-   * map would make either of those a crash, and neither side can be redeployed first.
-   *
-   * What it buys is the home half of invariant 19a. A home rung stopped being something
-   * credits alone could reach, so a save naming one whose gate its own star ledger has not
-   * passed cannot have come about honestly — exactly as a save naming an unreachable
-   * companion cannot — and without this the citadel is the one 30,000-credit entry on a
-   * public score that a forged `homesteadStock` row buys for nothing.
-   */
-  dwellingLevels?: Record<string, number>;
 
   /**
    * Turret id -> the keeper level that opens its rung on the shelf. Absent means ungated.
    *
-   * **A third additive map rather than a widening**, which is `bundles`' bargain for
-   * `dwellingLevels`' reason: a function deployed before the turret line was published ignores
-   * it and writes exactly the card it wrote yesterday, and a function reading a config seeded
-   * before this field existed sees no roster and publishes no line. Neither side has to be
-   * deployed first.
-   *
    * <b>It is the whole of what the server knows about turrets, and that is deliberate.</b> A
-   * line is a *picture* — it orders no board, pays nothing and is worth nothing to forge, which
-   * is the same reading `placed` has carried since the card shipped. What the roster buys is the
-   * one forgery a visitor could actually catch as a lie: a level-two keeper standing the
-   * forty-gate turret. So the gate is asked (and asked **before** anything else, which is
-   * `groveWorth`'s companion clause) and ownership is not, because nothing this server holds
-   * implies a turret was bought — `wardsOwned` is client-written exactly as `companionsOwned`
-   * is, and unlike a companion a turret has no price in the grove catalog to clamp against.
+   * line is a *picture* — it orders no board, pays nothing and is worth nothing to forge. What
+   * the roster buys is the one forgery a visitor could actually catch as a lie: a level-two
+   * keeper standing the forty-gate turret. So the gate is asked (before anything else) and
+   * ownership is not, because nothing this server holds implies a turret was bought —
+   * `wardsOwned` is client-written, and a turret has no price here to clamp against.
    *
    * The day a line reaches a board, a match-up or anything that pays, this stops being
    * defensible — the sentence `bestWave` carries, for the same reason.
    *
    * An entry per turret rather than a bare level, because `free` has to travel with it — see
-   * {@link GroveWardEntry}.
+   * {@link GroveWardEntry}. Absent on a config seeded before the line shipped, which publishes
+   * no line rather than an unvouched one.
    */
   wards?: Record<string, GroveWardEntry>;
-
-  /** The star ladder, ascending. What a grove's worth is banded into on a card. */
-  stars: number[];
 }
 
 /** The keeper-level curve, published into `config/progression` alongside the reward rules. */
@@ -201,8 +128,8 @@ export interface KeeperCurve {
  * The curve used when the seeder has not published one.
  *
  * Mirrors `ProgressionTable.Default`. An absent curve must not mean "everybody is level 1",
- * because that would silently zero the earned half of every score in the world — a
- * publishing job that looks like it worked and quietly halves the leaderboard.
+ * because that would publish every keeper at level one and drop every turret their line stands
+ * above its gate — a publishing job that looks like it worked and quietly empties every card.
  */
 export const DEFAULT_KEEPER_CURVE: KeeperCurve = {
   maxLevel: 60,
@@ -216,10 +143,10 @@ export const DEFAULT_KEEPER_CURVE: KeeperCurve = {
 /**
  * Total XP needed to stand at the start of each level, ascending.
  *
- * A byte-for-byte mirror of `ProgressionTable.Build`, and it has to be: the earned half of
- * a grove's worth is decided by which companion gates the player has passed, so a curve
- * that disagreed with the client's would put a different number on the board than the one
- * the player's own grove screen shows. Invariant 9a, for a leaderboard.
+ * A byte-for-byte mirror of `ProgressionTable.Build`, and it has to be: the card's keeper level
+ * and every gate its line is asked against come from this curve, so one that disagreed with the
+ * client's would publish a different level from the one the player's own profile shows.
+ * Invariant 9a, for a public card.
  */
 export function cumulativeXp(curve: KeeperCurve): number[] {
   const maxLevel = Math.max(1, Math.floor(curve.maxLevel) || 1);
@@ -264,8 +191,8 @@ export function keeperLevel(xp: number, curve: KeeperCurve): number {
  * numbers have to describe the same set of believed records. The high-water floors in
  * `progression.json` are deliberately *not* read: they are client-written, and reading them
  * would hand back the forgeability this whole file exists to remove. Deriving alone can
- * only understate a player's level, which can only lower a score, which is the safe
- * direction.
+ * only understate a player's level, which can only drop a gated seat from a card, which is
+ * the safe direction.
  */
 export function derivedXp(levels: unknown, config: ProgressionConfig): number {
   if (!levels || typeof levels !== "object" || Array.isArray(levels)) return 0;
@@ -294,98 +221,9 @@ export function derivedXp(levels: unknown, config: ProgressionConfig): number {
   return xp;
 }
 
-// ---------------------------------------------------------------------------- score
+// ---------------------------------------------------------------------------- ids
 
-/** What a grove is worth, split so the clamp can be applied to the half that needs it. */
-export interface GroveWorth {
-  /**
-   * Value held without paying anything.
-   *
-   * Structurally **zero** since the companion rule became keeper level AND purchase: the
-   * keeper ladder was the only thing in a grove that was ever handed over, and it no longer
-   * is. Kept in the shape rather than deleted because the clamp is expressed in terms of the
-   * split, the published card and the shared vectors are both built around it, and a rule
-   * that puts something back here later — a companion granted by an event, say — should find
-   * the half it belongs in already present rather than have to reintroduce it.
-   */
-  earned: number;
-
-  /** Value paid for, before clamping. */
-  bought: number;
-
-  /** The ceiling the bought half is held to. */
-  affordable: number;
-
-  /** `earned + min(bought, affordable)`. What goes on the board. */
-  score: number;
-
-  /** Stars the score earns against the published ladder. */
-  stars: number;
-
-  /** True when the clamp actually bit, which is worth logging. */
-  clamped: boolean;
-}
-
-/**
- * The `homesteadStock` rows of a save, as id → copies.
- *
- * Bounded on every axis a client controls, because this walks a client-written array: the
- * number of rows, the length of an id and the count on each row. `MAX_COPIES` mirrors
- * `GroveStock.MaxCopies` and exists so no arithmetic downstream can be made to overflow;
- * the *economic* bound is the affordability clamp in `groveWorth`, which is the one that
- * actually decides what a forged save scores.
- *
- * A v19 save carries `homesteadOwned` — a set of ids, from when owning a piece was
- * permission to draw it rather than possession of a copy — and it is read as one bundle of
- * each, which is exactly what that save used to score. A device that has not updated
- * therefore keeps its position on the boards instead of dropping to nothing, and its first
- * v20 push replaces the reading with the real one.
- */
-const MAX_STOCK_ROWS = 512;
-const MAX_COPIES = 9999;
-
-function stockOf(save: Record<string, unknown>, grove: GroveConfig): Map<string, number> {
-  const out = new Map<string, number>();
-  const rows = save.homesteadStock;
-
-  // An **empty** array falls through to the v19 field rather than meaning "owns nothing",
-  // which is what `GroveStock.In` does on the client — and the two halves have to agree or
-  // this is invariant 9a again. It is reachable: a document written by a v20 client that has
-  // bought no decor carries `homesteadStock: []` beside a mirror, and a partial update that
-  // rewrites only the legacy field leaves the empty array standing. Reading that as an empty
-  // v20 save scores such a grove at zero, on a public board, with nothing to show why.
-  if (Array.isArray(rows) && rows.length > 0) {
-    for (const row of rows) {
-      if (!row || typeof row !== "object") continue;
-
-      const id = (row as { id?: unknown }).id;
-      const copies = (row as { copies?: unknown }).copies;
-      if (typeof id !== "string" || id.length === 0 || id.length > 64) continue;
-      if (typeof copies !== "number" || !Number.isFinite(copies) || copies <= 0) continue;
-
-      // The larger of two rows for one id, never the last one. The file forbids duplicates
-      // (invariant 11a), so this is only reachable from a modified client — but `GroveStock`
-      // resolves it by taking the larger, and two implementations of one rule that disagree
-      // about a malformed input is exactly the drift invariant 9a is about. Cheaper to agree
-      // than to find out later which half was right.
-      const clamped = Math.min(Math.floor(copies), MAX_COPIES);
-      const had = out.get(id) ?? 0;
-      if (clamped > had) out.set(id, clamped);
-
-      if (out.size >= MAX_STOCK_ROWS) break;
-    }
-
-    return out;
-  }
-
-  for (const id of idSet(save.homesteadOwned, MAX_STOCK_ROWS)) {
-    const bundle = grove.bundles?.[id];
-    out.set(id, typeof bundle === "number" && bundle > 1 ? Math.min(bundle, MAX_COPIES) : 1);
-  }
-
-  return out;
-}
-
+/** A bounded set of short string ids out of a client-written array. Anything else is skipped. */
 function idSet(raw: unknown, limit: number): Set<string> {
   const out = new Set<string>();
   if (!Array.isArray(raw)) return out;
@@ -397,13 +235,6 @@ function idSet(raw: unknown, limit: number): Set<string> {
   }
 
   return out;
-}
-
-/** How many stars a score earns. Mirrors `GroveScoreTable.StarsFor`. */
-export function starsFor(score: number, ladder: number[]): number {
-  let stars = 0;
-  for (let i = 0; i < ladder.length; i++) if (score >= ladder[i]) stars = i + 1;
-  return stars;
 }
 
 /**
@@ -523,9 +354,8 @@ export const HARD_MAX_BOOST_XP = 1000000000;
  * **The bound is proportional, and that is the whole design.** A boost can only ever have
  * multiplied XP that was really paid, so a stored bonus above `provable x maxPercent%` is
  * arithmetically impossible however it got into the file — which clamps a forged figure to a
- * multiple of real progress rather than to some generous absolute ceiling. It is the same shape
- * `groveWorth` uses when it clamps a grove to what the account could afford (invariant 19a), and
- * far tighter than a flat figure could be.
+ * multiple of real progress rather than to some generous absolute ceiling - invariant 19a's
+ * adjudication, and far tighter than a flat figure could be.
  *
  * `provableXp` is the star ledger's XP plus the Infinite lane's — every source the bonus could
  * have been a percentage *of*. The client computes the identical clamp from the same two
@@ -736,10 +566,13 @@ export function shuffleTop(save: Record<string, unknown>): ShuffleRun | null {
  * in the future (`staleCardCutoff`), so setting it an hour ahead is safe; a moment in the past
  * that the old code was still running at is the one mistake. History, newest first:
  *
+ * - 2026-10-25 18:00Z - the Grovement's fields leave the card (`score`, `stars`, `dwelling`,
+ *   `land`, `placed`, `hall`, `hallFacing`, `catalogVersion`); `publishGrove` without them must be
+ *   live before this moment.
  * - 2026-10-15 14:21Z - `shuffleTop`, the best-graded Shuffle run (MODES.md 59o); `publishGrove`
  *   writing it went live at 14:20:46Z.
  */
-export const CARD_SHAPE_SINCE = 1792074060;
+export const CARD_SHAPE_SINCE = 1792951200;
 
 /** The most cards one repair run rebuilds, and how many at once. */
 export const REPAIR_BATCH = 300;
@@ -778,105 +611,11 @@ function bestRowWave(rows: unknown): number {
 }
 
 /**
- * What this save's grove is worth, recomputed from scratch.
+ * The priced companions a save may honestly be said to own, in catalog order - what a card's
+ * `companions` publishes. The roster is inert (16ab) and published empty, so this answers
+ * nothing today; it is kept, gate and all, until retiring companions is decided on its own.
  *
- * `affordable` is passed in rather than derived here so that the caller can compose it
- * from the two things only it can see — the derived earnings and the wallet's granted
- * baseline — and so this function stays a pure one that the test vectors can drive.
- */
-export function groveWorth(
-  save: Record<string, unknown>,
-  grove: GroveConfig,
-  level: number,
-  affordable: number
-): GroveWorth {
-  const stock = stockOf(save, grove);
-  const land = idSet(save.groveLandOwned, 128);
-  const companions = idSet(save.companionsOwned, 256);
-
-  let bought = 0;
-  let earned = 0;
-
-  // A copy is worth `cost / bundle`, so a bundle comes back to the price paid for it. That
-  // is the same reading this file has always taken — market value of what is held — and it
-  // is what keeps a bundle retune from moving every grove already on the boards.
-  //
-  // A home rung is clamped to one copy. It is in `pieces` and it is not stock: the ladder
-  // is a set of ids and the hall draws the best one owned, so a save claiming five sanctums
-  // is claiming something the client cannot produce. Clamping is strictly tighter than
-  // leaving it to the affordability ceiling, and the server knows which ids are rungs
-  // because it publishes them.
-  for (const [id, copies] of stock) {
-    const cost = grove.pieces[id];
-    if (typeof cost !== "number" || cost <= 0) continue;
-
-    if (id in (grove.dwellings ?? {})) {
-      // The gate is asked before the clamp, which is the companion clause below said about
-      // the home ladder and is strictly tighter than clamping: a level-3 save claiming the
-      // 30,000-credit citadel scores nothing for it rather than scoring what it could
-      // afford. An ungated rung, and a config seeded before the ladder was gated, both read
-      // as level 0 and are unaffected.
-      if (level >= Math.floor(grove.dwellingLevels?.[id] ?? 0)) bought += cost;
-      continue;
-    }
-
-    const bundle = grove.bundles?.[id];
-    const unit = typeof bundle === "number" && bundle > 1
-      ? Math.floor(cost / bundle)
-      : cost;
-
-    bought += unit * copies;
-  }
-
-  for (const id of land) {
-    const cost = grove.regions[id];
-    if (typeof cost === "number" && cost > 0) bought += cost;
-  }
-
-  // A companion is worth its price, and only a companion the save actually **owns** —
-  // which is the whole of what changed when the unlock rule became keeper level AND
-  // purchase. It used to be that passing a gate handed the companion over, so a gate the
-  // star ledger had provably passed was value this server could vouch for on its own, and
-  // it went into the unforgeable `earned` half. Nothing is handed over now: every companion
-  // in a grove was paid for in credits, so every companion belongs in the clamped half,
-  // beside the benches and the land that were always bought.
-  //
-  // The gate still does work, and it does it *before* the clamp rather than inside it: a
-  // save naming a companion whose gate its own keeper level has not reached cannot have
-  // come about honestly, so that entry is dropped outright rather than clamped down. That
-  // is strictly tighter than clamping — a level-1 save claiming the 30,000-credit companion
-  // now scores nothing for it instead of scoring whatever it could afford.
-  //
-  // **Walked through `heldCompanions` rather than inline**, because the card draws this set and
-  // the score counts it, and two walks over one rule is how a visitor comes to see a portrait
-  // the number beside it was never told about.
-  for (const id of heldCompanions(companions, grove, level)) {
-    bought += Math.floor(grove.companions[id].cost);
-  }
-
-  const ceiling = affordable > 0 ? Math.floor(affordable) : 0;
-  const allowed = Math.min(bought, ceiling);
-  const score = earned + allowed;
-
-  return {
-    earned,
-    bought,
-    affordable: ceiling,
-    score,
-    stars: starsFor(score, grove.stars ?? []),
-    clamped: allowed < bought,
-  };
-}
-
-/**
- * The priced companions a save may honestly be said to own, in catalog order.
- *
- * <b>One walk, read twice.</b> `groveWorth` prices it and `buildCard` publishes it, which is
- * what makes the portraits on a public profile and the number under them the same fact — the
- * alternative is two filters that agree until one of them is edited, and the symptom is a
- * stranger's screen showing a companion the score never counted.
- *
- * Three clauses and all three belong to the score:
+ * Three clauses:
  *
  *   * **priced only**, because a free companion is worth nothing and is held by *everybody* who
  *     has reached its gate — so it is not in `config/grove` at all, and a visitor's own client
@@ -1032,9 +771,9 @@ function starsOf(save: Record<string, unknown>, id: string, colour: string): num
  * would have done the same to whoever had already bought it. The gate belongs where money
  * changes hands (`WardLedger.OfferFor`), and the client's own `IsHeld` has never asked it.
  *
- * <b>Why `heldCompanions` keeps its gate and this does not.</b> A companion is counted into
- * `groveWorth`, so it is a *number that goes public* and invariant 19a applies to it —
- * adjudicated, and dropped rather than cut down. A seat is counted into nothing: no score, no
+ * <b>Why `heldCompanions` keeps its gate and this does not.</b> A companion was a priced
+ * purchase whose gate the server could check against a ledger it derives, so a save naming one
+ * above its level is dropped rather than drawn (19a). A seat is counted into nothing: no score, no
  * board ordering, no currency. It is a picture on somebody else's screen, which is the sentence
  * `firestore.rules` already uses to justify letting the client write `wardsOwned` at all — and
  * the rung beside it (`starsOf`) has only ever been clamped, never proven, for the same reason.
@@ -1089,48 +828,6 @@ export function publishedLine(
   }
 
   return out;
-}
-
-// ------------------------------------------------------- the arrangement's own takedown
-
-/**
- * What the wallet records about this account's published *arrangement*.
- *
- * <b>Why a grove can be reported at all, when this file's own header says it cannot be.</b>
- * That header argued a grove "cannot be arranged into something offensive", because every piece
- * is an id from a catalog we ship. That was true of the handful of pre-placed dots the grove
- * shipped with and is false of a 28×28 floor sold with walls, gates and fences (invariants 16b
- * and 16e): walls tile, so a player with enough of them can write whatever they like on the
- * ground — and every gate in this project stays green while they do, because nothing here ever
- * opens a picture (invariant 32b, on somebody else's screen).
- *
- * It lives on the wallet beside the name's holding for that holding's reason: `publishGrove`
- * already opens the wallet, so honouring a takedown on the one path that has to costs no read
- * at all, where a flag anywhere else would be a document read per player per publish for ever
- * to carry one bit that is almost always nought.
- */
-export interface GroveHolding {
-  /** When the arrangement was taken off the boards, or 0 if it never was. */
-  deniedUnix: number;
-}
-
-/** Reads what the wallet says about this account's arrangement. Adds no read of its own. */
-export function heldGrove(walletData: Record<string, unknown> | undefined): GroveHolding | null {
-  const raw = walletData?.grove as Partial<GroveHolding> | undefined;
-  if (!raw || typeof raw !== "object") return null;
-
-  return { deniedUnix: Math.floor(Number(raw.deniedUnix ?? 0)) };
-}
-
-/**
- * Whether this account's arrangement has been taken off the boards.
- *
- * Written as a predicate so a caller cannot get the sense of it backwards, which is `isDenied`'s
- * rule and for its reason: the obvious `holding.deniedUnix > 0` is exactly the expression
- * somebody writes as `!holding.deniedUnix` at the fourth call site.
- */
-export function isGroveDenied(holding: GroveHolding | null | undefined): boolean {
-  return !!holding && Math.floor(Number(holding.deniedUnix ?? 0)) > 0;
 }
 
 // ----------------------------------------------------------------------------- names
@@ -1324,36 +1021,18 @@ export function boardName(
 // ------------------------------------------------------------------------ the card
 
 /**
- * A placement as it appears on a card: a bare id, or a map when the piece has been turned.
+ * A keeper's public card, `groves/{uid}`.
  *
- * Two shapes because a turned piece is the exception, and a full floor is a thousand rows:
- * a bare string keeps the common case to one value and the document to about a third of
- * what a uniform map would cost. `facing` is a quarter turn, 1..3 — a piece facing 0 is
- * written as the bare string, because that is what it means.
+ * **What is gone, and must not come back under the same names**: `score`, `stars`, `dwelling`,
+ * `land`, `placed`, `hall`, `hallFacing` and `catalogVersion` described a grove, and went with
+ * it. A card built before that (`CARD_SHAPE_SINCE`) is rebuilt by `repairGroveCards`, and every
+ * client the update wall admits reads an absent field as nothing.
  */
-type CardPlacement = string | { piece: string; facing: number };
-
 export interface GroveCardDoc {
   name: string;
   avatar: string;
   level: number;
-  score: number;
-  stars: number;
-  dwelling: string;
-  land: string[];
-  placed: Record<string, CardPlacement>;
   builtUnix: number;
-
-  /**
-   * Where the keeper moved their hall, and which way they turned it. Absent means wherever
-   * the floor says, which is what every grove was before a seat could be stored at all.
-   *
-   * Sanitised rather than trusted, exactly as `placed` is: it is a picture, it is worth
-   * nothing to forge, and the only thing a bad value could do is put somebody's own house
-   * somewhere odd on their own card.
-   */
-  hall?: string;
-  hallFacing?: number;
 
   /**
    * The rank this keeper holds, as a rung id — the badge a board row and a public profile draw.
@@ -1425,9 +1104,6 @@ export interface GroveCardDoc {
    * unvouched one.
    */
   line?: CardSeat[];
-
-  /** The grove catalog this was scored against, so a stale seed is diagnosable. */
-  catalogVersion: number;
 }
 
 /**
@@ -1449,110 +1125,26 @@ export function optedIn(save: Record<string, unknown>): boolean {
 /**
  * Builds the card document for a save.
  *
- * Everything on it is recomputed or sanitised. The only fields taken from the save as
- * written are the arrangement and the ids in it — a picture, bounded by the rules' own size
- * caps, and worth nothing to forge.
+ * Everything on it is recomputed, bounded or sanitised; nothing is copied off the save as
+ * written. The Grovement's keys a long-standing save may still carry (`homesteadStock` and the
+ * rest, retired with it) are never read.
  */
 export function buildCard(
   uid: string,
   save: Record<string, unknown>,
   grove: GroveConfig,
   progression: ProgressionConfig,
-  worth: GroveWorth,
   level: number,
   nowUnix: number,
   confirmedName: string | null,
   list?: PreparedBlocklist,
-  groveDenied = false,
   // The level XP alone pays for, when it differs from `level`: a keeper level bought outright
   // (invariant 57) moves every gate this card draws and no badge, so the rank below is asked
   // about this and never about `level`. Defaults to `level` for every caller that has not
-  // bought one - which is what every card written before this deployment says.
+  // bought one.
   earnedLevel: number = level
 ): GroveCardDoc {
   const wallet = (save.wallet ?? {}) as Record<string, unknown>;
-
-  const land: string[] = [];
-  for (const id of idSet(save.groveLandOwned, 128)) {
-    if (grove.regions[id] !== undefined) land.push(id);
-  }
-  land.sort();
-
-  // The best dwelling held, which is derived rather than placed — the hearth's rule, and
-  // the reason a home cannot be bought and then not seen. "Held" is the same composite the
-  // client uses: a rung with no price is free to everybody, and a priced one has to be in
-  // the purchased set. Ties break on catalog order, which is arbitrary and stable.
-  //
-  // <b>Read through `stockOf`, which is the one door every reader of this section goes
-  // through, and it is here because this line once did not.</b> It asked `homesteadOwned`
-  // alone — the *derived* v19 mirror, kept only so a rolled-back client and a
-  // not-yet-redeployed `groveWorth` keep working — where the score beside it asked
-  // `stockOf`, which prefers the real `homesteadStock` and falls back to the mirror. The
-  // two disagreed the moment anything wrote one and not the other, and `SaveMerge` did
-  // exactly that on every sync in the game: a card drew the free cottage over a save that
-  // had paid 2,500 credits for a farmhouse, on every board and every visitor's screen,
-  // with the *score* counting the farmhouse correctly the whole time. Invariant 5b, in the
-  // shape it always takes — one question answered in two places, both plausible, and the
-  // copy that is wrong is the one nothing else reads.
-  //
-  // So there is no second reading of "what does this save hold" in this file. A dwelling is
-  // never bundled, so a row of any size means the rung was bought.
-  const owned = stockOf(save, grove);
-  let dwelling = "";
-  let dwellingTier = -1;
-
-  for (const [id, rawTier] of Object.entries(grove.dwellings ?? {})) {
-    const priced = typeof grove.pieces[id] === "number" && grove.pieces[id] > 0;
-    if (priced && !owned.has(id)) continue;
-
-    // And the gate, for the same reason the worth drops such a rung: a card drawing a
-    // citadel over a ledger that cannot reach one is the inconsistency a visitor could
-    // actually catch, and it would draw it on every board this grove appears on.
-    if (level < Math.floor(grove.dwellingLevels?.[id] ?? 0)) continue;
-
-    const tier = Math.floor(rawTier ?? 0);
-    if (tier > dwellingTier) {
-      dwelling = id;
-      dwellingTier = tier;
-    }
-  }
-
-  // **An arrangement taken off the boards publishes no arrangement**, which is
-  // `publishableName`'s fall-through wearing different clothes and is the whole mechanism of a
-  // grove takedown. It is deliberately the *only* thing a takedown costs: the keeper keeps their
-  // grove on their own screens, their name, their score, their stars and their row, exactly as a
-  // reported name keeps everything but its place on a board. A withdrawal would be a punishment
-  // pipeline, and this file's own header says why we do not have one.
-  //
-  // Read here rather than at the call site so that the report path and `publishGrove` cannot
-  // come to disagree about what a denial does — a rule with two readers and no home is a rule
-  // with two answers.
-  const placed: Record<string, CardPlacement> = {};
-  const rows = groveDenied || !Array.isArray(save.homesteadPlaced) ? [] : save.homesteadPlaced;
-
-  for (const raw of rows) {
-    const row = raw as { slot?: unknown; piece?: unknown; facing?: unknown } | null;
-    if (!row || typeof row !== "object") continue;
-
-    const slot = typeof row.slot === "string" ? row.slot : "";
-    const piece = typeof row.piece === "string" ? row.piece : "";
-
-    // An emptied slot is a real instruction in the save (invariant 16) and nothing at all
-    // on a card: a visitor cannot tell "never touched" from "cleared", and does not need to.
-    if (slot.length === 0 || slot.length > 32 || piece.length === 0 || piece.length > 64) continue;
-
-    // Clamped rather than trusted: `facing` comes out of a client-written save, and a card
-    // is what strangers see. Anything outside 0..3 is read as 0, which is the facing every
-    // piece had before they could be turned and the only safe reading of a value that
-    // cannot have come from this build.
-    const facing = typeof row.facing === "number" && Number.isInteger(row.facing)
-      ? ((row.facing % 4) + 4) % 4
-      : 0;
-
-    placed[slot] = facing === 0 ? piece : { piece, facing };
-
-    if (Object.keys(placed).length >= 1024) break;
-  }
 
   // Spread rather than written as `wave: bestWave(save)`, because Firestore refuses
   // `undefined` and a nought written out would put every card in the game into the endless
@@ -1561,9 +1153,8 @@ export function buildCard(
   const shuffle = shuffleWave(save);
   const graded = shuffleTop(save);
 
-  // Both spread for Firestore's reason and omitted when empty for the document's: a card with
-  // no companions and no line is what every card written before this deployment is, and absent
-  // has to keep meaning exactly that.
+  // Both spread for Firestore's reason and omitted when empty for the document's: absent and
+  // empty are one answer to every reader.
   const companions = heldCompanions(idSet(save.companionsOwned, 256), grove, level);
   const line = publishedLine(save, grove);
 
@@ -1571,8 +1162,7 @@ export function buildCard(
   // figures handed in are ones this function's caller already recomputed — the keeper level
   // from XP the save's own claim was refused on, and the lifetime waves from `endlessWaves`,
   // whose two clamps are a trap worth owning in one place. Spread for Firestore's reason and
-  // omitted when empty for the document's: a keeper below the first rung publishes no rung,
-  // and so does every card written before this deployment.
+  // omitted when empty for the document's: a keeper below the first rung publishes no rung.
   const rung = rungOf(save, progression, {
     keeperLevel: earnedLevel,
     lifetimeWaves: endlessWaves(save),
@@ -1582,12 +1172,6 @@ export function buildCard(
     name: boardName(confirmedName, uid, list),
     avatar: typeof wallet.avatarId === "string" ? wallet.avatarId.slice(0, 64) : "",
     level,
-    score: worth.score,
-    stars: worth.stars,
-    dwelling,
-    land,
-    placed,
-    ...hallSeat(save),
     ...(wave > 0 ? { wave } : {}),
     ...(shuffle > 0 ? { shuffle } : {}),
     ...(graded ? { shuffleTop: graded } : {}),
@@ -1595,40 +1179,18 @@ export function buildCard(
     ...(companions.length > 0 ? { companions } : {}),
     ...(line.length > 0 ? { line } : {}),
     builtUnix: nowUnix,
-    catalogVersion: Math.floor(grove.version ?? 0),
   };
 }
 
 /**
- * The hall's seat, read off the save the way a placement is.
- *
- * Omitted entirely when the keeper has never moved their home, so a card carries the field
- * only when it says something — which keeps every card written before this deployment
- * correct rather than merely old: absent has always meant "where the floor says".
+ * Guards against a grove config that was never seeded or was seeded badly. The turret roster
+ * is optional on purpose (a stale seed publishes no line); the companion roster is the one map
+ * every card reads.
  */
-function hallSeat(save: Record<string, unknown>): { hall?: string; hallFacing?: number } {
-  const slot = typeof save.groveHall === "string" ? save.groveHall : "";
-  if (slot.length === 0 || slot.length > 32) return {};
-
-  const raw = save.groveHallFacing;
-  const facing = typeof raw === "number" && Number.isInteger(raw) ? ((raw % 4) + 4) % 4 : 0;
-
-  return facing === 0 ? { hall: slot } : { hall: slot, hallFacing: facing };
-}
-
-/** Guards against a grove config that was never seeded or was seeded badly. */
 export function assertUsableGroveConfig(config: unknown): asserts config is GroveConfig {
   const c = config as GroveConfig | undefined;
 
-  if (
-    !c ||
-    typeof c !== "object" ||
-    typeof c.pieces !== "object" || c.pieces === null ||
-    typeof c.regions !== "object" || c.regions === null ||
-    typeof c.companions !== "object" || c.companions === null ||
-    typeof c.dwellings !== "object" || c.dwellings === null ||
-    !Array.isArray(c.stars)
-  ) {
+  if (!c || typeof c !== "object" || typeof c.companions !== "object" || c.companions === null) {
     throw new Error("config/grove is missing or malformed; run the seed script");
   }
 }
@@ -1646,8 +1208,6 @@ export interface RankedGrove {
   name: string;
   avatar: string;
   level: number;
-  score: number;
-  stars: number;
 
   /**
    * The furthest wave, carried on every row of every board rather than only on the endless
@@ -1658,7 +1218,7 @@ export interface RankedGrove {
    * which figure gets drawn is the board's decision (`LeaderboardBoard.IsEndless`). Two row
    * shapes would be two readers on the client for one document format.
    *
-   * Nought for a keeper who has never played the lane, which is what a global row usually is.
+   * Nought for a keeper who has never played the lane, which is what a Shuffle row often is.
    * Written out here rather than omitted: inside an array it costs a byte and buys nothing,
    * and unlike the card's own field it is not in an index.
    */
@@ -1669,7 +1229,7 @@ export interface RankedGrove {
    *
    * **Omitted when nought**, unlike `wave`: it arrived after every board document already held
    * rows without it, so absent has to mean nought on every reader anyway — and most keepers on
-   * the other two boards have never run the lane, so writing it would be a key per row buying
+   * the endless board have never run the lane, so writing it would be a key per row buying
    * nothing. Read through `figureOf`, never as `row.shuffle`.
    */
   shuffle?: number;
@@ -1715,20 +1275,18 @@ export function deciles(sorted: number[]): number[] {
 /**
  * Every board this job writes, and the whole of what `leaderboards` is allowed to hold.
  *
- * Three, and they are the game's permanent numbers: what a keeper has **built** (the grove's
- * worth), how far they have **held out** (the Infinite lane's wave count) and how far a dealt
- * build has carried them (the Shuffle lane's, 2026-10-10). Mirrored by
- * `LeaderboardBoard.All`, which is what the client asks for, and a board id is permanent for
- * invariant 1's reason — it names a document, so renaming one orphans whatever the last run
- * wrote and empties the screen until the next.
+ * Two, and they are the game's permanent numbers: how far a keeper has **held out** (the
+ * Infinite lane's wave count) and how far a dealt build has carried them (the Shuffle lane's,
+ * 2026-10-10). Mirrored by `LeaderboardBoard.All`, which is what the client asks for, and a
+ * board id is permanent for invariant 1's reason — it names a document, so renaming one orphans
+ * whatever the last run wrote and empties the screen until the next.
  *
- * **What used to be here was nine league boards** (l0 to l8) cutting the global board's own
- * number into bands. They cost nine queries and nine counts a night to answer a question the
- * published distribution already answers exactly and at O(1) (`config/groveRanks`, invariant
- * 19c), and no screen in the game ever named one. Those ids are spent and must never be
- * reused; `pruneRetiredBoards` is what takes the documents away.
+ * **Spent board ids, never to be reused:** `global` (the finest groves, ordered on a grove's
+ * worth; retired with the Grovement - no screen had drawn it since 2026-09-15) and the nine
+ * league boards `l0` to `l8` that cut its number into bands. `pruneRetiredBoards` is what
+ * takes their documents away.
  */
-export const BOARD_IDS = ["global", "endless", "shuffle"];
+export const BOARD_IDS = ["endless", "shuffle"];
 
 /** The alphabet a Firebase uid is drawn from, for the sampling cursor. See `randomCursor`. */
 const UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -1753,23 +1311,16 @@ function randomCursor(): string {
 }
 
 /**
- * A bounded random sample of cards, for the deciles and nothing else.
+ * A bounded random sample of cards, for the wave deciles and nothing else.
  *
- * **Projected, and it now projects two fields for the price of one.** `select(...)` still costs
- * one read per document - Firestore bills the index entry rather than the payload - but it is
- * the difference between pulling five thousand whole cards into a function's memory and pulling
- * five thousand pairs of numbers. A card carries every placement in somebody's grove.
+ * **Projected.** `select(...)` still costs one read per document - Firestore bills the index
+ * entry rather than the payload - but it is the difference between pulling five thousand whole
+ * cards into a function's memory and pulling five thousand numbers.
  *
- * **Both distributions come out of one walk, and that is why the second board's percentile was
- * nearly free.** A board is a hundred rows; a *percentile* is what answers "where do I stand" for
- * everybody the hundred cannot reach, and without one the Endless Watch would be a feature for a
- * hundred people at any population. Sampling waves separately would have cost another five
- * thousand reads a night; asking the same documents for a second field costs nothing at all.
- *
- * The two arrays are deliberately **not** the same length. A card with a wave and an empty grove
- * belongs in the wave distribution and not in the worth one, and vice versa - each population is
- * "keepers who have actually done this thing", which is the only population a percentile means
- * anything against (see `GroveRankTable`). That is also why each ships its own sample count.
+ * A board is a hundred rows; a *percentile* is what answers "where do I stand" for everybody the
+ * hundred cannot reach, and without one the Endless Watch would be a feature for a hundred people
+ * at any population. Its population is "keepers who have actually run the lane", which is the
+ * only population a percentile means anything against (see `GroveRankTable`).
  *
  * **The window wraps, and it wraps with `endBefore`.** A cursor landing near the end of the
  * id space would otherwise return a short sample, and a short sample taken from the end of
@@ -1781,21 +1332,14 @@ function randomCursor(): string {
  * players are shown as a percentile. It was caught by a live run reporting 29 samples against
  * a population of 15.
  *
- * **A card worth nothing is read and then discarded, and that is now a real dilution.** Since
- * the endless board shipped, a keeper who has played the Infinite lane publishes a card even
- * with an empty grove (`GrovePublishPolicy.WorthPublishing`), so the window can hand back
- * documents whose score is nought — which is exactly right for the deciles, whose population
- * is deliberately "keepers who have built something", and which means the *usable* sample is
- * smaller than `RANK_SAMPLE_SIZE`. It degrades the honest way: below
+ * **A card with no wave is read and then discarded, and that is a real dilution**: the *usable*
+ * sample is smaller than `RANK_SAMPLE_SIZE`. It degrades the honest way: below
  * `GroveRankTable.MinimumSamples` the client draws no percentile at all rather than a wrong
  * one. Raising the sample size is the lever if that ever binds — it cannot be filtered in the
  * query, because Firestore wants the inequality field first in the ordering and this one is
  * ordered by document id.
  */
 export interface RankSample {
-  /** Grove worth, for every sampled card worth more than nothing. */
-  scores: number[];
-
   /** Furthest wave, for every sampled card that has ever run the Infinite lane. */
   waves: number[];
 }
@@ -1806,15 +1350,12 @@ async function sampleRanks(db: FirebaseFirestore.Firestore): Promise<RankSample>
   const cursor = randomCursor();
 
   const first = await groves.orderBy(byId).startAt(cursor)
-                            .limit(RANK_SAMPLE_SIZE).select("score", "wave").get();
+                            .limit(RANK_SAMPLE_SIZE).select("wave").get();
 
-  const sample: RankSample = { scores: [], waves: [] };
+  const sample: RankSample = { waves: [] };
 
   const take = (snap: FirebaseFirestore.QuerySnapshot) => {
     for (const doc of snap.docs) {
-      const score = Math.floor(Number(doc.get("score") ?? 0));
-      if (Number.isFinite(score) && score > 0) sample.scores.push(score);
-
       // Absent on every card whose owner has never played the lane, which is most of them -
       // and absent has to read as "not in this population" rather than as a nought, or the
       // median wave would be nought and the first person to finish a run would be told they
@@ -1828,7 +1369,7 @@ async function sampleRanks(db: FirebaseFirestore.Firestore): Promise<RankSample>
 
   if (first.size < RANK_SAMPLE_SIZE) {
     const rest = await groves.orderBy(byId).endBefore(cursor)
-                             .limit(RANK_SAMPLE_SIZE - first.size).select("score", "wave").get();
+                             .limit(RANK_SAMPLE_SIZE - first.size).select("wave").get();
     take(rest);
   }
 
@@ -1844,14 +1385,13 @@ async function sampleRanks(db: FirebaseFirestore.Firestore): Promise<RankSample>
  * here **must** be one `buildCard` writes, or the board is silently empty for ever: nothing
  * fails, the query simply matches no document.
  *
- * Both are single fields, so Firestore indexes them automatically and neither board needs a
+ * Each is a single field, so Firestore indexes it automatically and no board needs a
  * composite index. That is not an accident — it is why a board is ordered on a figure the card
  * already carries rather than on one derived at query time.
  */
-export type BoardField = "score" | "wave" | "shuffle";
+export type BoardField = "wave" | "shuffle";
 
 const BOARD_FIELD: Record<string, BoardField> = {
-  global: "score",
   endless: "wave",
   shuffle: "shuffle",
 };
@@ -1883,9 +1423,8 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
     // cannot write two shapes of one keeper.
     const row = rowOf(doc.id, data as GroveCardDoc);
 
-    // Nothing worth ranking. A card carrying a nought sorts to the bottom of its own board
-    // rather than being absent from it, which is the one thing an `orderBy` alone cannot say
-    // — and it is unreachable on the two wave boards, where a nought is never written at all.
+    // Nothing worth ranking. A nought is never written onto a card (both figures are spread
+    // only when positive), so this is belt and braces against a card written before that.
     if (figureOf(row, field) <= 0) continue;
 
     rows.push(row);
@@ -1901,10 +1440,8 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
  * How many keepers are on one board, counted rather than sampled.
  *
  * An aggregation, which Firestore bills at one read per thousand index entries — so this is
- * the one figure here that grows with the game, and it grows at a thousandth of it. The
- * inequality is what keeps it honest on `global`, where every published card carries a `score`
- * and a good many of them are worth nothing; on `endless` it is nearly free, because a card
- * with no wave is not in that index at all.
+ * the one figure here that grows with the game, and it grows at a thousandth of it - and less,
+ * because a card without the figure is not in that board's index at all.
  */
 async function countOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<number> {
   const field = BOARD_FIELD[boardId];
@@ -1920,7 +1457,8 @@ async function countOf(db: FirebaseFirestore.Firestore, boardId: string): Promis
  * **A retired board is worse than a missing one.** It keeps whatever rows the last run that
  * knew about it wrote, for ever, readable by any signed-in player — a picture of a ladder that
  * no longer exists, which nothing will ever correct because nothing writes it. That is what
- * the nine league boards became the moment `BOARD_IDS` stopped naming them.
+ * the nine league boards became the moment `BOARD_IDS` stopped naming them, and what `global`
+ * becomes on the first run after the deploy that retires it.
  *
  * It is a standing rule in the job rather than a one-off script, for invariant 7a's reason: a
  * cleanup somebody has to remember on the day they retire a board will be forgotten, and its
@@ -1944,8 +1482,8 @@ async function pruneRetiredBoards(db: FirebaseFirestore.Firestore): Promise<stri
  * The row a card contributes to a board. One shape for both boards — see `RankedGrove`.
  *
  * Built from the card the server has just written rather than from the save, so a row on a
- * board can never say anything the card does not: the same sanitised name, the same clamped
- * score, the same bounded wave. `topOf` reads the identical fields back off the document,
+ * board can never say anything the card does not: the same sanitised name, the same derived
+ * level, the same bounded waves. `topOf` reads the identical fields back off the document,
  * which is what keeps the live path and the rebuild from ever disagreeing about a row.
  */
 export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
@@ -1954,8 +1492,6 @@ export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
     name: typeof card.name === "string" ? card.name : "",
     avatar: typeof card.avatar === "string" ? card.avatar : "",
     level: typeof card.level === "number" ? Math.floor(card.level) : 1,
-    score: typeof card.score === "number" ? Math.floor(card.score) : 0,
-    stars: typeof card.stars === "number" ? Math.floor(card.stars) : 0,
     wave: typeof card.wave === "number" ? Math.floor(card.wave) : 0,
     ...positive("shuffle", card.shuffle),
 
@@ -2002,8 +1538,6 @@ export function readRows(raw: unknown): RankedGrove[] {
       name: typeof row.name === "string" ? row.name : "",
       avatar: typeof row.avatar === "string" ? row.avatar : "",
       level: typeof row.level === "number" ? Math.floor(row.level) : 1,
-      score: typeof row.score === "number" ? Math.floor(row.score) : 0,
-      stars: typeof row.stars === "number" ? Math.floor(row.stars) : 0,
       wave: typeof row.wave === "number" ? Math.floor(row.wave) : 0,
       ...positive("shuffle", row.shuffle),
       ...(typeof row.rung === "string" && row.rung.length > 0 ? { rung: row.rung } : {}),
@@ -2081,7 +1615,7 @@ function sameRow(a: RankedGrove, b: RankedGrove): boolean {
   // for, arriving one layer further down.
   return a.uid === b.uid && a.name === b.name && a.avatar === b.avatar && a.level === b.level
     && (a.rung ?? "") === (b.rung ?? "")
-      && a.score === b.score && a.stars === b.stars && a.wave === b.wave
+      && a.wave === b.wave
       && figureOf(a, "shuffle") === figureOf(b, "shuffle");
 }
 
@@ -2228,13 +1762,12 @@ export async function scrubBoards(db: FirebaseFirestore.Firestore, uid: string):
  * else.
  *
  * **This is the safety net under `placeOnBoards`, and it is cheap enough to run every fifteen
- * minutes for ever.** Three queries at a hundred rows and a prune that lists three document
- * names: about three hundred reads a run, under thirty thousand a day, at any population — nothing here grows
+ * minutes for ever.** Two queries at a hundred rows and a prune that lists two document
+ * names: about two hundred reads a run, under twenty thousand a day, at any population — nothing here grows
  * with the player count, because a board is ordered on a field the card already carries and
  * Firestore indexes it. What it repairs is everything the live path can miss: a placement
- * that lost its transaction, a cutoff the cache read as higher than it was, a row whose figure
- * fell below the hundredth (the grove's worth can, a wave cannot) and a card withdrawn while a
- * rebuild was mid-flight.
+ * that lost its transaction, a cutoff the cache read as higher than it was, and a card withdrawn
+ * while a rebuild was mid-flight.
  *
  * `population` is written only while the board has room (`populationOf`), where it is the row
  * count and free. Past that it is a `count()` aggregation billed against every card on the
@@ -2277,26 +1810,24 @@ export async function rebuildBoards(): Promise<{ boards: number; pruned: string[
  * **Three kinds of question, three kinds of query, and that split is the whole design.** It
  * used to be one: read a bounded slab of cards and derive all three from it. That is exactly
  * right for a decile and exactly wrong for a leaderboard - past `RANK_SAMPLE_SIZE` published
- * groves the "finest groves" board stopped being the finest and became the best of an
- * arbitrary five thousand, with no symptom anybody could see. A top hundred has to be a
- * *query*, because it is the one number here where approximately right is wrong.
+ * cards a top hundred drawn from a sample is the best of an arbitrary five thousand, with no
+ * symptom anybody could see. A top hundred has to be a *query*, because it is the one number
+ * here where approximately right is wrong.
  *
  * - **Boards** come from `orderBy(field,"desc").limit(100)`: exact at any population, and a
  *   hundred reads each whether the game has a thousand players or ten million.
  * - **Populations** come from a `count()` aggregation, which Firestore bills at one read per
- *   thousand matches rather than one per document. "The finest of N keepers" is now N rather
- *   than the size of a sample.
+ *   thousand matches rather than one per document. "The top of N keepers" is N rather than
+ *   the size of a sample.
  * - **Deciles** stay sampled, because a percentile from a few thousand draws is accurate to
  *   far under the point it is rounded to, and an exact one would mean reading every card in
- *   the game every day to tell somebody they are in the top 12%. **Both** distributions come
- *   out of the one sample, so the second board's percentile costs no reads at all.
+ *   the game every day to tell somebody they are in the top 12%.
  *
  * **What it costs at ten million published cards:** two board queries at a hundred rows (200),
- * two counts (Firestore bills an aggregation at one read per thousand index entries, so the
- * global count is at most 10,000 and the endless one is a thousandth of however many people
- * have actually played the lane), the prune (one read per board document, so two), and the
- * sample (5,000). Call it fifteen thousand reads a day for the entire game, once, at four in
- * the morning - a fraction of a penny. **Nothing here grows with the player count except the
+ * two counts (Firestore bills an aggregation at one read per thousand index entries, so each is
+ * a thousandth of however many people have actually played its lane), the prune (one read per
+ * board document, so two), and the sample (5,000). Call it under ten thousand reads a day for the
+ * entire game, once, at four in the morning - a fraction of a penny. **Nothing here grows with the player count except the
  * counts, and those grow at a thousandth of it**; adding a board adds a hundred reads a night
  * and one aggregation, which is the whole reason a board is a document rather than a query.
  *
@@ -2311,7 +1842,7 @@ export async function rebuildBoards(): Promise<{ boards: number; pruned: string[
  * the client reads to decide whether to draw a percentile at all, so publishing it before the
  * boards it describes would open a window where the two disagree.
  */
-export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: number }> {
+export async function rebuildGroveRanks(): Promise<{ population: Record<string, number>; boards: number }> {
   const db = getFirestore();
 
   // Asked for together rather than one after another: they are independent reads against one
@@ -2332,9 +1863,8 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
   const population: Record<string, number> = {};
   BOARD_IDS.forEach((id, i) => { population[id] = counts[i]; });
 
-  // Ascending in both cases, which is what `deciles` wants and what the client asserts before
-  // it will believe a table at all.
-  const scores = sample.scores.slice().sort((a, b) => a - b);
+  // Ascending, which is what `deciles` wants and what the client asserts before it will
+  // believe a table at all.
   const waves = sample.waves.slice().sort((a, b) => a - b);
 
   const builtUnix = Math.floor(Date.now() / 1000);
@@ -2352,14 +1882,10 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
   await batch.commit();
   forgetBoardCache();
 
-  // `waveSamples` and `waveDeciles` are **additive**, and that is what makes this deployable
-  // in either order: a client that has never heard of them reads the document exactly as it
-  // did, and a client that has reads an absent pair as "nothing to say" and draws no standing
-  // — which is also the honest answer on the day this ships, when no population of watchers
-  // exists yet.
+  // Written whole, so the grove-worth pair (`samples`, `deciles`) that used to ride beside the
+  // waves leaves the document with this write. Every client reads each pair on its own and an
+  // absent one as "nothing to say" (`ReadRankTable`), so its absence costs no build anything.
   await db.doc(GROVE_PATHS.ranksConfig).set({
-    samples: scores.length,
-    deciles: deciles(scores),
     waveSamples: waves.length,
     waveDeciles: deciles(waves),
     population,
@@ -2368,14 +1894,12 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
   });
 
   logger.info("published grove ranks", {
-    ranked: population.global ?? 0,
-    sampled: scores.length,
-    watchers: population.endless ?? 0,
+    population,
     waveSampled: waves.length,
     boards: BOARD_IDS.length,
   });
 
-  return { ranked: population.global ?? 0, boards: BOARD_IDS.length };
+  return { population, boards: BOARD_IDS.length };
 }
 
 /**
@@ -2425,5 +1949,3 @@ export function publishStamp(): Record<string, unknown> {
   return { lastPublishedAt: FieldValue.serverTimestamp() };
 }
 
-/** Re-exported so `index.ts` composes the ceiling from one place. */
-export { earnedCredits };

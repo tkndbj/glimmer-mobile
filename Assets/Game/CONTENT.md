@@ -1078,10 +1078,10 @@ What is deliberately still here, and why:
   `GroveNames`, `config/grove` and `ReportSubject.Grove` all keep their spelling, because a
   collection name is a wire spelling and those are permanent (invariant 19o). `config/grove`
   is the turret roster now; a card is a keeper now.
-- **The five save keys**, in `firestore.rules` only. They are still allow-listed and still
-  bounded, because `hasOnly` is an allow-list over the whole document and dropping a key a
-  rolled-back client still writes costs that client *every* save write (invariant 12a). No
-  build writes them; save schema **v33** dropped them from `SaveFileDto`.
+- **Nothing of the save.** Save schema **v33** dropped the eight grove keys from `SaveFileDto`;
+  on 2026-10-25 they were swept from every stored save (`firebase/seed/retire-grove-keys.mjs`)
+  and then left `hasOnly`, in that order (16z). The card lost its grove fields and the
+  `global` board went with them; all of them are spent names.
 - **The companion roster.** Nothing in the game draws a companion, but the ids are still in
   the manifest and still on the wire. The grove was the last thing that *counted* them, so
   the roster is now inert rather than load-bearing - see invariant 16a for the reason it

@@ -53,8 +53,8 @@ import {
 } from "./refunds";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
-  assertUsableGroveConfig, buildCard, derivedXp, endlessXp, xpBoostXp, groveWorth, keeperLevel,
-  optedIn, heldGrove, isGroveDenied, rebuildGroveRanks, rebuildBoards, placeOnBoards,
+  assertUsableGroveConfig, buildCard, derivedXp, endlessXp, xpBoostXp, keeperLevel,
+  optedIn, rebuildGroveRanks, rebuildBoards, placeOnBoards,
   saveRevision, withdrawCard, CARD_SHAPE_SINCE, REPAIR_BATCH, REPAIR_WORKERS, staleCardCutoff,
 } from "./grove";
 import {
@@ -1986,14 +1986,14 @@ export const sweepVoidedPurchases = onSchedule(
  * Rebuilds this account's public grove card.
  *
  * <b>The request is empty and must stay empty.</b> Everything written here is recomputed or
- * sanitised from the save this function opens with its own credentials — the worth, the stars,
- * the keeper level, the name and the endless lane's wave count. A client that could hand any
+ * sanitised from the save this function opens with its own credentials — the keeper level, the
+ * rank, the name, the turret line and the two lanes' wave counts. A client that could hand any
  * of those in would be a client that could put any number it liked on a public leaderboard,
  * which is the whole of what `grove.ts` exists to prevent. The wave is the one figure that
  * cannot be *recomputed* — see `bestWave` for what stands in for that, and for why the endless
  * board must never be made to pay.
  *
- * Called by the client when the part of the grove a visitor can see has actually changed —
+ * Called by the client when the part of the card a visitor can see has actually changed —
  * see `GrovePublishPolicy` for why that is a client decision and why it is safe to be one.
  * A player who never calls it is simply not on the board.
  */
@@ -2074,25 +2074,9 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
   // truth about; the rank below is asked about the earned level alone.
   const level = earnedLevel + keeperBoughtOf(walletSnapshot.data());
 
-  // The ceiling on the bought half: everything this account has ever legitimately had to
-  // spend. Derived earnings plus whatever the server itself granted — never a number out of
-  // the save. See the header of grove.ts for why it is generous rather than exact.
-  //
-  // `credits.granted` is the *stored* field. `grantedBaseline` is the name it is given on
-  // the way out to a client (`toReply`), and reading that name here silently yielded zero —
-  // so the ceiling was derived earnings alone, and every account seed, daily chest, streak
-  // night, rewarded video and **real-money coin purchase** was left out of what a player
-  // could be said to afford. Somebody who bought forty dollars of coins and spent them on
-  // their grove would have been clamped to near nothing and ranked at the bottom. Nothing
-  // could catch it but a live run: the unit vectors take `affordable` as a parameter, and a
-  // clamp that is too tight looks exactly like a clamp that is working.
-  const derived = earnedCreditsForSave(save, config, uid);
-  //
-  // Typed rather than read off `DocumentData`, so the next person to reach for the reply's
-  // name gets a compile error instead of a zero.
+  // Typed rather than read off `DocumentData`, so the next person to reach for one of its
+  // fields gets a compile error instead of a zero.
   const walletDoc = walletSnapshot.data() as Partial<WalletDoc> | undefined;
-  const granted = Math.floor(Number(walletDoc?.credits?.granted ?? 0));
-  const affordable = derived.credits + Math.max(0, granted);
 
   const nowUnix = Math.floor(Date.now() / 1000);
   const { list } = await loadNameConfig(db, nowUnix);
@@ -2129,21 +2113,13 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
     }
   }
 
-  const worth = groveWorth(save, groveConfig, level, affordable);
-
   // `publishableName` rather than `holding.public`, and that one word is the whole takedown
   // path: a name that has been reported past the threshold resolves to null here and falls
   // through to the generated handle, exactly as an unnamed keeper's does. Reading the field
   // directly would republish a name a moment after it was taken down, on this player's very
   // next sync, and nothing else would ever notice.
-  // `isGroveDenied` rather than a field read, and the argument is `publishableName`'s word for
-  // word: an arrangement reported past the threshold publishes no arrangement, and reading the
-  // flag anywhere but through the predicate is how a takedown gets undone by this player's very
-  // next sync with nothing anywhere noticing. The wallet is already open, so it costs no read.
   const card = buildCard(
-    uid, save, groveConfig, config, worth, level, nowUnix, publishableName(holding), list,
-    isGroveDenied(heldGrove(walletDoc as Record<string, unknown> | undefined)),
-    earnedLevel
+    uid, save, groveConfig, config, level, nowUnix, publishableName(holding), list, earnedLevel
   );
 
   await db.doc(GROVE_PATHS.card(uid)).set(card);
@@ -2157,15 +2133,6 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
     if (placed.length > 0) logger.info("card placed on boards", { uid, boards: placed });
   } catch (error) {
     logger.warn("could not place the card on the boards", { uid, error: String(error) });
-  }
-
-  if (worth.clamped) {
-    // Not an accusation and not an error: a stale seed produces it too, and so does a
-    // player mid-refund. It is logged because a sudden run of them is the signal that
-    // either the catalog or the economy has moved and nobody re-seeded.
-    logger.warn("grove worth clamped to what the account could afford", {
-      uid, bought: worth.bought, affordable: worth.affordable, earned: worth.earned,
-    });
   }
 
   // Which save this card was built from, so the client can prove it was the one it pushed.
@@ -2552,9 +2519,9 @@ export const deleteAccount = onCall(
  *
  * **The boards are live — `publishGrove` places a card the moment it is written — and this is
  * the net under that.** It repairs whatever the live path can miss (a lost transaction, a
- * cutoff read as higher than it was, a row whose grove worth fell, a withdrawal that raced a
- * rebuild) by doing the one thing the live path cannot afford to: reading the whole top
- * hundred off the index and writing it down. About two hundred reads a run at any population,
+ * cutoff read as higher than it was, a withdrawal that raced a rebuild) by doing the one thing
+ * the live path cannot afford to: reading the whole top hundred off the index and writing it
+ * down. About two hundred reads a run at any population,
  * because a board is ordered on a field the card already carries.
  *
  * **The cadence is mirrored on the client as `LeaderboardBoard.RebuildMinutes`**, which is the
@@ -2574,7 +2541,7 @@ export const publishGroveBoards = onSchedule(
 );
 
 /**
- * Rebuilds the population counts and the published distributions, once a night — and the
+ * Rebuilds the population counts and the published wave distribution, once a night — and the
  * boards with them, as the fifteen-minute job does.
  *
  * Four in the morning UTC, in the quietest hours for a global player base — and late enough that a card published anywhere in the
@@ -2587,8 +2554,8 @@ export const publishGroveBoards = onSchedule(
 export const publishGroveRanks = onSchedule(
   { region: REGION, schedule: "0 4 * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },
   async () => {
-    const { ranked, boards } = await rebuildGroveRanks();
-    logger.info("grove ranks rebuilt", { ranked, boards });
+    const { population, boards } = await rebuildGroveRanks();
+    logger.info("grove ranks rebuilt", { population, boards });
   }
 );
 
@@ -3153,7 +3120,7 @@ export const adminGetPlayer = onCall(adminCallOptions, async (request): Promise<
   nowUnix: number;
   row: AdminPlayerRow;
   auth: AdminAuthRecord | null;
-  card: { level: number; score: number; stars: number; rung: string | null; wave: number; shuffle: number; builtUnix: number } | null;
+  card: { level: number; rung: string | null; wave: number; shuffle: number; builtUnix: number } | null;
   wallet: { keeperBought: number; dealsBought: string[]; dailyPasses: { id: string; remaining: number; day: number }[];
             containersRevoked: string[]; earnedFloor: number; granted: Record<string, number>; spent: Record<string, number> };
   save: { schemaVersion: number; revision: number } | null;
@@ -3197,7 +3164,7 @@ export const adminGetPlayer = onCall(adminCallOptions, async (request): Promise<
       disabled: user.disabled,
     } : null,
     card: card ? {
-      level: Number(card.level ?? 0), score: Number(card.score ?? 0), stars: Number(card.stars ?? 0),
+      level: Number(card.level ?? 0),
       rung: typeof card.rung === "string" ? card.rung : null,
       wave: Number(card.wave ?? 0), shuffle: Number(card.shuffle ?? 0), builtUnix: Number(card.builtUnix ?? 0),
     } : null,

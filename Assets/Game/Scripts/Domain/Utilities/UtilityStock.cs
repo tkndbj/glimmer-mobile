@@ -37,7 +37,7 @@ namespace GlimmerGrove.Utilities
     /// so nothing here is adjudicated (invariant 13) - and the reason that is safe rather than
     /// merely cheap is invariant 39: a utility that delivers damage is charged against the graded
     /// count at the most a match could ever have delivered, so no number written here can improve
-    /// a star, a credit or a grove's worth on a public board.
+    /// a star, a credit or a figure on a public card.
     /// </para>
     /// </summary>
     public sealed class UtilityStock

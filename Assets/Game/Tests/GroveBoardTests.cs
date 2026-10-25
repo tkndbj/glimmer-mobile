@@ -212,7 +212,7 @@ namespace GlimmerGrove.Tests
             // `LeaderboardBoard.All` mirrors. A board named here and not there is a screen
             // that draws an empty list for ever with nothing to say why; a board named there
             // and not here is a nightly write nobody can read.
-            CollectionAssert.AreEqual(new[] { "global", "endless", "shuffle" }, LeaderboardBoard.All);
+            CollectionAssert.AreEqual(new[] { "endless", "shuffle" }, LeaderboardBoard.All);
 
             var seen = new HashSet<string>(StringComparer.Ordinal);
 
@@ -227,11 +227,11 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ARetiredBoardIdIsRefusedRatherThanFetched()
         {
-            // The nine league boards are gone. What matters is not that they are absent from
-            // the list but that `IsKnown` refuses them: an id this client composed and the
-            // server does not write is a document read nobody should pay for, and a deep link
-            // from an older build is exactly where one would come from.
-            foreach (string retired in new[] { "l0", "l4", "l8", "league", "" })
+            // `global` (the finest groves) and the nine league boards are gone. What matters is
+            // not that they are absent from the list but that `IsKnown` refuses them: an id this
+            // client composed and the server does not write is a document read nobody should pay
+            // for, and a deep link from an older build is exactly where one would come from.
+            foreach (string retired in new[] { "global", "l0", "l4", "l8", "league", "" })
                 Assert.IsFalse(LeaderboardBoard.IsKnown(retired), retired);
 
             Assert.IsFalse(LeaderboardBoard.IsKnown(null));
@@ -244,7 +244,7 @@ namespace GlimmerGrove.Tests
             // the one predicate standing between the endless list and a column of numbers it
             // is not sorted by.
             Assert.IsTrue(LeaderboardBoard.IsEndless(LeaderboardBoard.Endless));
-            Assert.IsFalse(LeaderboardBoard.IsEndless(LeaderboardBoard.Global));
+            Assert.IsFalse(LeaderboardBoard.IsEndless("global"));
             Assert.IsFalse(LeaderboardBoard.IsEndless(null));
             Assert.IsFalse(LeaderboardBoard.IsEndless("l3"));
         }
@@ -254,33 +254,29 @@ namespace GlimmerGrove.Tests
         {
             // Two boards in waves now, and a row carries both lanes' figures - so the board has
             // to pick, or the Shuffle list would descend by one number and print another.
-            var row = new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 4200L, 3, 41, null, 17);
+            var row = new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 41, null, 17);
 
-            Assert.IsTrue(LeaderboardBoard.IsWaves(LeaderboardBoard.Endless));
-            Assert.IsTrue(LeaderboardBoard.IsWaves(LeaderboardBoard.Shuffle));
-            Assert.IsFalse(LeaderboardBoard.IsWaves(LeaderboardBoard.Global));
             Assert.IsFalse(LeaderboardBoard.IsEndless(LeaderboardBoard.Shuffle));
             Assert.IsFalse(LeaderboardBoard.IsShuffle(LeaderboardBoard.Endless));
 
             Assert.AreEqual(41, LeaderboardBoard.WaveOn(LeaderboardBoard.Endless, row));
             Assert.AreEqual(17, LeaderboardBoard.WaveOn(LeaderboardBoard.Shuffle, row));
-            Assert.AreEqual(0, LeaderboardBoard.WaveOn(LeaderboardBoard.Global, row));
-            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "", 1, 0L, 0, 0, null, -5).ShuffleWave);
+            Assert.AreEqual(0, LeaderboardBoard.WaveOn("global", row));
+            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "", 1, 0, null, -5).ShuffleWave);
         }
 
         [Test]
         public void ARowCarriesBothFiguresWhicheverBoardItCameOff()
         {
-            var row = new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 4200L, 3, 41);
+            var row = new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 41, null, 17);
 
-            Assert.AreEqual(4200L, row.Score);
             Assert.AreEqual(41, row.Wave);
+            Assert.AreEqual(17, row.ShuffleWave);
 
-            // Absent reads as nought rather than as missing, which is what a global row is:
-            // the server writes the field on every row and most of them have never played
-            // the lane.
-            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 4200L, 3).Wave);
-            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "coral", 7, 0L, 0, -9).Wave);
+            // Absent reads as nought rather than as missing, which is what a Shuffle row often is:
+            // the server writes the field on every row and many have never played the lane.
+            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "coral", 7).Wave);
+            Assert.AreEqual(0, new LeaderboardEntry(1, "uid", "Fern", "coral", 7, -9).Wave);
         }
 
         // ---------------------------------------------------------- the distribution

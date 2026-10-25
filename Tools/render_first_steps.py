@@ -63,13 +63,11 @@ C_LINE = (-250.0, 860.0, 90.0, 36, 22)
 C_KEY = (-510.0, 560.0, 150.0, 56, 30)
 
 # WelcomeStepOverlay - bands below the panel's top edge.
-P_W, P_H = 880.0, 1140.0
+P_W, P_ONE_KEY_H, P_TWO_KEYS_H = 880.0, 1010.0, 1090.0
 P_SEAT, P_SEAT_SIZE = 210.0, 220.0
 P_NAME = (365.0, 760.0, 56.0, 50, 28)
-P_UNLOCK = (440.0, 760.0, 70.0, 54, 30)
-P_BOXES, P_BOX_MOST, P_BOX_GAP, P_BOX_ROW = 560.0, 120.0, 22.0, 760.0
-P_DAY = (700.0, 760.0, 70.0, 54, 30)
-P_REASON = (785.0, 760.0, 80.0, 30, 18)
+P_UNLOCK = (480.0, 760.0, 160.0, 50, 34)
+P_BOXES, P_BOX_MOST, P_BOX_GAP, P_BOX_ROW = 660.0, 120.0, 22.0, 760.0
 P_YES = (232.0, 620.0, 138.0, 46, 26)
 P_LATER = (96.0, 480.0, 108.0, 36, 22)
 P_OK = (150.0, 560.0, 138.0, 46, 26)
@@ -250,6 +248,9 @@ def welcome(lang, ask=True, settings=False, done=1, draw=True):
     rules, _ = steps()
     quest = rules["welcome"]["quests"][0]
     days = int(quest["days"])
+    ready = done >= days
+    ask = ask and not ready
+    P_H = P_TWO_KEYS_H if ask else P_ONE_KEY_H
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     if draw:
         K.room(sheet)
@@ -274,7 +275,7 @@ def welcome(lang, ask=True, settings=False, done=1, draw=True):
         return K.shrunk(sheet, text, W / 2, top + dy, w, h, size, floor, fill=fill, outline=outline), floor
 
     sizes["name"] = band(P_NAME, s["ward.%s.name" % quest["ward"]], K.CREAM, 3)
-    sizes["unlock"] = band(P_UNLOCK, s["ui.steps.unlock_turret"], GOLD, 4)
+    sizes["unlock"] = band(P_UNLOCK, s["ui.steps.unlocked" if ready else "ui.steps.unlock_turret"], GOLD, 4)
 
     n = days
     size = min(P_BOX_MOST, (P_BOX_ROW - P_BOX_GAP * (n - 1)) / n)
@@ -289,17 +290,15 @@ def welcome(lang, ask=True, settings=False, done=1, draw=True):
         if i < done:
             K.paste(sheet, K.tint(K.fit(check, (size * .66, size * .66)), K.MINT), bx, top + P_BOXES - 2)
 
-    sizes["day"] = band(P_DAY, fmt(s["ui.steps.day_of"], max(1, done), days), GOLD, 4)
-    if done >= days:
-        sizes["reason"] = band(P_REASON, s["ui.steps.welcome_ready"], INK, 0)
-
     def foot(b, skin, text, what):
         dy, w, h, fsize, floor = b
         ky = top + P_H - dy
         K.paste(sheet, K.skin(skin, w, h), W / 2, ky)
         return K.one_line(sheet, text, W / 2, ky - 4, w - KEY_PAD, fsize, floor, what=what, outline=3), floor
 
-    if ask:
+    if ready:
+        sizes["claim"] = foot(P_OK, "btn_green", s["ui.steps.claim"], "%s claim" % lang)
+    elif ask:
         sizes["yes"] = foot(P_YES, "btn_green", s["ui.reminders.open_settings" if settings else "ui.reminders.ask_yes"],
                             "%s yes" % lang)
         sizes["later"] = foot(P_LATER, "btn_blue", s["ui.reminders.not_now"], "%s later" % lang)

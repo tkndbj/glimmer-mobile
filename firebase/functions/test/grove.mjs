@@ -4,19 +4,15 @@
  *
  *     npm --prefix firebase/functions test
  *
- * A grove's worth, the keeper level behind it, the public name and the endless best are all
- * derived twice — in C# so the game can draw them offline, and here so a forged save
- * cannot rank. Two implementations of one rule drift, so both run
- * firebase/shared/grove-vectors.json. Assets/Game/Tests/GroveBoardTests.cs is the other
- * half.
+ * The keeper level, the public name, the rank and the two lanes' bests are all derived twice —
+ * in C# so the game can draw them offline, and here so a forged save cannot rank. Two
+ * implementations of one rule drift, so both run firebase/shared/grove-vectors.json.
+ * Assets/Game/Tests/GroveBoardTests.cs is the other half.
  *
- * If this goes red, the board would show a player a different number than their own grove
- * screen does — which is not a crash, is not caught by anything else, and is very hard to
- * explain to somebody who is looking at both.
- *
- * `summarise` is exercised here too, and it is server-only by nature: no client ever ranks
- * anybody. It is in this file rather than a separate one because its inputs are the same
- * cards this file already builds.
+ * If this goes red, a board would show a player a different figure than their own screen does —
+ * which is not a crash, is not caught by anything else, and is very hard to explain to somebody
+ * who is looking at both. The card and board shapes are pinned here too, server-only by nature:
+ * no client ever ranks anybody.
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -33,7 +29,7 @@ if (!existsSync(compiled)) {
 }
 
 const {
-  groveWorth, keeperLevel, starsFor, bestWave, shuffleWave, figureOf, MAX_WAVE,
+  keeperLevel, bestWave, shuffleWave, figureOf, MAX_WAVE, assertUsableGroveConfig,
   shuffleTop, compareShuffleRuns, SHUFFLE_TOP, CARD_SHAPE_SINCE, staleCardCutoff, REPAIR_BATCH,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
@@ -60,11 +56,6 @@ const shared = (name) =>
 
 const vectors = shared("grove-vectors.json");
 
-// The catalog is a real homestead.json so the C# half can feed it through the mapper that
-// ships. Read here the way the seeder reads the shipped one, so the two derivations of
-// config/grove stay the same derivation.
-const catalog = shared("grove-catalog.json");
-
 let pass = 0;
 let fail = 0;
 
@@ -77,149 +68,48 @@ function equal(name, actual, expected) {
   check(name, actual === expected, `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
 }
 
-// The grove catalog, in the shape the seeder publishes. Built from the same vector the C#
-// half feeds through HomesteadMapper, so a change to one is a change to both.
+// `config/grove` in the shape the seeder publishes, with a companion roster to exercise
+// `heldCompanions`' three clauses (the shipped roster is published empty: 16ab). `monarch` is
+// the free companion, which the seeder never publishes because it is worth nothing.
 function groveConfig() {
-
-  const pieces = {};
-  const bundles = {};
-  const dwellings = {};
-  const dwellingLevels = {};
-  for (const piece of catalog.pieces) {
-    if ((piece.cost ?? 0) > 0) pieces[piece.id] = piece.cost;
-    if ((piece.cost ?? 0) > 0 && (piece.bundle ?? 1) > 1) bundles[piece.id] = piece.bundle;
-    if (piece.kind === "dwelling") {
-      dwellings[piece.id] = piece.tier ?? 0;
-      // Written only when there is a gate, which is what `seed-config.mjs` publishes and what
-      // keeps the field additive — an absent entry means ungated in both directions.
-      const gate = Math.floor(piece.requiresKeeperLevel ?? 0);
-      if (gate > 0) dwellingLevels[piece.id] = gate;
-    }
-  }
-
-  const regions = {};
-  for (const region of catalog.floor.regions) {
-    if ((region.cost ?? 0) > 0) regions[region.id] = region.cost;
-  }
-
-  const companions = {};
-  for (const companion of vectors.companions) {
-    if ((companion.unlockCost ?? 0) > 0) {
-      companions[companion.id] = { cost: companion.unlockCost, level: companion.unlockLevel ?? 0 };
-    }
-  }
-
   return {
-    version: 1, pieces, bundles, regions, companions, dwellings, dwellingLevels,
-    stars: catalog.score.stars,
+    companions: {
+      fox: { cost: 1500, level: 0 },
+      owl: { cost: 4000, level: 12 },
+      stag: { cost: 9000, level: 30 },
+    },
   };
 }
 
-// ------------------------------------------------------------------- grove worth
 /**
  * A progression config with no rank ladder on it, which is what these blocks want: they are
- * about the grove half of a card, and a server that has never been seeded with a `ranks` block
+ * about the rest of a card, and a server that has never been seeded with a `ranks` block
  * publishes no rung at all. `rankCases` in the shared vectors is where the ladder itself is
  * exercised, on both sides of the wire.
  */
 const NO_RANKS = { version: 1, rewards: {}, chapterRewards: {}, levelChapters: {} };
 
-console.log("\ngrove worth");
+// ------------------------------------------------------------------ config/grove
+console.log("\nconfig/grove");
 {
-  const config = groveConfig();
+  // The seeder's shape since the Grovement went: the two rosters and nothing else.
+  let refused = null;
+  try { assertUsableGroveConfig({ companions: {}, wards: { bolt: { level: 0, free: true } } }); }
+  catch (e) { refused = e; }
+  equal("the seeded shape is usable", refused, null);
 
-  for (const c of vectors.worthCases) {
-    // A case carrying `stock` is a v20 save; one carrying only `pieces` is a v19 save,
-    // and it stays that way on purpose — it is the coverage for the fallback a device
-    // that has not updated still goes through. Both must reach the same worth for the
-    // same holdings, which is what the "reads as one bundle of each" case pins.
-    const save = c.stock
-      ? {
-          homesteadStock: c.stock,
-          groveLandOwned: c.land,
-          companionsOwned: c.companions,
-        }
-      : {
-          homesteadOwned: c.pieces,
-          groveLandOwned: c.land,
-          companionsOwned: c.companions,
-        };
+  // A document seeded before this change still carries the Grovement's tables beside the rosters,
+  // and has to stay usable for the minutes between the deploy and the re-seed.
+  refused = null;
+  try { assertUsableGroveConfig({ version: 1, pieces: {}, regions: {}, dwellings: {}, stars: [], companions: {} }); }
+  catch (e) { refused = e; }
+  equal("a document still carrying the old tables is usable", refused, null);
 
-    const worth = groveWorth(save, config, c.keeperLevel, c.affordable);
-
-    check(
-      `${c.name}: ${worth.earned} earned + ${worth.bought} bought -> ${worth.score}`,
-      worth.earned === c.earned && worth.bought === c.bought &&
-      worth.score === c.score && worth.stars === c.stars && worth.clamped === c.clamped,
-      `expected ${c.earned}/${c.bought}/${c.score}/${c.stars}/${c.clamped}, ` +
-      `got ${worth.earned}/${worth.bought}/${worth.score}/${worth.stars}/${worth.clamped}`
-    );
+  for (const bad of [undefined, null, {}, { companions: null }, { wards: {} }]) {
+    let threw = false;
+    try { assertUsableGroveConfig(bad); } catch { threw = true; }
+    check(`a config without a companion roster is refused (${JSON.stringify(bad)})`, threw);
   }
-
-  // An id nobody has ever heard of is worth nothing rather than a crash. It is the
-  // ordinary case for a server one content drop behind a client, not an attack.
-  const unknown = groveWorth(
-    { homesteadOwned: ["no_such_piece"], groveLandOwned: ["nowhere"], companionsOwned: ["nobody"] },
-    config, 1, 100000
-  );
-  equal("an unknown id is worth nothing", unknown.score, 0);
-
-  // Every axis a client controls on the stock array. None of these can be reached by the
-  // shipped writer; all of them can be reached by a modified one, and the failure this
-  // guards against is arithmetic that overflows rather than a grove that scores high —
-  // the affordability ceiling already handles scoring high.
-  const junkStock = groveWorth(
-    {
-      homesteadStock: [
-        { id: "fence", copies: 1e308 },       // beyond the copy ceiling
-        { id: "fence", copies: 5 },           // a duplicate row, which the file forbids
-        { id: "bench", copies: -4 },          // negative
-        { id: "bench", copies: "12" },        // not a number
-        { id: "", copies: 3 },                // no id
-        { id: "x".repeat(200), copies: 3 },   // an id no catalog could hold
-        null,
-        "bench",
-      ],
-      groveLandOwned: [],
-      companionsOwned: [],
-    },
-    config, 1, 100000
-  );
-  // fence resolves to the copy ceiling (the larger of the two rows, clamped), which is
-  // 9,999 x 90 = 899,910 — and every other row in that array is dropped.
-  equal("a malformed stock row is dropped rather than trusted", junkStock.bought, 899910);
-  equal("and the copy ceiling is what stops it overflowing", junkStock.score, 100000);
-
-  // An empty stock array is not "owns nothing"; it falls through to the v19 field, because
-  // that is what GroveStock.In does on the client and the two must agree. Reachable from an
-  // ordinary partial update, and it scores a real grove at zero if it is got wrong.
-  const emptyStock = groveWorth(
-    { homesteadStock: [], homesteadOwned: ["bench"], groveLandOwned: [], companionsOwned: [] },
-    config, 1, 100000
-  );
-  equal("an empty stock array falls back to the v19 field", emptyStock.bought, 500);
-
-  const legacyBundle = groveWorth(
-    { homesteadOwned: ["fence"], groveLandOwned: [], companionsOwned: [] },
-    config, 1, 100000
-  );
-  equal("a v19 fence is worth one whole bundle", legacyBundle.bought, 900);
-
-  // Malformed inputs are the shape a forged save actually arrives in.
-  const junk = groveWorth(
-    { homesteadOwned: "bench", groveLandOwned: null, companionsOwned: [1, 2, {}] },
-    config, 1, 100000
-  );
-  equal("a save with junk in it scores zero", junk.score, 0);
-
-  const repeated = groveWorth(
-    { homesteadOwned: ["bench", "bench", "bench"], groveLandOwned: [], companionsOwned: [] },
-    config, 1, 100000
-  );
-  equal("a piece listed three times is counted once", repeated.score, 500);
-
-  const negative = groveWorth({}, config, 1, -5000);
-  equal("a negative ceiling clamps to nothing rather than inverting", negative.score, 0);
 }
 
 // ------------------------------------------------------------------ keeper level
@@ -230,16 +120,6 @@ console.log("\nkeeper level");
   }
 
   equal("negative xp is level 1", keeperLevel(-100, vectors.keeperCurve), 1);
-}
-
-// ------------------------------------------------------------------------ stars
-console.log("\nstars");
-{
-  const ladder = catalog.score.stars;
-
-  for (const c of vectors.starCases) {
-    equal(`${c.score} earns ${c.stars} star(s)`, starsFor(c.score, ladder), c.stars);
-  }
 }
 
 // ------------------------------------------------------------------- endless best
@@ -342,12 +222,12 @@ console.log("\nshuffle graded run");
 
   // On the card only when there is one, so a keeper with no graded run is the card it was.
   const plain = buildCard("uid-5", { shuffleBest: [{ level: "s13_shuffle", wave: 21 }] },
-                          groveConfig(), NO_RANKS, { score: 0, stars: 0 }, 6, 1_700_000_000, null);
+                          groveConfig(), NO_RANKS, 6, 1_700_000_000, null);
   check("a keeper with no graded run carries none", !("shuffleTop" in plain));
 
   const top = { grade: 5, points: 7800, wave: 140, stats: { damage: 2400, speed: 1800 } };
   const graded = buildCard("uid-6", { shuffleBest: [{ level: "s13_shuffle", wave: 150, top }] },
-                           groveConfig(), NO_RANKS, { score: 0, stars: 0 }, 6, 1_700_000_000, null);
+                           groveConfig(), NO_RANKS, 6, 1_700_000_000, null);
   equal("a graded run reaches the card whole", JSON.stringify(graded.shuffleTop), JSON.stringify(top));
   equal("beside the best wave", graded.shuffle, 150);
   check("a graded card is writable", writable(graded));
@@ -654,10 +534,9 @@ console.log("\nopting out");
 // ---------------------------------------------------------------------- the boards
 console.log("\nranking");
 {
-  // `summarise` is gone, and with it the test that drove it. Boards are a query now
-  // (`orderBy("score","desc").limit(100)`) and populations are a `count()`, because the top
-  // hundred of a bounded sample stopped being the top hundred the day this game had more
-  // than RANK_SAMPLE_SIZE published groves. Neither can be exercised without Firestore, so
+  // Boards are a query (`orderBy(field,"desc").limit(100)`) and populations are a `count()`,
+  // because the top hundred of a bounded sample stops being the top hundred the day this game
+  // has more than RANK_SAMPLE_SIZE published cards. Neither can be exercised without Firestore, so
   // what is pinned here is everything around them that still can be — and the writability
   // check below is the one that has already cost a live run.
 
@@ -676,20 +555,17 @@ console.log("\nranking");
   // already published ten board documents — leaving the boards up and the distribution
   // absent, which is precisely the state the feature's first day is in. Anything a scheduled
   // job writes has to be checked for writability, not only for arithmetic.
-  const empty = { samples: 0, deciles: deciles([]) };
-  check("every value the ranks document carries is writable", writable(empty),
-        JSON.stringify(empty));
   check("every value a board document carries is writable",
         writable({ entries: [], population: 0, builtUnix: 0 }));
 
-  const one = { samples: 1, deciles: deciles([4200]) };
-  equal("a population of one still produces nine deciles", one.deciles.length, 9);
+  const one = { waveSamples: 1, waveDeciles: deciles([42]) };
+  equal("a population of one still produces nine deciles", one.waveDeciles.length, 9);
   check("and they are writable", writable(one));
 
-  // The wave distribution is the same function over a second array, and it is what answers
-  // "where do I stand" for everybody the hundred-row board cannot reach. An empty one has to
-  // come back as an empty *array* rather than nine undefineds — Firestore refuses undefined,
-  // and this is the state on the day the board ships, when no watcher exists yet.
+  // The wave distribution is what answers "where do I stand" for everybody the hundred-row
+  // board cannot reach. An empty one has to come back as an empty *array* rather than nine
+  // undefineds — Firestore refuses undefined, and this is the state on the day a board ships,
+  // when no watcher exists yet.
   const noWatchers = { waveSamples: 0, waveDeciles: deciles([]) };
   equal("no watchers yet publishes no wave deciles", noWatchers.waveDeciles.length, 0);
   check("and the document is still writable", writable(noWatchers));
@@ -700,23 +576,22 @@ console.log("\nranking");
         watched.every((v, i) => i === 0 || v >= watched[i - 1]), watched.join(","));
   check("and every one of them is a real number", watched.every(Number.isFinite));
 
-  // Every board the job publishes, and there is exactly one list of them. The nine league
-  // boards are gone; `l0`..`l8` are spent ids and `pruneRetiredBoards` is what takes the
-  // documents away. The deletion scrub deliberately no longer reads this list — it walks the
-  // collection instead, because a board that has been retired but not yet pruned is exactly
-  // where a deleted keeper's name would otherwise survive (invariant 27).
-  equal("three boards, and no more", BOARD_IDS.length, 3);
-  equal("the global board is named first", BOARD_IDS[0], "global");
-  equal("the endless board is named second", BOARD_IDS[1], "endless");
-  equal("the shuffle board is named third", BOARD_IDS[2], "shuffle");
+  // Every board the job publishes, and there is exactly one list of them. `global` (the finest
+  // groves) and the nine league boards `l0`..`l8` are spent ids, and `pruneRetiredBoards` is
+  // what takes their documents away. The deletion scrub deliberately does not read this list —
+  // it walks the collection instead, because a board that has been retired but not yet pruned
+  // is exactly where a deleted keeper's name would otherwise survive (invariant 27).
+  equal("two boards, and no more", BOARD_IDS.length, 2);
+  equal("the endless board is named first", BOARD_IDS[0], "endless");
+  equal("the shuffle board is named second", BOARD_IDS[1], "shuffle");
 
-  check("no retired league id has come back",
-        BOARD_IDS.every((id) => !/^l[0-8]$/.test(id)));
+  check("no retired board id has come back",
+        BOARD_IDS.every((id) => id !== "global" && !/^l[0-8]$/.test(id)));
 
   // Mirrored by `LeaderboardBoard.All`, and the client refuses a board id outside its own
   // list before it spends a read on it — so an id here that the client does not know is a
   // board nobody can ever open.
-  equal("the list the client mirrors", BOARD_IDS.join(","), "global,endless,shuffle");
+  equal("the list the client mirrors", BOARD_IDS.join(","), "endless,shuffle");
 }
 
 /** True when nothing in this value is undefined — what Firestore actually demands. */
@@ -740,9 +615,10 @@ console.log("\nthe companions a card publishes");
 {
   const config = groveConfig();
 
-  // The roster the vectors author. `monarch` is free; the rest are priced and gated.
+  // The roster this file authors. `monarch` is free and so never published; the rest are priced
+  // and gated.
   const priced = Object.keys(config.companions).sort();
-  check("the vectors price more than one companion", priced.length >= 2, priced.join(","));
+  check("the roster prices more than one companion", priced.length >= 2, priced.join(","));
 
   const all = heldCompanions(new Set([...priced, "monarch", "no_such_friend"]), config, 99);
   check("the free companion is not published — a visitor's own roster resolves it",
@@ -756,22 +632,18 @@ console.log("\nthe companions a card publishes");
   equal("in a stable order whatever order the save wrote them", shuffled.join(","), priced.join(","));
 
   // The gate, asked before anything else. A save naming a companion whose gate its own keeper
-  // level has not reached cannot have come about honestly, so it is dropped outright — which is
-  // exactly what `groveWorth` does with the same row, because it is the same walk.
+  // level has not reached cannot have come about honestly, so it is dropped outright.
   const gated = priced.filter((id) => (config.companions[id].level ?? 0) > 1);
-  check("the vectors gate at least one companion", gated.length >= 1, gated.join(","));
+  check("the roster gates at least one companion", gated.length >= 1, gated.join(","));
 
   const junior = heldCompanions(new Set(priced), config, 1);
   for (const id of gated) {
     check(`a level-1 save publishes no '${id}'`, !junior.includes(id));
   }
 
-  // The set the card draws is the set the score counted. Two filters over one rule is how a
-  // visitor comes to see a portrait the number beside it was never told about.
-  const save = { companionsOwned: priced };
-  const worth = groveWorth(save, config, 1, 10_000_000);
-  const counted = junior.reduce((sum, id) => sum + config.companions[id].cost, 0);
-  equal("and the drawn set is exactly the priced set", worth.bought, counted);
+  // The shipped roster is published empty (16ab), and an empty roster publishes nothing.
+  equal("an empty roster publishes no companion",
+        heldCompanions(new Set(priced), { companions: {} }, 99).length, 0);
 }
 
 console.log("\nthe turret line a card publishes");
@@ -937,24 +809,23 @@ console.log("\nthe card a public profile reads");
     ...groveConfig(),
     wards: { bolt: { level: 0, free: true }, siphon: { level: 2, free: false } },
   };
-  const worth = groveWorth({}, config, 1, 0);
 
   const save = {
     wallet: { avatarId: "cinder" },
     companionsOwned: Object.keys(config.companions),
     wardLoadout: [{ colour: "r", ward: "siphon" }],
     wardsOwned: ["siphon:r"],
-    homesteadPlaced: [{ slot: "4,4", piece: "bench" }],
   };
 
-  const card = buildCard("uid-1", save, config, NO_RANKS, worth, 99, 1_700_000_000, "Fern Willow");
+  const card = buildCard("uid-1", save, config, NO_RANKS, 99, 1_700_000_000, "Fern Willow");
   check("a card carries the companions", Array.isArray(card.companions) && card.companions.length > 0);
   check("and the line", Array.isArray(card.line) && card.line.length === 1);
-  equal("and the arrangement", Object.keys(card.placed).length, 1);
+  equal("and the name", card.name, "Fern Willow");
+  equal("and the avatar", card.avatar, "cinder");
 
-  // Absent rather than empty, which is what every card written before this deployment says and
-  // is the same answer. Firestore refuses `undefined`, so these are spread rather than written.
-  const bare = buildCard("uid-2", {}, config, NO_RANKS, worth, 1, 1_700_000_000, null);
+  // Absent rather than empty: one answer to every reader. Firestore refuses `undefined`, so
+  // these are spread rather than written.
+  const bare = buildCard("uid-2", {}, config, NO_RANKS, 1, 1_700_000_000, null);
   check("a keeper who has bought nothing carries no companions", !("companions" in bare));
   check("and one who has arranged no line carries none", !("line" in bare));
 
@@ -963,21 +834,37 @@ console.log("\nthe card a public profile reads");
   check("a keeper who has run neither lane carries no wave", !("wave" in bare));
   check("and no shuffle wave", !("shuffle" in bare));
   const shuffler = buildCard("uid-3", { shuffleBest: [{ level: "s13_shuffle", wave: 21 }] },
-                             config, NO_RANKS, worth, 6, 1_700_000_000, null);
+                             config, NO_RANKS, 6, 1_700_000_000, null);
   equal("a Shuffle best reaches the card", shuffler.shuffle, 21);
   check("and not the Infinite figure", !("wave" in shuffler));
   check("a Shuffle card is writable", writable(shuffler));
 
-  // The whole of what a grove takedown does. `publishableName`'s fall-through wearing different
-  // clothes: read here rather than at the call site, so the report path and `publishGrove`
-  // cannot come to disagree about what a denial means.
-  const denied = buildCard("uid-1", save, config, NO_RANKS, worth, 99, 1_700_000_000, "Fern Willow",
-                           undefined, true);
-  equal("a denied arrangement publishes no arrangement", Object.keys(denied.placed).length, 0);
-  equal("and keeps the name", denied.name, "Fern Willow");
-  equal("the score", denied.score, worth.score);
-  check("the companions", Array.isArray(denied.companions) && denied.companions.length > 0);
-  check("and the line", Array.isArray(denied.line) && denied.line.length === 1);
+  // **A save still carrying the Grovement publishes none of it.** Long-standing documents held
+  // these keys until the retirement sweep (`retire-grove-keys.mjs`), and a card built from one
+  // is exactly the card built from a save that never had them. The fields a card used to carry
+  // for a grove must never come back, under these names or any other.
+  const veteran = {
+    ...save,
+    homesteadStock: [{ id: "farmhouse", copies: 1 }],
+    homesteadOwned: ["bench"],
+    homesteadPlaced: [{ slot: "4,4", piece: "bench", facing: 1 }],
+    groveLandOwned: ["east_meadow"],
+    groveEpoch: 2,
+    groveHall: "t_003_004",
+    groveHallFacing: 3,
+    groveHallSetUnix: 1_700_000_000,
+  };
+  const fromVeteran = buildCard("uid-1", veteran, config, NO_RANKS, 99, 1_700_000_000, "Fern Willow");
+  equal("a save holding grove keys publishes the card a save without them does",
+        JSON.stringify(fromVeteran), JSON.stringify(card));
+
+  const RETIRED = ["score", "stars", "dwelling", "land", "placed", "hall", "hallFacing", "catalogVersion"];
+  for (const field of RETIRED) check(`no card carries '${field}'`, !(field in fromVeteran) && !(field in bare));
+
+  const KNOWN = new Set(["name", "avatar", "level", "builtUnix", "rung", "wave", "shuffle", "shuffleTop",
+                         "companions", "line"]);
+  check("a card carries only the fields `GroveCardDoc` names",
+        Object.keys(fromVeteran).every((k) => KNOWN.has(k)), Object.keys(fromVeteran).join(","));
 }
 
 console.log("\na keeper standing a legendary");
@@ -997,7 +884,6 @@ console.log("\na keeper standing a legendary");
       pyroclast: { level: 48, free: false, legendary: true },
     },
   };
-  const worth = groveWorth({}, config, 1, 0);
 
   const save = {
     wardLoadout: [
@@ -1010,7 +896,7 @@ console.log("\na keeper standing a legendary");
     wardStars: [{ ward: "pyroclast", stars: 5 }],   // a bare ladder, bought outright (42k)
   };
 
-  const line = buildCard("uid-16", save, config, NO_RANKS, worth, 16, 1_700_000_000, null).line;
+  const line = buildCard("uid-16", save, config, NO_RANKS, 16, 1_700_000_000, null).line;
 
   equal("every seat they arranged is published", line.map((s) => s.c).join(""), "rgby");
   equal("and the legendary is the turret on red", line[0].w, "pyroclast");
@@ -1019,7 +905,7 @@ console.log("\na keeper standing a legendary");
   // The three clauses that *are* asked still are, at the same keeper level — this fix widened
   // one gate and none of the others.
   equal("a turret nobody bought is still dropped",
-        buildCard("uid-16", { ...save, wardsOwned: [] }, config, NO_RANKS, worth, 16, 1, null)
+        buildCard("uid-16", { ...save, wardsOwned: [] }, config, NO_RANKS, 16, 1, null)
           .line.map((s) => s.c).join(""), "b");        // `bolt` is free; the rest were not
 
   equal("and a legendary bought on one seat stands on one seat",
@@ -1027,62 +913,8 @@ console.log("\na keeper standing a legendary");
                   { ...save,
                     wardLoadout: save.wardLoadout.map(({ colour }) =>
                       ({ colour, ward: "pyroclast" })) },
-                  config, NO_RANKS, worth, 16, 1, null)
+                  config, NO_RANKS, 16, 1, null)
           .line.map((s) => s.c).join(""), "r");
-}
-
-console.log("\nthe home a card draws");
-{
-  const config = groveConfig();
-  const worth = groveWorth({}, config, 1, 0);
-
-  // The ladder this catalog authors, cheapest rung first, so this block says nothing about
-  // which homes ship — only that the best one held is the one published.
-  const rungs = Object.entries(config.dwellings).sort((a, b) => a[1] - b[1]).map(([id]) => id);
-  const free = rungs.find((id) => !(config.pieces[id] > 0));
-  const paid = rungs.filter((id) => config.pieces[id] > 0);
-
-  const at = (save, level = 99) =>
-    buildCard("uid-home", save, config, NO_RANKS, worth, level, 1_700_000_000, null).dwelling;
-
-  equal("a keeper who has bought no home draws the free rung", at({}), free);
-
-  // **The whole of the fault this block exists for.** A v20 client writes `homesteadStock`
-  // and derives `homesteadOwned` from it — and `SaveMerge` built the merged save with the
-  // stock and no mirror, so every synced document in the game carried a full stock beside an
-  // empty array. `buildCard` asked the mirror alone, so a keeper who had paid for a farmhouse
-  // was published with the free cottage, on every board and every visitor's screen, while the
-  // score beside it counted the farmhouse correctly because *it* read the stock. Both halves
-  // are fixed; this is the half that keeps a card honest whatever a client writes.
-  for (const id of paid) {
-    equal(`a home bought and recorded only as stock is published (${id})`,
-          at({ homesteadStock: [{ id, copies: 1 }] }), id);
-    equal(`and one recorded only in the v19 mirror still is (${id})`,
-          at({ homesteadOwned: [id] }), id);
-  }
-
-  if (paid.length > 1) {
-    const best = paid[paid.length - 1];
-    equal("the best rung held wins, whatever order the rows are in",
-          at({ homesteadStock: paid.map((id) => ({ id, copies: 1 })).reverse() }), best);
-  }
-
-  // The gate is asked before anything else, exactly as `groveWorth` asks it: a card drawing a
-  // citadel over a ledger that cannot reach one is the inconsistency a visitor could catch.
-  const gated = paid.find((id) => (config.dwellingLevels?.[id] ?? 0) > 0);
-  if (gated) {
-    equal("a rung the keeper level has not opened falls back to the free one",
-          at({ homesteadStock: [{ id: gated, copies: 1 }] },
-             config.dwellingLevels[gated] - 1), free);
-    equal("and is published the moment it has",
-          at({ homesteadStock: [{ id: gated, copies: 1 }] },
-             config.dwellingLevels[gated]), gated);
-  }
-
-  // The empty-array fall-through `stockOf` already makes for the score, now made for the home
-  // as well — the two cannot disagree, because there is only one reading left.
-  equal("an empty stock falls through to the mirror rather than meaning 'owns nothing'",
-        at({ homesteadStock: [], homesteadOwned: [paid[0]] }), paid[0]);
 }
 
 // ------------------------------------------------------------------ the revision
@@ -1102,8 +934,8 @@ equal("a cloud block that is not an object reports nought", saveRevision({ cloud
 // ------------------------------------------------------------ the live boards
 console.log("\nplacing a card on a board as it is published");
 {
-  const row = (uid, wave, score = 0, extra = {}) =>
-    ({ uid, name: uid.toUpperCase(), avatar: "", level: 1, score, stars: 0, wave, ...extra });
+  const row = (uid, wave, extra = {}) =>
+    ({ uid, name: uid.toUpperCase(), avatar: "", level: 1, wave, ...extra });
 
   // A board is one order whichever path wrote it. Firestore's `orderBy(field, "desc")` breaks
   // a tie on the document id in the *same* direction, so the live merge has to as well, or the
@@ -1118,17 +950,17 @@ console.log("\nplacing a card on a board as it is published");
   const first = mergeRow([], row("p", 3), "wave");
   check("the first keeper on a board is placed", first.changed && first.rows.length === 1);
 
-  // A card with no wave has no business on the endless board — and a card whose wave was
-  // there before and is not now is taken off it (that cannot happen to a wave, which only
-  // rises, but the grove's worth can fall to nought when a purchase is refunded).
+  // A card with no wave has no business on the endless board — and a card whose figure was
+  // there before and is not now is taken off it. A wave only rises, so this is the merge's
+  // arithmetic held rather than a case a live card reaches.
   const none = mergeRow([], row("p", 0), "wave");
   check("a card carrying nought is not placed", !none.changed && none.rows.length === 0);
   const gone = mergeRow([row("p", 3)], row("p", 0), "wave");
   check("and a row whose figure fell to nought is removed", gone.changed && gone.rows.length === 0);
 
   // Republishing an unchanged card writes nothing. That is what keeps the transaction free on
-  // the commonest publish of all: a name or a grove that moved, on a keeper already listed at
-  // the same wave.
+  // the commonest publish of all: something off the row that moved, on a keeper already listed
+  // at the same wave.
   const same = mergeRow([row("p", 3)], row("p", 3), "wave");
   check("an identical row changes nothing", !same.changed);
   const renamed = mergeRow([row("p", 3)], { ...row("p", 3), name: "Q" }, "wave");
@@ -1162,13 +994,20 @@ console.log("\nplacing a card on a board as it is published");
   check("anybody carrying a figure qualifies for a board with room", qualifies([], "z", 1, "wave"));
 
   // The row is the card, field for field, so a board can never say what the card does not.
-  const built = rowOf("u", { name: "Fern", avatar: "coral", level: 7, score: 4200, stars: 3, wave: 17 });
+  const built = rowOf("u", { name: "Fern", avatar: "coral", level: 7, wave: 17 });
   equal("the row carries the card's name", built.name, "Fern");
   equal("its level", built.level, 7);
-  equal("its score", built.score, 4200);
   equal("and its wave", built.wave, 17);
   equal("a card with no wave contributes a row with nought",
-        rowOf("u", { name: "F", level: 1, score: 1, stars: 0 }).wave, 0);
+        rowOf("u", { name: "F", level: 1 }).wave, 0);
+
+  // A card built before the Grovement's fields left still carries `score` and `stars` until it is
+  // repaired, and a board row written then still carries them until the next rebuild. Neither is
+  // copied forward.
+  const oldCard = rowOf("u", { name: "Fern", avatar: "", level: 7, score: 4200, stars: 3, wave: 17 });
+  check("a row never carries a grove's score or stars", !("score" in oldCard) && !("stars" in oldCard));
+  const oldRow = readRows([{ uid: "a", name: "A", level: 2, score: 900, stars: 2, wave: 5 }])[0];
+  check("nor does a row read off an old board", !("score" in oldRow) && !("stars" in oldRow));
 
   // What comes back off the document is bounded and typed, and anything malformed is dropped
   // rather than trusted — the same discipline `topOf` keeps over the cards.
@@ -1183,7 +1022,7 @@ console.log("\nplacing a card on a board as it is published");
 
   // The Shuffle board, ordered on a figure a row carries only when it has one. Absent has to
   // read as nought through every comparison, or `undefined - 3` is NaN and the sort stops.
-  const sh = (uid, shuffle) => row(uid, 0, 0, shuffle > 0 ? { shuffle } : {});
+  const sh = (uid, shuffle) => row(uid, 0, shuffle > 0 ? { shuffle } : {});
   equal("an absent shuffle figure reads as nought", figureOf(row("a", 9), "shuffle"), 0);
   equal("a present one reads as itself", figureOf(sh("a", 7), "shuffle"), 7);
 
@@ -1208,10 +1047,10 @@ console.log("\nplacing a card on a board as it is published");
   equal("a full shuffle board's cutoff is its last row", cutoffOf(shFull, "shuffle"), 300 - (BOARD_ROWS - 1));
   check("a stranger under it does not qualify", !qualifies(shFull, "z", 10, "shuffle"));
 
-  const shRow = rowOf("u", { name: "Fern", avatar: "", level: 6, score: 0, stars: 0, shuffle: 23 });
+  const shRow = rowOf("u", { name: "Fern", avatar: "", level: 6, shuffle: 23 });
   equal("the row carries the card's shuffle best", shRow.shuffle, 23);
   check("a card with none contributes a row with no shuffle key",
-        !("shuffle" in rowOf("u", { name: "F", level: 1, score: 1, stars: 0, wave: 4 })));
+        !("shuffle" in rowOf("u", { name: "F", level: 1, wave: 4 })));
   const shRead = readRows([sh("a", 6), { uid: "b", wave: 2, shuffle: "7" }, { uid: "c", shuffle: -1 }]);
   equal("a read row keeps its shuffle best", shRead[0].shuffle, 6);
   check("and drops one that is not a positive number", !("shuffle" in shRead[1]) && !("shuffle" in shRead[2]));

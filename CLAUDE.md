@@ -143,8 +143,12 @@ wire or rules mistake reaches live accounts.
 12a. **A field is on the wire only when it is in four places**: `SaveFileDto`, `SaveDelta`, the Firestore
    mapper both ways, and `hasOnly` in `firestore.rules` (an unlisted key loses every save write; rules deploy
    before the client). A field inside an existing map costs no rules release.
-12b. **Every list the rules bound is capped by the client first** (`size() <= N` refuses the whole write);
-   `CloudWireTests` reads `firestore.rules` to hold each pair.
+12b. **Every list the rules bound is capped by the client first** (`listOf(value, N)` refuses the whole
+   write); `CloudWireTests` reads `firestore.rules` to hold each pair.
+12c. **The save rule has an evaluation budget, measured, not estimated.** Firestore refuses a request past
+   1,000 evaluated expressions as PERMISSION_DENIED, so every write of the heaviest accounts is lost (2026-10-25:
+   v47's two clauses tipped veterans over). An optional key is read once with `get(key, default)` — never `in`
+   — and `firebase/e2e/rules-budget.mjs` must show ≥250 of headroom before any rules deploy.
 13. **A reward is derivable, adjudicated, third-party, or not currency** — recomputable by the server,
    reported by a third party, or bounded so tightly that forging it buys nothing.
 13a. **A claim is never refused for a reason that will still be true tomorrow** (the client resubmits for
@@ -162,10 +166,11 @@ wire or rules mistake reaches live accounts.
 > `CONTENT.md` records what was removed. Four rules survive:
 
 16y. **The wire spellings stay**: `groves/{uid}`, `GroveCard`, `GroveBoard`, `GroveNames`, `config/grove`,
-   `ReportSubject.Grove` and the nine `grove*`/`homestead*` save keys. A card is a *keeper*; `config/grove` is
-   the turret roster.
-16z. **The five removed save keys stay in `hasOnly` with their bounds** — a rolled-back client still writes
-   them, and dropping one costs it every save write.
+   `ReportSubject.Grove` (answers "nothing"). A card is a *keeper*; `config/grove` is the turret roster.
+16z. **The Grovement's eight save keys are retired from the wire and spent**: swept from every save by
+   `seed/retire-grove-keys.mjs` (backup first; `--check` must pass), then refused by `hasOnly` (the update
+   wall excludes every build that wrote them). A key leaves `hasOnly` only in that order — rules first refuses
+   every veteran's save.
 16aa. **A removal is a schema bump** — fewer fields fail every checksum; `Verify` trusts a file of another
    version (v32 → v33).
 16ab. **The companion roster is inert**: nothing counts or draws a companion; deleting it is a separate
@@ -719,7 +724,10 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 - **Retired in place on the wire**: `bestMillis` (22), `DailyChests`' section (45), and `levels[].bestRank`
   (the population standing; its map badge, win line and `publishGroveStats` removed 2026-10-07).
   `config/stats` is deleted; its read rule stays until the update wall excludes builds that ask.
-- **League board ids `l0`…`l8`** and the card's `league` field.
+- **League board ids `l0`…`l8`** and the card's `league` field; **board id `global`** (the finest groves) and
+  the card fields `score` `stars` `dwelling` `land` `placed` `hall` `hallFacing` `catalogVersion`.
+- **Save keys `homesteadStock` `homesteadOwned` `homesteadPlaced` `groveLandOwned` `groveEpoch` `groveHall`
+  `groveHallFacing` `groveHallSetUnix`** (16z).
 - **Season id `first_watch`** (seasons are `watch` + four digits).
 - **Store product `gg_first_bloom_pass`** — registered with both stores, never reusable.
 - **Grove homes `home_longhouse` `home_tower` `home_keep`, decor `barracks` `citadel`.**
@@ -807,7 +815,8 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 and the turret discount where they are sold; `--contact`, `--lang`, `--measure` the same gate). Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
 **`--check` proves reproducibility, not quality.** Art tools pass with licensed packs absent (PNGs committed).
 
-**Server**: `node firebase/seed/seed-release.mjs --check`; `node firebase/seed/seed-shuffle.mjs --check` (MODES.md 59l); `npm --prefix firebase/functions run seed -- --check`;
+**Server**: `node firebase/e2e/rules-budget.mjs` (12c; the heaviest save through Firestore's own engine,
+read-only); `node firebase/seed/retire-grove-keys.mjs --check` (16z); `node firebase/seed/seed-release.mjs --check`; `node firebase/seed/seed-shuffle.mjs --check` (MODES.md 59l); `npm --prefix firebase/functions run seed -- --check`;
 `Tools/make_name_blocklist.py --check`. Live e2e (differential on purpose — a stale function answers 200 with
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
 `ward-seats.mjs`, `keeper-spend.mjs`, `daily-pass.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
@@ -841,7 +850,7 @@ unaddressed (white rectangle, 7b); deleted art leaves entries that fail `BuildPl
 Editor closed have no `.meta` until it focuses.
 
 **Server drops**, in order (a change to `buildCard`'s output also raises `CARD_SHAPE_SINCE`, 19v): (1) `firestore:rules` only for a new top-level save key or collection, checked
-against the *released* ruleset, deployed before the client. (2) Functions **by name, in batches of three or
+against the *released* ruleset and by `rules-budget.mjs` (12c), deployed before the client. (2) Functions **by name, in batches of three or
 four**, then read the deployed artifact back. (3) `seed-config.mjs`, from a HEAD shadow if anything is
 uncommitted; snapshot and diff the config documents. (4) The Editor's three. (5) `smoke-test.mjs`. **A deploy
 without a re-seed pays the old table against the new board**; a new chapter's level ids reach the server only
@@ -933,7 +942,7 @@ gates print the derived totals.
 - **Systems live**: progression, tasks (45), season (47), streak (48), ranks (52) and the rank ceremony,
   tutorial (53), keeper levels for sale (57), the welcome bonus (58), daily challenges in four genres — Pairs, Glade, Merge, Push
   (56), referrals (51), reminders (50), the update wall (49, ships asking nothing), two public boards
-  (Endless Watch and Shuffle, one tab each) plus two distributions, seven utilities with a five-slot bar the player chooses (MODES.md 39r), thirty turrets including the legendary band.
+  (Endless Watch and Shuffle, one tab each) plus the wave distribution and the chapter standings, seven utilities with a five-slot bar the player chooses (MODES.md 39r), thirty turrets including the legendary band.
 - **Economy shapes worth knowing**: free play ~953 credits and 12 gems a day; with every advert ~7,160. Content
   pays credits once (80 a level, 40 a star). Stars: gold `par x 1.20`, silver `par x 1.40`, fail at `par x
   1.60`, except a siege, which authors its own. Chapter gate: 16 stars of the chapter behind, flat (cut to

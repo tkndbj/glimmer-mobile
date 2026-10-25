@@ -171,11 +171,10 @@ namespace GlimmerGrove
         /// <summary>
         /// Whether this screen will draw a board at all.
         ///
-        /// Narrower than <see cref="LeaderboardBoard.IsKnown"/> on purpose, and named for its
-        /// narrowness (invariant 15a): the global board is still a perfectly valid id the server
-        /// still writes, and what has changed is only that nothing here offers it. A deep link
-        /// carrying it lands on the board this screen does draw rather than on a list with no
-        /// way off it.
+        /// Asked of the tabs rather than of <see cref="LeaderboardBoard.IsKnown"/>, because the
+        /// tabs are what this screen can draw: a deep link carrying any other id - a retired one
+        /// such as <c>global</c> among them - lands on the board this screen does draw rather than
+        /// on a list with no way off it.
         /// </summary>
         static bool Offered(string boardId) => Array.IndexOf(Tabs, boardId) >= 0;
 
@@ -434,7 +433,7 @@ namespace GlimmerGrove
         {
             readonly LeaderboardScreen _screen;
             readonly Image _plate, _badge;
-            readonly Text _place, _name, _worth;
+            readonly Text _place, _name, _wave;
             readonly Btn _button;
 
             LeaderboardEntry _entry;
@@ -482,8 +481,8 @@ namespace GlimmerGrove
                                  new Vector2(430f, 50f), new Vector2(0f, .5f), new Vector2(515f, 24f),
                                  3f, 2f), 20);
 
-                _worth = UIKit.Shrinkable(
-                    UIKit.Titled("Worth", _plate.transform, string.Empty, 38, Pal.Gold,
+                _wave = UIKit.Shrinkable(
+                    UIKit.Titled("Wave", _plate.transform, string.Empty, 38, Pal.Gold,
                                  TextAnchor.MiddleLeft, new Vector2(430f, 52f),
                                  new Vector2(0f, .5f), new Vector2(515f, -30f), 3f, 0f), 18);
             }
@@ -497,17 +496,13 @@ namespace GlimmerGrove
                 _name.text = _entry.Name;
 
                 // What a row says is the board's decision and not the row's, because every row
-                // on one list says the same thing - see `LeaderboardBoard.IsEndless`. The figure
-                // a board is *ordered* on is the one it has to print, or the list reads as
-                // shuffled: a wave board drawn with grove worth on it would descend by a number
-                // nobody can see and ascend by one they can.
+                // on one list says the same thing - see `LeaderboardBoard.WaveOn`. The figure a
+                // board is *ordered* on is the one it has to print, or the list reads as shuffled.
                 //
                 // **The keeper level is not printed**, at the owner's instruction (2026-09-22):
                 // a board is about the lane, and a second number beside the one it is ordered
                 // on is a number to misread it by. The entry still carries it for the profile.
-                _worth.text = LeaderboardBoard.IsWaves(_screen._boardId)
-                    ? Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry))
-                    : Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score));
+                _wave.text = Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry));
 
                 // **The badge is the server's answer, and an absent one draws nothing.** Below
                 // the first rung is an ordinary state and so is a card published before this

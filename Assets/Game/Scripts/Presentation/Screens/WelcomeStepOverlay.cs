@@ -14,12 +14,14 @@ namespace GlimmerGrove
     /// <summary>
     /// "Well done!" - the welcome bonus's progress, shown at the moment a new player has just earned
     /// a piece of it (a welcome step, <c>FirstStepTable</c>): the turret the quest pays, standing in
-    /// its seat under the one line that says it is the prize; the row of day boxes, today's box
-    /// stamped with a tick that slams down onto it; and where the quest stands. Kept lean: no
-    /// sentence explaining the quest and no "come back tomorrow" - the boxes say both.
+    /// its seat under the line that says it is the prize and to keep playing; and the row of day
+    /// boxes, today's box stamped with a tick that slams down onto it. A quest this step finished
+    /// says the turret is unlocked and has one key, CLAIM, which takes it as the turret and hands
+    /// over to the loadout's reveal (<see cref="WardRevealOverlay"/>).
     ///
     /// <para>
-    /// <b>It carries the reminder ask</b> (invariant 50p) when the cadence allows one, because there
+    /// <b>It carries the reminder ask</b> (invariant 50p) when the cadence allows one and the quest
+    /// is still counting (a finished one has CLAIM to say instead), because there
     /// is no better moment to offer a nudge than the moment the player has been shown what tomorrow
     /// is for: REMIND ME raises the OS's own dialog (or its settings page, once the OS will not
     /// draw one again) and NOT NOW costs nothing. <see cref="FirstStepsMoment"/> decided the route
@@ -32,6 +34,7 @@ namespace GlimmerGrove
     /// REMIND ME this panel stays up until the app has lost focus to the dialog and got it back - or
     /// <see cref="OsGrace"/> has passed with no dialog at all - and only then resumes what the
     /// player tapped on the victory panel (<see cref="Then"/>, <c>AccountOverlay</c>'s contract).
+    /// After CLAIM that is the reveal's to resume, once it has gone.
     /// </para>
     /// </summary>
     public sealed class WelcomeStepOverlay : ModalView
@@ -45,17 +48,19 @@ namespace GlimmerGrove
         /// <summary>What to resume when this panel is gone, whichever way it goes.</summary>
         public Action Then { get; set; }
 
-        internal const float PanelW = 880f, PanelH = 1140f;
+        /// <summary>
+        /// The panel is as tall as its keys need: the boxes end 720 below the top edge and the
+        /// highest key's top stands about 70 under them - GOT IT or CLAIM (150 + 69 off the foot)
+        /// or REMIND ME over NOT NOW (232 + 69).
+        /// </summary>
+        internal const float PanelW = 880f, OneKeyH = 1010f, TwoKeysH = 1090f;
 
         /// <summary>
         /// Where each band sits below the panel's top edge, as a middle: the seat -100..-320, the
-        /// name -337..-393, the prize line -405..-475, the boxes -500..-620, the day line -665..-735,
-        /// and only for a quest already full the reason -745..-825 (two lines at 30). The keys stand
-        /// on the foot, the upper one's top edge at -839. Measured in every Latin table by
-        /// <c>render_first_steps.py --measure</c>.
+        /// name -337..-393, the prize line -400..-560 (wrapped, up to three lines), the boxes
+        /// -600..-720. Measured in every Latin table by <c>render_first_steps.py --measure</c>.
         /// </summary>
-        internal const float SeatY = -210f, NameY = -365f, UnlockY = -440f, BoxesY = -560f,
-                             DayY = -700f, ReasonY = -785f;
+        internal const float SeatY = -210f, NameY = -365f, UnlockY = -480f, BoxesY = -660f;
 
         internal const float SeatSize = 220f, BoxMost = 120f, BoxGap = 22f, BoxRow = 760f;
 
@@ -68,7 +73,6 @@ namespace GlimmerGrove
         CeremonyFx _matter, _light;
         Image[] _boxes, _ticks;
         Image _body;
-        Text _day, _reason;
         Btn _yes, _later, _ok;
         AssetHold _art;
         bool _answered, _waitingOs, _sawBlur, _continued;
@@ -77,9 +81,13 @@ namespace GlimmerGrove
         int Done => Quest != null ? WelcomeLedger.DaysDone(Quest) : 0;
         int Target => Quest != null ? Quest.Days : 0;
 
+        /// <summary>The quest is full and not yet taken: the panel says so and offers CLAIM.</summary>
+        bool Ready => Quest != null && WelcomeLedger.StateOf(Quest) == WelcomeState.Ready;
+
         protected override void Build()
         {
-            MakePanel(new Vector2(PanelW, PanelH), Loc.Get("ui.steps.well_done"), dismissOnScrim: false);
+            bool oneKey = Route == AskRoute.None || Ready;
+            MakePanel(new Vector2(PanelW, oneKey ? OneKeyH : TwoKeysH), Loc.Get("ui.steps.well_done"), dismissOnScrim: false);
             if (Quest == null) return;
 
             var tint = SiegeView.TintOf(Quest.Colour);
@@ -105,26 +113,11 @@ namespace GlimmerGrove
             UIKit.Shrinkable(UIKit.Titled("Name", Panel, Loc.Get(Quest.Ward.NameKey), 50, Pal.Cream,
                                           TextAnchor.MiddleCenter, new Vector2(760f, 56f),
                                           new Vector2(.5f, 1f), new Vector2(0f, NameY), 3f, 3f), 28);
-            UIKit.Shrinkable(UIKit.Titled("Unlock", Panel, Loc.Get("ui.steps.unlock_turret"), 54, Pal.Gold,
-                                          TextAnchor.MiddleCenter, new Vector2(760f, 70f),
-                                          new Vector2(.5f, 1f), new Vector2(0f, UnlockY), 4f, 4f), 30);
+            UIKit.Shrinkable(UIKit.Titled("Unlock", Panel, Loc.Get(Ready ? "ui.steps.unlocked" : "ui.steps.unlock_turret"), 50, Pal.Gold,
+                                          TextAnchor.MiddleCenter, new Vector2(760f, 160f),
+                                          new Vector2(.5f, 1f), new Vector2(0f, UnlockY), 4f, 4f, wrap: true), 34);
 
             BuildBoxes();
-
-            _day = UIKit.Shrinkable(UIKit.Titled("Day", Panel, Loc.Format("ui.steps.day_of", Math.Max(1, Done), Target), 54,
-                                                 Pal.Gold, TextAnchor.MiddleCenter, new Vector2(760f, 70f),
-                                                 new Vector2(.5f, 1f), new Vector2(0f, DayY), 4f, 4f), 30);
-            _day.transform.localScale = Vector3.zero;
-
-            // A quest already full says where to collect it; otherwise the boxes are the whole story.
-            if (Done >= Target)
-            {
-                _reason = UIKit.Shrinkable(UIKit.Titled("Reason", Panel, Loc.Get("ui.steps.welcome_ready"), 30, Ink,
-                                                        TextAnchor.MiddleCenter, new Vector2(760f, 80f),
-                                                        new Vector2(.5f, 1f), new Vector2(0f, ReasonY), 0f, 0f, wrap: true), 18);
-                _reason.transform.localScale = Vector3.zero;
-            }
-
             BuildKeys();
 
             // Matter under light, over the panel: the stamp's dust and its sparks.
@@ -170,6 +163,15 @@ namespace GlimmerGrove
 
         void BuildKeys()
         {
+            if (Ready)
+            {
+                _ok = UIKit.TextButton("Claim", Panel, "btn_green", Loc.Get("ui.steps.claim"), 46,
+                                       new Vector2(560f, 138f), new Vector2(.5f, 0f), new Vector2(0f, 150f), Claim);
+                UIKit.OneLine(_ok, 26);
+                _ok.transform.localScale = Vector3.zero;
+                return;
+            }
+
             if (Route == AskRoute.None)
             {
                 _ok = UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 46,
@@ -196,14 +198,13 @@ namespace GlimmerGrove
         /// <summary>
         /// Today's tick comes down on today's box: it starts large and tilted above the box, drops
         /// on it, and lands with a thump - the box lit, a ring, a puff of dust round it, sparks - and
-        /// then the line saying where the quest stands and the keys. <see cref="GiftTempo"/>'s beats.
+        /// then the keys. <see cref="GiftTempo"/>'s beats.
         /// </summary>
         void Stamp()
         {
             int k = Done - 1;
             if (k < 0 || k >= _ticks.Length)
             {
-                Tween.After(GiftTempo.StampLine, RevealText, this);
                 Tween.After(GiftTempo.StampKeys, RevealKeys, this);
                 return;
             }
@@ -266,14 +267,7 @@ namespace GlimmerGrove
                 Audio.SfxVaried("land", .6f);
             }, this);
 
-            Tween.After(GiftTempo.StampLine, RevealText, this);
             Tween.After(GiftTempo.StampKeys, RevealKeys, this);
-        }
-
-        void RevealText()
-        {
-            if (_day) Tween.Pop(_day.transform, 0f, .45f);
-            if (_reason) Tween.Pop(_reason.transform, 0f, .4f, .12f);
         }
 
         void RevealKeys()
@@ -308,6 +302,41 @@ namespace GlimmerGrove
             if (_answered) return;
             _answered = true;
             Close();
+        }
+
+        /// <summary>
+        /// Takes the quest as its turret and plays the loadout's reveal, which resumes the victory
+        /// panel's choice when it closes. Taken on another device meanwhile: nothing to give, so
+        /// the panel just closes and resumes it itself.
+        /// </summary>
+        void Claim()
+        {
+            if (_answered) return;
+            _answered = true;
+
+            if (!WelcomeLedger.TryClaim(Quest, WelcomeReward.Turret))
+            {
+                Audio.Sfx("blocked", .45f);
+                Close();
+                return;
+            }
+
+            Audio.Sfx("collect", .6f);
+
+            var quest = Quest;
+            var then = Then;
+            Then = null;
+            _continued = true;
+            Close(() =>
+            {
+                var reveal = Flow.Modal<WardRevealOverlay>(v =>
+                {
+                    v.Model = quest.Ward;
+                    v.Colour = quest.Colour;
+                    v.Then = then;
+                });
+                if (reveal == null) then?.Invoke();
+            }, quiet: true);
         }
 
         void Yes()
@@ -368,7 +397,8 @@ namespace GlimmerGrove
         public override bool OnBack()
         {
             if (_waitingOs) return true;
-            if (Route == AskRoute.None) Ok();
+            if (Ready) Claim();
+            else if (Route == AskRoute.None) Ok();
             else Later();
             return true;
         }

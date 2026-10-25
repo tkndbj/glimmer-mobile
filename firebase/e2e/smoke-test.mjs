@@ -229,38 +229,6 @@ const save = {
     // is `TipLedger.MaxIds` now, and this is what proves the *released* rules honour it.
     tipsSeen: { arrayValue: { values: Array.from({ length: 200 }, (_, i) => ({ stringValue: `lesson_${i}` })) } },
     companionsOwned: { arrayValue: { values: [{ stringValue: "coral" }] } },
-    // The grove: what was bought for it, and where it stands. Same reason again, and it
-    // is the newest pair — an unlisted field is refused outright by `hasOnly`, so a rules
-    // release that forgot these would not degrade the grove, it would turn every sync in
-    // the game into PERMISSION_DENIED. A list of maps rather than a map keyed by slot id,
-    // because a slot id is content and a Firestore field name is not.
-    homesteadOwned: { arrayValue: { values: [{ stringValue: "fence_low" }] } },
-    homesteadPlaced: { arrayValue: { values: [
-      { mapValue: { fields: { slot: { stringValue: "meadow_a" },
-                              piece: { stringValue: "oak" },
-                              setUnix: { integerValue: "1700000000" } } } },
-      // A slot the player deliberately emptied: a row with no piece. It is a choice and
-      // carries a stamp, which is what stops a stale device putting the tree back.
-      { mapValue: { fields: { slot: { stringValue: "meadow_b" },
-                              piece: { stringValue: "" },
-                              setUnix: { integerValue: "1700000001" } } } },
-      // Facing the other way. Part of the arrangement, so it has to survive the trip —
-      // a piece that comes back mirrored is the same loss as one that comes back missing.
-      { mapValue: { fields: { slot: { stringValue: "t_007_006" },
-                              piece: { stringValue: "lantern_post" },
-                              setUnix: { integerValue: "1700000002" },
-                              flipped: { booleanValue: true } } } },
-    ] } },
-
-    // The ground the grove stands on. It shipped in save schema v17 and reached neither
-    // this document nor the rules for a whole version, so land bought with credits stayed
-    // on the phone that bought it — invisible until account switching became the first
-    // feature that ever reads the cloud copy back over a working local save, at which
-    // point a player's grove came back as the free starter square. It is here now so that
-    // "the rules accept what the client actually writes" is checked rather than assumed.
-    groveLandOwned: { arrayValue: { values: [
-      { stringValue: "r_north" }, { stringValue: "r_east" },
-    ] } },
 
     // How far the Infinite lane has ever been held, per level. It is here for the reason
     // every block above is — the mapper sends it, so an unlisted field would refuse the
@@ -315,24 +283,34 @@ const smuggled = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=smuggle
   method: "PATCH", headers: json, body: JSON.stringify({ fields: { smuggled: { stringValue: "x" } } }) });
 check(smuggled.status === 403, "a field the rules do not list is refused", `got ${smuggled.status}`);
 
-// The grove's arrangement is the longest client-controlled list in the document, and the
-// only defence against a device making its own save expensive to read is the bound in the
+// The only defence against a device making its own save expensive to read is the bound in the
 // rules. Checked rather than assumed, because a `size()` clause that was written but never
-// released looks exactly like one that works.
-const bloated = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=homesteadPlaced`, {
-  method: "PATCH", headers: json, body: JSON.stringify({ fields: { homesteadPlaced: {
-    arrayValue: { values: Array.from({ length: 1200 }, (_, i) => (
-      { mapValue: { fields: { slot: { stringValue: "s" + i }, piece: { stringValue: "oak" },
-                              setUnix: { integerValue: "1700000000" } } } })) } } } }) });
-check(bloated.status === 403, "an oversized grove arrangement is refused", `got ${bloated.status}`);
+// released looks exactly like one that works. The lesson ledger is the list that crossed its
+// bound once (2026-09-16), so it is the one asked about.
+const bloated = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=tipsSeen`, {
+  method: "PATCH", headers: json, body: JSON.stringify({ fields: { tipsSeen: {
+    arrayValue: { values: Array.from({ length: 257 }, (_, i) => ({ stringValue: "lesson_" + i })) } } } }) });
+check(bloated.status === 403, "a list one past its bound is refused", `got ${bloated.status}`);
 
-// Land is a set of regions rather than of tiles precisely so it stays small (invariant
-// 16e), and the cap is what keeps it that way. Same reasoning as the arrangement above: a
-// size() clause that was written but never released looks exactly like one that works.
-const tooMuchLand = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=groveLandOwned`, {
-  method: "PATCH", headers: json, body: JSON.stringify({ fields: { groveLandOwned: {
-    arrayValue: { values: Array.from({ length: 200 }, (_, i) => ({ stringValue: "r" + i })) } } } }) });
-check(tooMuchLand.status === 403, "an oversized land set is refused", `got ${tooMuchLand.status}`);
+// **The Grovement's save keys are refused** (16z, retired). They left `hasOnly` only after the
+// retirement sweep (`seed/retire-grove-keys.mjs`) emptied every document of them and the update
+// wall excluded every build that wrote them, so a release that took them out early would have
+// refused every veteran's save. Each is refused on its own, which is what proves the allow-list
+// and not some other clause is what stops it.
+for (const [key, value] of [
+  ["homesteadStock", { arrayValue: { values: [] } }],
+  ["homesteadOwned", { arrayValue: { values: [] } }],
+  ["homesteadPlaced", { arrayValue: { values: [] } }],
+  ["groveLandOwned", { arrayValue: { values: [] } }],
+  ["groveEpoch", { integerValue: "1" }],
+  ["groveHall", { stringValue: "t_003_004" }],
+  ["groveHallFacing", { integerValue: "1" }],
+  ["groveHallSetUnix", { integerValue: "1700000000" }],
+]) {
+  const retired = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=${key}`, {
+    method: "PATCH", headers: json, body: JSON.stringify({ fields: { [key]: value } }) });
+  check(retired.status === 403, `the retired grove key '${key}' is refused`, `got ${retired.status}`);
+}
 
 // The point of keying the ledger by level id: one glade can be written on its own
 // rather than re-uploading a ledger that may run to thousands of entries.
@@ -901,30 +879,23 @@ if (taskConfig) {
 // is the part worth attacking from the client's side. Everything below runs against the
 // deployed rules and the deployed functions, because neither can be checked anywhere else.
 
-// `config/grove` is the turret roster now. The Grovement was removed on 2026-09-21 and the
-// seeder writes its six tables **empty rather than absent** — the deployed reader
-// (`assertUsableGroveConfig`) indexes them without checking, so an absent map throws on every
-// publish where an empty one scores nought, which is the answer wanted. Both halves are asserted:
-// the maps are there, and there is nothing in them. A run that finds pieces in here is reading a
-// document nobody has re-seeded since the removal.
+// `config/grove` is the turret roster and the (inert, empty) companion roster, and nothing
+// else: the Grovement's tables and catalog version left with the seed that followed the
+// functions that stopped reading them. A run that finds one is reading a document nobody has
+// re-seeded since.
 const groveConfig = await (await fetch(`${FS}/config/grove`, { headers: bearer })).json();
 check(!groveConfig.error, "config/grove is readable by a signed-in player",
       groveConfig.error?.status ?? "");
 
-const groveTable = (name) => groveConfig?.fields?.[name]?.mapValue;
-const GROVE_TABLES = ["pieces", "bundles", "regions", "companions", "dwellings", "dwellingLevels"];
-check(GROVE_TABLES.every((name) => groveTable(name) !== undefined),
-      "config/grove still carries every grove table the deployed reader indexes",
-      GROVE_TABLES.filter((name) => groveTable(name) === undefined).join(", "));
-check(GROVE_TABLES.every((name) => Object.keys(groveTable(name)?.fields ?? {}).length === 0),
-      "and every one of them is empty (the Grovement was removed; re-seed if this is red)",
-      GROVE_TABLES.map((name) => `${name}=${Object.keys(groveTable(name)?.fields ?? {}).length}`).join(" "));
+const groveFields = Object.keys(groveConfig?.fields ?? {}).sort();
+check(groveFields.join(",") === "companions,wards",
+      "config/grove carries the two rosters and nothing of the Grovement (re-seed if this is red)",
+      groveFields.join(","));
+check(Object.keys(groveConfig?.fields?.companions?.mapValue?.fields ?? {}).length === 0,
+      "and the companion roster is empty (16ab)");
 
-// What a forged save claims below. Spelled out rather than read off the catalog, because the
-// catalog is empty now: these are ids the old catalog named and a rolled-back client could still
-// write, which is the shape a real stale save arrives in.
-const pieceIds = ["barrel", "fir", "wall_barbican"];
-const regionIds = ["meadow", "orchard"];
+// A companion set this save claims. The roster the server publishes against is empty, so the card
+// below carries none of them.
 const companionIds = ["monarch", "ember_fox", "moss_owl"];
 
 const list = (ids) => ({ arrayValue: { values: ids.map((id) => ({ stringValue: id })) } });
@@ -943,15 +914,11 @@ const STORED_NAME = `Fern‮${RUN_TAG}`;
 const PUBLIC_NAME = `Fern${RUN_TAG}`;
 const NAME_KEY = PUBLIC_NAME.toLowerCase();
 
-const forgedGrove = await fetch(
-  `${FS}/players/${uid}?updateMask.fieldPaths=homesteadOwned` +
-  `&updateMask.fieldPaths=groveLandOwned&updateMask.fieldPaths=companionsOwned` +
-  `&updateMask.fieldPaths=wallet`,
+const keeperWrite = await fetch(
+  `${FS}/players/${uid}?updateMask.fieldPaths=companionsOwned&updateMask.fieldPaths=wallet`,
   {
     method: "PATCH", headers: json,
     body: JSON.stringify({ fields: {
-      homesteadOwned: list(pieceIds),
-      groveLandOwned: list(regionIds),
       companionsOwned: list(companionIds),
       wallet: { mapValue: { fields: {
         heartsProduced: { integerValue: "9" }, heartsSpent: { integerValue: "5" },
@@ -964,11 +931,7 @@ const forgedGrove = await fetch(
     } }),
   }
 );
-// The write itself is the assertion, and it is invariant 16z: no shipping build sends these
-// keys any more, but a rolled-back client still does, and `hasOnly` is an allow-list over the
-// whole document — dropping a key it writes would cost that client *every* save write, silently.
-check(forgedGrove.ok, "the released rules still accept the retired grove keys (16z)",
-      String(forgedGrove.status));
+check(keeperWrite.ok, "a save naming its keeper is accepted", String(keeperWrite.status));
 
 const published = await call("publishGrove", {});
 check(published.status === 200, "publishGrove accepts an honest call", String(published.status));
@@ -981,18 +944,18 @@ check(Number(published.body?.result?.revision) >= 1,
       JSON.stringify(published.body?.result?.revision));
 
 const card = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
-const cardScore = Number(card?.fields?.score?.integerValue ?? -1);
 
-check(cardScore >= 0, "a card was published", `score ${cardScore}`);
+check(Number(card?.fields?.builtUnix?.integerValue ?? 0) > 0, "a card was published",
+      JSON.stringify(card?.fields?.builtUnix));
 
-// The whole point, since the removal. The save claims pieces, land and companions the old
-// catalog priced, and the card scores **nought**: nothing on the server prices a grove any more,
-// so a stale or forged save moves no board. This used to be a clamp to what the account could
-// afford (19a); the clamp is still in the code and clamps a figure that is always zero now. A
-// positive score here is the one thing that would mean a grove is being scored again.
-check(cardScore === 0,
-      "a forged grove scores nought, whatever the save claims (the Grovement is gone)",
-      `score ${cardScore}`);
+// **Nothing of the Grovement is on a card.** A `publishGrove` from before its removal answers
+// 200 with a card carrying `score`, `stars`, `dwelling`, `land`, `placed` and `catalogVersion`,
+// which is what makes this check differential: it goes green only against the deployment that
+// stopped writing them.
+const RETIRED_CARD_FIELDS = ["score", "stars", "dwelling", "land", "placed", "hall", "hallFacing", "catalogVersion"];
+check(RETIRED_CARD_FIELDS.every((field) => card?.fields?.[field] === undefined),
+      "the card carries nothing of the Grovement",
+      RETIRED_CARD_FIELDS.filter((field) => card?.fields?.[field] !== undefined).join(","));
 
 check(card?.fields?.name?.stringValue === PUBLIC_NAME,
       "the published name has its bidi override stripped",
@@ -1178,61 +1141,20 @@ if (wardIds.length > 0) {
         "a turret on a seat nobody bought is not published", JSON.stringify(seats));
 }
 
-// ---------------------------------------------------------------- stock, live
-//
-// What is left of the v20 stock cases after the removal, and it is the half with teeth: the
-// `homesteadStock` key is one a rolled-back client still writes, and `hasOnly` is an allow-list
-// over the whole document, so a rules release that dropped it would cost that client *every*
-// save write rather than that one field (12a, 16z). The arithmetic the other half used to prove
-// — a bundle worth the bundle, copies multiplying, the v19 mirror, a home the catalog knows — is
-// gone with the catalog, and what replaces it is the one sentence the removal owes: a stock of
-// any size scores nought.
-const stockRows = (id, copies) => ({
-  arrayValue: { values: [{ mapValue: { fields: {
-    id: { stringValue: id },
-    copies: { integerValue: String(copies) },
-  } } }] },
-});
-
-const stocked = await fetch(
-  `${FS}/players/${uid}?updateMask.fieldPaths=homesteadStock`,
-  { method: "PATCH", headers: json,
-    body: JSON.stringify({ fields: { homesteadStock: stockRows(pieceIds[0], 500) } }) }
-);
-check(stocked.ok, "the released rules still accept a homesteadStock write (16z)", String(stocked.status));
-
-const republished = await call("publishGrove", {});
-const restocked = republished.status === 200
-  ? await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json()
-  : null;
-check(Number(restocked?.fields?.score?.integerValue ?? -1) === 0,
-      "and five hundred copies of a retired piece still score nought",
-      `status ${republished.status}, score ${JSON.stringify(restocked?.fields?.score)}`);
-
-
 // Server-written, and that is the rule with teeth: everything on a card is derived from a
 // document the client controls, so a client that could write here would own the board.
-const forgeCard = await fetch(`${FS}/groves/${uid}?updateMask.fieldPaths=score`, {
+const forgeCard = await fetch(`${FS}/groves/${uid}?updateMask.fieldPaths=wave`, {
   method: "PATCH", headers: json,
-  body: JSON.stringify({ fields: { score: { integerValue: "999999999" } } }),
+  body: JSON.stringify({ fields: { wave: { integerValue: "999999999" } } }),
 });
 check(forgeCard.status === 403, "a client cannot write its own card", String(forgeCard.status));
-
-const forgeBoard = await fetch(`${FS}/leaderboards/global?updateMask.fieldPaths=population`, {
-  method: "PATCH", headers: json,
-  body: JSON.stringify({ fields: { population: { integerValue: "1" } } }),
-});
-check(forgeBoard.status === 403, "a client cannot write a board", String(forgeBoard.status));
-
-const boardRead = await fetch(`${FS}/leaderboards/global`, { headers: bearer });
-check(boardRead.ok, "a signed-in player may read a board", String(boardRead.status));
 
 // Both boards, and read the same way — one document, whole. A board that has never been built
 // is a 404 and that is an ordinary first-day state rather than a failure, so what is asserted
 // is that the read is *permitted*, which is the half the rules decide.
 const endlessRead = await fetch(`${FS}/leaderboards/endless`, { headers: bearer });
 check(endlessRead.ok || endlessRead.status === 404,
-      "and the endless board is readable on the same rule", String(endlessRead.status));
+      "a signed-in player may read a board", String(endlessRead.status));
 
 const forgeEndless = await fetch(`${FS}/leaderboards/endless?updateMask.fieldPaths=population`, {
   method: "PATCH", headers: json, body: JSON.stringify({ fields: { population: { integerValue: "1" } } }) });
@@ -1490,19 +1412,21 @@ const again = await callAs("reportKeeper", { keeperId: uid }, second.idToken);
 check(again.body?.result?.outcome === "duplicate", "and reporting the same name twice is one",
       JSON.stringify(again.body?.result));
 
-// The other subject. A keeper puts a name *and* an arrangement in front of strangers, and the
-// two are separate judgements in separate collections — so reporting one must leave the other
-// untouched and must not read as a duplicate of it.
+// The grove subject. No card publishes an arrangement since the Grovement went, so a grove
+// report finds nothing to report and records nothing — answered as `reported` (the outcome
+// collapse never tells a caller "nothing"), and therefore **never** `duplicate`, however often
+// it is sent. A deployment from before the retirement records the first and answers the second
+// `duplicate`, which is what makes this differential.
 const groveReported = await callAs(
   "reportKeeper", { keeperId: uid, subject: "grove" }, second.idToken);
 check(groveReported.body?.result?.outcome === "reported",
-      "and can report their grovement, which is a separate judgement",
+      "a grove report is answered, not refused (the subject is still a spelling)",
       JSON.stringify(groveReported.body?.result));
 
 const groveAgain = await callAs(
   "reportKeeper", { keeperId: uid, subject: "grove" }, second.idToken);
-check(groveAgain.body?.result?.outcome === "duplicate",
-      "idempotent on the pair and the subject together",
+check(groveAgain.body?.result?.outcome === "reported",
+      "and records nothing, so a second one is no duplicate (no arrangement is published)",
       JSON.stringify(groveAgain.body?.result));
 
 // `groveReports` is server-only in both directions for `nameReports`' reasons, and the rules

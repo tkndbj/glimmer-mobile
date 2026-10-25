@@ -1286,11 +1286,12 @@ namespace GlimmerGrove.Cloud
                         // Every row carries both figures whichever board it came off, because a
                         // row is the same row (`LeaderboardEntry.Wave`); which one is drawn is
                         // the board's decision, and an absent `wave` reads as nought exactly as
-                        // it does on the card it was copied from.
+                        // it does on the card it was copied from. A row written before the
+                        // Grovement's fields left may still carry `score` and `stars`; they are
+                        // not read.
                         rows.Add(new Social.LeaderboardEntry(
                             rank, ownerId, Text(entry, "name"), Text(entry, "avatar"),
-                            (int)ReadLong(entry, "level"), ReadLong(entry, "score"),
-                            (int)ReadLong(entry, "stars"), (int)ReadLong(entry, "wave"),
+                            (int)ReadLong(entry, "level"), (int)ReadLong(entry, "wave"),
                             Text(entry, "rung"), (int)ReadLong(entry, "shuffle")));
 
                         if (rows.Count >= Social.LeaderboardBoard.MaxRows) break;
@@ -1309,17 +1310,13 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Reads the published distributions: grove worth, and the Endless Watch's waves.
+        /// Reads the published distribution of the Endless Watch's waves, and each board's
+        /// population.
         ///
         /// One document, once a session, and every failure an empty answer rather than a propagated exception,
-        /// because nothing anywhere waits on it.
-        ///
-        /// <para>
-        /// <b>The wave pair is read exactly as the worth pair is, through one reader.</b> Two
-        /// copies of "nine ascending numbers and a sample count" would be two places for the
-        /// ascending check to be forgotten - and that check is what stands between a malformed
-        /// document and a screen printing percentages drawn at random.
-        /// </para>
+        /// because nothing anywhere waits on it. A document written before the Grovement's
+        /// distribution left still carries <c>samples</c> and <c>deciles</c> beside the wave
+        /// pair; they are not read.
         /// </summary>
         public async Task<(CloudResult result, Social.GroveRankPublication published)>
             ReadGroveRanksAsync(CancellationToken cancellation = default)
@@ -1349,11 +1346,9 @@ namespace GlimmerGrove.Cloud
                             population[pair.Key] = (int)ToLong(pair.Value);
                 }
 
-                // `waveDeciles` is additive: a document written before the Endless Watch shipped
-                // simply has none, and an absent table is what every reader already treats as
-                // "nothing to say" (invariant 19k's additive half).
+                // An absent table is what every reader treats as "nothing to say" (invariant
+                // 19k's additive half).
                 return (CloudResult.Success, new Social.GroveRankPublication(
-                    ReadRankTable(document, "deciles", "samples"),
                     ReadRankTable(document, "waveDeciles", "waveSamples"),
                     population,
                     ReadLong(document, "builtUnix")));

@@ -185,23 +185,17 @@ namespace GlimmerGrove.Tests
         /// Nine wave counts and a sample big enough to mean them - what a night's job publishes.
         /// </summary>
         static GroveRankPublication Published(int samples, params long[] deciles)
-            => new GroveRankPublication(GroveRankTable.None,
-                                        new GroveRankTable(samples, deciles),
-                                        null, 1L);
+            => new GroveRankPublication(new GroveRankTable(samples, deciles), null, 1L);
 
         [Test]
         public void AWaveStandsAgainstTheKeepersWhoHaveRunTheLane()
         {
             GroveRanks.Publish(Published(4000, 2, 4, 6, 8, 10, 12, 14, 16, 18));
 
-            // Higher is better, exactly as grove worth is - the same table used twice rather
-            // than copied or given a flag.
+            // Higher is better.
             Assert.AreEqual(GroveRankTable.MinRank, GroveRanks.Waves.TopPercent(400));
             Assert.AreEqual(GroveRankTable.MaxRank, GroveRanks.Waves.TopPercent(1));
             Assert.AreEqual(50, GroveRanks.Waves.TopPercent(10));
-
-            // And the two distributions do not bleed into each other.
-            Assert.IsFalse(GroveRanks.Table.IsUsable);
         }
 
         [Test]

@@ -3358,10 +3358,6 @@
       "text": "Aşama {0}"
     },
     {
-      "key": "ui.board.row_worth",
-      "text": "Değer: {0}"
-    },
-    {
       "key": "ui.board.title",
       "text": "sıralama"
     },
@@ -6330,20 +6326,20 @@
       "text": "Yeni kule açıldı!"
     },
     {
+      "key": "ui.steps.unlocked",
+      "text": "Bu kuleyi açtın!"
+    },
+    {
       "key": "ui.steps.well_done",
       "text": "AFERİN!"
     },
     {
-      "key": "ui.steps.day_of",
-      "text": "Gün {0} / {1}"
-    },
-    {
       "key": "ui.steps.unlock_turret",
-      "text": "Bu kuleyi aç!"
+      "text": "Bu kuleyi açmaya bir adım daha yaklaştın! Oynamaya devam et."
     },
     {
-      "key": "ui.steps.welcome_ready",
-      "text": "Kulen hazır! Hoş geldin bonusundan al."
+      "key": "ui.steps.claim",
+      "text": "AL"
     },
     {
       "key": "ui.steps.chests_line",

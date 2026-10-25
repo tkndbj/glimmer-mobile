@@ -89,8 +89,8 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>Invariant 39 lives here, and it is arithmetic rather than a policy.</b> A utility must
     /// be able to buy a <em>finish</em> and never a <em>grade</em>, because a grade is not a
-    /// private number: stars derive credits, credits are a grove's worth, and a grove's worth
-    /// reaches a public leaderboard (invariant 19a). A consumable that made a run score better
+    /// private number: stars derive credits and XP, and the keeper level and rank badge that XP
+    /// climbs are published on a public card (invariant 19a). A consumable that made a run score better
     /// would therefore be a consumable that moved a public figure - and utilities are not
     /// adjudicated, so a forged one would move it for free.
     /// </para>

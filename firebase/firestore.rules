@@ -17,10 +17,10 @@ rules_version = '2';
 //   players/{uid}/spendLog/{id}      idempotency records for debits. Client reads only.
 //   players/{uid}/grantLog/{id}      idempotency records for awards. Client reads only.
 //   receipts/{store}__{txn}          global receipt claims. Client cannot see them.
-//   groves/{uid}                     the public grove card. Any player reads, none write.
+//   groves/{uid}                     a keeper's public card. Any player reads, none write.
 //   names/{nameKey}                  a reserved keeper name. Any player gets one, none list.
 //   nameReports/{uid}/...            who reported whose name. Server-only, both ways.
-//   groveReports/{uid}/...           who reported whose grovement. The same, per subject.
+//   groveReports/{uid}/...           grove reports filed while the Grovement stood. Server-only.
 //   leaderboards/{boardId}           a published board. Any player reads, none write.
 //   config/{doc}                     reward table and product catalog. Read-only.
 //   config/release                   the minimum client per store. World-readable.
@@ -51,23 +51,64 @@ service cloud.firestore {
     // ------------------------------------------------------------- the save
     match /players/{uid} {
 
+      // ---- The evaluation budget. READ THIS BEFORE ADDING A CLAUSE. ----
+      //
+      // Firestore evaluates at most 1,000 expressions per request and refuses anything past
+      // that as PERMISSION_DENIED - on the device indistinguishable from a malformed save, and
+      // fatal the same way: every write of that account is refused until the rules change
+      // (invariant 12c). Every clause below is paid on every save write, and the account that
+      // pays for the most is the longest-played one, because it carries the most optional keys.
+      // On 2026-10-25 that account crossed the cap: the v47 build-stamp clauses landed on a
+      // ruleset already two expressions from it.
+      //
+      // So the shape is chosen for cost as well as for clarity:
+      //
+      //   - an optional key is read once, through `get` with a default that passes its own
+      //     check, rather than tested with `in` and then read again: absent and well-formed are
+      //     one path, and a present value is checked exactly as strictly as before;
+      //   - a bounded list is `listOf(value, N)` and nothing else, which is also the one shape
+      //     `CloudWireTests` reads every bound out of (12b);
+      //   - a nested block is bound to a `let` once, rather than re-walked from `d`.
+      //
+      // And the cost is measured, never estimated: `node firebase/e2e/rules-budget.mjs` runs the
+      // heaviest save these rules can accept - derived from this text, so a new clause is priced
+      // the moment it is written - through Firestore's own engine and fails below 250
+      // expressions of headroom. It runs before every rules deploy.
+
+      // A list no longer than `n`. The one way a list is bounded here.
+      function listOf(value, n) {
+        return value is list && value.size() <= n;
+      }
+
+      // A whole number in `[lo, hi]`.
+      function intIn(value, lo, hi) {
+        return value is int && value >= lo && value <= hi;
+      }
+
       // One task period: a key and two bounded lists. See the `tasks` clause below.
       function taskPeriod(p) {
         return p is map
-               && (!('counts' in p) || (p.counts is list && p.counts.size() <= 32))
-               && (!('claimed' in p) || (p.claimed is list && p.claimed.size() <= 32));
+               && listOf(p.get('counts', []), 32)
+               && listOf(p.get('claimed', []), 32);
       }
 
       // Shape checks only. Anything expensive or unbounded is the functions' job.
       function wellFormed() {
         let d = request.resource.data;
+        let ads = d.get('ads', {});
+        let tasks = d.get('tasks', {});
+        let welcome = tasks.get('welcome', {});
+        let challenges = d.get('challenges', {});
+
+        // `hasOnly` is an allow-list over the *whole* document: a key the client writes and this
+        // list does not name loses every save write, not that field (12a), so a new top-level
+        // key ships here before the client that writes it. A key leaves only once no document
+        // holds it and no client the update wall admits writes it (16z).
         return d.keys().hasOnly([
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
                  'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
-                 'companionsOwned', 'homesteadStock', 'homesteadOwned',
-                 'homesteadPlaced', 'groveLandOwned', 'groveEpoch',
-                 'groveHall', 'groveHallFacing', 'groveHallSetUnix',
+                 'companionsOwned',
                  'heartContainersOwned', 'heartContainersRevoked',
                  'utilityStock',
                  'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
@@ -83,259 +124,91 @@ service cloud.firestore {
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
                && d.levels is map
                && d.levels.size() <= 5000
-               && (!('lastPlayedLevelId' in d) || d.lastPlayedLevelId is string)
-               // Which lessons the player has been shown. Client-owned and harmless —
-               // it buys nothing — but bounded anyway, because an unbounded array the
-               // client controls is a way to make the document expensive to read.
-               //
-               // The bound was 64, and on 2026-09-16 the owner's own account crossed it:
-               // the ledger keeps every id it has ever seen, including the lessons of
-               // withdrawn modes, so the longest-played account is the first to reach the
-               // cap — and from that write on the rules refused *every* save for that
-               // account (invariant 12a), which reached the player as "could not save your
-               // progress" on every account switch. The bound now matches
-               // `TipLedger.MaxIds`, the client prunes to it before writing, and
-               // `CloudWireTests` holds the two together.
-               && (!('tipsSeen' in d) || (d.tipsSeen is list && d.tipsSeen.size() <= 256))
-               // Today's chest counters. Client-owned and forgeable, and that is
-               // accounted for: nothing here decides what a chest pays. The server
-               // re-rolls each chest itself and refuses a second grant for the same id,
-               // so the worst a forged counter buys is a day's chests without playing
-               // for them — which is what an honest player gets anyway.
-               && (!('daily' in d) || d.daily is map)
-               // Today's rewarded-ad allowance. Client-owned and forgeable in exactly the
-               // same way, and accounted for in exactly the same way: nothing here decides
-               // what an ad paid. That is granted by the server when the ad network's own
-               // signed callback arrives, so a forged counter buys another offer and no
-               // currency at all. Bounded because the client controls its length.
-               && (!('ads' in d) || (d.ads is map
-                                     && (!('watched' in d.ads)
-                                         || (d.ads.watched is list && d.ads.watched.size() <= 64))))
-               // The streak's three dates. Client-owned and forgeable in exactly the same
-               // way as the two blocks above, and accounted for in the same way: nothing
-               // here decides what a night pays. The ladder does pay currency now, but the
-               // server grants it from its own record of the last night it paid — a claim
-               // may only advance the night as fast as the calendar advances — so editing
-               // these buys a differently-shaped lie and no money. See functions/src/streak.ts.
-               && (!('streak' in d) || d.streak is map)
-               // How much of each event's reward track the player has taken. Unlike every
-               // other client-owned block above, this one *does* reach a payment: a
-               // milestone pays only once its floor has reached it, so `eventCredits` reads
-               // it. It is still safe to let the client write, because that function clamps
-               // the floor to the glades the same derivation counted — a forged one takes
-               // early what play had already earned and nothing else. Bounded because the
-               // client controls its length. See invariant 13 and EventCollection.
-               && (!('events' in d) || (d.events is list && d.events.size() <= 256))
-               && (!('eventsSeeded' in d) || d.eventsSeeded is bool)
-               // The companions the player bought. Client-owned and forgeable, and that is
-               // accounted for rather than overlooked: a forged entry buys a portrait and
-               // nothing else — no currency, no progression, no advantage on a board. The
-               // money half is defended where money always is, by `submitSpends` refusing a
-               // debit the server-derived balance cannot cover, so there is nothing here for
-               // the server to adjudicate. Bounded because the client controls its length.
-               && (!('companionsOwned' in d) || (d.companionsOwned is list
-                                                 && d.companionsOwned.size() <= 256))
-               // The heart containers the player bought with real money, and the ones a
-               // refund took back. Client-owned like the companion set and accounted for the
-               // same way — a forged container buys faster hearts and nothing else: no
-               // currency, no progression, no advantage on a board and nothing that reaches
-               // a public card, because `publishGrove` derives a grove's worth from the three
-               // sets above and not from these. What is *not* client-owned is the refund: the
-               // server writes the revocations onto its own wallet document and reports them
-               // on every reply, so a forged edit here can only take a container away from
-               // the player who forged it. Bounded because the client controls the length,
-               // and small because the catalog sells three.
-               && (!('heartContainersOwned' in d) || (d.heartContainersOwned is list
-                                                      && d.heartContainersOwned.size() <= 32))
-               && (!('heartContainersRevoked' in d) || (d.heartContainersRevoked is list
-                                                        && d.heartContainersRevoked.size() <= 32))
-               // The grove, RETIRED on 2026-09-21 — the Grovement was removed from the game
-               // and nothing this build writes emits any of these five keys.
-               //
-               // **They stay allow-listed, and that is the whole point of leaving them here.**
-               // `hasOnly` is an allow-list over the *whole* document, so a client that has
-               // not updated and still sends `homesteadPlaced` would lose **every** save write
-               // rather than that one field — invariant 12a from the direction with teeth. An
-               // allow-list entry for a key nobody sends costs nothing; removing one costs a
-               // rolled-back player their whole save path, silently, with no screen saying so.
-               // The bounds are kept for the same reason: an old client still has to pass them.
-               //
-               // Nothing reads them either. `publishGrove` still derives a grove's worth from
-               // this document for accounts whose saves already carry one, which is harmless:
-               // no board in the game draws that number any more.
-               //
-               // `homesteadOwned` was already retired in place once (it is the v19 field that
-               // `homesteadStock` replaced in v20), so this is the second layer of the same
-               // rule on the same key.
-               //
-               && (!('homesteadStock' in d) || (d.homesteadStock is list
-                                                && d.homesteadStock.size() <= 512))
-               && (!('homesteadOwned' in d) || (d.homesteadOwned is list
-                                                && d.homesteadOwned.size() <= 512))
-               && (!('homesteadPlaced' in d) || (d.homesteadPlaced is list
-                                                 && d.homesteadPlaced.size() <= 1024))
-
-               // Land. Retired with the four keys above and kept for their reason.
-               && (!('groveLandOwned' in d) || (d.groveLandOwned is list
-                                                && d.groveLandOwned.size() <= 128))
-
-               // Which generation of the grove catalogue this save's grove belonged to.
-               // Retired with the keys above and kept for their reason.
-               && (!('groveEpoch' in d) || (d.groveEpoch is int
-                                            && d.groveEpoch >= 0 && d.groveEpoch <= 64))
-
-               // Utilities. Bounded like everything else the client controls the length of,
-               // and generously against `UtilityCatalog.MaxItems` (16) so a content drop that
-               // adds one never needs a rules deploy to land — and rows naming a utility an
-               // older build does not know are carried through rather than dropped.
-               // The bound matches `UtilityStock.MaxIds`, and it has to: `hasOnly` is an
-               // allow-list over the whole document, so a save the client will write and these
-               // rules refuse loses *every* save write rather than the extra rows (12a).
-               && (!('utilityStock' in d) || (d.utilityStock is list
-                                              && d.utilityStock.size() <= 64))
-
-               // The tasks: two periods, each a key, a list of per-goal counts and a list of
-               // claimed task ids. Nothing here is paid on — a task chest is bounded by the
-               // wallet's own per-period allowance in `claimAwards` — so this is shape only.
-               // The list bounds match `TaskLedger.MaxGoals` and `MaxClaimed` (32), and have
-               // to: `hasOnly` is an allow-list over the whole document, so a save these rules
-               // refuse loses *every* write rather than the extra rows (12a).
-               //
-               // `lifetime` is the third row of the same map (save v32): one count per goal,
-               // no period key and nothing claimed, because the window never ends and a rank
-               // is derived and pays nothing. It rides *inside* this map on purpose — `hasOnly`
-               // is an allow-list over the document's own keys, so this clause is the only
-               // thing that had to change and the ruleset already deployed accepts the field:
-               // client and rules may go out in either order, which no other field here can
-               // say (invariant 12a). The bound matches `LifetimeTally.MaxGoals` (32), held
-               // to it offline by `CloudWireTests`.
-               //
-               // `welcome` is the fourth row of the map (save v40): the welcome bonus's days per
-               // verb and the quests taken (`WelcomeLedger`, invariant 58). It pays an
-               // entitlement that buys no currency, so this is shape only; the bounds match
-               // `WelcomeLedger.MaxRows` (8), held offline by `CloudWireTests`. It rides inside
-               // this map for `lifetime`'s reason - the ruleset deployed before this clause
-               // already accepts the key, so client and rules may go out in either order.
-               && (!('tasks' in d) || (d.tasks is map
-                                       && (!('daily' in d.tasks) || taskPeriod(d.tasks.daily))
-                                       && (!('weekly' in d.tasks) || taskPeriod(d.tasks.weekly))
-                                       && (!('lifetime' in d.tasks) || (d.tasks.lifetime is list
-                                                                        && d.tasks.lifetime.size() <= 32))
-                                       && (!('welcome' in d.tasks) || (d.tasks.welcome is map
-                                           && (!('days' in d.tasks.welcome) || (d.tasks.welcome.days is list
-                                                                                && d.tasks.welcome.days.size() <= 8))
-                                           && (!('claimed' in d.tasks.welcome) || (d.tasks.welcome.claimed is list
-                                                                                   && d.tasks.welcome.claimed.size() <= 8))
-                                           && (!('coined' in d.tasks.welcome) || (d.tasks.welcome.coined is list
-                                                                                  && d.tasks.welcome.coined.size() <= 8))))
-                                       // The shop deals already shown as a popup (save v41,
-                                       // `DealSeen.MaxIds`, invariant 60c). Shape only: it pays
-                                       // nothing and decides only whether a popup is raised.
-                                       && (!('dealsSeen' in d.tasks) || (d.tasks.dealsSeen is list
-                                                                         && d.tasks.dealsSeen.size() <= 64))
-                                       // The first steps (save v46, `FirstStepsLedger`): the
-                                       // levels whose first clear earned a step, and what was
-                                       // handed over. Shape only - a step's chests are re-rolled
-                                       // and proved against `levels` by `claimAwards`. Bounds
-                                       // match `MaxEarned` (16) and `MaxTaken` (64).
-                                       && (!('stepsEarned' in d.tasks) || (d.tasks.stepsEarned is list
-                                                                           && d.tasks.stepsEarned.size() <= 16))
-                                       && (!('stepsTaken' in d.tasks) || (d.tasks.stepsTaken is list
-                                                                          && d.tasks.stepsTaken.size() <= 64))))
-
-               // The turrets the player bought and the line they stand in. Client-owned and
-               // forgeable, and accounted for the way the companion set is: a forged turret buys
-               // a silhouette and an addition to a bolt - no currency, no progression, and
-               // nothing that reaches a public card, because `publishGrove` derives a grove's
-               // worth from what is standing in the grove and never from the line. The money half
-               // is defended where money always is, by `submitSpends` refusing a debit the
-               // server-derived balance cannot cover. Bounded because the client controls the
-               // length, generously against `WardCatalog.MaxModels` so a content drop that adds a
-               // turret never needs a rules deploy to land. **A row is a turret and a colour**
-               // (`WardHolding`), so the ceiling is four times the roster rather than one - it
-               // was 64 while a purchase covered the whole line, which a full shelf now passes on
-               // its own.  A save write that exceeds this loses **every** field, not this one
-               // (invariant 12a), so the rules go out before a client that can reach it.
-               && (!('wardsOwned' in d) || (d.wardsOwned is list && d.wardsOwned.size() <= 160))
-               && (!('wardLoadout' in d) || (d.wardLoadout is list && d.wardLoadout.size() <= 8))
-               && (!('wardLoadoutSetUnix' in d) || d.wardLoadoutSetUnix is int)
-
-               // How deep an endless run has ever got, per level. It pays nothing - credits and
-               // XP derive from the star ledger alone (invariant 9) - so a forged wave moves a
-               // reading and never a balance.
-               //
-               // Since the Endless Watch shipped it *is* a public number: `publishGrove` copies
-               // the best of these rows onto the card as `wave`. It is the one figure on a card
-               // the server cannot recompute, so unlike the grove's worth it is **bounded**
-               // rather than clamped (`bestWave`, `MAX_WAVE`) - which is only defensible while
-               // the endless board pays nothing. Nothing here changes for it: the rows were
-               // already allowed and already capped.
-               //
-               // A row also carries `waves` since save v30 - a lifetime tally that *does* pay,
-               // in XP (`EndlessRewardTable`). The sentence above still holds and is worth
-               // reading precisely: the figure that is **published** is still the best (`wave`),
-               // and it still pays nothing. The tally is never published, buys no currency, and
-               // is bounded on both sides. It needed no release here, because it rides inside a
-               // list this rule bounds by *length* without naming a row's fields (invariant 12a's
-               // cheap half) - which is the whole reason it was shaped that way.
-               //
-               // The bound matches `EndlessLedger.MaxRows`, and it has to: `hasOnly` is an
-               // allow-list over the whole document, so a save the client writes and these rules
-               // refuse loses *every* save write (invariant 12a).
-               && (!('endlessBest' in d) || (d.endlessBest is list
-                                             && d.endlessBest.size() <= 64))
-               // The Shuffle lane's best wave per level (save v42, `ShuffleLedger`): what the
-               // Shuffle board is ordered on. `endlessBest`'s shape and its bargain - it pays
-               // nothing, and the published figure is bounded by `publishGrove` (19l). The bound
-               // matches `ShuffleLedger.MaxRows` for the reason above it. **This line ships
-               // before the v42 client**: a client writing a key `hasOnly` does not name loses
-               // every save write (12a).
-               && (!('shuffleBest' in d) || (d.shuffleBest is list
-                                             && d.shuffleBest.size() <= 64))
-               // The builds this account has run (save v47, `BuildStamp`): the oldest and the
-               // newest, as `AppVersion`'s integer (1.1.3 is 10103), nought for none. For
-               // analytics; they buy nothing. Bounded at 99.99.99, which `BuildStamp.MaxBuild`
-               // matches and the client never writes past. **This ships before the v47 client**
-               // (12a).
-               && (!('firstBuild' in d) || (d.firstBuild is int
-                                            && d.firstBuild >= 0 && d.firstBuild <= 999999))
-               && (!('lastBuild' in d) || (d.lastBuild is int
-                                           && d.lastBuild >= 0 && d.lastBuild <= 999999))
-               // How far each turret has been upgraded: twenty turrets on four seats is eighty,
-               // and the bound matches `WardStarLedger.MaxRows` for the reason above it.
-               && (!('wardStars' in d) || (d.wardStars is list
-                                           && d.wardStars.size() <= 128))
-               // Where the player moved their hall: a tile id, a quarter turn, and the stamp the
-               // merge reads (invariant 11c). Bounded because the client writes the string; a
-               // tile id is fifteen characters and the bound is generous against a floor that
-               // grows. Nothing here can buy anything — a forged seat moves the forger's own
-               // house and nothing else — so the shape is all that is checked.
-               && (!('groveHall' in d) || (d.groveHall is string && d.groveHall.size() <= 32))
-               && (!('groveHallFacing' in d) || (d.groveHallFacing is int
-                                                 && d.groveHallFacing >= 0
-                                                 && d.groveHallFacing <= 3))
-               && (!('groveHallSetUnix' in d) || d.groveHallSetUnix is int)
-
-               // The daily challenges (save v34): today's plays per genre, a lifetime tally of
-               // levels cleared per genre, and the day each deal was last bought. Client-owned
-               // and forgeable, and accounted for the way the endless tally is: the plays pay
-               // nothing by themselves; the tally pays XP inside a bounded range and no currency
-               // (`challengeXp`, invariant 13's fourth clause); and a deal row here buys only a
-               // page — every coin claim past the free allowance is priced by `claimAwards`
-               // against the deal recorded on the *wallet* document when the gems were taken,
-               // which no client can write. So this is shape only. The three bounds match
-               // `ChallengeLedger.MaxTodayRows` / `MaxClearRows` / `MaxTierRows` and have to:
-               // `hasOnly` is an allow-list over the whole document, so a save these rules
-               // refuse loses *every* write rather than the extra rows (12a). Held to the client
-               // offline by `CloudWireTests`. **A new top-level key, so this ruleset deploys
-               // before the client that writes it.**
-               && (!('challenges' in d) || (d.challenges is map
-                                            && (!('today' in d.challenges) || (d.challenges.today is list
-                                                                               && d.challenges.today.size() <= 32))
-                                            && (!('clears' in d.challenges) || (d.challenges.clears is list
-                                                                                && d.challenges.clears.size() <= 64))
-                                            && (!('tiers' in d.challenges) || (d.challenges.tiers is list
-                                                                               && d.challenges.tiers.size() <= 16))));
+               && d.get('lastPlayedLevelId', '') is string
+               // Which lessons the player has been shown. Client-owned and harmless - it buys
+               // nothing - but bounded, because an unbounded array the client controls makes the
+               // document expensive to read. The bound was 64 until 2026-09-16, when the owner's
+               // own account crossed it and the rules refused every save it wrote (12a); it now
+               // matches `TipLedger.MaxIds`, which the client prunes to before writing.
+               && listOf(d.get('tipsSeen', []), 256)
+               // Today's chest counters. Forgeable and accounted for: the server re-rolls each
+               // chest and refuses a second grant for the same id, so a forged counter buys a
+               // day's chests without playing for them - what an honest player gets anyway.
+               && d.get('daily', {}) is map
+               // Today's rewarded-ad allowance. Forgeable the same way and accounted for the same
+               // way: an ad is paid by the server when the network's signed callback arrives, so a
+               // forged counter buys another offer and no currency.
+               && ads is map
+               && listOf(ads.get('watched', []), 64)
+               // The streak's dates. A night pays from the server's own record of the last night
+               // it paid (functions/src/streak.ts), so editing these buys no money.
+               && d.get('streak', {}) is map
+               // How much of each event's track the player has taken. This one *does* reach a
+               // payment - `eventCredits` reads the floor - and is safe to let the client write
+               // because that function clamps it to the glades the same derivation counted
+               // (invariant 13, `EventCollection`).
+               && listOf(d.get('events', []), 256)
+               && d.get('eventsSeeded', false) is bool
+               // The companions bought. A forged entry buys a portrait and nothing else; the money
+               // half is defended by `submitSpends` refusing a debit the derived balance cannot
+               // cover. The roster is inert (16ab) and the key stays until it is retired on purpose.
+               && listOf(d.get('companionsOwned', []), 256)
+               // The heart containers bought with real money, and the ones a refund took back. A
+               // forged container buys faster hearts and nothing else; the refund is the server's,
+               // written on its own wallet document and reported on every reply, so an edit here
+               // can only take a container from the player who made it.
+               && listOf(d.get('heartContainersOwned', []), 32)
+               && listOf(d.get('heartContainersRevoked', []), 32)
+               // Utilities. Generous against `UtilityCatalog.MaxItems` so a content drop never
+               // needs a rules deploy; the bound matches `UtilityStock.MaxIds`.
+               && listOf(d.get('utilityStock', []), 64)
+               // The tasks: two periods (a key, per-goal counts, claimed ids), the lifetime tally
+               // (v32, `LifetimeTally.MaxGoals`), the welcome bonus (v40, `WelcomeLedger.MaxRows`),
+               // the deals already shown as a popup (v41, `DealSeen.MaxIds`, 60c) and the first
+               // steps (v46, `FirstStepsLedger.MaxEarned` / `MaxTaken`). Shape only: a task chest
+               // is bounded by the wallet's per-period allowance in `claimAwards`, a welcome prize
+               // buys no currency, and a step's chests are re-rolled and proved against `levels`.
+               // Sub-keys are not allow-listed, so a new row inside this map ships in either order
+               // with the client (12a's cheap half).
+               && tasks is map
+               && taskPeriod(tasks.get('daily', {}))
+               && taskPeriod(tasks.get('weekly', {}))
+               && listOf(tasks.get('lifetime', []), 32)
+               && welcome is map
+               && listOf(welcome.get('days', []), 8)
+               && listOf(welcome.get('claimed', []), 8)
+               && listOf(welcome.get('coined', []), 8)
+               && listOf(tasks.get('dealsSeen', []), 64)
+               && listOf(tasks.get('stepsEarned', []), 16)
+               && listOf(tasks.get('stepsTaken', []), 64)
+               // The turrets bought and the line they stand in. A forged turret buys a silhouette
+               // and nothing that pays; the money half is `submitSpends`'. A row is a turret and a
+               // colour (`WardHolding`), so the ceiling is four times `WardCatalog.MaxModels`.
+               && listOf(d.get('wardsOwned', []), 160)
+               && listOf(d.get('wardLoadout', []), 8)
+               && d.get('wardLoadoutSetUnix', 0) is int
+               // The best wave per level on the Infinite lane and on the Shuffle lane. Each pays
+               // nothing and is the one public figure the server cannot recompute, so it is
+               // bounded where it is published (`bestWave`, `shuffleWave`, `MAX_WAVE`, 19l). A row's
+               // `waves` tally (v30) pays XP inside a bound and is never published. Bounds match
+               // `EndlessLedger.MaxRows` and `ShuffleLedger.MaxRows`.
+               && listOf(d.get('endlessBest', []), 64)
+               && listOf(d.get('shuffleBest', []), 64)
+               // The oldest and newest build this account has run (v47, `BuildStamp`), as
+               // `AppVersion`'s integer (1.1.3 is 10103), nought for none. Analytics; buys nothing.
+               // The ceiling is 99.99.99, which `BuildStamp.MaxBuild` matches.
+               && intIn(d.get('firstBuild', 0), 0, 999999)
+               && intIn(d.get('lastBuild', 0), 0, 999999)
+               // How far each turret has been upgraded; matches `WardStarLedger.MaxRows`.
+               && listOf(d.get('wardStars', []), 128)
+               // The daily challenges (v34): today's plays per genre, the lifetime clears per genre
+               // and the day each deal was last bought. Shape only - every coin past the free
+               // allowance is priced by `claimAwards` against the deal recorded on the wallet. Bounds
+               // match `ChallengeLedger.MaxTodayRows` / `MaxClearRows` / `MaxTierRows`.
+               && challenges is map
+               && listOf(challenges.get('today', []), 32)
+               && listOf(challenges.get('clears', []), 64)
+               && listOf(challenges.get('tiers', []), 16);
       }
 
       // The revision only ever moves forward, which gives the sync optimistic
@@ -390,21 +263,19 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------- the public boards
-    // A player's grove, as everybody else may see it. This collection exists so that the
-    // save document never has to be readable by anyone but its owner: `players/{uid}`
-    // holds the level ledger, the streak's dates, the event floors and the ad allowance,
-    // and a leaderboard needs a name, a number and where the benches are. Widening the
-    // save's read rule to serve that would publish everything else with it and make the
-    // save's shape a public API that could never change again.
+    // A keeper's public card (the spelling is permanent, 16y). This collection exists so that
+    // the save document never has to be readable by anyone but its owner: `players/{uid}`
+    // holds the level ledger, the streak's dates, the event floors and the ad allowance, and a
+    // board needs a name, a level, a badge and a wave. Widening the save's read rule to serve
+    // that would publish everything else with it and make the save's shape a public API that
+    // could never change again.
     //
-    // Server-written, without exception. The score on a card is recomputed by
-    // `publishGrove` from the save it reads with admin credentials and clamped to currency
-    // the server itself derived — see functions/src/grove.ts. Letting a client write here
-    // would hand it the leaderboard, because the three id sets a card is built from are
-    // client-written and forgeable by design. That was always fine while a forged entry
-    // "bought a picture on a screen nobody else sees"; it is this collection that makes
-    // that sentence stop being true, which is why it is the one place the client is
-    // refused write access to something built entirely out of its own save.
+    // Server-written, without exception. Every figure on a card is recomputed or bounded by
+    // `publishGrove` from the save it reads with admin credentials — see
+    // functions/src/grove.ts. Letting a client write here would hand it the boards, because
+    // everything a card is built from is client-written and forgeable by design, which is why
+    // this is the one place the client is refused write access to something built entirely
+    // out of its own save.
     //
     // Readable by any signed-in player, and only by a signed-in player. It carries a
     // display name, so it is not world-readable the way `config/release` is. Nothing here
@@ -424,7 +295,7 @@ service cloud.firestore {
     // The published boards: one document each, holding up to a hundred rows.
     //
     // Denormalised rather than queried, and that is a cost decision that does not move as
-    // the game grows. The obvious shape — order the player collection by score and take
+    // the game grows. The obvious shape — order the player collection by wave and take
     // the first hundred — is a hundred document reads every time anybody opens the screen,
     // against a collection that grows for the life of the game, on a database billed per
     // read. One document is one read, the same for everybody, and cacheable.
@@ -467,7 +338,9 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------------- reports
-    // Who has reported whose keeper name or grovement, and how many distinct players have.
+    // Who has reported whose keeper name, and how many distinct players have. (`groveReports`
+    // holds the reports filed while a card still published an arrangement; no new one is
+    // written — functions/src/reports.ts.)
     //
     // Server-only in **both** directions, which is unusual here and deliberate in each.
     //
@@ -487,9 +360,8 @@ service cloud.firestore {
     //
     // The reporter's own daily quota lives at players/{uid}/private/reports and is covered by
     // the existing `private` rule, which is why it is not named here.
-    // The two subjects are two collections, because they are two judgements: a name three
-    // people found offensive says nothing about the benches, and one tally would hide a grove
-    // behind a name's reports. `reports.ts` owns both and the shape is identical.
+    // Each subject is its own collection, because each is its own judgement; `reports.ts` owns
+    // them and the shape is identical.
     //
     // Named here even though the catch-all at the foot of this file already denies them, and
     // that is not redundancy: a collection nobody has written a rule for reads as a collection

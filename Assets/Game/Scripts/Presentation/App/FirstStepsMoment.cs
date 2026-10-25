@@ -210,8 +210,9 @@ namespace GlimmerGrove
             // The reminder ask rides on this panel (invariant 50p): one of the four an install may
             // see, marked when it opens, so the cadence spaces the next three, seven and fourteen
             // days away - no second ask today, however many chests follow.
+            // A finished quest's panel says CLAIM instead, and an ask it would spend is kept for later.
             var route = AskRoute.None;
-            if (Notify.Supported)
+            if (Notify.Supported && WelcomeLedger.StateOf(quest) != WelcomeState.Ready)
             {
                 long unix = GameClock.NowUnix();
                 var log = NotificationAsk.Log;
