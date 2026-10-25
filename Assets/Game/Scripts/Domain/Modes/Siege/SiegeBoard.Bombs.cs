@@ -32,8 +32,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Set from the published firepot rather than read from a constant</b>, because how
         /// hard a firepot hits is content (<c>UtilityCatalog</c>) and a bomb has to hit for
-        /// exactly the same - the player is told it is a firepot, and two numbers that mean one
-        /// thing is two numbers that can drift. <see cref="SiegeTuning.BombDamage"/> is the
+        /// the same baseline damage. Dropped bombs keep their full health-surge scaling.
+        /// <see cref="SiegeTuning.BombDamage"/> is the
         /// fallback for a build that has never seen a store.
         /// </summary>
         public int BombDamage { get; set; } = SiegeTuning.BombDamage;
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Modes
             if (at < 0) return 0;
 
             var bomb = _bombs[at];
-            int absorbed = Blast(bomb.Lane, bomb.Row, BombDamage, into);
+            int absorbed = Blast(bomb.Lane, bomb.Row, BombDamage, into, fullScaling: true);
 
             if (absorbed <= 0) return 0;
 

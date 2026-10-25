@@ -6535,7 +6535,7 @@
     },
     {
       "key": "utility.stormcall.note",
-      "text": "Lightning strikes every raider on the hill. It will not fell a boss."
+      "text": "Hits up to 5 enemies, or 60% if higher. Always includes bosses, but cannot kill them."
     },
     {
       "key": "utility.surge.name",

@@ -249,16 +249,11 @@ namespace GlimmerGrove
                              : afterPurchase ? "ui.account.guest_purchase"
                              : "ui.account.guest";
 
-            // Moss rather than Mint, and every green on this panel is the same decision. Mint
-            // is a board colour - bright because everywhere else it is drawn on something dark
-            // - and every line here is unoutlined text on the cream panel paper, where it comes
-            // out at about 1.8:1 and has to be squinted at. This panel is the one place a
-            // player is told their grove is safe, so it is the last place a sentence should be
-            // hard to read. See Pal.Moss.
-            _status = Line("Status", Loc.Get(statusKey), 34,
-                           linked || choosing ? Pal.Moss : available ? Pal.Rose
-                                              : new Color(.52f, .40f, .31f, .9f),
+            _status = Line("Status", Loc.Get(statusKey), 34, Color.white,
                            StatusH, TextAnchor.MiddleCenter, 2f);
+            var statusOutline = _status.gameObject.AddComponent<Outline>();
+            statusOutline.effectColor = Color.black;
+            statusOutline.effectDistance = Vector2.one * 2f;
             Fit(_status, 24, 34);
 
             // An address, so it is dimmer and smaller than everything else here and never
@@ -307,7 +302,7 @@ namespace GlimmerGrove
             }
 
             _cursor += BeforeClose;
-            _actions.Add(UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46,
+            _actions.Add(UIKit.TextButton("Close", Panel, "btn_blue", Loc.Get("ui.common.done"), 46,
                              new Vector2(560f, CloseH), new Vector2(.5f, 1f),
                              new Vector2(0f, -(_cursor + CloseH * .5f)),
                              () => { if (!_busy) Close(); }).gameObject);

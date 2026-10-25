@@ -5,7 +5,7 @@ namespace GlimmerGrove.Modes
 {
     /// <summary>
     /// What the action bar spends into the board: a firepot onto the hill, a storm
-    /// over all of it, a mending into a ward, a surge of fuel.
+    /// over part of it, a mending into a ward, a surge of fuel.
     ///
     /// <para>
     /// <b>Every one of them reports what it actually did</b>, because that is what the run is
@@ -47,15 +47,16 @@ namespace GlimmerGrove.Modes
         /// class of fault invariant 32c refuses.
         /// </para>
         /// <para>
-        /// <b><paramref name="baseline"/> is damage against an unsurged raider, and every raider
-        /// takes it through its own surge</b> - see <see cref="SiegeSurge.Hurt"/>, and
-        /// <c>UtilityUnit.Hill</c> for the rule this is one half of. That is what keeps a firepot
-        /// worth the same share of a raider on chapter one and on chapter forty, and worth the
-        /// same share of wave ninety as of wave one in an endless run, where the two are standing
-        /// on the hill together.
+        /// Firepots gain half the damage added by each raider's health surge: a twofold health
+        /// multiplier gives one and a half times the baseline damage. Each target uses its own
+        /// surge, including when different waves share an endless hill.
         /// </para>
         /// </summary>
         public int Blast(int lane, int row, int baseline, List<SiegeStrike> into)
+            => Blast(lane, row, baseline, into, false);
+
+        // Dropped bombs retain their full scaling without changing a firepot's reach or damage path.
+        int Blast(int lane, int row, int baseline, List<SiegeStrike> into, bool fullScaling)
         {
             if (baseline <= 0) return 0;
             if (lane < 0 || lane >= SiegeTuning.Lanes) return 0;
@@ -77,14 +78,16 @@ namespace GlimmerGrove.Modes
                 if (!SiegeTuning.Caught(raider.Kind, raider.Column, raider.March, lane, row))
                     continue;
 
-                // Through this raider's own surge, exactly as its health was (invariant 39a).
+                // Preserve the baseline and halve only the increase from the health surge.
                 int damage = raider.Surge.Hurt(baseline);
+                if (!fullScaling) damage = baseline + (damage - baseline) / 2;
 
                 // Through the one door (`SiegeBoard.Fight.cs`): a firepot dropped on a boss
                 // behind its guard takes nothing, is not recorded, and - because `absorbed` is
                 // what the run is charged for (invariant 39) and what hands an unused firepot
                 // back - costs the player nothing either.
-                int took = Wound(raider, damage);
+                int took = Wound(raider, damage,
+                                 fullScaling ? int.MaxValue : UtilityLimit(raider, baseline));
                 if (took <= 0) continue;
 
                 absorbed += took;
@@ -100,8 +103,9 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Strikes <b>everything on the hill</b> for the same damage, and answers how much was
-        /// absorbed.
+        /// Strikes at least five targetable enemies when available, or sixty per cent rounded
+        /// down when that is higher, always including bosses.
+        /// Bosses take priority when their count exceeds that quota and cannot be killed.
         ///
         /// <para>
         /// <b>The strikes are shuffled, and they are shuffled off the board's own stream.</b> The
@@ -121,37 +125,50 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A surge <em>is</em> read, and it has to be for the same reason the shield is not.</b>
         /// <paramref name="baseline"/> is damage against an unsurged raider and every raider takes
-        /// it through its own (<see cref="SiegeSurge.Hurt"/>), which is what keeps
-        /// <c>UtilityKind.Storm</c>'s own promise true for ever: it hurts a boss and never fells
-        /// one, because that is a <em>ratio</em> rather than a number, and a flat figure would
-        /// stop being either the day a chapter carried a surge.
+        /// it through its own (<see cref="SiegeSurge.Hurt"/>). Boss damage is additionally capped
+        /// against the actual health pool and cannot deliver the finishing blow.
         /// </para>
         /// </summary>
         public int Storm(int baseline, List<SiegeStrike> into)
         {
             if (baseline <= 0) return 0;
 
+            var targets = new List<SiegeRaider>();
+            int bosses = 0;
+
+            foreach (var raider in _raiders)
+            {
+                if (!StormCandidate(raider)) continue;
+                if (raider.Boss) targets.Insert(bosses++, raider);
+                else targets.Add(raider);
+            }
+
+            int count = Math.Max(5, targets.Count * 3 / 5);
+            count = Math.Min(targets.Count, Math.Max(bosses, count));
+            if (count == 0) return 0;
+
+            // Bosses are reserved first; ordinary targets come from the board's deterministic stream.
+            for (int i = targets.Count - 1; i > bosses; i--)
+            {
+                int j = bosses + (int)(Next() % (uint)(i - bosses + 1));
+                var held = targets[i];
+                targets[i] = targets[j];
+                targets[j] = held;
+            }
+
             int first = into != null ? into.Count : 0;
             int absorbed = 0;
 
-            for (int i = 0; i < _raiders.Count; i++)
+            for (int i = 0; i < count; i++)
             {
-                var raider = _raiders[i];
-
-                // **Everything that has arrived, which is what "everywhere" has to mean.** A
-                // firepot is aimed at a box of the hill and so cannot reach a raider standing on
-                // the field; a storm is aimed at nothing and would be lying about its own name if
-                // the one raider the player most wants gone were the one thing it missed. It is
-                // also the only utility that can answer a field raider at all, which is the
-                // escape hatch that keeps a board with an awkward colour winnable.
-                if (!raider.Alive || raider.Wait > 0f) continue;
+                var raider = targets[i];
 
                 // Through this raider's own surge, exactly as its health was (invariant 39a).
                 int damage = raider.Surge.Hurt(baseline);
 
                 // Through the one door (`SiegeBoard.Fight.cs`), for `Blast`'s reason: a storm
                 // over a guarded boss strikes everything else and the boss not at all.
-                int took = Wound(raider, damage);
+                int took = Wound(raider, damage, UtilityLimit(raider, baseline));
                 if (took <= 0) continue;
 
                 absorbed += took;
@@ -175,6 +192,31 @@ namespace GlimmerGrove.Modes
             }
 
             return absorbed;
+        }
+
+        /// <summary>Whether a storm has any target it can damage.</summary>
+        public bool CanStorm
+        {
+            get
+            {
+                foreach (var raider in _raiders)
+                    if (StormCandidate(raider)) return true;
+                return false;
+            }
+        }
+
+        static bool StormCandidate(SiegeRaider raider)
+            => raider.Alive && raider.OnTheHill && !raider.Arriving
+            && (!raider.Boss || raider.Health > 1);
+
+        // Keep a utility's baseline share of a boss even when a mode reduces its health pool.
+        // Apply the cap after damage modifiers, and leave the finishing blow to the player.
+        static int UtilityLimit(SiegeRaider raider, int baseline)
+        {
+            if (!raider.Boss) return int.MaxValue;
+            int share = (int)Math.Min(int.MaxValue,
+                (long)baseline * raider.MaxHealth / SiegeTuning.HealthOf(raider.Kind));
+            return Math.Min(raider.Health - 1, Math.Max(1, share));
         }
 
         /// <summary>

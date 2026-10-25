@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using GlimmerGrove.Modes;
+using GlimmerGrove.Shuffle;
 using GlimmerGrove.Utilities;
 using NUnit.Framework;
 
@@ -18,10 +20,8 @@ namespace GlimmerGrove.Tests
     /// twenty and says a firepot does nothing.
     /// </para>
     /// <para>
-    /// <b>So the invariant is written as arithmetic and pinned here</b>: a utility's damage and a
-    /// raider's health go through <em>one</em> multiplier, so their ratio is exact on every
-    /// chapter and on every wave of an endless run. These cases are deliberately about the ratio
-    /// rather than about any particular figure - a retune of 440 must not move one of them.
+        /// Firepots gain half the health increase; storm damage retains full scaling but reaches
+        /// only part of the hill. Bosses take limited damage and cannot be finished by either.
     /// </para>
     /// </summary>
     public sealed class SiegeUtilityScaleTests
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Tests
         {
             var board = Board(tough);
 
-            for (int i = 0; i < 60 * 120 && board.OnTheHill < 1; i++) board.Advance(1f / 60f);
+            for (int i = 0; i < 60 * 120 && board.OnTheHill < 4; i++) board.Advance(1f / 60f);
 
             Assert.Greater(board.OnTheHill, 0, "the wave never reached the hill");
             return board;
@@ -116,27 +116,32 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the hill
         /// <summary>
-        /// <b>A firepot is worth the same share of a surged raider as of a plain one.</b> Stated
-        /// as a cross-multiplication rather than as two figures, so a retune of the health or of
-        /// the step cannot make it read as passing for the wrong reason.
+        /// Half the increase, preserving the original baseline, on every board mode and per target.
         /// </summary>
         [Test]
-        public void AFirepotTakesTheSameShareOfASurgedRaiderAsOfAPlainOne()
+        public void AFirepotGainsHalfTheHealthIncreaseInEveryMode()
         {
-            int plain = Absorbed(Mustered(10), blast: true);
-            int surged = Absorbed(Mustered(13), blast: true);
-
-            Assert.Greater(plain, 0, "the firepot reached nobody, so this case proves nothing");
-            Assert.AreEqual(plain * 13, surged * 10,
-                            "a firepot has to climb with the hill exactly as the hill climbed");
+            for (int mode = 0; mode < 3; mode++)
+            {
+                var plain = Target(0, surge: 10);
+                var doubled = Target(1, surge: 20);
+                var uneven = Target(2, surge: 13);
+                var board = WithTargets(mode, plain, doubled, uneven);
+                var hits = new List<SiegeStrike>();
+                Assert.AreEqual(73, board.Blast(0, SiegeTuning.RowOf(.5f), 20, hits));
+                Assert.AreEqual(20, plain.MaxHealth - plain.Health);
+                Assert.AreEqual(30, doubled.MaxHealth - doubled.Health);
+                Assert.AreEqual(23, uneven.MaxHealth - uneven.Health);
+                Assert.AreEqual(3, hits.Count);
+            }
         }
 
         /// <summary>The same of a stormcall, which is the other kind measured in hill health.</summary>
         [Test]
         public void AStormcallTakesTheSameShareOfASurgedHillAsOfAPlainOne()
         {
-            int plain = Absorbed(Mustered(10), blast: false);
-            int surged = Absorbed(Mustered(13), blast: false);
+            int plain = Mustered(10).Storm(Nibble, null);
+            int surged = Mustered(13).Storm(Nibble, null);
 
             Assert.Greater(plain, 0, "the storm reached nobody, so this case proves nothing");
             Assert.AreEqual(plain * 13, surged * 10);
@@ -224,24 +229,161 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(UtilityUnits.Climbs(UtilityKind.None));
         }
 
-        // ------------------------------------------------------------------ helpers
-        /// <summary>
-        /// What one use of <see cref="Nibble"/> absorbs across the whole hill.
-        ///
-        /// A blast is aimed at every box in turn rather than at one, so the two kinds reach the
-        /// same raiders and the comparison is about the multiplier alone.
-        /// </summary>
-        static int Absorbed(SiegeBoard board, bool blast)
+        [Test]
+        public void AStormHitsAtLeastFiveOrSixtyPercentInEveryMode()
         {
-            if (!blast) return board.Storm(Nibble, null);
+            int[] expected = { 0, 1, 2, 3, 4, 5, 5, 5, 5, 5, 6, 6, 7 };
+            for (int mode = 0; mode < 3; mode++)
+                for (int count = 0; count < expected.Length; count++)
+                {
+                    var targets = new SiegeRaider[count];
+                    for (int i = 0; i < count; i++) { targets[i] = Target(i); targets[i].Health = 1; }
+                    var board = WithTargets(mode, targets);
+                    var hits = new List<SiegeStrike>();
+                    var item = new UtilityItem("stormcall", UtilityKind.Storm, 700, 40, 3, 4);
+                    Assert.AreEqual(count > 0, SiegeUtility.Would(board, item, default));
+                    var use = SiegeUtility.Apply(board, item, default, hits);
+                    Assert.AreEqual(expected[count], hits.Count, $"mode {mode}, count {count}");
+                    Assert.AreEqual(expected[count], use.Delivered);
+                    Assert.AreEqual(count > 0, use.Landed);
+                    Assert.AreEqual(SiegeUtility.MatchesFor(use.Delivered), use.Matches);
+                    int alive = 0;
+                    foreach (var target in targets) if (target.Alive) alive++;
+                    Assert.AreEqual(count - expected[count], alive);
+                    if (count > 5) Assert.Greater(alive, 0);
+                }
+        }
 
-            int whole = 0;
+        [Test]
+        public void StormsReserveBossesBeforeChoosingOrdinaryTargetsInEveryMode()
+        {
+            for (int mode = 0; mode < 3; mode++)
+            {
+                var targets = new SiegeRaider[10];
+                for (int i = 0; i < 10; i++) targets[i] = Target(i, i < 2 ? SiegeKind.Boss : SiegeKind.Creeper);
+                var board = WithTargets(mode, targets);
+                var hits = new List<SiegeStrike>();
+                board.Storm(1, hits);
+                Assert.AreEqual(6, hits.Count);
+                var ids = new HashSet<int>();
+                foreach (var hit in hits) ids.Add(hit.Raider);
+                Assert.AreEqual(6, ids.Count);
+                Assert.IsTrue(ids.Contains(0));
+                Assert.IsTrue(ids.Contains(1));
+            }
+        }
 
-            for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
-                for (int row = 0; row < SiegeTuning.BlastRows; row++)
-                    whole += board.Blast(lane, row, Nibble, null);
+        [Test]
+        public void BothUtilitiesLimitReducedBossPoolsAndNeverFinishABossInEveryMode()
+        {
+            for (int mode = 0; mode < 3; mode++)
+                foreach (bool storm in new[] { false, true })
+                {
+                    var boss = Target(0, SiegeKind.Boss, share: 25);
+                    boss.Hexed = 1f;
+                    var board = WithTargets(mode, boss);
+                    int before = boss.Health;
+                    if (storm) board.Storm(20, null);
+                    else board.Blast(boss.Column, SiegeTuning.RowOf(boss.March), 20, null);
+                    Assert.AreEqual(5, before - boss.Health,
+                                    "a reduced boss pool or a hex must not amplify the utility's share");
 
-            return whole;
+                    boss.Health = 2;
+                    if (storm) board.Storm(99999, null);
+                    else board.Blast(boss.Column, SiegeTuning.RowOf(boss.March), 99999, null);
+                    Assert.AreEqual(1, boss.Health);
+                    Assert.IsTrue(boss.Alive);
+
+                    var hits = new List<SiegeStrike>();
+                    if (storm) Assert.AreEqual(0, board.Storm(99999, hits));
+                    else Assert.AreEqual(0, board.Blast(boss.Column, SiegeTuning.RowOf(boss.March), 99999, hits));
+                    Assert.IsEmpty(hits);
+                    Assert.AreEqual(1, boss.Health);
+                }
+        }
+
+        [Test]
+        public void AStormIncludesEveryBossEvenWhenTheyExceedTheQuota()
+        {
+            var bosses = new SiegeRaider[6];
+            for (int i = 0; i < bosses.Length; i++) bosses[i] = Target(i, SiegeKind.Boss);
+            var board = WithTargets(1, bosses);
+            var hits = new List<SiegeStrike>();
+            board.Storm(99999, hits);
+            Assert.AreEqual(6, hits.Count);
+            foreach (var boss in bosses) { Assert.IsTrue(boss.Alive); Assert.AreEqual(1, boss.Health); }
+            Assert.IsFalse(board.CanStorm);
+        }
+
+        [Test]
+        public void AStormExcludesDeadWaitingAndArrivingEnemies()
+        {
+            var targets = new SiegeRaider[8];
+            for (int i = 0; i < 7; i++) targets[i] = Target(i);
+            targets[5].Alive = false;
+            targets[6].Wait = 10f;
+            targets[7] = Target(7, SiegeKind.Boss);
+            targets[7].March = 0f;
+            var hits = new List<SiegeStrike>();
+            WithTargets(0, targets).Storm(1, hits);
+            Assert.AreEqual(5, hits.Count);
+            foreach (var hit in hits) Assert.Less(hit.Raider, 5);
+        }
+
+        [Test]
+        public void AStormChoosesTheSameTargetsWithOrWithoutAStrikeReport()
+        {
+            var a = new SiegeRaider[10];
+            var b = new SiegeRaider[10];
+            for (int i = 0; i < 10; i++) { a[i] = Target(i); b[i] = Target(i); }
+            var hits = new List<SiegeStrike> { new SiegeStrike(999, 1, false) };
+            Assert.AreEqual(6, WithTargets(0, a).Storm(1, hits));
+            Assert.AreEqual(6, WithTargets(0, b).Storm(1, null));
+            Assert.AreEqual(999, hits[0].Raider, "an existing report entry must not be shuffled");
+            for (int i = 0; i < 10; i++) Assert.AreEqual(a[i].Health, b[i].Health);
+        }
+
+        [Test]
+        public void DroppedBombsKeepTheirFullHealthScalingInEveryMode()
+        {
+            for (int mode = 0; mode < 3; mode++)
+            {
+                var bomber = Target(0, SiegeKind.Bomber, surge: 20);
+                bomber.Health = 1;
+                var enemy = Target(1, surge: 20);
+                var board = WithTargets(mode, bomber, enemy);
+                board.BombDamage = 10;
+                board.Blast(0, SiegeTuning.RowOf(.5f), 1, null);
+                Assert.AreEqual(1, board.Bombs.Count);
+                int before = enemy.Health;
+                Assert.AreEqual(20, board.Detonate(board.Bombs[0].Id, null));
+                Assert.AreEqual(20, before - enemy.Health);
+            }
+        }
+
+        // ------------------------------------------------------------------ helpers
+        static SiegeRaider Target(int id, SiegeKind kind = SiegeKind.Creeper, int surge = 10,
+                                  int share = 100)
+        {
+            var target = new SiegeRaider(id, 0, kind, 0, 0f, new SiegeSurge(surge, 10), share);
+            target.March = target.Boss ? target.Hold : .5f;
+            return target;
+        }
+
+        static SiegeBoard WithTargets(int mode, params SiegeRaider[] targets)
+        {
+            var rows = Field();
+            Assert.IsTrue(ProtoGrid.TryRead(rows, rows[0].Length, rows.Length, SiegeLayout.Cells,
+                                            out var grid, out string error), error);
+            SiegeRamp ramp = mode == 1 ? (SiegeRamp)new SiegeEndless("rgby", 0, 20, .55f)
+                           : mode == 2 ? new ShuffleRamp("rgby", 24, .5f) : null;
+            var layout = new SiegeLayout(grid, Gems, Wards, ramp == null ? Waves : null,
+                                         null, 0, ramp);
+            Assert.IsNull(layout.Fault, layout.Fault);
+            var board = SiegeBoard.Build(layout);
+            // Place the same controlled hill on each real mode; spawning and timing are unrelated.
+            ((List<SiegeRaider>)board.Raiders).AddRange(targets);
+            return board;
         }
 
         /// <summary>What the whole hill is carrying, which is what a utility is measured against.</summary>

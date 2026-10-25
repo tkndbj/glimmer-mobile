@@ -383,7 +383,7 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void AStormStrikesEveryRaiderStandingOnTheHill()
+        public void AStormStrikesEveryAvailableRaiderWhenFewerThanFiveAreStanding()
         {
             var board = Stormy();
             // A wave arrives spaced by `RaiderSpacing`, so the whole of it is only on the
@@ -403,6 +403,7 @@ namespace GlimmerGrove.Tests
             var struck = new HashSet<int>();
             foreach (var hit in strikes) struck.Add(hit.Raider);
 
+            Assert.LessOrEqual(standing.Count, 5);
             CollectionAssert.AreEquivalent(standing, struck);
         }
 
@@ -457,11 +458,14 @@ namespace GlimmerGrove.Tests
 
             Assert.IsNotNull(bulwark, "the fixture has to send a bulwark");
 
-            var strikes = new List<SiegeStrike>();
-            board.Storm(100, strikes);
-
             int took = 0;
-            foreach (var hit in strikes) if (hit.Raider == bulwark.Id) took = hit.Damage;
+            for (int attempt = 0; attempt < 20 && took == 0; attempt++)
+            {
+                foreach (var raider in board.Raiders) { raider.Health = raider.MaxHealth; raider.Alive = true; }
+                var strikes = new List<SiegeStrike>();
+                board.Storm(100, strikes);
+                foreach (var hit in strikes) if (hit.Raider == bulwark.Id) took = hit.Damage;
+            }
 
             Assert.AreEqual(100, took, "a shield halves a bolt and never a storm");
         }
@@ -475,7 +479,7 @@ namespace GlimmerGrove.Tests
         public void AStormIsChargedForEverythingItAbsorbed()
         {
             var board = Stormy();
-            Settle(board, SiegeTuning.FirstWaveAfter + 1f);
+            Settle(board, SiegeTuning.FirstWaveAfter + SiegeTuning.RaiderSpacing * 5f);
 
             var item = new UtilityItem("stormcall", UtilityKind.Storm, 700, 40, 3, 4);
             var strikes = new List<SiegeStrike>();

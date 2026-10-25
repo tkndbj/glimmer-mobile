@@ -6535,7 +6535,7 @@
     },
     {
       "key": "utility.stormcall.note",
-      "text": "Ein Blitz trifft jeden Plünderer auf dem Hügel. Einen Boss fällt er nicht."
+      "text": "Trifft bis zu 5 Gegner oder 60 %, falls höher. Bosse sind immer dabei und überleben."
     },
     {
       "key": "utility.surge.name",

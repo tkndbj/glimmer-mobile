@@ -312,19 +312,6 @@ namespace GlimmerGrove
         bool WasFree => !HeartStake.PaidAtEnding(Price);
 
         /// <summary>
-        /// The most heart icons this panel will ever draw in a row.
-        ///
-        /// <para>
-        /// The row is 600 units across at a 96-unit step, so six is what fits and five is what
-        /// the free gate has always been. It exists as a bound because the cap stopped being a
-        /// single number when heart containers shipped: <c>Wallet.MaxHearts</c> is per player
-        /// and can be fifty, and a row that grew with it would draw a wall off both edges of
-        /// the panel. Everything above it is the "+n" the surplus already used.
-        /// </para>
-        /// </summary>
-        const int RowPips = 5;
-
-        /// <summary>
         /// Hearts for a video: the free way out, and always drawn above the paid one.
         ///
         /// <para>
@@ -703,71 +690,39 @@ namespace GlimmerGrove
                             outline: 0f, shadow: 0f, wrap: true);
 
         /// <summary>
-        /// The heart row, with the one just lost drawn empty and struck through by a
-        /// short animation. Showing the cost is the point - a resource that quietly
-        /// decrements is a resource players feel cheated by later.
-        ///
-        /// <para>
-        /// The row is a fixed handful of icons wide and stays that width however many hearts
-        /// are held, because it is a picture of the gate rather than of the balance - twenty
-        /// icons would be a wall, and the row is 600 units across. A surplus, whether it came
-        /// from a chest, a streak, a video or a bought container, is drawn as a "+n" beside
-        /// the row: still visible, still honest, and it does not turn a panel about a lost run
-        /// into a shelf of trophies.
-        /// </para>
-        /// <para>
-        /// <see cref="RowPips"/> is a bound rather than the cap itself, and it became one when
-        /// heart containers shipped: <c>Wallet.MaxHearts</c> is per player now and can be
-        /// fifty, which no row of icons can draw. It is still held to the cap as well, so a
-        /// content push that lowers the free tuning to three draws three.
-        /// </para>
+        /// One heart and the full balance, including hearts above the refill limit.
+        /// A charged loss counts down once; repaints show the current balance at rest.
         /// </summary>
         void BuildHearts()
         {
             var row = UIKit.Node("Hearts", Panel);
             row.anchorMin = row.anchorMax = new Vector2(.5f, 1f);
             row.pivot = new Vector2(.5f, .5f);
-            row.sizeDelta = new Vector2(600f, 120f);
+            row.sizeDelta = new Vector2(240f, DefeatPanel.HeartsHeight);
             row.anchoredPosition = new Vector2(0f, -DefeatPanel.HeartsCentre);
 
-            const float step = 96f;
-            int pips = Wallet.MaxHearts < RowPips ? Wallet.MaxHearts : RowPips;
-            if (pips < 1) pips = 1;
+            bool animate = HeartWasCharged && !Rebuilding;
+            int remaining = Rebuilding ? Profile.Hearts : HeartsLeft;
+            int before = remaining + (animate ? 1 : 0);
 
-            float left = -(pips - 1) * step * .5f;
+            var heart = UIKit.Img("Heart", row, Art.S("Ui/ic_heart"), Pal.Rose,
+                                  Vector2.one * 92f, new Vector2(.5f, .5f),
+                                  new Vector2(-66f, 0f));
+            heart.preserveAspect = true;
 
-            int drawn = HeartsLeft > pips ? pips : HeartsLeft;
-            int surplus = HeartsLeft - drawn;
+            var count = UIKit.Titled("Count", row, before.ToString(), 64, Pal.Rose,
+                                     TextAnchor.MiddleCenter, new Vector2(120f, 96f),
+                                     new Vector2(.5f, .5f), new Vector2(48f, 0f), 3f, 3f);
 
-            if (surplus > 0)
-                UIKit.Titled("Surplus", row, $"+{surplus}", 40, Pal.Rose, TextAnchor.MiddleLeft,
-                             new Vector2(120f, 60f), new Vector2(.5f, .5f),
-                             new Vector2(left + pips * step - 24f, 0f), 3f, 3f);
+            if (!animate) return;
 
-            for (int k = 0; k < pips; k++)
+            // Let the panel arrive before showing the heart that was already charged.
+            Tween.Value(before, remaining, .4f, value =>
             {
-                bool held = k < drawn;
-
-                // The struck-through heart is only drawn when the loss actually shows in
-                // the row. A player who was over the drawn row still paid, but the picture
-                // would be a lie: nothing in the icons went out.
-                // Not on a repaint: the heart went out a minute ago, and draining it again
-                // because gems landed is the panel reporting a charge that did not happen.
-                bool justLost = HeartWasCharged && surplus == 0 && k == drawn && !Rebuilding;
-
-                var heart = UIKit.Img("H" + k, row, Art.S("Ui/ic_heart"),
-                                      held ? Pal.Rose : new Color(.62f, .58f, .60f, .38f),
-                                      Vector2.one * 78f, new Vector2(.5f, .5f),
-                                      new Vector2(left + k * step, 0f));
-                heart.preserveAspect = true;
-
-                if (!justLost) continue;
-
-                // the one that was taken: full for a beat, then drained
-                heart.color = Pal.Rose;
-                Tween.Punch(heart.transform, .3f, .4f).Delay(.18f);
-                Tween.Tint(heart, new Color(.62f, .58f, .60f, .38f), .45f, Ease.InQuad).Delay(.30f);
-            }
+                if (count) count.text = Mathf.RoundToInt(value).ToString();
+            }, Ease.InOutQuad, count).Delay(.5f);
+            Tween.Punch(count.transform, .18f, .4f).Delay(.5f);
+            Tween.Punch(heart.transform, .18f, .4f).Delay(.5f);
         }
     }
 

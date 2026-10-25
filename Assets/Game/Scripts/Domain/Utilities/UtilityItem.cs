@@ -48,11 +48,13 @@ namespace GlimmerGrove.Utilities
         Surge = 3,
 
         /// <summary>
-        /// Damage to <b>everything on the hill at once</b>, aimed at nothing.
+        /// Damage to at least five targetable enemies when available, or sixty per cent rounded
+        /// down when higher. Bosses are included first even when they exceed that quota.
+        /// Aimed at nothing; never kills a boss.
         ///
         /// <para>
         /// <b>It is charged like any other damage and that is what keeps it honest.</b> A storm
-        /// that empties a full hill delivers thousands, so <c>SiegeUtility.MatchesFor</c> bills it
+        /// that thins a full hill delivers damage, so <c>SiegeUtility.MatchesFor</c> bills it
         /// dozens of matches against the grade - which is the same arithmetic a firepot pays and
         /// the reason invariant 39 needs no special case for it. It buys a <em>finish</em>, never
         /// a grade, and on a hill worth enough to be worth clearing it buys a finish that scores
@@ -60,8 +62,9 @@ namespace GlimmerGrove.Utilities
         /// </para>
         /// <para>
         /// <b>It does not kill a boss and must not.</b> Every raider takes the same magnitude, so
-        /// a warlord or an overlord - which carry the health of several waves - is hurt and
-        /// survives. A consumable that ended the finale would be the fight sold rather than
+        /// a warlord or an overlord is hurt and survives. Damage is capped to the baseline share
+        /// of its actual health pool, including reduced boss pools, and leaves at least one HP.
+        /// A consumable that ended the finale would be the fight sold rather than
         /// played, and the mode's one duel is the thing a chapter is built toward.
         /// </para>
         /// <para>
@@ -138,18 +141,15 @@ namespace GlimmerGrove.Utilities
     /// <b>The one rule that makes this mode's numbers last for ever.</b> A chapter is made harder
     /// by surging what its raiders carry (invariant 37by) and an endless lane surges every wave,
     /// so the hill's numbers climb without bound while the line's do not. A magnitude is therefore
-    /// only meaningful <em>against</em> something, and which something decides everything: 440
-    /// means "two creepers and a bit" and stays true for ever if it climbs with a creeper, and
-    /// decays to nothing if it does not. A chapter twenty that carried three times the health
-    /// would have a firepot worth two thirds of what it is worth today, a stormcall that stopped
-    /// being the answer to a wave of armour, and a bomb nobody would cross the board to tap.
+        /// only meaningful <em>against</em> something. Storms and dropped bombs retain their share
+        /// as enemy health climbs; firepots deliberately gain only half of the health increase.
     /// </para>
     /// <para>
     /// <b>So a magnitude is authored against the baseline and converted at the point of
     /// contact</b>, never at authoring time and never per chapter: content keeps writing 440, and
-    /// every raider takes it through <c>SiegeSurge.Hurt</c> - the same multiplier its own health
-    /// went through. Nothing has to be retuned when a chapter ships, there is no second number to
-    /// keep in step, and the share is exact by construction rather than by anybody remembering.
+        /// every raider uses its own health surge. Storms use the full multiplier; firepots keep
+        /// their baseline and gain half the increase. Bosses also cap utility damage against their
+        /// actual health pool, so reducing a boss's health does not turn a utility into a finisher.
     /// </para>
     /// <para>
     /// <b>Why not scale a utility with the player's line instead.</b> It is the obvious answer and

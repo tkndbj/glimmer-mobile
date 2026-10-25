@@ -361,7 +361,7 @@ namespace GlimmerGrove.Tests
                     Assert.Greater(thrown, 1, $"{kind}: the fixture threw one charge and proved nothing");
                 }
 
-                // One blow worth the whole bar: the boss falls to it, from its first stand.
+                // Storms can hurt a planted boss but must leave the finishing blow to the player.
                 {
                     var board = SiegeBoard.Build(DuelWith(kind));
                     var boss = Standing(board);
@@ -369,7 +369,8 @@ namespace GlimmerGrove.Tests
                     Assert.AreEqual(0, boss.Phase);
                     board.Storm(boss.MaxHealth * 10, null);
 
-                    Assert.IsFalse(boss.Alive, $"{kind} survived a blow worth ten of it");
+                    Assert.IsTrue(boss.Alive, $"a storm finished {kind}");
+                    Assert.AreEqual(1, boss.Health);
                 }
 
                 // And a boss is never anything but hurtable once it stands.

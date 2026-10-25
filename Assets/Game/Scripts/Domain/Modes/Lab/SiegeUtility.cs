@@ -192,11 +192,7 @@ namespace GlimmerGrove.Modes
                     return true;
 
                 case UtilityKind.Storm:
-                    // **This one can be answered honestly in advance**, unlike a blast: it lands
-                    // everywhere, so "would it hit anything" is exactly "is anything on the hill".
-                    // A storm over an empty hill is an item spent for nothing, and refusing it
-                    // costs the player only a tap.
-                    return board.OnTheHill > 0;
+                    return board.CanStorm;
 
                 case UtilityKind.Mend:
                     return board.RoomForHealth(aim.Ward) > 0;
@@ -238,18 +234,15 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A magnitude goes in as it was authored and the board converts it.</b> Every damaging
         /// kind is measured in <c>UtilityUnit.Hill</c> - damage against an unsurged raider - and
-        /// <c>SiegeBoard.Blast</c> and <c>SiegeBoard.Storm</c> put it through each raider's own
-        /// surge. Nothing is scaled here, because here there is no raider to scale it against:
+        /// <c>SiegeBoard.Blast</c> and <c>SiegeBoard.Storm</c> scale it against each target:
+        /// half the health increase for a firepot, full scaling for a storm. Nothing is scaled
+        /// here, because here there is no raider to scale it against:
         /// an endless hill holds wave four and wave forty at once, and one figure for both would
         /// be wrong for at least one of them.
         /// </para>
         /// <para>
-        /// <b>The charge needs no change for it, and that is the check worth doing.</b>
-        /// <see cref="MatchesFor"/> divides by <c>PerfectMatch</c>, and par is the hill's health
-        /// over the same figure (<c>SiegeTuning.Par</c>) - so a surge multiplies what a utility
-        /// delivers and what the level is graded against by the same amount. What it costs the
-        /// grade as a <em>share of par</em> is therefore identical on every chapter, which is the
-        /// whole of why invariant 39 survives a hill that climbs for ever.
+        /// The charge still measures damage actually absorbed through <see cref="MatchesFor"/>.
+        /// Target limits and boss caps therefore charge only for the work the utility delivered.
         /// </para>
         /// <para>
         /// <b>Nothing is taken from the player here.</b> This applies the effect and reports it;
@@ -283,8 +276,8 @@ namespace GlimmerGrove.Modes
                     if (absorbed <= 0) return SiegeUse.Refused;
 
                     // Charged exactly as a firepot is, which is what stops it being a way to buy
-                    // a grade: a storm that clears a full hill delivers thousands and is billed
-                    // dozens of matches, so the run's spent count can never come out below a run
+                    // a grade: a storm that thins a hill is billed for its actual damage, so the
+                    // run's spent count can never come out below a run
                     // that did the same work by playing (invariant 39).
                     return new SiegeUse(true, MatchesFor(absorbed), absorbed, -1);
                 }

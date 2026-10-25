@@ -63,13 +63,9 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Deliberately the same multiplier <see cref="Health"/> applies, and that identity is
-        /// the whole feature.</b> A firepot is authored as a share of a raider - 440 against a
-        /// creeper's 200 is two creepers and a bit - and putting <em>both sides of that
-        /// comparison</em> through one multiplier is what keeps the share exact on every chapter
-        /// that will ever ship and on wave ninety of an endless run. A flat figure decays against
-        /// a hill that surges: at a chapter carrying three tenths, a firepot that was worth two
-        /// creepers is worth one and a half, and by the tenth chapter it is worth nothing anybody
-        /// would spend gems on.
+        /// the full scaling used by storms and dropped bombs.</b> Their share of a raider stays
+        /// constant as the hill surges. Firepots average this result with their baseline so that
+        /// only half of the health increase is added to their damage.
         /// </para>
         /// <para>
         /// <b>Its own member rather than a call to <see cref="Health"/>, and pinned to it by a

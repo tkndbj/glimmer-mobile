@@ -86,7 +86,8 @@ namespace GlimmerGrove.Modes
         /// record can say what it took and a kill is one that took the last of it.
         /// </para>
         /// </summary>
-        int Wound(SiegeRaider raider, int damage)
+        /// <param name="limit">An optional utility cap, applied after damage modifiers.</param>
+        int Wound(SiegeRaider raider, int damage, int limit = int.MaxValue)
         {
             if (raider == null || !raider.Alive || damage <= 0) return 0;
             if (raider.Arriving || raider.Health <= 0) return 0;
@@ -102,7 +103,8 @@ namespace GlimmerGrove.Modes
             // source. The damage itself on every board whose build holds neither.
             damage = Afflict(raider, damage);
 
-            int took = damage < raider.Health ? damage : raider.Health;
+            int took = System.Math.Min(damage, System.Math.Min(raider.Health, limit));
+            if (took <= 0) return 0;
 
             raider.Health -= took;
             raider.Flash = .18f;

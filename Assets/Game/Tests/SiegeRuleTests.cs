@@ -2414,7 +2414,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         [Test]
-        public void AUtilitysKillIsDeadAndStillHeldAndWinsTheRunAtOnce()
+        public void AUtilitysKillIsDeadAndStillHeldUntilTheNextStep()
         {
             foreach (bool storm in new[] { false, true })
             {
@@ -2425,8 +2425,6 @@ namespace GlimmerGrove.Tests
                 Assert.IsFalse(board.IsFinished);
 
                 var ids = new List<int>();
-                for (int i = 0; i < board.Raiders.Count; i++) ids.Add(board.Raiders[i].Id);
-
                 var strikes = new List<SiegeStrike>();
 
                 // Enough to kill everything standing, which is the case that ends the run.
@@ -2436,14 +2434,15 @@ namespace GlimmerGrove.Tests
                         for (int row = 0; row < SiegeTuning.BlastRows; row++)
                             board.Blast(lane, row, 9999, strikes);
 
-                Assert.AreEqual(2, strikes.Count, "both raiders were struck");
+                Assert.AreEqual(2, strikes.Count);
+                foreach (var strike in strikes) ids.Add(strike.Raider);
                 for (int i = 0; i < strikes.Count; i++)
                     Assert.IsTrue(strikes[i].Killed, "and both were killed");
 
                 // One: the run is already over. This is why nothing gets a second chance to
                 // notice - `ProtoVerdict` reads `IsFinished` and the screen ends the run.
                 Assert.IsTrue(board.IsFinished,
-                              "the last raider fell, so the verdict is already Done");
+                              "either utility can finish a small group of ordinary raiders");
 
                 // Two: nothing has been swept, so "forgotten" is still false for both of them.
                 for (int i = 0; i < ids.Count; i++)

@@ -6535,7 +6535,7 @@
     },
     {
       "key": "utility.stormcall.note",
-      "text": "Um raio atinge todos os invasores da colina. Não derruba um chefe."
+      "text": "Atinge até 5 inimigos, ou 60% se for mais. Sempre inclui os chefes, sem matá-los."
     },
     {
       "key": "utility.surge.name",
