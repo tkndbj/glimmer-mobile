@@ -8230,6 +8230,170 @@
       "text": "Un evocatore di ossa e una gorgone, insieme"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Fonderia di cenere"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Ponte di ferro"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "Scudi e bruti fin dall'inizio"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Officina di saldatura"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Bruti alla fine di ogni ondata"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Incudine di scintille"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "Due colori, poi altri due, poi tutti e quattro"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Passerella di travi"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Due bombardieri in ogni ondata"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Torre dell'ingranaggio"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "Un evocatore della piaga e un devastatore, insieme"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Linea di pericolo"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "Un colore alla volta, a valanga"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Gancio della lanterna"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Quattro ondate, armature e bombe insieme"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Pressa da forgia"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Due scudi in ogni ondata"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "La rampa"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Quattro ondate, con bruti in ognuna"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Testa della caldaia"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "Un portatore di guerra e un tonante, insieme"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Rastrelliera dei proiettili"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Scudi e bombe su una lunga salita"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Tubo del vapore"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Bombe e armature in ogni ondata"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Sfioratore"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "Bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Cascata di scorie"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Tre scudi in testa a ogni ondata"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Bocca della fornace"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "Un signore supremo e le fauci della tomba, insieme"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Colata del crogiolo"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Bruti di un colore, poi scudi dello stesso"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Frantoio a pestelli"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Quattro ondate sotto la pressa"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Cascata di magma"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "Un bombardiere guida ogni ondata"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Ciminiera"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Tutto ciò che ha la fonderia, in una volta"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Corona di cenere"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "Un re vuoto e un evocatore di ossa, insieme"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Favilla"
     },

@@ -8230,6 +8230,170 @@
       "text": "A bonecaller and a gorgon, together"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Cinderworks"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Iron Span"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "Shields and brutes from the very start"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Weld Bay"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Brutes close every wave"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Spark Anvil"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "Two colours, then two more, then all four"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Girder Walk"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Two bombers in every wave"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Cog Tower"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "A blightcaller and a harrower, together"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Hazard Line"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Lantern Hook"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Four waves, armour and bombs at once"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Forge Press"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Two shields in every wave"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "Rampway"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Four waves, brutes in every one"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Boiler Head"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "A warbringer and a thunderer, together"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Shell Rack"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Shields and bombs on a long climb"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Steam Pipe"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Bombs and plate in every wave"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Spillway"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "Brutes from the very first wave"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Slag Fall"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Three shields at the head of every wave"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Kiln Mouth"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "An overlord and a gravemaw, together"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Ladle Pour"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Brutes of one colour, then shields of it"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Stamp Mill"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Four waves under the press"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Magma Fall"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "A bomber leads every wave"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Smokestack"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Everything the foundry has, at once"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Cinder Crown"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "A hollow king and a bonecaller, together"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },

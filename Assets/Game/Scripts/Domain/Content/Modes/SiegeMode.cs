@@ -1246,9 +1246,16 @@ namespace GlimmerGrove.Content
         /// been drawn whole only once, by the fourth chapter. Appending it moves no shipped chapter
         /// onto a new cast and costs no art.
         /// </para>
+        /// <para>
+        /// <b>Fifteen, and the fifteenth is the wild again.</b> Left alone the table would wrap onto
+        /// the insects; rock golems, minotaurs and mud clods are the crowd the cinder foundry's
+        /// painting asks for - a works hewn out of floating rock - and the wild has been drawn whole
+        /// only once, by the fifth chapter. Appending it moves no shipped chapter onto a new cast and
+        /// costs no art.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
                                             Insects, Reunion, Gathering, Armada, Vanguard,
-                                            Armada, Court, Rabble };
+                                            Armada, Court, Rabble, Wild };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.

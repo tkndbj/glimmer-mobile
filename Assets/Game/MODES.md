@@ -1204,6 +1204,36 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    curse and the void stone carry on. Its map (`map14`) is walked along its asphalt road
    (`TRACES[14]`, `GROUND[14]` at a tolerance of ten); twenty rungs reach over 35 marks, accepted.
 
+37fi. **The fifteenth chapter spikes higher over a higher floor.** Cinderworks (`s17_cinderworks`,
+   order 161, levels 211-230, the owner's cinder foundry over a lava sea, 2026-10-25) was
+   commissioned off the same production reading as Rustwaste - players clear the ladder without
+   buying an upgrade - as "base 110% health bonus, and some levels should have spikes ... some
+   levels should be truly challenging". **The floor is 2.1** (`Traded` row `(14, 21)`) and each
+   rung deals its own figure over it in Rustwaste's sawtooth, steeper: 2.1 2.2 2.1 2.3 2.2 |
+   2.1 2.3 2.2 2.4 2.3 | 2.2 2.4 2.3 2.5 2.3 | 2.2 2.4 2.4 2.6 2.4 (average 2.295 against
+   2.155). Every block climbs to a spike on its fourth rung, the spikes climb 2.3, 2.4, 2.5, 2.6,
+   the duel after each stands a tenth or two under it, and no two neighbours are more than two
+   tenths apart (`Tools/chapters/s17_cinderworks.py` proves all four;
+   `TheEighthChapterTradesSurgeForItsCrowd` holds the floor and a peak of exactly five tenths
+   over it). **The crowd is Rustwaste's** (910 raiders against 909; brutes, shields and bombers
+   equal), so the step is health alone - par runs 7.9% over Rustwaste's. Its duels are four pairs
+   nobody had fought, eight verbs, no sunlord: blightcaller + harrower, warbringer + thunderer,
+   overlord + gravemaw, hollowking + bonecaller. `TheFifteenthChapterIsHarder` reads it against
+   Rustwaste on the gate's three-star embers and strongest line and on the veteran line at three
+   and four stars (the star ladder is read on `Veteran(3)`, as Rustwaste's is), and refuses a
+   wall on the four-star veteran line. **Its fields were chosen by play, 37fh's lesson again**: the
+   first deal held eleven of rungs 9-20 at nought of nine on the four-star veteran line, so sixteen
+   rungs were played on fifty fresh six-swap fields each and given the one field that holds them
+   2 to 5 of 9 there. Measured against Rustwaste: three-star embers **3** of 180 against 10, the
+   strongest line **55** against 77, the veteran line at three stars **16** against 29 (six rungs
+   walled - a player standing the best live line meets a rung they cannot pass without an
+   upgrade about every third rung), and at four stars **53** against 60, **every rung held 2 or 3
+   of 9, nothing walled**. On the strongest line every duel's boss is reached 9 of 9 and the duels
+   fall 0, 4, 0 and 3 of 9. **The cast is the wild whole again** - rock golems, minotaurs and mud clods, drawn whole
+   only by the fifth chapter - and the curse and the void stone carry on. Its map (`map15`) is
+   walked along its iron road (`TRACES[15]`, `GROUND[15]` at a tolerance of ten, the furnace-lit
+   plates listed beside the plain ones); twenty rungs reach over 37 marks, accepted.
+
 ## The Shuffle lane - the third track
 
 The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a

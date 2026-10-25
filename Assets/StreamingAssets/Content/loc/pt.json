@@ -8230,6 +8230,170 @@
       "text": "Um invocador de ossos e uma górgona, juntos"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Fundição das Cinzas"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Ponte de Ferro"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "Escudos e brutos desde o início"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Oficina de Solda"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Brutos no fim de cada onda"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Bigorna das Faíscas"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "Duas cores, depois outras duas, depois as quatro"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Passarela de Vigas"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Dois bombardeiros em cada onda"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Torre da Engrenagem"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "Um invocador da praga e um devastador, juntos"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Faixa de Perigo"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "Uma cor por vez, em avalanche"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Gancho da Lanterna"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Quatro ondas, armadura e bombas ao mesmo tempo"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Prensa da Forja"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Dois escudos em cada onda"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "A Rampa"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Quatro ondas, com brutos em cada uma"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Topo da Caldeira"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "Um arauto da guerra e um trovejante, juntos"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Prateleira de Projéteis"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Escudos e bombas numa longa subida"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Cano de Vapor"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Bombas e armadura em cada onda"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Vertedouro"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "Brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Cascata de Escória"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Três escudos à frente de cada onda"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Boca do Forno"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "Um soberano e uma boca da cova, juntos"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Despejo do Cadinho"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Brutos de uma cor, depois escudos dessa cor"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Moinho de Pilões"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Quatro ondas sob a prensa"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Cascata de Magma"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "Um bombardeiro lidera cada onda"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Chaminé"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Tudo o que a fundição tem, de uma vez"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Coroa das Cinzas"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "Um rei oco e um invocador de ossos, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Faisquinha"
     },

@@ -361,6 +361,37 @@ namespace GlimmerGrove.Tests
             new Rung("s16_rustcrown", new[] { "brybgybr", "bgbgrbrb", "yrygbygg", "gybrygbb", "rgyrbgrr" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#ggrbyRGbyr", "rgbyRGbyrgbyRG" }, "bonecaller:r+gorgon:g", 50, 22, 38, 52, "plsfha", true, true),
         };
 
+        /// <summary>
+        /// Cinderworks, the fifteenth chapter: the owner's cinder foundry over a lava sea, twenty rungs,
+        /// a duel on every fifth, each rung dealing its own surge at or over the floor of 2.1 (the
+        /// owner's "base 110% health bonus") in a sawtooth whose spikes climb to 2.6 (MODES.md 37fi),
+        /// on Rustwaste's crowd; the wild cast, and the curse and the void stone carried on. Held to
+        /// `s17_cinderworks.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Cinderworks =
+        {
+            new Rung("s17_ironspan", new[] { "yybryybg", "ggrrgrgg", "ryrbyrbb", "ybgbbygy", "brgyrygy" }, "rgby", "rgby", new[] { "rgbyRGby#grgbyrgb", "rgby#yRGby!rgbyRG", "rgBY#b#rrgbyRGbyg" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s17_weldbay", new[] { "gbygrbyg", "rrgbrybr", "ggrbbrby", "rbyyggyr", "ggryybrb" }, "rgby", "rgby", new[] { "rgby#grgbyRGbyrgb", "rgbyRGby#bbrgbyRGy", "rgbyRGbyrgBY#yrgr" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s17_sparkanvil", new[] { "rgyrbggb", "ryrryrbr", "ybbybryg", "gbyrygyb", "grggbrgg" }, "rgby", "rgby", new[] { "yyrrYRyyrr#yyrr", "ggbbGBggbb#ggbb", "rgbyRGBY#g#ybrrgby" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s17_girderwalk", new[] { "byyrygyb", "grrbrbgy", "yggbyyrg", "gbyrrgby", "gbgrybgr" }, "rgby", "rgby", new[] { "rgbyRGby!gRGbyrb", "rgBY#r!yRGby!grb", "rgby!b#gRGbyRGby!r" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s17_cogtower", new[] { "grrbbryb", "bryygbgg", "ygrggybr", "gbyybygy", "rbbyrrby" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#g!bRGbyRGb", "rgBY#r#yRGbyrg" }, "blightcaller:g+harrower:r", 35, 22, 38, 52, "plsfha", true, true),
+            new Rung("s17_hazardline", new[] { "gyyrrbyb", "ybbgbggb", "grgyrryy", "ybbyggbg", "ggybrbrr" }, "rgby", "rgby", new[] { "ggGGGggggg#gyyy", "bbBBBbbbbb#brrr", "rrRR#rrrrYYY#yyyy" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s17_lanternhook", new[] { "yggbygrr", "rrgrggyb", "byyrybry", "ggbbybgg", "ybbrgrgb" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#y#rRGbyRGb", "rgby!ggbRG#brgyy", "rgbyRGby#rrgbyRG" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s17_forgepress", new[] { "bgybrgbb", "ybygbyrg", "grgrygrr", "bybbyrby", "rybygrby" }, "rgby", "rgby", new[] { "rgby#b#gRGby!rgby", "rgby#r#yRGBYrgbyg", "rgBY#y#rRGbyrgby" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s17_rampway", new[] { "yrggbbyg", "ybrbyrrb", "ggbgrgrb", "grrybbgr", "yrbgybyg" }, "rgby", "rgby", new[] { "rgby#rrgbyRGbyrgb", "rgby#grgbyRGbyy", "rgby#y!bbgBYrgby", "rgbyrgbyRGBYrgr" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s17_boilerhead", new[] { "rygyrgbg", "gbrbybyr", "gyrbbryg", "rgbgrgbr", "rrbgygry" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyg", "rgby#bRGbyrgbRG", "rgby#rRGbyrgb" }, "warbringer:b+thunderer:y", 50, 23, 38, 52, "plsfha", true, true),
+            new Rung("s17_shellrack", new[] { "gbgygbgb", "byrbryrg", "yygrygry", "gbrybgyr", "bgrbbygg" }, "rgby", "rgby", new[] { "rgbyrgbyRGby!rgy", "rgBY#g#byrgbyRGbyr", "rgby!b#rRGbyrgBYgy" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s17_steampipe", new[] { "ybggrygb", "ryybbgrg", "bbrbbyyb", "bygrgbgg", "grgryrgr" }, "rgby", "rgby", new[] { "rgby#g!rRGbyrgby", "rgby#b#y!rRGbyrgb", "rgBY!y#gRGbyrgBY" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s17_spillway", new[] { "ggygryrg", "ybbygbgb", "yyrybryb", "rbrgrgyy", "bgybryrr" }, "rgby", "rgby", new[] { "rgbyRGby#brgbyrgb", "rgbyRGby#rRGbyrg", "RGbyrgby#ggrbyrgBY" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s17_slagfall", new[] { "bggyrbgb", "ygybgbyg", "gbrbrgry", "bbgrbbrg", "gyyggyby" }, "rgby", "rgby", new[] { "#g#b#rRGBYrgbyrg", "#y#r#bRGbyrgbyrgb", "#b#g#yRGbyrgbyrg" }, "", 25, 25, 38, 52, "plsfha", true, true),
+            new Rung("s17_kilnmouth", new[] { "rgyybggb", "gbrgrbgy", "brrygbby", "bygbrryr", "grrggbrr" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyg", "rgby#yRGbyRGb", "rgBY#bRGbyrgb" }, "overlord:r+gravemaw:b", 45, 23, 38, 52, "plsfha", true, true),
+            new Rung("s17_ladlepour", new[] { "brgyygyb", "yyrgbryg", "ggbybgbr", "bgyrggrg", "ybgbbryg" }, "rgby", "rgby", new[] { "rrRRR#rrrryyg", "ggGGG#ggggg#gb", "bbBBB#bbbbyy#yy" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s17_stampmill", new[] { "ybgrgbgb", "yrbgyryb", "ggrybbyr", "bybrgrgy", "ggyyrgyr" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrb", "rgby#yyrgbyRGby", "rgby#g#b!rrgbyRG", "RGBYrgbyRGbygr" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s17_magmafall", new[] { "gbggryry", "ryggbybg", "grbyygrr", "gbrbgbyg", "byrggyrr" }, "rgby", "rgby", new[] { "!rrgbyRGbyrgbyRG", "!bygby#gRGby!rgb", "!ggrBY#yRGbyrgBYr" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s17_smokestack", new[] { "bryryrgy", "yggbybgr", "bbyyrgyb", "grrbybyr", "rbgbgrbg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGbyg", "rgby#r#y#bRGby!rgb", "rgby!g#bRGbyrgBYRG" }, "", 20, 26, 38, 52, "plsfha", true, true),
+            new Rung("s17_cindercrown", new[] { "bgbrbybr", "byygyrbb", "ggbrbygr", "yyrybbrg", "gygrgygb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#bbrgbyRGbyr", "rgbyRGbyrgbyRG" }, "hollowking:g+bonecaller:y", 50, 24, 38, 52, "plsfha", true, true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -429,7 +460,7 @@ namespace GlimmerGrove.Tests
         static WardLine LineFor(string chapter)
             => chapter == "Thornwatch" ? Bare()
              : chapter == "Broodmarch" ? Kitted()
-             : chapter == "Rustwaste" ? Veteran(3)
+             : chapter == "Rustwaste" || chapter == "Cinderworks" ? Veteran(3)
              : Bought();
 
 
@@ -596,6 +627,7 @@ namespace GlimmerGrove.Tests
             ("Ironbastion", Ironbastion),
             ("Wyrmforge", Wyrmforge),
             ("Rustwaste", Rustwaste),
+            ("Cinderworks", Cinderworks),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line, bool walls = true)

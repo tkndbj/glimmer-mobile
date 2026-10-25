@@ -3159,6 +3159,8 @@ CHAPTER_CASTS = {
     "s15_wyrmforge": "court",
     # The fourteenth draws the rabble whole again, the neighbourhood's zombies (`SiegeMode.MainCasts`).
     "s16_rustwaste": "rabble",
+    # The fifteenth draws the wild whole again, the foundry's rock golems (`SiegeMode.MainCasts`).
+    "s17_cinderworks": "wild",
     "s02_endlesswatch": "medley",
 }
 

@@ -8230,6 +8230,170 @@
       "text": "Przywoływacz kości i gorgona, razem"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Popielna huta"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Żelazny most"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "Tarcze i osiłki od samego początku"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Spawalnia"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Osiłki na końcu każdej fali"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Iskrzące kowadło"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "Dwa kolory, potem dwa kolejne, potem wszystkie cztery"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Kładka z dźwigarów"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Dwóch bombowców w każdej fali"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Wieża zębatki"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "Przywoływacz zarazy i niszczyciel, razem"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Linia ostrzegawcza"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "Jeden kolor naraz, lawiną"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Hak latarni"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Cztery fale, pancerz i bomby naraz"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Prasa kuźnicza"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Dwie tarcze w każdej fali"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "Rampa"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Cztery fale, osiłki w każdej"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Głowica kotła"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "Zwiastun wojny i gromowładny, razem"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Stojak na pociski"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Tarcze i bomby na długiej wspinaczce"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Rura parowa"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Bomby i pancerz w każdej fali"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Przelew"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "Osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Wodospad żużlu"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Trzy tarcze na czele każdej fali"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Paszcza pieca"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "Władca i paszcza grobu, razem"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Wylew z kadzi"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Osiłki jednego koloru, potem tarcze tego koloru"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Stępa"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Cztery fale pod prasą"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Wodospad magmy"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "Bombowiec prowadzi każdą falę"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Komin"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Wszystko, co ma huta, naraz"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Popielna korona"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "Pusty król i przywoływacz kości, razem"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Iskierka"
     },

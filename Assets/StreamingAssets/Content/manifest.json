@@ -501,6 +501,36 @@
       ]
     },
     {
+      "id": "s17_cinderworks",
+      "version": 1,
+      "order": 161,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s17_ironspan",
+        "s17_weldbay",
+        "s17_sparkanvil",
+        "s17_girderwalk",
+        "s17_cogtower",
+        "s17_hazardline",
+        "s17_lanternhook",
+        "s17_forgepress",
+        "s17_rampway",
+        "s17_boilerhead",
+        "s17_shellrack",
+        "s17_steampipe",
+        "s17_spillway",
+        "s17_slagfall",
+        "s17_kilnmouth",
+        "s17_ladlepour",
+        "s17_stampmill",
+        "s17_magmafall",
+        "s17_smokestack",
+        "s17_cindercrown"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

@@ -8230,6 +8230,170 @@
       "text": "Un invocador de huesos y una gorgona, juntos"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Fundición de ceniza"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Puente de hierro"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "Escudos y brutos desde el principio"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Taller de soldadura"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Brutos al final de cada oleada"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Yunque de chispas"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "Dos colores, luego otros dos, luego los cuatro"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Paso de vigas"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Dos bombarderos en cada oleada"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Torre del engranaje"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "Un invocador de plagas y un devastador, juntos"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Línea de peligro"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "Un color cada vez, en avalancha"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Gancho del farol"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Cuatro oleadas, armadura y bombas a la vez"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Prensa de forja"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Dos escudos en cada oleada"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "La rampa"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Cuatro oleadas, con brutos en cada una"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Cabeza de caldera"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "Un heraldo de guerra y un tronador, juntos"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Estante de proyectiles"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Escudos y bombas en una larga subida"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Tubo de vapor"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Bombas y armadura en cada oleada"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Aliviadero"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "Brutos desde la primera oleada"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Cascada de escoria"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Tres escudos al frente de cada oleada"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Boca del horno"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "Un señor supremo y una fauce de la tumba, juntos"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Vertido del crisol"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Brutos de un color, y luego escudos de ese color"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Molino de mazos"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Cuatro oleadas bajo la prensa"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Cascada de magma"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "Un bombardero encabeza cada oleada"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Chimenea"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Todo lo que tiene la fundición, a la vez"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Corona de ceniza"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "Un rey hueco y un invocador de huesos, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Chispita"
     },

@@ -8230,6 +8230,170 @@
       "text": "Un invocateur d'os et une gorgone, ensemble"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Fonderie des cendres"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Pont de fer"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "Des boucliers et des brutes dès le départ"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Atelier de soudure"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Des brutes à la fin de chaque vague"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Enclume à étincelles"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "Deux couleurs, puis deux autres, puis les quatre"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Passerelle de poutres"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Deux bombardiers dans chaque vague"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Tour du rouage"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "Un invocateur de fléaux et un ravageur, ensemble"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Ligne de danger"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "Une couleur à la fois, en avalanche"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Crochet à lanterne"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Quatre vagues, armure et bombes d'un coup"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Presse de forge"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Deux boucliers dans chaque vague"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "La rampe"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Quatre vagues, des brutes dans chacune"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Tête de chaudière"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "Un porte-guerre et un tonnant, ensemble"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Râtelier à obus"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Boucliers et bombes sur une longue montée"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Tuyau de vapeur"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Bombes et armure dans chaque vague"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Déversoir"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "Des brutes dès la première vague"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Chute de scories"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Trois boucliers en tête de chaque vague"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Gueule du four"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "Un seigneur suprême et une gueule du tombeau, ensemble"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Coulée du creuset"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Des brutes d'une couleur, puis des boucliers de cette couleur"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Bocard"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Quatre vagues sous la presse"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Chute de magma"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "Un bombardier mène chaque vague"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Cheminée d'usine"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Tout ce que la fonderie a, d'un coup"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Couronne de cendres"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "Un roi creux et un invocateur d'os, ensemble"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Flammèche"
     },

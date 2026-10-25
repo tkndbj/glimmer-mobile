@@ -318,6 +318,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Rabble, SiegeMode.CastFor(GameTrack.Main, 13),
                             "Rustwaste does not draw the rabble");
 
+            // And the fifteenth wraps onto the wild rather than the insects: the foundry's rock
+            // golems and minotaurs, drawn whole once before.
+            Assert.AreEqual(SiegeMode.Wild, SiegeMode.CastFor(GameTrack.Main, 14),
+                            "Cinderworks does not draw the wild");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
 

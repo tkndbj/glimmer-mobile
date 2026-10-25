@@ -8230,6 +8230,170 @@
       "text": "Bir kemik çağırıcısı ve bir gorgon, birlikte"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "Kor Dökümhanesi"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "Demir Köprü"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "En baştan kalkanlar ve devler"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "Kaynak Atölyesi"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "Her aşamanın sonunda devler"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "Kıvılcım Örsü"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "İki renk, sonra iki renk daha, sonra dördü birden"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "Kiriş Yolu"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "Her aşamada iki bombacı"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "Dişli Kulesi"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "Bir çürüme çağırıcısı ve bir yıkıcı, birlikte"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "Tehlike Şeridi"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "Her seferinde bir renk, sel gibi"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "Fener Kancası"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "Dört aşama, aynı anda zırh ve bombalar"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "Dövme Presi"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "Her aşamada iki kalkan"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "Rampa Yolu"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "Dört aşama, her birinde devler"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "Kazan Başı"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "Bir savaş habercisi ve bir gök gürleyen, birlikte"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "Mermi Rafı"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "Uzun bir tırmanışta kalkanlar ve bombalar"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "Buhar Borusu"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "Her aşamada bombalar ve zırh"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "Taşma Kanalı"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "İlk aşamadan itibaren devler"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "Cüruf Şelalesi"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "Her aşamanın başında üç kalkan"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "Fırın Ağzı"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "Bir büyük efendi ve bir mezar ağzı, birlikte"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "Pota Dökümü"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "Tek renkten devler, sonra o renkten kalkanlar"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "Döğme Değirmeni"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "Presin altında dört aşama"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "Magma Şelalesi"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "Her aşamayı bir bombacı yönetir"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "Fabrika Bacası"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "Dökümhanenin elindeki her şey, bir arada"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "Kor Tacı"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "Bir oyuk kral ve bir kemik çağırıcısı, birlikte"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Kıvılcımcık"
     },

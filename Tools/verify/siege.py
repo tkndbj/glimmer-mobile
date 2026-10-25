@@ -337,7 +337,10 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: The fourteenth's floor is 2.0, a tenth over the thirteenth and under the 2.2 the ladder derives:
 #: the owner's brief of 2026-10-25 - "100% health bonus at minimum", with some rungs at 110% and
 #: 120%. It is a floor rather than every rung's figure; `s16_rustwaste.py` writes a sawtooth over it.
-TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19, 13: 20}
+#: The fifteenth's floor is 2.1, a tenth over the fourteenth and under the 2.4 the ladder derives:
+#: the owner's brief of 2026-10-25 - "base 110% health bonus, and some levels should have spikes".
+#: A floor again; `s17_cinderworks.py` writes its sawtooth over it, spiking to 2.6.
+TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19, 13: 20, 14: 21}
 
 
 def toughness_for(ordinal):
@@ -493,6 +496,10 @@ STAR_FACTORS = {
     #: Ironbastion's reason**: par carries each rung's own surge, so the same share asks for the same
     #: quality of play on a heavier hill. Provisional until the owner's sweep.
     14: (0.38, 0.52),
+
+    #: Cinderworks, a sawtooth of 2.1 to 2.6 over Rustwaste's crowd. **The same lines, for the same
+    #: reason**: par carries each rung's own surge. Provisional until the owner's sweep.
+    15: (0.38, 0.52),
 }
 
 

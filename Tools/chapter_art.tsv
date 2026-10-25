@@ -111,6 +111,13 @@ s15_wyrmforge	wyrmforge_map.png
 # 2048x8256 picture, supplied as `map3.png` and saved as `rustwaste_map.png` - pass the folder it
 # was saved in as --source. Drawn by s16_rustwaste, and by whatever fourteenth chapter comes next.
 s16_rustwaste	rustwaste_map.png
+# map15 - four strips, the owner's own painting (2026-10-25): a cinder foundry in the sky - floating
+# rocks over a lava sea carrying smoking furnaces, a crucible pouring, a forge press, a crane, a
+# cog tower, a boiler and pipes, an ore pier and a welding mech, with lava falling off every edge,
+# joined by an iron road of riveted plates edged in hazard stripes. One flattened 2048x8256
+# picture, supplied as `map4.png` and saved as `cinderworks_map.png` - pass the folder it was
+# saved in as --source. Drawn by s17_cinderworks, and by whatever fifteenth chapter comes next.
+s17_cinderworks	cinderworks_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

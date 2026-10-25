@@ -298,6 +298,9 @@ NUDGE = {
 #:
 #: **`map14` accepts every rung for the same reason**: its asphalt road switches back across the
 #: middle of four strips ten times, so twenty rungs on it cannot all keep their marks clear.
+#:
+#: **`map15` accepts every rung for the same reason**: its iron road switches back across the
+#: middle of four strips fifteen times, so twenty rungs on it cannot all keep their marks clear.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
@@ -309,6 +312,7 @@ ACCEPTED_OVERLAPS = {
     12: True,
     13: True,
     14: True,
+    15: True,
 }
 
 
@@ -495,6 +499,22 @@ TRACES = {
             (570, 4150), (1460, 3480), (575, 2750), (1455, 2100), (650, 1620), (1240, 1180),
         ),
     ),
+    #: `map15` is the owner's cinder foundry (2026-10-25): an iron road of riveted plates edged in
+    #: yellow-and-black hazard stripes, switching back fifteen times up a stack of floating rocks
+    #: over a sea of lava - a welding mech and an ore pier at the foot, a cog tower, a forge press,
+    #: pipes and a boiler, then lava falls, a crucible pouring, a crane and smoking furnaces above -
+    #: from the foot of the bottom rock to the head of the top one. Only the plates are listed as
+    #: ground (`GROUND[15]`); the bends were read off the mask's own row runs, one turning point
+    #: each, and the samples snap to the middle of the road. Where a lantern or a furnace mouth
+    #: lights the road orange it falls out of the mask and the samples there stand on the line.
+    15: dict(
+        size=(2048, 8256),
+        bends=(
+            (395, 8200), (1610, 7420), (630, 6820), (1330, 6250), (800, 5860), (1430, 5250),
+            (790, 4740), (1570, 4240), (1000, 4000), (1480, 3720), (650, 3220), (1610, 2520),
+            (625, 1770), (1490, 1160), (640, 540), (1240, 100), (1260, 0),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -634,6 +654,13 @@ GROUND = {
     # these. The junk heap and the containers carry the grey in patches and are never near the
     # line; the sky's nearest violet, (152, 104, 159), is forty off it in blue.
     14: [(158, 99, 119), (157, 100, 117)],
+
+    # `map15` is the foundry, and its ground is its **iron road** and nothing else: riveted plates
+    # of one warm grey, (100, 78, 78) - the median of the road mask over the whole of `TRACES[15]` -
+    # and the same plates where a furnace mouth lights them, (120, 83, 77). The furnaces, the press
+    # and the crane carry the grey in patches and are never near the line; the rock beside the
+    # road, (72, 48, 50), is twenty-eight off it.
+    15: [(100, 78, 78), (120, 83, 77)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -671,6 +698,7 @@ STREAM = {
     12: [],
     13: [],
     14: [],
+    15: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -754,6 +782,11 @@ VOID = {
     # foot. Subtracted from the road at its own tolerance only, for `map9`'s reason (it is walked,
     # not searched).
     14: [(196, 140, 172), (152, 104, 159), (220, 100, 143), (249, 101, 129), (252, 104, 104)],
+
+    # `map15`'s void is a lava sea running gold at the foot through orange to ember red at the
+    # head, under a smoke-red sky. Subtracted from the road at its own tolerance only, for
+    # `map9`'s reason (it is walked, not searched).
+    15: [(251, 146, 54), (238, 95, 38), (234, 83, 30), (221, 62, 23), (144, 51, 42)],
 }
 
 #: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
@@ -787,7 +820,7 @@ ENCLOSED = {10}
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10, 14: 10}
+TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10, 14: 10, 15: 10}
 DEFAULT_TOLERANCE = 26
 
 

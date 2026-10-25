@@ -8230,6 +8230,170 @@
       "text": "مستدعي عظام وغرغون، معا"
     },
     {
+      "key": "chapter.s17_cinderworks.name",
+      "text": "مسبك الجمر"
+    },
+    {
+      "key": "level.s17_ironspan.name",
+      "text": "الجسر الحديدي"
+    },
+    {
+      "key": "level.s17_ironspan.tagline",
+      "text": "حواجز وعمالقة منذ البداية"
+    },
+    {
+      "key": "level.s17_weldbay.name",
+      "text": "ورشة اللحام"
+    },
+    {
+      "key": "level.s17_weldbay.tagline",
+      "text": "عمالقة في آخر كل موجة"
+    },
+    {
+      "key": "level.s17_sparkanvil.name",
+      "text": "سندان الشرر"
+    },
+    {
+      "key": "level.s17_sparkanvil.tagline",
+      "text": "لونان، ثم لونان آخران، ثم الأربعة"
+    },
+    {
+      "key": "level.s17_girderwalk.name",
+      "text": "ممر العوارض"
+    },
+    {
+      "key": "level.s17_girderwalk.tagline",
+      "text": "مفجران في كل موجة"
+    },
+    {
+      "key": "level.s17_cogtower.name",
+      "text": "برج الترس"
+    },
+    {
+      "key": "level.s17_cogtower.tagline",
+      "text": "مستدعي آفة وحاصد، معا"
+    },
+    {
+      "key": "level.s17_hazardline.name",
+      "text": "خط الخطر"
+    },
+    {
+      "key": "level.s17_hazardline.tagline",
+      "text": "لون واحد في كل مرة، كالسيل"
+    },
+    {
+      "key": "level.s17_lanternhook.name",
+      "text": "خطاف الفانوس"
+    },
+    {
+      "key": "level.s17_lanternhook.tagline",
+      "text": "أربع موجات، دروع وقنابل معا"
+    },
+    {
+      "key": "level.s17_forgepress.name",
+      "text": "مكبس الحدادة"
+    },
+    {
+      "key": "level.s17_forgepress.tagline",
+      "text": "حاجزان في كل موجة"
+    },
+    {
+      "key": "level.s17_rampway.name",
+      "text": "المنحدر"
+    },
+    {
+      "key": "level.s17_rampway.tagline",
+      "text": "أربع موجات، وعمالقة في كل منها"
+    },
+    {
+      "key": "level.s17_boilerhead.name",
+      "text": "رأس المرجل"
+    },
+    {
+      "key": "level.s17_boilerhead.tagline",
+      "text": "جالب حرب وراعد، معا"
+    },
+    {
+      "key": "level.s17_shellrack.name",
+      "text": "رف القذائف"
+    },
+    {
+      "key": "level.s17_shellrack.tagline",
+      "text": "حواجز وقنابل في صعود طويل"
+    },
+    {
+      "key": "level.s17_steampipe.name",
+      "text": "أنبوب البخار"
+    },
+    {
+      "key": "level.s17_steampipe.tagline",
+      "text": "قنابل ودروع في كل موجة"
+    },
+    {
+      "key": "level.s17_spillway.name",
+      "text": "المفيض"
+    },
+    {
+      "key": "level.s17_spillway.tagline",
+      "text": "عمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s17_slagfall.name",
+      "text": "شلال الخبث"
+    },
+    {
+      "key": "level.s17_slagfall.tagline",
+      "text": "ثلاثة حواجز في مقدمة كل موجة"
+    },
+    {
+      "key": "level.s17_kilnmouth.name",
+      "text": "فوهة الفرن"
+    },
+    {
+      "key": "level.s17_kilnmouth.tagline",
+      "text": "سيد أعظم وفم القبور، معا"
+    },
+    {
+      "key": "level.s17_ladlepour.name",
+      "text": "سكب البوتقة"
+    },
+    {
+      "key": "level.s17_ladlepour.tagline",
+      "text": "عمالقة من لون واحد، ثم حواجز من لونه"
+    },
+    {
+      "key": "level.s17_stampmill.name",
+      "text": "مطحنة الدق"
+    },
+    {
+      "key": "level.s17_stampmill.tagline",
+      "text": "أربع موجات تحت المكبس"
+    },
+    {
+      "key": "level.s17_magmafall.name",
+      "text": "شلال الصهارة"
+    },
+    {
+      "key": "level.s17_magmafall.tagline",
+      "text": "مفجر يقود كل موجة"
+    },
+    {
+      "key": "level.s17_smokestack.name",
+      "text": "المدخنة"
+    },
+    {
+      "key": "level.s17_smokestack.tagline",
+      "text": "كل ما يملكه المسبك، دفعة واحدة"
+    },
+    {
+      "key": "level.s17_cindercrown.name",
+      "text": "تاج الجمر"
+    },
+    {
+      "key": "level.s17_cindercrown.tagline",
+      "text": "ملك أجوف ومستدعي عظام، معا"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "شرارة الجمر"
     },
