@@ -8394,6 +8394,170 @@
       "text": "Un rey hueco y un invocador de huesos, juntos"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Bastión del ancla"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Paso de nubes"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Escudos y brutos desde el principio"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Aspa del molino"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Brutos al final de cada oleada"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Puente de celosía"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Dos colores, luego otros dos, luego los cuatro"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Roca del engranaje"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Dos bombarderos en cada oleada"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Reposo de cohetes"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Un acorazado y una fauce de la tumba, juntos"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Farola"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Un color cada vez, en avalancha"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Depósitos de combustible"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Cuatro oleadas, armadura y bombas a la vez"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Rampa en sombra"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Dos escudos en cada oleada"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Patio de cajas"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Cuatro oleadas, con brutos en cada una"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Mástil de radio"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Un caudillo y una gorgona, juntos"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Línea de sacos"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Escudos y bombas en una larga subida"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Cañones gemelos"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bombas y armadura en cada oleada"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Foco cegador"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Brutos desde la primera oleada"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Cañón de campaña"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Tres escudos al frente de cada oleada"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Roca del faro"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Un coloso y un encadenador, juntos"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Cadena del ancla"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Brutos de un color, y luego escudos de ese color"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Banderas de señales"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Cuatro oleadas junto a las banderas"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Estante de cohetes"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Un bombardero encabeza cada oleada"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Cubierta de torretas"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Todo lo que tiene la batería, a la vez"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Cofa"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Un rey hueco y un devastador, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Chispita"
     },

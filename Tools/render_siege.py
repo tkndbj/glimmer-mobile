@@ -3161,6 +3161,8 @@ CHAPTER_CASTS = {
     "s16_rustwaste": "rabble",
     # The fifteenth draws the wild whole again, the foundry's rock golems (`SiegeMode.MainCasts`).
     "s17_cinderworks": "wild",
+    # The sixteenth draws the vanguard whole again, the battery's gun line (`SiegeMode.MainCasts`).
+    "s18_anchorhold": "vanguard",
     "s02_endlesswatch": "medley",
 }
 

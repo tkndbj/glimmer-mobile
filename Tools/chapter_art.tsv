@@ -118,6 +118,13 @@ s16_rustwaste	rustwaste_map.png
 # picture, supplied as `map4.png` and saved as `cinderworks_map.png` - pass the folder it was
 # saved in as --source. Drawn by s17_cinderworks, and by whatever fifteenth chapter comes next.
 s17_cinderworks	cinderworks_map.png
+# map16 - four strips, the owner's own painting (2026-10-25): a gun battery in the sky - floating
+# rocks above the clouds carrying naval turrets, a field gun behind sandbags, rocket racks, ammo
+# crates, a lighthouse, radio masts, signal flags, fuel tanks, a windmill and a watchtower, with
+# anchors hanging off the undersides, joined by a grey road edged in white lines. One flattened
+# 2048x8256 picture, supplied as `map5.png` and saved as `anchorhold_map.png` - pass the folder it
+# was saved in as --source. Drawn by s18_anchorhold, and by whatever sixteenth chapter comes next.
+s18_anchorhold	anchorhold_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

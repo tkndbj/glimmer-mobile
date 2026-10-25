@@ -8394,6 +8394,170 @@
       "text": "A hollow king and a bonecaller, together"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Anchorhold"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Cloud Step"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Shields and brutes from the very start"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Mill Vane"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Brutes close every wave"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Truss Bridge"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Two colours, then two more, then all four"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Cog Rock"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Two bombers in every wave"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Rocket Rest"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "An ironclad and a gravemaw, together"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Lamp Post"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Tank Farm"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Four waves, armour and bombs at once"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Shadow Ramp"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Two shields in every wave"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Crate Yard"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Four waves, brutes in every one"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Radio Mast"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "A warlord and a gorgon, together"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Sandbag Line"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Shields and bombs on a long climb"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Twin Guns"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bombs and plate in every wave"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Glare Lamp"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Brutes from the very first wave"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Field Gun"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Three shields at the head of every wave"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Beacon Rock"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "A colossus and a shackler, together"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Anchor Chain"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Brutes of one colour, then shields of it"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Signal Flags"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Four waves past the signal flags"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Rocket Rack"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "A bomber leads every wave"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Turret Deck"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Everything the battery has, at once"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Crow's Nest"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "A hollow king and a harrower, together"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },

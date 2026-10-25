@@ -66,6 +66,7 @@ TABLES = (
     ("Wyrmforge", "s15_wyrmforge", "SiegeRuleTests.Chapters.cs"),
     ("Rustwaste", "s16_rustwaste", "SiegeRuleTests.Chapters.cs"),
     ("Cinderworks", "s17_cinderworks", "SiegeRuleTests.Chapters.cs"),
+    ("Anchorhold", "s18_anchorhold", "SiegeRuleTests.Chapters.cs"),
 )
 
 #: One `new Rung(...)` line. Deliberately narrow - it matches the shape this project writes and

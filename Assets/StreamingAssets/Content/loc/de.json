@@ -8394,6 +8394,170 @@
       "text": "Ein hohler König und ein Knochenrufer, gemeinsam"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Ankerfeste"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Wolkenstufe"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Schilde und Schläger von Anfang an"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Mühlenflügel"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Schläger am Ende jeder Welle"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Fachwerkbrücke"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Zwei Farben, dann zwei weitere, dann alle vier"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Zahnradfels"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Zwei Bomber in jeder Welle"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Raketenablage"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Ein Gepanzerter und ein Grabschlund, gemeinsam"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Laternenpfahl"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Eine Farbe nach der anderen, als Flut"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Tanklager"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Vier Wellen, Rüstung und Bomben zugleich"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Schattenrampe"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Zwei Schilde in jeder Welle"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Kistenhof"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Vier Wellen, Schläger in jeder"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Funkmast"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Ein Kriegsherr und eine Gorgone, gemeinsam"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Sandsacklinie"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Schilde und Bomben auf einem langen Aufstieg"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Zwillingsgeschütze"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bomben und Rüstung in jeder Welle"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Suchscheinwerfer"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Schläger ab der ersten Welle"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Feldgeschütz"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Drei Schilde an der Spitze jeder Welle"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Leuchtturmfels"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Ein Koloss und ein Fessler, gemeinsam"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Ankerkette"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Schläger einer Farbe, dann Schilde derselben"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Signalflaggen"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Vier Wellen an den Signalflaggen vorbei"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Raketengestell"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Ein Bomber führt jede Welle an"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Geschützdeck"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Alles, was die Batterie hat, auf einmal"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Krähennest"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Ein hohler König und ein Verwüster, gemeinsam"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Glutfunke"
     },

@@ -8394,6 +8394,170 @@
       "text": "Bir oyuk kral ve bir kemik çağırıcısı, birlikte"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Çapa Kalesi"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Bulut Basamağı"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "En baştan kalkanlar ve devler"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Değirmen Kanadı"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Her aşamanın sonunda devler"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Kafes Köprü"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "İki renk, sonra iki renk daha, sonra dördü birden"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Dişli Kayası"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Her aşamada iki bombacı"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Roket Yatağı"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Bir zırhlı ve bir mezar ağzı, birlikte"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Lamba Direği"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Her seferinde bir renk, sel gibi"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Yakıt Tankları"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Dört aşama, aynı anda zırh ve bombalar"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Gölge Rampası"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Her aşamada iki kalkan"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Sandık Avlusu"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Dört aşama, her birinde devler"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Telsiz Direği"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Bir savaş beyi ve bir gorgon, birlikte"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Kum Torbası Hattı"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Uzun bir tırmanışta kalkanlar ve bombalar"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "İkiz Toplar"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Her aşamada bombalar ve zırh"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Projektör"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "İlk aşamadan itibaren devler"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Sahra Topu"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Her aşamanın başında üç kalkan"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Fener Kayası"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Bir dev heykel ve bir zincirci, birlikte"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Çapa Zinciri"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Tek renkten devler, sonra o renkten kalkanlar"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "İşaret Bayrakları"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "İşaret bayraklarının yanından dört aşama"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Roket Rafı"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Her aşamayı bir bombacı yönetir"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Taret Güvertesi"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Bataryanın elindeki her şey, bir arada"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Gözcü Yuvası"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Bir oyuk kral ve bir yıkıcı, birlikte"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Kıvılcımcık"
     },

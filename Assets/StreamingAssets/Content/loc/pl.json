@@ -8394,6 +8394,170 @@
       "text": "Pusty król i przywoływacz kości, razem"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Kotwiczna twierdza"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Chmurny stopień"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Tarcze i osiłki od samego początku"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Skrzydło młyna"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Osiłki na końcu każdej fali"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Most kratowy"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Dwa kolory, potem dwa kolejne, potem wszystkie cztery"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Skała zębatki"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Dwóch bombowców w każdej fali"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Leże rakiet"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Opancerzony i paszcza grobu, razem"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Latarnia uliczna"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Jeden kolor naraz, lawiną"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Zbiorniki paliwa"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Cztery fale, pancerz i bomby naraz"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Cienista rampa"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Dwie tarcze w każdej fali"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Plac skrzyń"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Cztery fale, osiłki w każdej"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Maszt radiowy"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Wódz i gorgona, razem"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Linia worków"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Tarcze i bomby na długiej wspinaczce"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Bliźniacze działa"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bomby i pancerz w każdej fali"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Reflektor"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Działo polowe"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Trzy tarcze na czele każdej fali"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Skała latarni"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Kolos i skuwacz, razem"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Łańcuch kotwicy"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Osiłki jednego koloru, potem tarcze tego koloru"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Flagi sygnałowe"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Cztery fale obok flag"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Stojak rakiet"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Bombowiec prowadzi każdą falę"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Pokład wieżyczek"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Wszystko, co ma bateria, naraz"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Bocianie gniazdo"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Pusty król i niszczyciel, razem"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Iskierka"
     },

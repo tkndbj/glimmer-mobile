@@ -8394,6 +8394,170 @@
       "text": "ملك أجوف ومستدعي عظام، معا"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "حصن المرساة"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "درجة السحاب"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "حواجز وعمالقة منذ البداية"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "ريشة الطاحونة"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "عمالقة في آخر كل موجة"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "الجسر الشبكي"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "لونان، ثم لونان آخران، ثم الأربعة"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "صخرة الترس"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "مفجران في كل موجة"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "مرقد الصواريخ"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "مدرع وفم القبور، معا"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "عمود المصباح"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "لون واحد في كل مرة، كالسيل"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "خزانات الوقود"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "أربع موجات، دروع وقنابل معا"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "منحدر الظل"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "حاجزان في كل موجة"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "ساحة الصناديق"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "أربع موجات، وعمالقة في كل منها"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "سارية اللاسلكي"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "أمير حرب وغرغون، معا"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "خط أكياس الرمل"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "حواجز وقنابل في صعود طويل"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "المدفعان التوأم"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "قنابل ودروع في كل موجة"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "الكشاف"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "عمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "مدفع الميدان"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "ثلاثة حواجز في مقدمة كل موجة"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "صخرة المنارة"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "عملاق أعظم ومقيد، معا"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "سلسلة المرساة"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "عمالقة من لون واحد، ثم حواجز من لونه"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "رايات الإشارة"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "أربع موجات بجوار الرايات"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "رف الصواريخ"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "مفجر يقود كل موجة"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "سطح المدافع"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "كل ما تملكه البطارية، دفعة واحدة"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "عش الغراب"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "ملك أجوف وحاصد، معا"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "شرارة الجمر"
     },

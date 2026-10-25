@@ -392,6 +392,37 @@ namespace GlimmerGrove.Tests
             new Rung("s17_cindercrown", new[] { "bgbrbybr", "byygyrbb", "ggbrbygr", "yyrybbrg", "gygrgygb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#bbrgbyRGbyr", "rgbyRGbyrgbyRG" }, "hollowking:g+bonecaller:y", 50, 24, 38, 52, "plsfha", true, true),
         };
 
+        /// <summary>
+        /// Anchorhold, the sixteenth chapter: the owner's gun battery above the clouds, twenty rungs, a
+        /// duel on every fifth, each rung dealing its own surge at or over the floor of 2.2 (the owner's
+        /// "base health bonus 120%") in a sawtooth whose spikes climb to 2.7 (MODES.md 37fj), on
+        /// Cinderworks' crowd; the vanguard cast, and the curse and the void stone carried on. Held to
+        /// `s18_anchorhold.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Anchorhold =
+        {
+            new Rung("s18_cloudstep", new[] { "yryrbybg", "rrybrgyr", "gbgyrrgy", "rybgbryg", "brygybgb" }, "rgby", "rgby", new[] { "rgbyRGby#yrgbyrgb", "rgby#gRGby!rgbyRG", "rgBY#r#brgbyRGbyy" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s18_millvane", new[] { "ybbggyby", "yrryyrgr", "bygbbgby", "bgrybrby", "ygyrgygr" }, "rgby", "rgby", new[] { "rgby#brgbyRGbyrgb", "rgbyRGby#rrgbyRGb", "rgbyRGbyrgBY#grgy" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s18_trussbridge", new[] { "grbbyrry", "yrbbggrb", "rgyrrbyr", "bbgrygbr", "ygybbrrg" }, "rgby", "rgby", new[] { "bbggBGbbgg#bbgg", "rryyRYrryy#rryy", "rgbyRGBY#b#rygrgby" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s18_cogrock", new[] { "rggyyryr", "gyrrbrgr", "bbyygbyb", "bbggbbrg", "rygyryrg" }, "rgby", "rgby", new[] { "rgbyRGby!yRGbyrg", "rgBY#b!rRGby!gry", "rgby!r#yRGbyRGby!b" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s18_rocketrest", new[] { "bryggyry", "ybgrrybr", "gryrrbyg", "bggybgrb", "yggbygby" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#y!rRGbyRGb", "rgBY#g#bRGbyrg" }, "ironclad:r+gravemaw:g", 35, 23, 38, 52, "plsfha", true, true),
+            new Rung("s18_lamppost", new[] { "gryrbbgr", "ygybrgyb", "rrbrybyr", "ybygyrbg", "ygrbbggr" }, "rgby", "rgby", new[] { "yyYYYyyyyy#ybbb", "rrRRRrrrrr#rggg", "ggGG#ggggBBB#bbbb" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s18_tankfarm", new[] { "ygygbgrr", "ybbrygbb", "gyybrryy", "ggrybbyg", "ybrgrggb" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#g#bRGbyRGb", "rgby!yyrRG#rrgbb", "rgbyRGby#bbgbyRG" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s18_shadowramp", new[] { "gryrrygy", "rygbybgr", "gyrgyryg", "bgbgbgyy", "ybyrygrg" }, "rgby", "rgby", new[] { "rgby#r#yRGby!rgby", "rgby#b#gRGBYrgbyr", "rgBY#g#bRGbyrgby" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s18_crateyard", new[] { "ybrrgbbg", "bygyyryg", "yrbybggr", "rrbrbbry", "byyrgrgb" }, "rgby", "rgby", new[] { "rgby#bbgbyRGbyrgb", "rgby#ygbyRGbyrr", "rgby#r!yygBYrgby", "rgbyrgbyRGBYrgby" }, "", 20, 25, 38, 52, "plsfha", true, true),
+            new Rung("s18_radiomast", new[] { "rbgbrbry", "yggyygyr", "yybyrrbg", "rrgbgygb", "rrgbbygg" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#gRGbyrgbRG", "rgby#yRGbyrgb" }, "warlord:b+gorgon:y", 50, 24, 38, 52, "plsfha", true, true),
+            new Rung("s18_sandbagline", new[] { "gybgybby", "yrgyrygg", "bgyybbrg", "rgbrggry", "bbybyygb" }, "rgby", "rgby", new[] { "rgbyrgbyRGby!rgb", "rgBY#y#ryrgbyRGbyg", "rgby!r#gRGbyrgBYby" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s18_twinguns", new[] { "rbrbbyyr", "byrgygyr", "grbyrggb", "brggbryy", "ybyrbbgr" }, "rgby", "rgby", new[] { "rgby#y!gRGbyrgby", "rgby#r#b!gRGbyrgb", "rgBY!b#yRGbyrgBY" }, "", 20, 25, 38, 52, "plsfha", true, true),
+            new Rung("s18_glarelamp", new[] { "gbgygbgy", "gbgbrrgb", "ryygbgby", "gybrrybg", "ygbbryyr" }, "rgby", "rgby", new[] { "rgbyRGby#grgbyrgb", "rgbyRGby#yRGbyrg", "RGbyrgby#rrgbyrgBY" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s18_fieldgun", new[] { "brybyybr", "brgbrrgy", "ygbygbyy", "rybyggbb", "grgbbyyg" }, "rgby", "rgby", new[] { "#y#r#gRGBYrgbyrg", "#b#g#rRGbyrgbyrgb", "#r#y#bRGbyrgbyrg" }, "", 25, 26, 38, 52, "plsfha", true, true),
+            new Rung("s18_beaconrock", new[] { "bryrggyy", "grgbyrrg", "rygyybgr", "yybbgrbb", "rgrbgrrg" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#rRGbyRGb", "rgBY#yRGbyrgb" }, "colossus:g+shackler:b", 45, 24, 38, 52, "plsfha", true, true),
+            new Rung("s18_anchorchain", new[] { "yrrybybg", "gygbbggr", "rbggrrgb", "gbbyrryb", "ggyybyry" }, "rgby", "rgby", new[] { "bbBBB#bbbbrrg", "yyYYY#yyyyy#yr", "ggGGG#ggggbb#bb" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s18_signalflags", new[] { "gbbrrbry", "gygyrgyg", "rrggybbg", "rbbrrggy", "gbyryygb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbygr", "rgby#bbrgbyRGby", "rgby#y#r!ggrbyRG", "RGBYrgbyRGbyry" }, "", 20, 25, 38, 52, "plsfha", true, true),
+            new Rung("s18_rocketrack", new[] { "grbybybr", "byrybygy", "bbrbgrbr", "gygrgryy", "yrbbyygg" }, "rgby", "rgby", new[] { "!yrgbyRGbyrgbyRG", "!grgby#rRGby!yrb", "!bbgBY#rRGbyrgBYg" }, "", 20, 25, 38, 52, "plsfha", true, true),
+            new Rung("s18_turretdeck", new[] { "rbgygrgy", "bgbrbyrb", "gryyrgyr", "ygrgbygr", "ybybrbyb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGbyr", "rgby#g#b#yRGby!rgb", "rgby!r#yRGbyrgBYRG" }, "", 20, 27, 38, 52, "plsfha", true, true),
+            new Rung("s18_crowsnest", new[] { "ybryyrrg", "rybyrybg", "bgrgryrr", "gyygbgry", "rrbybgbg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbygb", "rgby#yyrgbyRGbyr", "rgbyRGbyrgbyRG" }, "hollowking:r+harrower:y", 50, 25, 38, 52, "plsfha", true, true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -460,7 +491,7 @@ namespace GlimmerGrove.Tests
         static WardLine LineFor(string chapter)
             => chapter == "Thornwatch" ? Bare()
              : chapter == "Broodmarch" ? Kitted()
-             : chapter == "Rustwaste" || chapter == "Cinderworks" ? Veteran(3)
+             : chapter == "Rustwaste" || chapter == "Cinderworks" || chapter == "Anchorhold" ? Veteran(3)
              : Bought();
 
 
@@ -628,6 +659,7 @@ namespace GlimmerGrove.Tests
             ("Wyrmforge", Wyrmforge),
             ("Rustwaste", Rustwaste),
             ("Cinderworks", Cinderworks),
+            ("Anchorhold", Anchorhold),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line, bool walls = true)

@@ -301,6 +301,9 @@ NUDGE = {
 #:
 #: **`map15` accepts every rung for the same reason**: its iron road switches back across the
 #: middle of four strips fifteen times, so twenty rungs on it cannot all keep their marks clear.
+#:
+#: **`map16` accepts every rung for the same reason**: its grey road switches back across the
+#: middle of four strips fourteen times, so twenty rungs on it cannot all keep their marks clear.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
@@ -313,6 +316,7 @@ ACCEPTED_OVERLAPS = {
     13: True,
     14: True,
     15: True,
+    16: True,
 }
 
 
@@ -515,6 +519,21 @@ TRACES = {
             (625, 1770), (1490, 1160), (640, 540), (1240, 100), (1260, 0),
         ),
     ),
+    #: `map16` is the owner's sky battery (2026-10-25): a grey road edged in white lines, switching
+    #: back fourteen times up a stack of floating rocks above the clouds - a windmill, fuel tanks and
+    #: a cog at the foot, gun emplacements, a radio mast and a lighthouse in the middle, signal flags,
+    #: naval turrets and a watchtower at the head. Only the road is listed as ground (`GROUND[16]`);
+    #: the bends were read off the mask's own row runs, one turning point each, and the samples
+    #: snap to the middle of the road. The ramp between the fuel-tank rock and the one above it is
+    #: the same road in shadow, listed as the second colour.
+    16: dict(
+        size=(2048, 8256),
+        bends=(
+            (930, 8050), (1575, 7470), (640, 6840), (1420, 6300), (740, 5860), (1460, 5300),
+            (760, 4760), (1480, 4300), (1060, 4030), (1440, 3740), (620, 3210), (1580, 2540),
+            (600, 1790), (1520, 1210), (640, 520), (1100, 250),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -661,6 +680,13 @@ GROUND = {
     # and the crane carry the grey in patches and are never near the line; the rock beside the
     # road, (72, 48, 50), is twenty-eight off it.
     15: [(100, 78, 78), (120, 83, 77)],
+
+    # `map16` is the battery, and its ground is its **grey road** and nothing else: one cool grey,
+    # (156, 144, 143) - the median of the road mask over the whole of `TRACES[16]` - and the same
+    # road where it climbs the shaded ramp, (118, 115, 124). The towers and the lighthouse carry
+    # the shaded grey in patches and are never near the line; the rock tops are greener and the
+    # clouds far paler.
+    16: [(156, 144, 143), (118, 115, 124)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -699,6 +725,7 @@ STREAM = {
     13: [],
     14: [],
     15: [],
+    16: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -787,6 +814,11 @@ VOID = {
     # head, under a smoke-red sky. Subtracted from the road at its own tolerance only, for
     # `map9`'s reason (it is walked, not searched).
     15: [(251, 146, 54), (238, 95, 38), (234, 83, 30), (221, 62, 23), (144, 51, 42)],
+
+    # `map16`'s void is a sky running blue at the head through a dusk band to cream cloud at the
+    # foot. Subtracted from the road at its own tolerance only, for `map9`'s reason (it is walked,
+    # not searched).
+    16: [(67, 107, 158), (93, 138, 177), (182, 178, 151), (252, 237, 212), (243, 224, 191)],
 }
 
 #: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
@@ -820,7 +852,7 @@ ENCLOSED = {10}
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10, 14: 10, 15: 10}
+TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10, 14: 10, 15: 10, 16: 10}
 DEFAULT_TOLERANCE = 26
 
 

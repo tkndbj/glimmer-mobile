@@ -225,7 +225,8 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(19, SiegeTuning.ToughnessFor(12), "Wyrmforge is not the traded 1.9");
             Assert.AreEqual(20, SiegeTuning.ToughnessFor(13), "Rustwaste's floor is not the traded 2.0");
             Assert.AreEqual(21, SiegeTuning.ToughnessFor(14), "Cinderworks' floor is not the traded 2.1");
-            Assert.AreEqual(24, SiegeTuning.ToughnessFor(15), "the ladder past the trades moved");
+            Assert.AreEqual(22, SiegeTuning.ToughnessFor(15), "Anchorhold's floor is not the traded 2.2");
+            Assert.AreEqual(25, SiegeTuning.ToughnessFor(16), "the ladder past the trades moved");
 
             foreach (var rung in Cogspire)
                 Assert.AreEqual(SiegeTuning.ToughnessFor(8), rung.Built().Tough.HealthTenths,
@@ -275,6 +276,21 @@ namespace GlimmerGrove.Tests
             }
             Assert.AreEqual(SiegeTuning.ToughnessFor(14), least, "no rung of Cinderworks deals its floor");
             Assert.AreEqual(5, most - least, "Cinderworks' surge does not spike to 2.6");
+
+            // **The sixteenth is a floor too** (MODES.md 37fj): every rung at or over its row and at
+            // most five tenths past it, the floor met, and a spike of the whole five.
+            least = int.MaxValue;
+            most = 0;
+            foreach (var rung in Anchorhold)
+            {
+                int tenths = rung.Built().Tough.HealthTenths;
+                Assert.GreaterOrEqual(tenths, SiegeTuning.ToughnessFor(15), $"{rung.Id} deals under the floor");
+                Assert.LessOrEqual(tenths, SiegeTuning.ToughnessFor(15) + 5, $"{rung.Id} deals past the peak");
+                least = System.Math.Min(least, tenths);
+                most = System.Math.Max(most, tenths);
+            }
+            Assert.AreEqual(SiegeTuning.ToughnessFor(15), least, "no rung of Anchorhold deals its floor");
+            Assert.AreEqual(5, most - least, "Anchorhold's surge does not spike to 2.7");
         }
     }
 }

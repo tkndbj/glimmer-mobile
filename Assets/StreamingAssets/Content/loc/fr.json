@@ -8394,6 +8394,170 @@
       "text": "Un roi creux et un invocateur d'os, ensemble"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Fort de l'ancre"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Marche des nuages"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Des boucliers et des brutes dès le départ"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Aile du moulin"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Des brutes à la fin de chaque vague"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Pont en treillis"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Deux couleurs, puis deux autres, puis les quatre"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Rocher du rouage"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Deux bombardiers dans chaque vague"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Repos des roquettes"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Un cuirassé et une gueule du tombeau, ensemble"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Réverbère"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Une couleur à la fois, en avalanche"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Dépôt de carburant"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Quatre vagues, armure et bombes d'un coup"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Rampe d'ombre"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Deux boucliers dans chaque vague"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Cour des caisses"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Quatre vagues, des brutes dans chacune"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Mât radio"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Un chef de guerre et une gorgone, ensemble"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Ligne de sacs de sable"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Boucliers et bombes sur une longue montée"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Canons jumeaux"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bombes et armure dans chaque vague"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Projecteur"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Des brutes dès la première vague"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Canon de campagne"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Trois boucliers en tête de chaque vague"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Rocher du phare"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Un colosse et un enchaîneur, ensemble"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Chaîne d'ancre"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Des brutes d'une couleur, puis des boucliers de cette couleur"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Pavillons de signaux"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Quatre vagues le long des pavillons"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Râtelier à roquettes"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Un bombardier mène chaque vague"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Pont des tourelles"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Tout ce que la batterie a, d'un coup"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Nid-de-pie"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Un roi creux et un ravageur, ensemble"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Flammèche"
     },

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s18_anchorhold
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s18_anchorhold
+  m_GUID: 0a880ec4e25c40fc81a3cdec81bfae5f
+  m_SerializeEntries:
+  - m_GUID: d8f52cc5c51a45acae993caeea9cea91
+    m_Address: Art/Map/map16_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b52d3622fd5044b88f2583a89113537d
+    m_Address: Art/Map/map16_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f58389542b3445ba930858a0ace28d70
+    m_Address: Art/Map/map16_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 556441bbe0eb49cda71c797afb59918b
+    m_Address: Art/Map/map16_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 4bf3f63bd314489a8ab0025df20c345e, type: 2}
+    - {fileID: 11400000, guid: 36bda3f2ecb641158494321a543fb8a2, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s18_anchorhold_BundledAssetGroupSchema
+    - Glimmer Chapter s18_anchorhold_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

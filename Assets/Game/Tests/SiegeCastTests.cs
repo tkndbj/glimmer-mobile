@@ -323,6 +323,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Wild, SiegeMode.CastFor(GameTrack.Main, 14),
                             "Cinderworks does not draw the wild");
 
+            // And the sixteenth wraps onto the vanguard rather than the insects: the battery's gun
+            // line, drawn whole once before.
+            Assert.AreEqual(SiegeMode.Vanguard, SiegeMode.CastFor(GameTrack.Main, 15),
+                            "Anchorhold does not draw the vanguard");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
 

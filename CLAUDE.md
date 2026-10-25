@@ -923,12 +923,13 @@ gates print the derived totals.
 - **One live mode, Thornwatch (siege)** on three tracks: the ladder, the Infinite lane and the Shuffle lane
   (`s13_shufflewatch`, keeper 5, MODES.md 59 - a dealt Breaker line, no bosses, three upgrade cards every two
   waves; the two authored star waves are guesses until the owner plays). Chapters `s01`, `s03`–`s08` (ten rungs each), `s09`–`s12` and
-  `s14_ironbastion`–`s17_cinderworks` (twenty, boss duels every fifth; `s13` is the Shuffle lane's id), and
+  `s14_ironbastion`–`s18_anchorhold` (twenty, boss duels every fifth; `s13` is the Shuffle lane's id), and
   `s02_endlesswatch` on the Infinite track (opens at keeper 10). Glade, fall and prism are hidden. Six casts; no
   sixth square exists, so the twelfth chapter wraps onto the armada, the thirteenth onto the court, the
-  fourteenth onto the rabble and the fifteenth onto the wild (`SiegeMode.MainCasts`, MODES.md 37ff-37fi); a later
-  one wraps again or cuts a cast. `s16_rustwaste` and `s17_cinderworks` deal each rung's own surge over a floor
-  (2.0 and 2.1, spiking to 2.4 and 2.6; 37fh, 37fi). Details in `MODES.md`.
+  fourteenth onto the rabble, the fifteenth onto the wild and the sixteenth onto the vanguard (`SiegeMode.MainCasts`,
+  MODES.md 37ff-37fj); a later one wraps again or cuts a cast. `s16_rustwaste`, `s17_cinderworks` and
+  `s18_anchorhold` deal each rung's own surge over a floor (2.0, 2.1 and 2.2, spiking to 2.4, 2.6 and 2.7;
+  37fh-37fj). Details in `MODES.md`.
 - **Systems live**: progression, tasks (45), season (47), streak (48), ranks (52) and the rank ceremony,
   tutorial (53), keeper levels for sale (57), the welcome bonus (58), daily challenges in four genres — Pairs, Glade, Merge, Push
   (56), referrals (51), reminders (50), the update wall (49, ships asking nothing), two public boards

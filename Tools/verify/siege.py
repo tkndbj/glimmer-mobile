@@ -340,7 +340,10 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: The fifteenth's floor is 2.1, a tenth over the fourteenth and under the 2.4 the ladder derives:
 #: the owner's brief of 2026-10-25 - "base 110% health bonus, and some levels should have spikes".
 #: A floor again; `s17_cinderworks.py` writes its sawtooth over it, spiking to 2.6.
-TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19, 13: 20, 14: 21}
+#: The sixteenth's floor is 2.2, a tenth over the fifteenth and under the 2.5 the ladder derives:
+#: the owner's brief of 2026-10-25 - "base health bonus 120% and with spikes". A floor again;
+#: `s18_anchorhold.py` writes its sawtooth over it, spiking to 2.7.
+TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19, 13: 20, 14: 21, 15: 22}
 
 
 def toughness_for(ordinal):
@@ -500,6 +503,10 @@ STAR_FACTORS = {
     #: Cinderworks, a sawtooth of 2.1 to 2.6 over Rustwaste's crowd. **The same lines, for the same
     #: reason**: par carries each rung's own surge. Provisional until the owner's sweep.
     15: (0.38, 0.52),
+
+    #: Anchorhold, a sawtooth of 2.2 to 2.7 over Cinderworks' crowd. **The same lines, for the same
+    #: reason**: par carries each rung's own surge. Provisional until the owner's sweep.
+    16: (0.38, 0.52),
 }
 
 

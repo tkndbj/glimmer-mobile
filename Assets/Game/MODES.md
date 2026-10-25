@@ -1234,6 +1234,31 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    walked along its iron road (`TRACES[15]`, `GROUND[15]` at a tolerance of ten, the furnace-lit
    plates listed beside the plain ones); twenty rungs reach over 37 marks, accepted.
 
+37fj. **The sixteenth chapter climbs a tenth again, and its fields are chosen on three lines.**
+   Anchorhold (`s18_anchorhold`, order 162, levels 231-250, the owner's gun battery above the
+   clouds, 2026-10-25) was commissioned as "base health bonus 120% and with spikes". **The floor is
+   2.2** (`Traded` row `(15, 22)`) and each rung deals its own figure over it in 37fi's sawtooth a
+   tenth higher: 2.2 2.3 2.2 2.4 2.3 | 2.2 2.4 2.3 2.5 2.4 | 2.3 2.5 2.4 2.6 2.4 | 2.3 2.5 2.5 2.7 2.5
+   (average 2.395), spikes 2.4, 2.5, 2.6, 2.7, neighbours never more than two tenths apart
+   (`Tools/chapters/s18_anchorhold.py`; `TheEighthChapterTradesSurgeForItsCrowd` holds the floor and
+   a peak five tenths over it). **The crowd is Cinderworks'** (910 raiders, brutes, shields and
+   bombers equal), so the step is health alone - par runs 3.6% over. Its duels are four pairs nobody
+   had fought, eight verbs, no sunlord: ironclad + gravemaw, warlord + gorgon, colossus + shackler,
+   hollowking + harrower. **The first deal held 8 of 180 on the four-star veteran line**, sixteen
+   rungs at nought, so every field was chosen by play (37fh): forty fresh fields a rung on that
+   line, sixty more for the field gun's shield column (one in a hundred held it twice). **Choosing on
+   that line alone was not enough** - it left the three-star veteran line and three-star embers
+   over Cinderworks' - so every field holding its rung 2 to 5 of 9 there was played on both of those
+   lines too and the twenty were picked together. Measured against Cinderworks: three-star embers
+   **2** of 180 against 3, the strongest line **50** against 55, the veteran line at three stars
+   **14** against 16 (seven rungs walled), at four stars **50** against 53, **every rung held 2 to 4
+   of 9, nothing walled**; every duel's boss is reached 9 of 9 on the strongest line, the duels
+   falling 5, 2, 0 and 2 of 9 (the colossus and shackler at the lighthouse is the wall a bought line
+   meets, held 4 of 9 on the four-star veteran line). **The cast is the vanguard whole again**,
+   drawn whole only by the eleventh chapter, and the curse and the void stone carry on. Its map
+   (`map16`) is walked along its grey road (`TRACES[16]`, `GROUND[16]` at a tolerance of ten, the
+   shaded ramp listed beside the plain road); twenty rungs reach over 34 marks, accepted.
+
 ## The Shuffle lane - the third track
 
 The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a

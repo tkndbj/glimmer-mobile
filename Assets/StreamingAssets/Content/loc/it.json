@@ -8394,6 +8394,170 @@
       "text": "Un re vuoto e un evocatore di ossa, insieme"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Rocca dell'ancora"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Gradino di nubi"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Scudi e bruti fin dall'inizio"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Pala del mulino"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Bruti alla fine di ogni ondata"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Ponte a traliccio"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Due colori, poi altri due, poi tutti e quattro"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Roccia dell'ingranaggio"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Due bombardieri in ogni ondata"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Riposo dei razzi"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Un corazzato e le fauci della tomba, insieme"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Lampione"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Un colore alla volta, a valanga"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Deposito carburante"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Quattro ondate, armature e bombe insieme"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Rampa d'ombra"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Due scudi in ogni ondata"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Cortile delle casse"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Quattro ondate, con bruti in ognuna"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Antenna radio"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Un condottiero e una gorgone, insieme"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Linea di sacchi"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Scudi e bombe su una lunga salita"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Cannoni gemelli"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bombe e armature in ogni ondata"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Riflettore"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Cannone da campo"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Tre scudi in testa a ogni ondata"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Roccia del faro"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Un colosso e un incatenatore, insieme"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Catena dell'ancora"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Bruti di un colore, poi scudi dello stesso"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Bandiere di segnalazione"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Quattro ondate lungo le bandiere"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Rastrelliera dei razzi"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Un bombardiere guida ogni ondata"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Ponte delle torrette"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Tutto ciò che ha la batteria, in una volta"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Coffa"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Un re vuoto e un devastatore, insieme"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Favilla"
     },

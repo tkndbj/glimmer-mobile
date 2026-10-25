@@ -531,6 +531,36 @@
       ]
     },
     {
+      "id": "s18_anchorhold",
+      "version": 1,
+      "order": 162,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s18_cloudstep",
+        "s18_millvane",
+        "s18_trussbridge",
+        "s18_cogrock",
+        "s18_rocketrest",
+        "s18_lamppost",
+        "s18_tankfarm",
+        "s18_shadowramp",
+        "s18_crateyard",
+        "s18_radiomast",
+        "s18_sandbagline",
+        "s18_twinguns",
+        "s18_glarelamp",
+        "s18_fieldgun",
+        "s18_beaconrock",
+        "s18_anchorchain",
+        "s18_signalflags",
+        "s18_rocketrack",
+        "s18_turretdeck",
+        "s18_crowsnest"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

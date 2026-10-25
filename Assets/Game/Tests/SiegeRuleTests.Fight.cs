@@ -845,6 +845,7 @@ namespace GlimmerGrove.Tests
             yield return ("wyrmforge", Wyrmforge);
             yield return ("rustwaste", Rustwaste);
             yield return ("cinderworks", Cinderworks);
+            yield return ("anchorhold", Anchorhold);
         }
     }
 }

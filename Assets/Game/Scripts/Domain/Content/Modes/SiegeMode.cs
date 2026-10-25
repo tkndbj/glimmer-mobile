@@ -1253,9 +1253,15 @@ namespace GlimmerGrove.Content
         /// only once, by the fifth chapter. Appending it moves no shipped chapter onto a new cast and
         /// costs no art.
         /// </para>
+        /// <para>
+        /// <b>Sixteen, and the sixteenth is the vanguard again.</b> Left alone the table would wrap
+        /// onto the insects; the fifth square is the crowd the sky battery's painting asks for - a
+        /// fortified gun line - and it has been drawn whole only once, by the eleventh chapter.
+        /// Appending it moves no shipped chapter onto a new cast and costs no art.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
                                             Insects, Reunion, Gathering, Armada, Vanguard,
-                                            Armada, Court, Rabble, Wild };
+                                            Armada, Court, Rabble, Wild, Vanguard };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.

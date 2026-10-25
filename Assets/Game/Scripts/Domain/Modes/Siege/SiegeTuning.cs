@@ -3001,9 +3001,15 @@ namespace GlimmerGrove.Modes
         /// is: the chapter tool writes each rung's own figure at or above it, spiking to 2.6
         /// (MODES.md 37fi), held by <c>TheFifteenthChapterIsHarder</c>.
         /// </para>
+        /// <para>
+        /// <b>A ninth row: the sixteenth chapter's floor is 2.2</b>, a tenth over the fifteenth's and
+        /// under the 2.5 the ladder would give it - the owner's brief on 2026-10-25: "base health
+        /// bonus 120% and with spikes". A floor again: the chapter tool writes each rung's own figure
+        /// at or above it, spiking to 2.7 (MODES.md 37fj), held by <c>TheSixteenthChapterIsHarder</c>.
+        /// </para>
         /// </summary>
         public static readonly (int Ordinal, int Tenths)[] Traded =
-            { (7, 14), (8, 15), (9, 16), (10, 15), (11, 17), (12, 19), (13, 20), (14, 21) };
+            { (7, 14), (8, 15), (9, 16), (10, 15), (11, 17), (12, 19), (13, 20), (14, 21), (15, 22) };
 
         /// <summary>
         /// A health figure at a share of itself, in per cent, never under one - the one place a

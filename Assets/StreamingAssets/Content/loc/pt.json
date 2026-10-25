@@ -8394,6 +8394,170 @@
       "text": "Um rei oco e um invocador de ossos, juntos"
     },
     {
+      "key": "chapter.s18_anchorhold.name",
+      "text": "Bastião da Âncora"
+    },
+    {
+      "key": "level.s18_cloudstep.name",
+      "text": "Degrau das Nuvens"
+    },
+    {
+      "key": "level.s18_cloudstep.tagline",
+      "text": "Escudos e brutos desde o início"
+    },
+    {
+      "key": "level.s18_millvane.name",
+      "text": "Pá do Moinho"
+    },
+    {
+      "key": "level.s18_millvane.tagline",
+      "text": "Brutos no fim de cada onda"
+    },
+    {
+      "key": "level.s18_trussbridge.name",
+      "text": "Ponte Treliçada"
+    },
+    {
+      "key": "level.s18_trussbridge.tagline",
+      "text": "Duas cores, depois outras duas, depois as quatro"
+    },
+    {
+      "key": "level.s18_cogrock.name",
+      "text": "Rocha da Engrenagem"
+    },
+    {
+      "key": "level.s18_cogrock.tagline",
+      "text": "Dois bombardeiros em cada onda"
+    },
+    {
+      "key": "level.s18_rocketrest.name",
+      "text": "Descanso dos Foguetes"
+    },
+    {
+      "key": "level.s18_rocketrest.tagline",
+      "text": "Um encouraçado e uma boca da cova, juntos"
+    },
+    {
+      "key": "level.s18_lamppost.name",
+      "text": "Poste de Luz"
+    },
+    {
+      "key": "level.s18_lamppost.tagline",
+      "text": "Uma cor por vez, em avalanche"
+    },
+    {
+      "key": "level.s18_tankfarm.name",
+      "text": "Tanques de Combustível"
+    },
+    {
+      "key": "level.s18_tankfarm.tagline",
+      "text": "Quatro ondas, armadura e bombas ao mesmo tempo"
+    },
+    {
+      "key": "level.s18_shadowramp.name",
+      "text": "Rampa na Sombra"
+    },
+    {
+      "key": "level.s18_shadowramp.tagline",
+      "text": "Dois escudos em cada onda"
+    },
+    {
+      "key": "level.s18_crateyard.name",
+      "text": "Pátio de Caixotes"
+    },
+    {
+      "key": "level.s18_crateyard.tagline",
+      "text": "Quatro ondas, com brutos em cada uma"
+    },
+    {
+      "key": "level.s18_radiomast.name",
+      "text": "Mastro de Rádio"
+    },
+    {
+      "key": "level.s18_radiomast.tagline",
+      "text": "Um senhor da guerra e uma górgona, juntos"
+    },
+    {
+      "key": "level.s18_sandbagline.name",
+      "text": "Linha de Sacos"
+    },
+    {
+      "key": "level.s18_sandbagline.tagline",
+      "text": "Escudos e bombas numa longa subida"
+    },
+    {
+      "key": "level.s18_twinguns.name",
+      "text": "Canhões Gêmeos"
+    },
+    {
+      "key": "level.s18_twinguns.tagline",
+      "text": "Bombas e armadura em cada onda"
+    },
+    {
+      "key": "level.s18_glarelamp.name",
+      "text": "Holofote"
+    },
+    {
+      "key": "level.s18_glarelamp.tagline",
+      "text": "Brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s18_fieldgun.name",
+      "text": "Canhão de Campanha"
+    },
+    {
+      "key": "level.s18_fieldgun.tagline",
+      "text": "Três escudos à frente de cada onda"
+    },
+    {
+      "key": "level.s18_beaconrock.name",
+      "text": "Rocha do Farol"
+    },
+    {
+      "key": "level.s18_beaconrock.tagline",
+      "text": "Um colosso e um acorrentador, juntos"
+    },
+    {
+      "key": "level.s18_anchorchain.name",
+      "text": "Corrente da Âncora"
+    },
+    {
+      "key": "level.s18_anchorchain.tagline",
+      "text": "Brutos de uma cor, depois escudos dessa cor"
+    },
+    {
+      "key": "level.s18_signalflags.name",
+      "text": "Bandeiras de Sinal"
+    },
+    {
+      "key": "level.s18_signalflags.tagline",
+      "text": "Quatro ondas junto às bandeiras"
+    },
+    {
+      "key": "level.s18_rocketrack.name",
+      "text": "Suporte de Foguetes"
+    },
+    {
+      "key": "level.s18_rocketrack.tagline",
+      "text": "Um bombardeiro lidera cada onda"
+    },
+    {
+      "key": "level.s18_turretdeck.name",
+      "text": "Convés das Torres"
+    },
+    {
+      "key": "level.s18_turretdeck.tagline",
+      "text": "Tudo o que a bateria tem, de uma vez"
+    },
+    {
+      "key": "level.s18_crowsnest.name",
+      "text": "Cesto da Gávea"
+    },
+    {
+      "key": "level.s18_crowsnest.tagline",
+      "text": "Um rei oco e um devastador, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Faisquinha"
     },
