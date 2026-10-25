@@ -8066,6 +8066,170 @@
       "text": "Un rey hueco y un heraldo de guerra, juntos"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Páramo oxidado"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Desguace"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "Armadura y brutos desde la primera oleada"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Gancho de grúa"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Una gran multitud, brutos en cada oleada"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Tubería de polvo"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Dos colores, luego otros dos, luego los cuatro"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Charca tóxica"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Bombarderos en cada oleada"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Puerta de chatarra"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Un invocador de plagas y un acorazado, juntos"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Ruta de torres"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Un color cada vez, en avalancha"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Campo solar"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Cuatro oleadas, armadura y bombas a la vez"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Puente oxidado"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Dos escudos en cada oleada"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Barriles de aceite"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Cuatro oleadas, con brutos en cada una"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Estante de motores"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Una fauce de la tumba come mientras una tormenta drena"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Colina de turbinas"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Escudos y bombas en una larga subida"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Cruce de cables"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bombas y armadura en cada oleada"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Rodamundos"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Brutos desde la primera oleada"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Pila de contenedores"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Tres escudos al frente de cada oleada"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Atalaya"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Un devastador y un caudillo, juntos"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Ciénaga de lodo"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Brutos de un color, y luego escudos de ese color"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Mano de hierro"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Cuatro oleadas junto a la mano del robot"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Mirada del robot"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Un bombardero encabeza cada oleada"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Aguja de chatarra"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Todo lo que tiene el páramo, a la vez"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Corona oxidada"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Un invocador de huesos y una gorgona, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Chispita"
     },

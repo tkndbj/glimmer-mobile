@@ -8066,6 +8066,170 @@
       "text": "Um rei oco e um arauto da guerra, juntos"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Ermo Enferrujado"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Ferro-velho"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "Armadura e brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Gancho do Guindaste"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Uma grande multidão, brutos em cada onda"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Cano de Poeira"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Duas cores, depois outras duas, depois as quatro"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Poça Tóxica"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Bombardeiros em cada onda"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Portão da Sucata"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Um invocador da praga e um encouraçado, juntos"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Rota das Torres"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Uma cor por vez, em avalanche"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Campo Solar"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Quatro ondas, armadura e bombas ao mesmo tempo"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Ponte Enferrujada"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Dois escudos em cada onda"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Barris de Óleo"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Quatro ondas, com brutos em cada uma"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Prateleira de Motores"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Uma boca da cova come enquanto uma tempestade drena"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Colina das Turbinas"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Escudos e bombas numa longa subida"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Cruzamento de Cabos"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bombas e armadura em cada onda"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Planta Errante"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Brutos desde a primeira onda"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Pilha de Contêineres"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Três escudos à frente de cada onda"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Mirante"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Um devastador e um senhor da guerra, juntos"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Pântano de Lodo"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Brutos de uma cor, depois escudos dessa cor"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Mão de Ferro"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Quatro ondas junto à mão do robô"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Olhar do Robô"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Um bombardeiro lidera cada onda"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Torre de Sucata"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Tudo o que o ermo tem, de uma vez"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Coroa Enferrujada"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Um invocador de ossos e uma górgona, juntos"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Faisquinha"
     },

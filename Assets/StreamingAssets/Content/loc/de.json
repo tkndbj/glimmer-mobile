@@ -8066,6 +8066,170 @@
       "text": "Ein hohler König und ein Kriegsbringer, gemeinsam"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Rostödnis"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Schrottplatz"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "Rüstung und Schläger ab der ersten Welle"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Kranhaken"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Eine große Menge, Schläger in jeder Welle"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Staubrohr"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Zwei Farben, dann zwei weitere, dann alle vier"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Giftteich"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Bomber in jeder Welle"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Schrotttor"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Ein Fäulnisrufer und ein Gepanzerter, gemeinsam"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Mastenweg"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Eine Farbe nach der anderen, als Flut"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Solarfeld"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Vier Wellen, Rüstung und Bomben zugleich"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Rostbrücke"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Zwei Schilde in jeder Welle"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Ölfässer"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Vier Wellen, Schläger in jeder"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Motorenregal"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Ein Grabschlund frisst, während ein Sturm saugt"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Turbinenhügel"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Schilde und Bomben auf einem langen Aufstieg"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Kabelkreuz"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bomben und Rüstung in jeder Welle"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Steppenläufer"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Schläger ab der ersten Welle"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Containerstapel"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Drei Schilde an der Spitze jeder Welle"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Ausguck"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Ein Verwüster und ein Kriegsherr, gemeinsam"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Schlammsumpf"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Schläger einer Farbe, dann Schilde derselben"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Eiserne Hand"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Vier Wellen an der Hand des Roboters vorbei"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Roboterblick"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Ein Bomber führt jede Welle an"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Schrottspitze"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Alles, was die Ödnis hat, auf einmal"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Rostkrone"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Ein Knochenrufer und eine Gorgone, gemeinsam"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Glutfunke"
     },

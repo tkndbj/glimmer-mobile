@@ -8066,6 +8066,170 @@
       "text": "Un re vuoto e un portatore di guerra, insieme"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Landa arrugginita"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Sfasciacarrozze"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "Armature e bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Gancio della gru"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Una grande folla, bruti in ogni ondata"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Tubo di polvere"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Due colori, poi altri due, poi tutti e quattro"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Pozza tossica"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Bombardieri in ogni ondata"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Porta dei rottami"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Un evocatore della piaga e un corazzato, insieme"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Via dei tralicci"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Un colore alla volta, a valanga"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Campo solare"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Quattro ondate, armature e bombe insieme"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Ponte arrugginito"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Due scudi in ogni ondata"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Barili di petrolio"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Quattro ondate, con bruti in ognuna"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Scaffale dei motori"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Le fauci della tomba divorano mentre una tempesta prosciuga"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Colle delle turbine"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Scudi e bombe su una lunga salita"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Incrocio dei cavi"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bombe e armature in ogni ondata"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Rotolacampo"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Bruti fin dalla prima ondata"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Pila di container"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Tre scudi in testa a ogni ondata"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Vedetta"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Un devastatore e un condottiero, insieme"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Palude di fango"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Bruti di un colore, poi scudi dello stesso"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Mano di ferro"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Quattro ondate lungo la mano del robot"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Sguardo del robot"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Un bombardiere guida ogni ondata"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Guglia di rottami"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Tutto ciò che ha la landa, in una volta"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Corona arrugginita"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Un evocatore di ossa e una gorgone, insieme"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Favilla"
     },

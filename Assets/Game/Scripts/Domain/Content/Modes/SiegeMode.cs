@@ -1239,9 +1239,16 @@ namespace GlimmerGrove.Content
         /// dragon forge's painting asks for. Appending it moves no shipped chapter onto a new cast
         /// and costs no art.
         /// </para>
+        /// <para>
+        /// <b>Fourteen, and the fourteenth is the rabble again.</b> Left alone the table would wrap
+        /// onto the insects; the neighbourhood's zombies - a sledgehammer, a manhole cover held up as
+        /// a shield - are the crowd the wasteland scrapyard's painting asks for, and the rabble has
+        /// been drawn whole only once, by the fourth chapter. Appending it moves no shipped chapter
+        /// onto a new cast and costs no art.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
                                             Insects, Reunion, Gathering, Armada, Vanguard,
-                                            Armada, Court };
+                                            Armada, Court, Rabble };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.

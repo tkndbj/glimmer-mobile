@@ -334,7 +334,10 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: The thirteenth deals 1.9, two tenths over the twelfth and under the 2.1 the ladder derives: the
 #: owner's brief of 2026-10-20 named the figure - "harder than the previous chapter, 90% health
 #: bonus" - on a crowd held above Ironbastion's on every count (`TheThirteenthChapterIsHarder`).
-TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19}
+#: The fourteenth's floor is 2.0, a tenth over the thirteenth and under the 2.2 the ladder derives:
+#: the owner's brief of 2026-10-25 - "100% health bonus at minimum", with some rungs at 110% and
+#: 120%. It is a floor rather than every rung's figure; `s16_rustwaste.py` writes a sawtooth over it.
+TRADED = {7: 14, 8: 15, 9: 16, 10: 15, 11: 17, 12: 19, 13: 20}
 
 
 def toughness_for(ordinal):
@@ -485,6 +488,11 @@ STAR_FACTORS = {
     #: share asks for the same quality of play on a bigger hill.
     #: Provisional until the owner's sweep reads `TheThirteenthChapterIsHarder`.
     13: (0.38, 0.52),
+
+    #: Rustwaste, a sawtooth of 2.0 to 2.4 over Wyrmforge's crowd. **The same lines, for
+    #: Ironbastion's reason**: par carries each rung's own surge, so the same share asks for the same
+    #: quality of play on a heavier hill. Provisional until the owner's sweep.
+    14: (0.38, 0.52),
 }
 
 

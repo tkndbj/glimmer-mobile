@@ -295,6 +295,9 @@ NUDGE = {
 #:
 #: **`map13` accepts every rung for the same reason**: its flagstone road switches back across the
 #: middle of four strips eighteen times, so twenty rungs on it cannot all keep their marks clear.
+#:
+#: **`map14` accepts every rung for the same reason**: its asphalt road switches back across the
+#: middle of four strips ten times, so twenty rungs on it cannot all keep their marks clear.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
@@ -305,6 +308,7 @@ ACCEPTED_OVERLAPS = {
     11: True,
     12: True,
     13: True,
+    14: True,
 }
 
 
@@ -477,6 +481,20 @@ TRACES = {
             (1620, 2500), (700, 1800), (1530, 1180), (630, 520), (1250, 110), (1066, 0),
         ),
     ),
+    #: `map14` is the owner's wasteland scrapyard (2026-10-25): a two-lane asphalt road with white
+    #: dashes, switching back ten times up a stack of floating desert rocks - a wrecked-car yard and
+    #: a crane at the foot, a toxic pool, pylons, a watchtower on shipping containers, a rusted
+    #: giant robot and a junk heap above them - from the foot of the bottom rock to the head of the
+    #: top one, beside the second toxic pool. Only the asphalt is listed as ground (`GROUND[14]`);
+    #: the bends were read off the mask's own row runs, one turning point each, and the samples snap
+    #: to the middle of the two lanes.
+    14: dict(
+        size=(2048, 8256),
+        bends=(
+            (650, 7880), (1165, 7450), (640, 6950), (1460, 6250), (630, 5550), (1405, 4850),
+            (570, 4150), (1460, 3480), (575, 2750), (1455, 2100), (650, 1620), (1240, 1180),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -609,6 +627,13 @@ GROUND = {
     # of these. The statue, the bones and the runestones carry the same grey in patches and are
     # never near the line; the sky's nearest dusk, (126, 101, 94), is sixteen off it.
     13: [(145, 118, 109), (137, 117, 110)],
+
+    # `map14` is the scrapyard, and its ground is its **asphalt road** and nothing else: one flat
+    # mauve grey, (158, 99, 119) at the head and (157, 100, 117) at the foot - the median of the
+    # road mask over each third of `TRACES[14]`, the tenth to ninetieth percentile within three of
+    # these. The junk heap and the containers carry the grey in patches and are never near the
+    # line; the sky's nearest violet, (152, 104, 159), is forty off it in blue.
+    14: [(158, 99, 119), (157, 100, 117)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -645,6 +670,7 @@ STREAM = {
     11: [],
     12: [],
     13: [],
+    14: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -723,6 +749,11 @@ VOID = {
     # reason (it is walked, not searched).
     13: [(54, 74, 81), (67, 89, 93), (103, 98, 93), (119, 100, 86), (126, 101, 94),
          (148, 87, 68), (135, 66, 59), (98, 41, 43), (118, 35, 31), (131, 38, 34)],
+
+    # `map14`'s void is a sky running lilac at the head through violet and rose to coral at the
+    # foot. Subtracted from the road at its own tolerance only, for `map9`'s reason (it is walked,
+    # not searched).
+    14: [(196, 140, 172), (152, 104, 159), (220, 100, 143), (249, 101, 129), (252, 104, 104)],
 }
 
 #: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
@@ -756,7 +787,7 @@ ENCLOSED = {10}
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10}
+TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8, 12: 10, 13: 10, 14: 10}
 DEFAULT_TOLERANCE = 26
 
 

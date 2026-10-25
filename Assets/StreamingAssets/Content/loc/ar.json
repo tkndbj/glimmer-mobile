@@ -8066,6 +8066,170 @@
       "text": "ملك أجوف وجالب حرب، معا"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "القفار الصدئة"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "ساحة الحطام"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "دروع وعمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "خطاف الرافعة"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "حشد كبير، وعمالقة في كل موجة"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "أنبوب الغبار"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "لونان، ثم لونان آخران، ثم الأربعة"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "البركة السامة"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "مفجرون في كل موجة"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "بوابة الخردة"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "مستدعي آفة ومدرع، معا"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "طريق الأبراج"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "لون واحد في كل مرة، كالسيل"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "الحقل الشمسي"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "أربع موجات، دروع وقنابل معا"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "الجسر الصدئ"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "حاجزان في كل موجة"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "براميل النفط"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "أربع موجات، وعمالقة في كل منها"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "رف المحركات"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "فم القبور يلتهم والعاصفة تستنزف"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "تل التوربينات"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "حواجز وقنابل في صعود طويل"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "تقاطع الكابلات"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "قنابل ودروع في كل موجة"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "الشوك المتدحرج"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "عمالقة منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "كومة الحاويات"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "ثلاثة حواجز في مقدمة كل موجة"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "برج المراقبة"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "حاصد وأمير حرب، معا"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "مستنقع الوحل"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "عمالقة من لون واحد، ثم حواجز من لونه"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "اليد الحديدية"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "أربع موجات بجوار يد الروبوت"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "نظرة الروبوت"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "مفجر يقود كل موجة"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "قمة الخردة"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "كل ما تملكه القفار، دفعة واحدة"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "التاج الصدئ"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "مستدعي عظام وغرغون، معا"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "شرارة الجمر"
     },

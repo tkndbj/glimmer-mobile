@@ -104,6 +104,13 @@ s14_ironbastion	ironbastion_map.png
 # the folder it was saved in as --source. Drawn by s15_wyrmforge, and by whatever thirteenth
 # chapter comes next.
 s15_wyrmforge	wyrmforge_map.png
+# map14 - four strips, the owner's own painting (2026-10-25): a wasteland scrapyard in the sky -
+# floating desert rocks carrying a junk heap, a rusted giant robot, wrecked cars under a crane,
+# wind turbines, power pylons, a toxic pool and a watchtower on shipping containers, with engines
+# hanging off the rock undersides, joined by a grey asphalt road with white dashes. One flattened
+# 2048x8256 picture, supplied as `map3.png` and saved as `rustwaste_map.png` - pass the folder it
+# was saved in as --source. Drawn by s16_rustwaste, and by whatever fourteenth chapter comes next.
+s16_rustwaste	rustwaste_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

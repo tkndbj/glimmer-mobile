@@ -8066,6 +8066,170 @@
       "text": "Bir oyuk kral ve bir savaş habercisi, birlikte"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Pas Çorağı"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Hurda Bahçesi"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "İlk aşamadan itibaren zırh ve devler"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Vinç Kancası"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Büyük bir kalabalık, her aşamada devler"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Toz Borusu"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "İki renk, sonra iki renk daha, sonra dördü birden"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Zehirli Gölet"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Her aşamada bombacılar"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Hurda Kapısı"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Bir çürüme çağırıcısı ve bir zırhlı, birlikte"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Direk Yolu"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Her seferinde bir renk, sel gibi"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Güneş Tarlası"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Dört aşama, aynı anda zırh ve bombalar"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Paslı Köprü"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Her aşamada iki kalkan"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Yağ Varilleri"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Dört aşama, her birinde devler"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Motor Rafı"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Bir mezar ağzı yer, bir fırtına emer"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Türbin Tepesi"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Uzun bir tırmanışta kalkanlar ve bombalar"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Kablo Kavşağı"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Her aşamada bombalar ve zırh"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Çalı Topu"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "İlk aşamadan itibaren devler"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Konteyner Yığını"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Her aşamanın başında üç kalkan"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Gözcü Kulesi"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Bir yıkıcı ve bir savaş beyi, birlikte"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Çamur Bataklığı"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Tek renkten devler, sonra o renkten kalkanlar"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Demir El"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Robotun elinin yanından dört aşama"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Robotun Bakışı"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Her aşamayı bir bombacı yönetir"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Hurda Kulesi"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Çorağın elindeki her şey, bir arada"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Pas Tacı"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Bir kemik çağırıcısı ve bir gorgon, birlikte"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Kıvılcımcık"
     },

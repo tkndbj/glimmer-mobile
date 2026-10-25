@@ -8066,6 +8066,170 @@
       "text": "A hollow king and a warbringer, together"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Rustwaste"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Wreck Yard"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "Plate and brutes from the first wave"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Crane Hook"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "A big crowd, brutes in every wave"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Dust Pipe"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Two colours, then two more, then all four"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Toxic Pool"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Bombers in every wave"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Scrap Gate"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "A blightcaller and an ironclad, together"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Pylon Run"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Solar Field"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Four waves, armour and bombs at once"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Rust Bridge"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Two shields in every wave"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Oil Barrels"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Four waves, brutes in every one"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Engine Shelf"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "A gravemaw feeds while a storm drains"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Turbine Hill"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Shields and bombs on a long climb"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Cable Cross"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bombs and plate in every wave"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Tumbleweed"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Brutes from the very first wave"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Container Stack"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Three shields at the head of every wave"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Lookout"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "A harrower and a warlord, together"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Sludge Mire"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Brutes of one colour, then shields of it"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Iron Hand"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Four waves past the robot's hand"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Robot's Gaze"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "A bomber leads every wave"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Junk Spire"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Everything the wasteland has, at once"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Rust Crown"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "A bonecaller and a gorgon, together"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },

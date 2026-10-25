@@ -8066,6 +8066,170 @@
       "text": "Pusty król i zwiastun wojny, razem"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Rdzawe pustkowie"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Złomowisko"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "Pancerz i osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Hak dźwigu"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Duży tłum, osiłki w każdej fali"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Rura pyłu"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Dwa kolory, potem dwa kolejne, potem wszystkie cztery"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Toksyczna sadzawka"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Bombowcy w każdej fali"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Złomowa brama"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Przywoływacz zarazy i opancerzony, razem"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Szlak słupów"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Jeden kolor naraz, lawiną"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Pole słoneczne"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Cztery fale, pancerz i bomby naraz"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Rdzawy most"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Dwie tarcze w każdej fali"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Beczki ropy"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Cztery fale, osiłki w każdej"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Półka silników"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Paszcza grobu pożera, a burza wysysa"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Wzgórze turbin"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Tarcze i bomby na długiej wspinaczce"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Skrzyżowanie kabli"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bomby i pancerz w każdej fali"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Biegacz stepowy"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Osiłki od pierwszej fali"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Stos kontenerów"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Trzy tarcze na czele każdej fali"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Punkt obserwacyjny"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Niszczyciel i wódz, razem"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Błotne bagno"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Osiłki jednego koloru, potem tarcze tego koloru"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Żelazna dłoń"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Cztery fale obok dłoni robota"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Spojrzenie robota"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Bombowiec prowadzi każdą falę"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Złomowa iglica"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Wszystko, co ma pustkowie, naraz"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Rdzawa korona"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Przywoływacz kości i gorgona, razem"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Iskierka"
     },

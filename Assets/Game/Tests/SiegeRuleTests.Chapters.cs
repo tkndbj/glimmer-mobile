@@ -330,6 +330,37 @@ namespace GlimmerGrove.Tests
             new Rung("s15_wyrmcrown", new[] { "yrrybbrg", "gybgrygy", "grbrbggr", "bbrybryr", "ygybggyb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#yyrbyRGbyr", "rgbyRGbyrgbyRG" }, "hollowking:y+warbringer:g", 50, 19, 38, 52, "plsfha", true, true),
         };
 
+        /// <summary>
+        /// Rustwaste, the fourteenth chapter: the owner's wasteland scrapyard in the sky, twenty rungs,
+        /// a duel on every fifth, and **the first chapter whose rungs do not share one surge** - each
+        /// deals its own at or over the floor of 2.0 (the owner's "100% health bonus at minimum"), in a
+        /// sawtooth up to 2.4 (MODES.md 37fh), on Wyrmforge's crowd; the rabble cast, and the curse and
+        /// the void stone carried on. Held to `s16_rustwaste.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Rustwaste =
+        {
+            new Rung("s16_wreckyard", new[] { "yggbgryy", "rbybybgb", "ryrgbyyr", "yggbrgbb", "brygyrbr" }, "rgby", "rgby", new[] { "rgbyRGby#rgbyrgb", "rgby#bRGby!rgbyRG", "rgBY#y#grgbyRGbyr" }, "", 20, 20, 38, 52, "plsfha", true, true),
+            new Rung("s16_cranehook", new[] { "gyyrbggr", "rrgbyggb", "rgbgrrbr", "ybybrygb", "ggygbyry" }, "rgby", "rgby", new[] { "rgby#rgbyRGbyrgby", "rgbyRGby#rrgbyRGby", "rgbyRGbyrgBY#grgb" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s16_dustpipe", new[] { "rgyrryyb", "rrbygbgg", "gygrbrbb", "bgbgyryy", "yrrybbyr" }, "rgby", "rgby", new[] { "rrggRGrrgg#rrgg", "bbyyBYbbyy#bbyy", "rgbyRGBY#r#bgyrgby" }, "", 20, 20, 38, 52, "plsfha", true, true),
+            new Rung("s16_toxicpool", new[] { "rgbgbbry", "ryryryrb", "grybrgbg", "ybrbyryy", "gyrryggb" }, "rgby", "rgby", new[] { "rgbyRGby!rRGbyrg", "rgBY#g!bRGby!yrg", "rgby!g#rRGbyRGby!b" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s16_scrapgate", new[] { "grbbyryb", "gyggryrr", "yrrbybgy", "ybybyrry", "bbrgbrgb" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#r!gRGbyRGb", "rgBY#g#yRGbyrg" }, "blightcaller:b+ironclad:y", 35, 21, 38, 52, "plsfha", true, true),
+            new Rung("s16_pylonrun", new[] { "rgbrbybb", "byygyygg", "bgrrgbby", "gybbgrry", "ybrbyybr" }, "rgby", "rgby", new[] { "yyYYYyyyyy#yggg", "rrRRRrrrrr#rbbb", "bbBB#bbbbGGG#gggg" }, "", 20, 20, 38, 52, "plsfha", true, true),
+            new Rung("s16_solarfield", new[] { "rggyrybb", "bryrrgyr", "bbggbbgg", "grbryyrr", "yybggrrb" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyrgb", "rgby#b#gRGbyRGb", "rgby!rrbRG#yrrgy", "rgbyRGby#grgbyRG" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s16_rustbridge", new[] { "rrbggrgr", "ygrygygr", "bggyrbyb", "rbrbyrrb", "rggbgbry" }, "rgby", "rgby", new[] { "rgby#y#rRGby!rgby", "rgby#g#bRGBYrgbyr", "rgBY#b#gRGbyrgby" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s16_oilbarrels", new[] { "ybgbgbbr", "yygyrbrg", "rbrybgyb", "rgrgrgyg", "ggbgrrbr" }, "rgby", "rgby", new[] { "rgby#grgbyRGbyrgb", "rgby#yrgbyRGbyr", "rgby#b!rrgBYrgby", "rgbyrgbyRGBYrgb" }, "", 20, 23, 38, 52, "plsfha", true, true),
+            new Rung("s16_engineshelf", new[] { "yrgbrrbb", "bbyyggrg", "ygrbbgyb", "rrygrryb", "bgbbrggr" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#yRGbyrgbRG", "rgby#bRGbyrgb" }, "gravemaw:g+thunderer:r", 50, 21, 38, 52, "plsfha", true, true),
+            new Rung("s16_turbinehill", new[] { "ygbbrygb", "rrgrybyb", "gyygygry", "bygbrybg", "rgrbbgyb" }, "rgby", "rgby", new[] { "rgbyrgbyRGby!rgb", "rgBY#r#gyrgbyRGbyb", "rgby!y#bRGbyrgBYgr" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s16_cablecross", new[] { "ybrbyrrg", "rrygrggy", "ggyrbyyb", "ybrbgrbb", "bygygbyy" }, "rgby", "rgby", new[] { "rgby#r!gRGbyrgby", "rgby#y#b!gRGbyrgb", "rgBY!b#rRGbyrgBY" }, "", 20, 20, 38, 52, "plsfha", true, true),
+            new Rung("s16_tumbleweed", new[] { "brgrgygr", "grygbbgg", "bybrrbry", "gybgyygr", "rrgygrbr" }, "rgby", "rgby", new[] { "rgbyRGby#yrgbyrgb", "rgbyRGby#gRGbyrg", "RGbyrgby#rrgbyrgBY" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s16_containerstack", new[] { "rrggbyyb", "rbyybrbr", "ybrryrgg", "yybgbygy", "brrygyrg" }, "rgby", "rgby", new[] { "#r#g#yRGBYrgbyrg", "#b#y#gRGbyrgbyrgb", "#g#r#bRGbyrgbyrg" }, "", 25, 23, 38, 52, "plsfha", true, true),
+            new Rung("s16_lookout", new[] { "ybrgbryy", "rbbyrgyy", "yrryggbr", "grybyybg", "gbgrrbrg" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#rRGbyRGb", "rgBY#gRGbyrgb" }, "harrower:y+warlord:b", 45, 22, 38, 52, "plsfha", true, true),
+            new Rung("s16_sludgemire", new[] { "rbggbbgr", "gybgyrby", "brrygryb", "ygbybygg", "grrbrbgr" }, "rgby", "rgby", new[] { "yyYYY#yyyyrrb", "bbBBB#bbbbb#bg", "rrRRR#rrrrgg#gg" }, "", 20, 21, 38, 52, "plsfha", true, true),
+            new Rung("s16_ironhand", new[] { "grrgrybr", "byybgrgy", "rygrybyy", "gbrgbgyg", "gybgyrrg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyry", "rgby#bbrgbyRGby", "rgby#r#y!ggrbyRG", "RGBYrgbyRGbyrg" }, "", 40, 23, 38, 52, "plsfha", true, true),
+            new Rung("s16_robotgaze", new[] { "yybrbbyg", "ygygrbyb", "rbrbygrr", "gyryggrg", "bybrbybb" }, "rgby", "rgby", new[] { "!grgbyRGbyrgbyRG", "!yrgby#bRGby!rrgb", "!rrgBY#gRGbyrgBYy" }, "", 20, 22, 38, 52, "plsfha", true, true),
+            new Rung("s16_junkspire", new[] { "ybgryyry", "rgyygbyg", "ybygrbgb", "grrbyyrb", "bgygrryg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGbyb", "rgby#g#b#rRGby!rgb", "rgby!y#gRGbyrgBYRG" }, "", 20, 24, 38, 52, "plsfha", true, true),
+            new Rung("s16_rustcrown", new[] { "brybgybr", "bgbgrbrb", "yrygbygg", "gybrygbb", "rgyrbgrr" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#ggrbyRGbyr", "rgbyRGbyrgbyRG" }, "bonecaller:r+gorgon:g", 50, 22, 38, 52, "plsfha", true, true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -382,14 +413,23 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The line a chapter is measured on: the starter for the first, the first paid rung
-        /// for the second, the workhorse for everything past that.
+        /// for the second, the workhorse for everything past that - and, from the fourteenth on,
+        /// the veteran line (<see cref="Veteran"/>) at three stars.
         ///
         /// <b>One place, because three gates ask it</b> and a chapter measured on two
         /// different lines by two gates is two answers to one question.
         /// </summary>
+        /// <remarks>
+        /// <b>The fourteenth is met on the veteran line because that is the line its brief names</b>
+        /// (MODES.md 37fh): a player arriving at level 191 stands what the one live account that had
+        /// cleared every level stood, not four one-star embers - on which Rustwaste, built to make
+        /// the strong line want an upgrade, clears nothing, and the star ladder would be reported
+        /// missing about the wrong turret (this method's own 2026-09-20 lesson).
+        /// </remarks>
         static WardLine LineFor(string chapter)
             => chapter == "Thornwatch" ? Bare()
              : chapter == "Broodmarch" ? Kitted()
+             : chapter == "Rustwaste" ? Veteran(3)
              : Bought();
 
 
@@ -555,6 +595,7 @@ namespace GlimmerGrove.Tests
             ("Neonhaven", Neonhaven),
             ("Ironbastion", Ironbastion),
             ("Wyrmforge", Wyrmforge),
+            ("Rustwaste", Rustwaste),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line, bool walls = true)

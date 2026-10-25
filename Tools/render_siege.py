@@ -3157,6 +3157,8 @@ CHAPTER_CASTS = {
     "s14_ironbastion": "armada",
     # The thirteenth wraps onto the court rather than the insects (`SiegeMode.MainCasts`).
     "s15_wyrmforge": "court",
+    # The fourteenth draws the rabble whole again, the neighbourhood's zombies (`SiegeMode.MainCasts`).
+    "s16_rustwaste": "rabble",
     "s02_endlesswatch": "medley",
 }
 

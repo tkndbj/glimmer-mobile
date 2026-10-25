@@ -471,6 +471,36 @@
       ]
     },
     {
+      "id": "s16_rustwaste",
+      "version": 1,
+      "order": 159,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s16_wreckyard",
+        "s16_cranehook",
+        "s16_dustpipe",
+        "s16_toxicpool",
+        "s16_scrapgate",
+        "s16_pylonrun",
+        "s16_solarfield",
+        "s16_rustbridge",
+        "s16_oilbarrels",
+        "s16_engineshelf",
+        "s16_turbinehill",
+        "s16_cablecross",
+        "s16_tumbleweed",
+        "s16_containerstack",
+        "s16_lookout",
+        "s16_sludgemire",
+        "s16_ironhand",
+        "s16_robotgaze",
+        "s16_junkspire",
+        "s16_rustcrown"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

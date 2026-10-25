@@ -2986,9 +2986,17 @@ namespace GlimmerGrove.Modes
         /// Ironbastion's on every count. <c>TheThirteenthChapterIsHarder</c> holds the pair: under
         /// Ironbastion on the good line and the strongest, and not a wall.
         /// </para>
+        /// <para>
+        /// <b>A seventh row: the fourteenth chapter's floor is 2.0</b>, a tenth over the thirteenth
+        /// and under the 2.2 the ladder would give it - the owner's brief on 2026-10-25: "100%
+        /// health bonus at minimum ... some levels should have 110%, 120%". <b>It is the first
+        /// chapter whose rungs do not all deal its row</b>: this is the floor, and the chapter tool
+        /// writes each rung's own figure at or above it in a sawtooth (MODES.md 37fh), held by
+        /// <c>TheFourteenthChapterIsHarder</c>.
+        /// </para>
         /// </summary>
         public static readonly (int Ordinal, int Tenths)[] Traded =
-            { (7, 14), (8, 15), (9, 16), (10, 15), (11, 17), (12, 19) };
+            { (7, 14), (8, 15), (9, 16), (10, 15), (11, 17), (12, 19), (13, 20) };
 
         /// <summary>
         /// A health figure at a share of itself, in per cent, never under one - the one place a

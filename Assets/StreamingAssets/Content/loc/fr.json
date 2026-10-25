@@ -8066,6 +8066,170 @@
       "text": "Un roi creux et un porte-guerre, ensemble"
     },
     {
+      "key": "chapter.s16_rustwaste.name",
+      "text": "Friche rouillée"
+    },
+    {
+      "key": "level.s16_wreckyard.name",
+      "text": "Casse auto"
+    },
+    {
+      "key": "level.s16_wreckyard.tagline",
+      "text": "De l'armure et des brutes dès la première vague"
+    },
+    {
+      "key": "level.s16_cranehook.name",
+      "text": "Crochet de grue"
+    },
+    {
+      "key": "level.s16_cranehook.tagline",
+      "text": "Une grande foule, des brutes dans chaque vague"
+    },
+    {
+      "key": "level.s16_dustpipe.name",
+      "text": "Tuyau de poussière"
+    },
+    {
+      "key": "level.s16_dustpipe.tagline",
+      "text": "Deux couleurs, puis deux autres, puis les quatre"
+    },
+    {
+      "key": "level.s16_toxicpool.name",
+      "text": "Mare toxique"
+    },
+    {
+      "key": "level.s16_toxicpool.tagline",
+      "text": "Des bombardiers dans chaque vague"
+    },
+    {
+      "key": "level.s16_scrapgate.name",
+      "text": "Porte de ferraille"
+    },
+    {
+      "key": "level.s16_scrapgate.tagline",
+      "text": "Un invocateur de fléaux et un cuirassé, ensemble"
+    },
+    {
+      "key": "level.s16_pylonrun.name",
+      "text": "Route des pylônes"
+    },
+    {
+      "key": "level.s16_pylonrun.tagline",
+      "text": "Une couleur à la fois, en avalanche"
+    },
+    {
+      "key": "level.s16_solarfield.name",
+      "text": "Champ solaire"
+    },
+    {
+      "key": "level.s16_solarfield.tagline",
+      "text": "Quatre vagues, armure et bombes d'un coup"
+    },
+    {
+      "key": "level.s16_rustbridge.name",
+      "text": "Pont rouillé"
+    },
+    {
+      "key": "level.s16_rustbridge.tagline",
+      "text": "Deux boucliers dans chaque vague"
+    },
+    {
+      "key": "level.s16_oilbarrels.name",
+      "text": "Barils de pétrole"
+    },
+    {
+      "key": "level.s16_oilbarrels.tagline",
+      "text": "Quatre vagues, des brutes dans chacune"
+    },
+    {
+      "key": "level.s16_engineshelf.name",
+      "text": "Étagère à moteurs"
+    },
+    {
+      "key": "level.s16_engineshelf.tagline",
+      "text": "Une gueule du tombeau dévore pendant qu'un orage draine"
+    },
+    {
+      "key": "level.s16_turbinehill.name",
+      "text": "Colline des éoliennes"
+    },
+    {
+      "key": "level.s16_turbinehill.tagline",
+      "text": "Boucliers et bombes sur une longue montée"
+    },
+    {
+      "key": "level.s16_cablecross.name",
+      "text": "Croisée des câbles"
+    },
+    {
+      "key": "level.s16_cablecross.tagline",
+      "text": "Bombes et armure dans chaque vague"
+    },
+    {
+      "key": "level.s16_tumbleweed.name",
+      "text": "Virevoltant"
+    },
+    {
+      "key": "level.s16_tumbleweed.tagline",
+      "text": "Des brutes dès la première vague"
+    },
+    {
+      "key": "level.s16_containerstack.name",
+      "text": "Pile de conteneurs"
+    },
+    {
+      "key": "level.s16_containerstack.tagline",
+      "text": "Trois boucliers en tête de chaque vague"
+    },
+    {
+      "key": "level.s16_lookout.name",
+      "text": "Vigie"
+    },
+    {
+      "key": "level.s16_lookout.tagline",
+      "text": "Un ravageur et un chef de guerre, ensemble"
+    },
+    {
+      "key": "level.s16_sludgemire.name",
+      "text": "Marais de boue"
+    },
+    {
+      "key": "level.s16_sludgemire.tagline",
+      "text": "Des brutes d'une couleur, puis des boucliers de cette couleur"
+    },
+    {
+      "key": "level.s16_ironhand.name",
+      "text": "Main de fer"
+    },
+    {
+      "key": "level.s16_ironhand.tagline",
+      "text": "Quatre vagues le long de la main du robot"
+    },
+    {
+      "key": "level.s16_robotgaze.name",
+      "text": "Regard du robot"
+    },
+    {
+      "key": "level.s16_robotgaze.tagline",
+      "text": "Un bombardier mène chaque vague"
+    },
+    {
+      "key": "level.s16_junkspire.name",
+      "text": "Flèche de ferraille"
+    },
+    {
+      "key": "level.s16_junkspire.tagline",
+      "text": "Tout ce que la friche a, d'un coup"
+    },
+    {
+      "key": "level.s16_rustcrown.name",
+      "text": "Couronne rouillée"
+    },
+    {
+      "key": "level.s16_rustcrown.tagline",
+      "text": "Un invocateur d'os et une gorgone, ensemble"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Flammèche"
     },

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s16_rustwaste
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s16_rustwaste
+  m_GUID: 8e0a51a893324c61bdafcd3989d1d692
+  m_SerializeEntries:
+  - m_GUID: 669edd8a683f4583972061460656e158
+    m_Address: Art/Map/map14_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f910e7dcec014d12ac76bf433160dcdc
+    m_Address: Art/Map/map14_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30d6392cfe064fae83bc00ab61a71cd9
+    m_Address: Art/Map/map14_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ea807fd24604526ab8a80b2db386490
+    m_Address: Art/Map/map14_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 0e90b0c00608444296f3d72bb64b96ed, type: 2}
+    - {fileID: 11400000, guid: b066a6bbc14f46b0bd074e56d9cdc0d6, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s16_rustwaste_BundledAssetGroupSchema
+    - Glimmer Chapter s16_rustwaste_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

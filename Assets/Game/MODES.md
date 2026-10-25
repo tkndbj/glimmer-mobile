@@ -1172,6 +1172,38 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    road (`TRACES[13]`, read off the road mask's row runs; `GROUND[13]` at a tolerance of ten);
    twenty rungs reach over 32 marks, accepted as `map12`'s 35.
 
+37fh. **The fourteenth chapter is harder in waves, and measured on a real player's line.** Rustwaste
+   (`s16_rustwaste`, order 159, levels 191-210, the owner's wasteland scrapyard, 2026-10-25) was
+   commissioned as "100% health bonus at minimum ... some levels should have 110%, 120% ... I
+   genuinely want players to feel the difficulty", after live data showed players clearing the
+   ladder without buying an upgrade. **It is the first chapter whose rungs do not share one
+   surge**: `Traded` row `(13, 20)` is a *floor*, and each rung deals its own figure over it in a
+   sawtooth (2.0 2.1 2.0 2.2 2.1 | 2.0 2.2 2.1 2.3 2.1 | 2.1 2.0 2.2 2.3 2.2 | 2.1 2.3 2.2 2.4 2.2,
+   average 2.155) - every block climbs to a spike on its fourth rung, the spikes climb, and no
+   two neighbours are more than two tenths apart (`Tools/chapters/s16_rustwaste.py` proves all
+   three; `TheEighthChapterTradesSurgeForItsCrowd` holds the floor and the peak). The crowd is
+   Wyrmforge's (909 raiders against 903, brutes, shields and bombers equal), so the step is health,
+   which bites the strong line (37ff). **The gate's own "strongest" line had stopped being the
+   strongest a player brings** - the one live account that had cleared all 190 levels stood pyre,
+   pyre, leech and harpoon at three stars and won every Wyrmforge rung the sweep held 47 of 180 -
+   so `TheFourteenthChapterIsHarder` reads that line (`Veteran`) at three stars and at four
+   beside the gate's two, and asserts fewer held than Wyrmforge on all four and **no wall on the
+   four-star line** (one upgrade a seat past the best live player). **A field decides more than
+   the surge**: the same waves at the same surge read 0 to 9 of 9 by field alone, and the first
+   deal walled eight rungs on the four-star line, two of them at the floor - so eighteen fields
+   were chosen by play, each holding its rung 2 to 5 of 9 on that line (the finale's colossus and
+   overlord held 1 on every field, so its pair moved to a bonecaller and a gorgon, and the iron
+   hand's cogs went to forty). Measured: three-star embers **10** of 180 against Wyrmforge's 19,
+   the strongest line **77** against 97 (nothing walled), the veteran line at three stars **29**
+   against 47 (one rung walled - the upgrade the brief asks a player to want), at four stars **60**
+   against 70 with every rung held 1 to 5 of 9. Its duels - blightcaller + ironclad, gravemaw +
+   thunderer, harrower + warlord, bonecaller + gorgon - fall 3, 8, 5 and 2 of 9 on the strongest
+   line. **The star ladder is read on the veteran line here** (`LineFor`): 74% of its clears are
+   three-star, under the 75% the gate refuses at, at the shared 0.38/0.52 lines. **The cast is the
+   rabble whole again**, the neighbourhood's zombies, drawn whole only by the fourth chapter. The
+   curse and the void stone carry on. Its map (`map14`) is walked along its asphalt road
+   (`TRACES[14]`, `GROUND[14]` at a tolerance of ten); twenty rungs reach over 35 marks, accepted.
+
 ## The Shuffle lane - the third track
 
 The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a

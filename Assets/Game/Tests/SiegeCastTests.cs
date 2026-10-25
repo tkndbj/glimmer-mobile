@@ -313,6 +313,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Court, SiegeMode.CastFor(GameTrack.Main, 12),
                             "Wyrmforge does not draw the court");
 
+            // And the fourteenth wraps onto the rabble rather than the insects: the wasteland's
+            // zombies, drawn whole once before.
+            Assert.AreEqual(SiegeMode.Rabble, SiegeMode.CastFor(GameTrack.Main, 13),
+                            "Rustwaste does not draw the rabble");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
 
