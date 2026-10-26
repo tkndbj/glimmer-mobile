@@ -238,6 +238,15 @@ namespace GlimmerGrove.Modes
         /// every gem of its colour on the field.
         /// </summary>
         Nova = 9,
+
+        /// <summary>
+        /// <b>The gem bomb</b> (MODES.md 37fk): forged by a run of exactly four on the ladder and
+        /// the Infinite lane, never on the Shuffle lane. It waits on the field until the player
+        /// taps it (<c>SiegeBoard.Detonate</c>) or a match, a lance or another bomb takes it, and
+        /// then it takes every gem within <c>SiegeLongMatch.BombReach</c> of it - each paying its
+        /// own colour's fuel. Made, never dealt, so it is on no roster.
+        /// </summary>
+        Bomb = 10,
     }
 
     /// <summary>
@@ -387,16 +396,24 @@ namespace GlimmerGrove.Modes
         public static bool ShovesTheHill(SiegeCharm charm) => charm == SiegeCharm.Anvil;
 
         /// <summary>
-        /// <b>The charms the field makes rather than deals</b> (the Shuffle lane's power gems):
-        /// on no <see cref="Roster"/>, so no body can name one and no chapter's ladder reaches
-        /// one, and taught by no lesson. <c>SiegeCharmTests</c> holds every enum member to
+        /// <b>The charms the field makes rather than deals</b> - the Shuffle lane's power gems and
+        /// the ladder's gem bomb: on no <see cref="Roster"/>, so no body can name one and no
+        /// chapter's ladder reaches one. <c>SiegeCharmTests</c> holds every enum member to
         /// exactly one of the two lists.
         /// </summary>
-        public static readonly SiegeCharm[] Made = { SiegeCharm.RocketRow, SiegeCharm.RocketColumn, SiegeCharm.Nova };
+        public static readonly SiegeCharm[] Made =
+            { SiegeCharm.RocketRow, SiegeCharm.RocketColumn, SiegeCharm.Nova, SiegeCharm.Bomb };
 
         /// <summary>Whether <paramref name="charm"/> is one the field forges (<see cref="Made"/>).</summary>
         public static bool IsPower(SiegeCharm charm)
-            => charm == SiegeCharm.RocketRow || charm == SiegeCharm.RocketColumn || charm == SiegeCharm.Nova;
+            => charm == SiegeCharm.RocketRow || charm == SiegeCharm.RocketColumn || charm == SiegeCharm.Nova
+               || charm == SiegeCharm.Bomb;
+
+        /// <summary>
+        /// Whether <paramref name="charm"/> is the gem bomb - the one charm a player may set off by
+        /// tapping it (<c>SiegeBoard.Detonate</c>).
+        /// </summary>
+        public static bool IsBomb(SiegeCharm charm) => charm == SiegeCharm.Bomb;
 
         /// <summary>Whether <paramref name="charm"/> is a rocket, and so takes a line.</summary>
         public static bool IsRocket(SiegeCharm charm)

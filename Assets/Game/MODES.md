@@ -1259,6 +1259,22 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    (`map16`) is walked along its grey road (`TRACES[16]`, `GROUND[16]` at a tolerance of ten, the
    shaded ramp listed beside the plain road); twenty rungs reach over 34 marks, accepted.
 
+37fk. **A long match pays on the ladder and the Infinite lane, never the Shuffle lane** (2026-10-26,
+   the owner: "add some fun"). A straight run of exactly four merges into a **gem bomb**
+   (`SiegeCharm.Bomb`, made, never dealt): three gems clear and pay, and the merge pays
+   `SiegeLongMatch.MergeGems` more of its colour (the owner: merging is never free). The bomb goes
+   off when tapped (`SiegeBoard.Detonate`, a turn charged like a swap) or when anything takes it,
+   taking its 3x3 square; every gem pays its own colour. A straight run of five or more fires a
+   **salvo** (`RocketsFor`: 3, +1 a gem, at most 5) at the bodies nearest the line, booked to land
+   `RocketLands` later (37s); a rocket takes `RocketDamage` plus **130% of its target's health
+   bonus** (`RocketDamageAt`, the owner's figure), soaked by a shield. **Two locks keep the Shuffle
+   lane untouched** (it sells `power_gems`): only `SiegeRules.LongMatches` switches a board on
+   (`SiegeLayout.LongMatches`: no ramp or `SiegeEndless`; false for the tutorial and showcase), and
+   a board holding a build never forges. It draws from no stream (41). **Every gate builds boards
+   directly and so measures the mode without it**; both payoffs only add, so a holdability gate is
+   still a floor, but star lines are not - they come in easier until the owner re-sweeps (37cb).
+   Taught by the opening tutorial alone (`siege_gem_bomb`, 53a), never on a run. Held by `SiegeLongMatchTests`.
+
 ## The Shuffle lane - the third track
 
 The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a

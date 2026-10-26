@@ -28,17 +28,17 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "brbrgbgg",
-     "rrggbbrg",
-     "bbgrrggr",
-     "gbrbgrbr",
-     "rggrrbgb"
+     "bryyggrg",
+     "bybgryyr",
+     "rgrrbggb",
+     "bygrrbry",
+     "rggyybgb"
     ],
-    "gems": "rgb",
-    "wards": "rgb",
+    "gems": "rgby",
+    "wards": "rgby",
     "waves": [
-     "rgbrgb",
-     "rgbrgbrgb"
+     "rgbyrg",
+     "byrgbyrgb"
     ],
     "boss": "",
     "introduction": true
@@ -57,18 +57,18 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "rrgbbgbg",
-     "bbgrbrbr",
-     "rbbgrrgb",
-     "grgbgbgr",
-     "rggrgbbg"
+     "gbbrbrgg",
+     "bbyrbyrb",
+     "gyrgyyrr",
+     "ggyyrrbg",
+     "bbybrggr"
     ],
-    "gems": "rgb",
-    "wards": "rgb",
+    "gems": "rgby",
+    "wards": "rgby",
     "waves": [
-     "rgbrgb",
-     "rgbrgbrgb",
-     "rgBrgbrg"
+     "rgbyrg",
+     "byrgbyrgb",
+     "ygBrgbyr"
     ],
     "boss": "",
     "cogs": 25
@@ -87,18 +87,18 @@
     "width": 8,
     "height": 5,
     "rows": [
-     "rrggbggb",
-     "gbrbrbrb",
-     "bggrgbrr",
-     "rrgbrggb",
-     "rgrbrbgg"
+     "gygybyyr",
+     "bybbrbbr",
+     "rrbryrgg",
+     "byggyygy",
+     "bgbygrrg"
     ],
-    "gems": "rgb",
-    "wards": "rgb",
+    "gems": "rgby",
+    "wards": "rgby",
     "waves": [
-     "rgbrgB",
-     "rgbRGbrg",
-     "RGBRGbrgb"
+     "rgbyrB",
+     "ygbRGbyr",
+     "RGBYRbygb"
     ],
     "boss": "",
     "cogs": 25,

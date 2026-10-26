@@ -490,6 +490,19 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeAnvil = new Mechanic("siege_anvil");
 
         /// <summary>
+        /// The gem bomb (MODES.md 37fk): that four in a row merge into a bomb and the merge feeds
+        /// the turret, that tapping it blows up the gems round it, each feeding its own turret -
+        /// and, in one clause, that five in a row fire rockets at the hill.
+        ///
+        /// <b>Raised the first time a bomb stands settled in its socket and ringed on the bomb</b>,
+        /// which is invariant 6b for a <em>tap this</em> lesson: the ring goes round the thing to
+        /// tap. The salvo is a clause rather than a lesson of its own because it asks nothing of the
+        /// player - it fires itself - and a panel about it would hold the board for news the
+        /// player has just watched happen.
+        /// </summary>
+        public static readonly Mechanic SiegeGemBomb = new Mechanic("siege_gem_bomb");
+
+        /// <summary>
         /// The cursed stone (<c>SiegeLayout.Obsidian</c>): it feeds nothing, and three in a line
         /// break the curse over the hill. Raised the first time one settles on the field, and
         /// pointed at it (invariant 6b - the thing to line up).
@@ -978,6 +991,7 @@ namespace GlimmerGrove.Progression
             SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
             SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass, SiegeAnvil,
+            SiegeGemBomb,
             SiegeObsidian, SiegeSingularity,
             SiegeRubble,
             ModeSwitch, LuckySpin,

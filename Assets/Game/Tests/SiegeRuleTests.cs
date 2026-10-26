@@ -181,9 +181,9 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Chapter =
         {
-            new Rung("s01_firstwatch", new[] { "brbrgbgg", "rrggbbrg", "bbgrrggr", "gbrbgrbr", "rggrrbgb" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb" }, "", 0, 0, 75, 92, ""),
-            new Rung("s01_ironward", new[] { "rrgbbgbg", "bbgrbrbr", "rbbgrrgb", "grgbgbgr", "rggrgbbg" }, "rgb", "rgb", new[] { "rgbrgb", "rgbrgbrgb", "rgBrgbrg" }, "", 25, 0, 75, 92, ""),
-            new Rung("s01_stonewatch", new[] { "rrggbggb", "gbrbrbrb", "bggrgbrr", "rrgbrggb", "rgrbrbgg" }, "rgb", "rgb", new[] { "rgbrgB", "rgbRGbrg", "RGBRGbrgb" }, "", 25, 0, 75, 92, "p"),
+            new Rung("s01_firstwatch", new[] { "bryyggrg", "bybgryyr", "rgrrbggb", "bygrrbry", "rggyybgb" }, "rgby", "rgby", new[] { "rgbyrg", "byrgbyrgb" }, "", 0, 0, 75, 92, ""),
+            new Rung("s01_ironward", new[] { "gbbrbrgg", "bbyrbyrb", "gyrgyyrr", "ggyyrrbg", "bbybrggr" }, "rgby", "rgby", new[] { "rgbyrg", "byrgbyrgb", "ygBrgbyr" }, "", 25, 0, 75, 92, ""),
+            new Rung("s01_stonewatch", new[] { "gygybyyr", "bybbrbbr", "rrbryrgg", "byggyygy", "bgbygrrg" }, "rgby", "rgby", new[] { "rgbyrB", "ygbRGbyr", "RGBYRbygb" }, "", 25, 0, 75, 92, "p"),
             new Rung("s01_thornhollow", new[] { "gbrryrbb", "rygbrrbr", "bbgybggy", "ybygyybb", "gyrbbggr" }, "rgby", "rgby", new[] { "rrrgggbb", "YYyy!rrrr", "GGbbYY" }, "", 25, 0, 75, 92, "p"),
             new Rung("s01_warlordsgate", new[] { "ygrrbrgg", "ryyrgrrb", "bbggyyby", "brryrbyg", "ggrbggry" }, "rgby", "rgby", new[] { "rgbyrg", "rgby!bRGby", "RGbyRG" }, "warlord:r", 25, 0, 75, 92, "p"),
             new Rung("s01_bramblerun", new[] { "bbrgrbrg", "bggrbgyy", "rgyygrry", "brbybyyg", "yrbrgrrg" }, "rgby", "rgby", new[] { "RGby#rby", "RGby!yrGby", "RGbyRG#gRgby" }, "", 25, 0, 75, 92, "p"),

@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Esta torre está llena.\n\nTócala para lanzar toda la carga de golpe. Alcanza a cualquier color."
+      "text": "¡Tócala para alcanzar a todos los colores!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "TOCA UNA TORRE LLENA"
+      "text": "¡TORRE LLENA!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Desliza una gema para alinear tres del mismo color.\n\nLa torre de ese color abre fuego, y solo alcanza a invasores de su color."
+      "text": "¡Junta 3 gemas para cargar la torre de ese color!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "DESLIZA PARA HACER TRES"
+      "text": "JUNTA 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "EL YUNQUE"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Junta 4 para crear una bomba. ¡Tócala para que explote!\n¡Junta 5 para lanzar cohetes!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBA"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Bu kule dolu.\n\nBütün yükü tek seferde fırlatmak için ona dokun. Her renge isabet eder."
+      "text": "Her renge vurmak için dokun!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "DOLU BİR KULEYE DOKUN"
+      "text": "KULE DOLU!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Aynı renkten üçünü hizalamak için bir mücevheri kaydır.\n\nO rengin kulesi ateş açar ve sadece kendi rengindeki akıncıları vurur."
+      "text": "O rengin kulesini doldurmak için 3 mücevher eşleştir!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "ÜÇLÜ İÇİN KAYDIR"
+      "text": "3'LÜ EŞLEŞTİR"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "ÖRS"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Bomba yapmak için 4 eşleştir. Patlatmak için dokun!\nRoket fırlatmak için 5 eşleştir!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBA"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

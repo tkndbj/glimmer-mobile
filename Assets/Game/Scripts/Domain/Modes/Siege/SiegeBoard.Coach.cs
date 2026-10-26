@@ -42,7 +42,30 @@ namespace GlimmerGrove.Modes
             if (ward < 0 || ward >= _wards.Length || fuel <= 0f) return false;
 
             var post = _wards[ward];
-            return post.Alive && post.Fill(fuel);
+            bool banked = post.Alive && post.Fill(fuel);
+
+            if (banked) Banked();
+            return banked;
+        }
+
+        /// <summary>
+        /// Whether this line may bank only one charge in its whole run. <b>The opening tutorial's
+        /// alone</b> (the owner, 2026-10-26: the overcharge should happen once): it teaches the
+        /// overcharge once, and its closing sweep keeps every tube full, so without this every
+        /// match after the lesson banked another one. False on every other board.
+        /// </summary>
+        public bool OneCharge { get; set; }
+
+        /// <summary>
+        /// Called wherever a ward has just banked: on a board allowed one charge, the whole line
+        /// stops banking from here on (<see cref="SiegeWard.Banks"/>). The charge just banked is
+        /// kept, so the tap the lesson asks for still has something to throw.
+        /// </summary>
+        void Banked()
+        {
+            if (!OneCharge) return;
+
+            for (int i = 0; i < _wards.Length; i++) _wards[i].StopBanking();
         }
 
         /// <summary>

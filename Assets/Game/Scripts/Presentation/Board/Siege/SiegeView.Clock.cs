@@ -106,6 +106,12 @@ namespace GlimmerGrove
             // the hill, the wards, the muster and the fuel together - see `Dilate`.
             var report = _board.Advance(Time.unscaledDeltaTime * _pace);
 
+            // **A salvo's rockets fly on the same seconds the model was just handed**
+            // (`SiegeView.LongMatch`), so a held run holds them and a bent clock bends them - the
+            // rocket and the landing it is drawing cannot drift apart for any reason but a late
+            // launch, and that one is caught up when the landing is reported.
+            Flying(Time.unscaledDeltaTime * _pace);
+
             // **The count-in is part of the run, so it is paced by the run.** Read off the
             // board's own quiet rather than timed beside it, which is what stops it running out
             // behind a first-timer's tip - see `CountIn`. After `Advance`, so the first beat
@@ -193,6 +199,13 @@ namespace GlimmerGrove
             // fuel (invariant 37s): the bolts land when the motes do, and the one thing this may
             // not do is kill a raider before the gem that paid for it has finished bursting.
             Volley(report.Charmed);
+
+            // **A salvo's rockets landing, on the frame the model landed them** - booked exactly
+            // as a stormglass's bolts are, so the rocket flown from the field is told to arrive
+            // now (`SiegeView.LongMatch`). Before `Reap`, so a body a rocket kills is still
+            // standing to be hit.
+            if (report.Rocketed.Count > 0) Touchdown(report.Rocketed);
+
             for (int i = 0; i < report.Forged.Count; i++) Forged(report.Forged[i]);
             if (report.Stilled > 0f) Stilled(report.Stilled);
 

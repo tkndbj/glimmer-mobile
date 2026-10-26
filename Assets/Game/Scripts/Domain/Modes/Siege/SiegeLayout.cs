@@ -564,6 +564,14 @@ namespace GlimmerGrove.Modes
         public bool IsEndless => Ramp != null;
 
         /// <summary>
+        /// Whether a long match pays off on this lane (<see cref="SiegeLongMatch"/>, MODES.md
+        /// 37fk): an authored ladder and the Infinite lane, and never the Shuffle lane, which sells
+        /// its own long-match payoff as a card. Asked of the ramp's <em>kind</em> rather than of a
+        /// field, so a new chapter on either track gets it without a line of code (invariant 4).
+        /// </summary>
+        public bool LongMatches => Ramp == null || Ramp is SiegeEndless;
+
+        /// <summary>
         /// How many waves are coming, or <see cref="int.MaxValue"/> on an endless lane.
         ///
         /// <b>Asked rather than <c>Waves.Length</c></b>, which is the one thing an endless lane

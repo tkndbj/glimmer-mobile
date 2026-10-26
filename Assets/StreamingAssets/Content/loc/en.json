@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "This turret is full.\n\nTap it to throw the whole charge at once. It hits any colour."
+      "text": "Tap it to hit every colour!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "TAP A FULL TURRET"
+      "text": "TURRET FULL!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Slide a gem to line up three of a colour.\n\nThat colour's turret opens fire, and it only hits raiders of its own colour."
+      "text": "Match 3 gems to fuel that colour's turret!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "SLIDE TO MATCH THREE"
+      "text": "MATCH 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "THE ANVIL"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Match 4 to make a bomb. Tap it to blast!\nMatch 5 to fire rockets!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "MATCH 4 = BOMB"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

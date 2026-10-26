@@ -980,6 +980,12 @@ namespace GlimmerGrove
                 case SiegeCharm.Hourglass: return Mechanic.SiegeHourglass;
                 case SiegeCharm.Anvil: return Mechanic.SiegeAnvil;
 
+                // The power gems are never taught on a run: the Shuffle lane's by their card, and
+                // the gem bomb by the opening tutorial (`TutorialScreen`, MODES.md 37fk).
+                case SiegeCharm.Bomb:
+                case SiegeCharm.RocketRow:
+                case SiegeCharm.RocketColumn:
+                case SiegeCharm.Nova:
                 case SiegeCharm.None:
                 default: return default;
             }

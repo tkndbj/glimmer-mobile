@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Esta torre está cheia.\n\nToque nela para lançar a carga inteira de uma vez. Ela atinge qualquer cor."
+      "text": "Toque nela para atingir todas as cores!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "TOQUE NUMA TORRE CHEIA"
+      "text": "TORRE CHEIA!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Deslize uma gema para alinhar três da mesma cor.\n\nA torre daquela cor abre fogo, e só atinge invasores da mesma cor."
+      "text": "Junte 3 gemas para abastecer a torre dessa cor!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "DESLIZE PARA FAZER TRÊS"
+      "text": "JUNTE 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "A BIGORNA"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Junte 4 para criar uma bomba. Toque nela para explodir!\nJunte 5 para lançar foguetes!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBA"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

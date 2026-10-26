@@ -87,7 +87,11 @@ namespace GlimmerGrove
             var host = UIKit.Node("Power", (RectTransform)gem.Img.transform);
             gem.Power = host;
 
-            if (SiegeCharms.IsRocket(charm))
+            // **The ladder's gem bomb wears a lit fuse, not a power gem's light** (MODES.md 37fk,
+            // `SiegeView.LongMatch`). Asked first, so neither branch below ever sees one.
+            if (SiegeCharms.IsBomb(charm))
+                gem.PowerParts = FuseParts(host, tint);
+            else if (SiegeCharms.IsRocket(charm))
             {
                 host.localRotation = Quaternion.Euler(0f, 0f, charm == SiegeCharm.RocketColumn ? 90f : 0f);
 
@@ -137,6 +141,13 @@ namespace GlimmerGrove
 
                 var tint = gem.Colour >= 0 && gem.Colour < SiegeLayout.Letters.Length ? TintOf(gem.Colour) : Pal.Cream;
                 var lift = Color.Lerp(tint, Color.white, .5f);
+
+                // The gem bomb's fuse (`SiegeView.LongMatch`), never a power gem's light.
+                if (SiegeCharms.IsBomb(gem.Powered))
+                {
+                    Fizzing(gem, age, tint);
+                    continue;
+                }
 
                 if (SiegeCharms.IsRocket(gem.Powered))
                 {
@@ -225,6 +236,13 @@ namespace GlimmerGrove
         /// <summary>The forge itself: light closing on the cell, then the gem igniting as what it became.</summary>
         void Forging(SiegeForging forged)
         {
+            // **A gem bomb is merged, not forged** - its own sequence (`SiegeView.LongMatch`).
+            if (SiegeCharms.IsBomb(forged.Charm))
+            {
+                Merged(forged);
+                return;
+            }
+
             var at = CentreOf(forged.Cell);
             var tint = TintOf(forged.Colour);
             var lift = Color.Lerp(tint, Color.white, .5f);

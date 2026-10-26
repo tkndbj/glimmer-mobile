@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Questa torretta è piena.\n\nToccala per lanciare tutta la carica in un colpo. Colpisce qualsiasi colore."
+      "text": "Toccala per colpire ogni colore!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "TOCCA UNA TORRETTA PIENA"
+      "text": "TORRETTA PIENA!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Fai scorrere una gemma per allinearne tre dello stesso colore.\n\nLa torretta di quel colore apre il fuoco, e colpisce solo i predoni del suo colore."
+      "text": "Abbina 3 gemme per caricare la torretta di quel colore!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "SCORRI PER FARE TRIS"
+      "text": "ABBINA 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "L'INCUDINE"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Abbinane 4 per creare una bomba. Toccala per farla esplodere!\nAbbinane 5 per lanciare razzi!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBA"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "هذا البرج ممتلئ.\n\nانقره لتقذف الشحنة كلها دفعة واحدة. تصيب أي لون."
+      "text": "انقره ليصيب كل الألوان!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "انقر برجا ممتلئا"
+      "text": "البرج ممتلئ!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "حرك جوهرة لتصف ثلاثا من لون واحد.\n\nيفتح برج ذلك اللون النار، ولا يصيب إلا المهاجمين من لونه."
+      "text": "طابق 3 جواهر لتغذي برج ذلك اللون!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "حرك لتطابق ثلاثا"
+      "text": "طابق 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "السندان"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "طابق 4 لتصنع قنبلة. انقرها لتفجرها!\nطابق 5 لتطلق صواريخ!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = قنبلة"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

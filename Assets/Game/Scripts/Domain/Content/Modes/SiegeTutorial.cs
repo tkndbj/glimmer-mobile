@@ -44,20 +44,20 @@ namespace GlimmerGrove.Content
         public const int Width = 8, Height = 5;
 
         /// <summary>
-        /// The colours, which are three rather than four.
-        ///
-        /// <b>Three is the fewest a field can hold</b> (<see cref="SiegeLayout.MinWards"/>), and
-        /// the fewest is what a first board wants: a line of three turrets is three things to
-        /// look at rather than four, and the first rung of the chapter this leads into deals
-        /// exactly the same three.
+        /// The colours: all four, because the first rung of the chapter this leads into deals
+        /// all four (2026-10-26) and a tutorial teaches the board the player is about to meet.
+        /// On three a run of four came along on most moves, which would teach the gem bomb as
+        /// something that happens rather than something you make.
         /// </summary>
-        public const string Deal = "rgb";
+        public const string Deal = "rgby";
 
         /// <summary>The line, one turret per colour. See <see cref="Deal"/>.</summary>
-        public const string Line = "rgb";
+        public const string Line = "rgby";
 
         /// <summary>
-        /// The one wave: four of each colour, walking on one at a time.
+        /// The one wave: three of each colour, walking on one at a time - **red first**, the
+        /// colour of the taught match, so the first turret a player fuels has the first raider to
+        /// shoot at.
         ///
         /// <para>
         /// <b>Twelve, and it has been three and then six.</b> A wave walks on at
@@ -79,17 +79,19 @@ namespace GlimmerGrove.Content
         /// thing to learn, and the tutorial teaches two.
         /// </para>
         /// </summary>
-        public const string Wave = "rgbrgbrgbrgb";
+        public const string Wave = "rgbyrgbyrgby";
 
         /// <summary>
         /// The field, authored settled and with a swap planted where a thumb can reach it.
         ///
         /// <para>
-        /// The ground pattern is <c>rgb</c> running diagonally, which is the one arrangement of
-        /// three colours on a rectangle that contains <b>no run and no swap at all</b> - so every
-        /// move this board offers is one that was put there on purpose. One cell is then changed,
-        /// at (2,3), and that single edit is what makes <see cref="TaughtA"/> ↔ <see cref="TaughtB"/>
-        /// line up three greens along the fourth row.
+        /// <b>Two moves were planted, and nothing else was left</b> (searched rather than typed,
+        /// ten of each colour): <see cref="TaughtA"/> ↔ <see cref="TaughtB"/> lines up three reds
+        /// along the fourth row - the first lesson - and <see cref="FourA"/> ↔ <see cref="FourB"/>
+        /// lines up four blues along the bottom row - the gem bomb. The one other move on the
+        /// field is the three the bomb's own pattern always allows beside it. The four sits in the
+        /// bottom row and in columns the first match never touches, so it is still standing when
+        /// the second lesson asks for it.
         /// </para>
         /// <para>
         /// <b>Do not retype this by eye.</b> <c>TutorialTests</c> holds all of it - that the field
@@ -100,15 +102,16 @@ namespace GlimmerGrove.Content
         /// </summary>
         public static readonly string[] Rows =
         {
-            "rgbrgbrg",
-            "gbrgbrgb",
-            "brgbrgbr",
-            "rggrgbrg",
-            "gbrgbrgb",
+            "yrgyrgrb",
+            "bbyrgyyg",
+            "bygbbygr",
+            "grrgrgbr",
+            "ygrybbyb",
         };
 
         /// <summary>
-        /// The gem the coaching hand picks up, at (4,3), and the cell it slides it into, (3,3).
+        /// The gem the coaching hand picks up, at (4,3), and the cell it slides it into, (3,3) -
+        /// lining up three reds along the fourth row.
         ///
         /// <para>
         /// <b>Chosen rather than searched, and the difference matters on this one board.</b>
@@ -118,8 +121,8 @@ namespace GlimmerGrove.Content
         /// working, so the worst a mistyped row can do is move the hand rather than break it.
         /// </para>
         /// <para>
-        /// <b><see cref="TaughtA"/> is the green, and the order is the lesson.</b> The swap lines
-        /// up three greens along the fourth row, so the gem the hand picks up has to be the green
+        /// <b><see cref="TaughtA"/> is the red, and the order is the lesson.</b> The swap lines
+        /// up three reds along the fourth row, so the gem the hand picks up has to be the green
         /// that completes them - the one the ring is on and the one the player then watches light
         /// up with the other two. It shipped the other way round: the hand picked up the red at
         /// (3,3) and slid it right, so the gem ringed and swiped was the one gem on the row that
@@ -131,6 +134,14 @@ namespace GlimmerGrove.Content
         public const int TaughtA = 3 * Width + 4, TaughtB = 3 * Width + 3;
 
         /// <summary>
+        /// The gem bomb's move (MODES.md 37fk): the blue at (6,3) slid down into (6,4), lining up
+        /// four blues along the bottom row. <see cref="FourA"/> is the gem that joins the run, for
+        /// <see cref="TaughtA"/>'s reason. <see cref="Four"/> falls back to a search if the field
+        /// has moved under it.
+        /// </summary>
+        public const int FourA = 3 * Width + 6, FourB = 4 * Width + 6;
+
+        /// <summary>
         /// How long one feed takes to climb the tube. See <see cref="Feed"/>.
         ///
         /// Long enough to be watched and short enough that nobody waits: the point of pouring a
@@ -139,7 +150,7 @@ namespace GlimmerGrove.Content
         public const float PourSeconds = .55f;
 
         /// <summary>
-        /// How many matches fill a tube here.
+        /// How many matches fill a tube here, once the gem bomb has been taught.
         ///
         /// <para>
         /// <b>Three, and the first cut was one.</b> A tube really holds fourteen gems' worth
@@ -150,9 +161,9 @@ namespace GlimmerGrove.Content
         /// is what happens, rather than something you build. Reported in one word: <em>instant</em>.
         /// </para>
         /// <para>
-        /// <b>Three is the fewest that still reads as accumulation</b> - the tube climbs, twice,
-        /// before it lights - and it is close enough to the real four or five that nothing has to
-        /// be unlearned. The shortfall is the tutorial's own (<see cref="Feed"/>); what the
+        /// <b>Two since 2026-10-26</b>: by the time the tube is taught the player has already
+        /// matched three and set off a bomb, so the line already holds fuel, and a tube that
+        /// climbs once and lights on the next move still reads as built rather than handed over. The shortfall is the tutorial's own (<see cref="Feed"/>); what the
         /// player sees is a tube filling from their matches, which is exactly what will happen on
         /// the first rung.
         /// </para>
@@ -164,7 +175,7 @@ namespace GlimmerGrove.Content
         /// <see cref="Charged"/>; this only decides how generous each feed is.
         /// </para>
         /// </summary>
-        public const int MatchesToArm = 3;
+        public const int MatchesToArm = 2;
 
         /// <summary>The rules a tutorial run is played by.</summary>
         /// <remarks>
@@ -175,7 +186,7 @@ namespace GlimmerGrove.Content
         /// tutorial can never open on four white rectangles (invariant 7b).
         /// </remarks>
         public static SiegeRules Rules()
-            => new SiegeRules(Layout(), WardLine.Starter(WardCatalog.Default));
+            => new SiegeRules(Layout(), WardLine.Starter(WardCatalog.Default), longMatches: true);
 
         /// <summary>The board this tutorial is played on. Never null; see <see cref="Fault"/>.</summary>
         public static SiegeLayout Layout()
@@ -283,6 +294,120 @@ namespace GlimmerGrove.Content
             bool bJoins = runs.Contains(a);
 
             return bJoins && !aJoins ? b : a;
+        }
+
+        /// <summary>
+        /// The gem bomb's move: <see cref="FourA"/> ↔ <see cref="FourB"/> while the field still
+        /// lines four up there, else the first move on the field that lines up four or more, else
+        /// nothing (<see cref="SiegeSwap.Found"/> false). Oriented, for <see cref="Taught"/>'s
+        /// reason.
+        /// </summary>
+        public static SiegeSwap Four(SiegeBoard board)
+        {
+            if (board == null) return default;
+
+            if (Lengthens(board, FourA, FourB))
+                return Oriented(board, new SiegeSwap(FourA, FourB, 0));
+
+            for (int i = 0; i < board.Count; i++)
+            {
+                int x = i % board.Width, y = i / board.Width;
+
+                if (x + 1 < board.Width && Lengthens(board, i, i + 1))
+                    return Oriented(board, new SiegeSwap(i, i + 1, 0));
+
+                if (y + 1 < board.Height && Lengthens(board, i, i + board.Width))
+                    return Oriented(board, new SiegeSwap(i, i + board.Width, 0));
+            }
+
+            return default;
+        }
+
+        /// <summary>
+        /// Whether trading <paramref name="a"/> and <paramref name="b"/> is a move the board takes
+        /// <em>and</em> lines up a straight run of four or more through either of them.
+        /// </summary>
+        static bool Lengthens(SiegeBoard board, int a, int b)
+        {
+            if (!board.Lines(a, b)) return false;
+
+            var cells = new char[board.Count];
+            for (int i = 0; i < cells.Length; i++) cells[i] = board.At(i);
+
+            char cell = cells[a];
+            cells[a] = cells[b];
+            cells[b] = cell;
+
+            return Through(cells, board.Width, board.Height, a) >= SiegeLongMatch.BombRun
+                || Through(cells, board.Width, board.Height, b) >= SiegeLongMatch.BombRun;
+        }
+
+        /// <summary>The longest straight run of one colour through <paramref name="cell"/>.</summary>
+        static int Through(char[] cells, int width, int height, int cell)
+        {
+            char c = cells[cell];
+            if (SiegeLayout.Letters.IndexOf(c) < 0) return 0;
+
+            int x = cell % width, y = cell / width;
+
+            int across = 1;
+            for (int k = x - 1; k >= 0 && cells[y * width + k] == c; k--) across++;
+            for (int k = x + 1; k < width && cells[y * width + k] == c; k++) across++;
+
+            int down = 1;
+            for (int k = y - 1; k >= 0 && cells[k * width + x] == c; k--) down++;
+            for (int k = y + 1; k < height && cells[k * width + x] == c; k++) down++;
+
+            return across > down ? across : down;
+        }
+
+        /// <summary>
+        /// Whether this board's one charge has been banked and thrown already: the line no longer
+        /// banks (<see cref="SiegeBoard.OneCharge"/>) and no turret holds one. The tube lesson
+        /// then has nothing left to wait for.
+        /// </summary>
+        public static bool Spent(SiegeBoard board)
+        {
+            if (board == null || !board.OneCharge) return false;
+
+            for (int i = 0; i < board.Wards.Count; i++)
+                if (board.Wards[i].Banks || board.Wards[i].Charges > 0) return false;
+
+            return true;
+        }
+
+        /// <summary>The cell a gem bomb is standing in, or -1 while none is.</summary>
+        public static int Bomb(SiegeBoard board)
+        {
+            if (board == null) return -1;
+
+            for (int i = 0; i < board.Count; i++)
+                if (SiegeCharms.IsBomb(board.CharmAt(i))) return i;
+
+            return -1;
+        }
+
+        /// <summary>
+        /// The standing turret closest to banking a charge, or -1: where the tutorial's feeds go
+        /// while the tube is being taught, so the one that lights is the one already nearly lit.
+        /// </summary>
+        public static int Fullest(SiegeBoard board)
+        {
+            if (board == null) return -1;
+
+            int best = -1;
+            float most = -1f;
+
+            for (int i = 0; i < board.Wards.Count; i++)
+            {
+                var ward = board.Wards[i];
+                if (!ward.Alive || ward.Charge <= most) continue;
+
+                most = ward.Charge;
+                best = i;
+            }
+
+            return best;
         }
 
         /// <summary>

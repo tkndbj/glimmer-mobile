@@ -123,7 +123,7 @@ namespace GlimmerGrove
         // guessed. Mixing top-anchored text with bottom-anchored buttons is what let the
         // stakes line and the sign-in buttons occupy the same forty pixels.
         const float TopMargin = 100f, BottomMargin = 56f;
-        const float StatusH = 96f, LabelH = 40f, LineH = 60f;
+        const float StatusH = 110f, LabelH = 40f, LineH = 60f;
         const float ButtonH = 118f, WarnH = 44f, CloseH = 124f;
         const float AfterStatus = 12f, AfterLabel = 28f, AfterLine = 20f;
         const float BetweenButtons = 14f, AfterButtons = 22f, BeforeClose = 12f;
@@ -249,12 +249,12 @@ namespace GlimmerGrove
                              : afterPurchase ? "ui.account.guest_purchase"
                              : "ui.account.guest";
 
-            _status = Line("Status", Loc.Get(statusKey), 34, Color.white,
+            _status = Line("Status", Loc.Get(statusKey), 40, Color.white,
                            StatusH, TextAnchor.MiddleCenter, 2f);
             var statusOutline = _status.gameObject.AddComponent<Outline>();
             statusOutline.effectColor = Color.black;
             statusOutline.effectDistance = Vector2.one * 2f;
-            Fit(_status, 24, 34);
+            Fit(_status, 28, 40);
 
             // An address, so it is dimmer and smaller than everything else here and never
             // wraps - a long one is elided by the fitter rather than pushed onto a line that
@@ -332,7 +332,7 @@ namespace GlimmerGrove
 
             if (_spinner || Panel == null) return;
 
-            var arc = UIKit.Img("Spinner", Panel, Art.Arc(96, 9f), Pal.Moss,
+            var arc = UIKit.Img("Spinner", Panel, Art.Arc(96, 9f), Pal.Mint,
                                 new Vector2(96f, 96f), new Vector2(.5f, 1f),
                                 new Vector2(0f, -(_actionsTop + _actionsBottom) * .5f));
             arc.raycastTarget = false;
@@ -443,12 +443,12 @@ namespace GlimmerGrove
                 // Says what is happening first, because this is the step that takes the time
                 // and the one the player is trusting: their grove is being put somewhere safe
                 // before anything is handed over.
-                Say("ui.account.securing", Pal.Moss);
+                Say("ui.account.securing", Pal.Mint);
                 StartCoroutine(RunBecome(CloudSaveService.SwitchAccountAsync(credential)));
                 return;
             }
 
-            Say("ui.account.working", Pal.Moss);
+            Say("ui.account.working", Pal.Mint);
             StartCoroutine(RunLink(credential));
         }
 
@@ -457,10 +457,9 @@ namespace GlimmerGrove
             var task = CloudSaveService.LinkAsync(credential);
             while (!task.IsCompleted) yield return null;
 
-            _busy = false;
-
             if (task.IsFaulted)
             {
+                _busy = false;
                 Debug.LogException(task.Exception);
                 Say("ui.account.failed", Pal.Rose);
                 yield break;
@@ -468,9 +467,13 @@ namespace GlimmerGrove
 
             var result = task.Result;
 
+            // A success keeps the spinner up until the panel closes: the sign-in buttons
+            // reappearing for the moment before it does read as "it didn't work".
+            if (!result.Ok) _busy = false;
+
             if (result.Ok)
             {
-                Say("ui.account.linked_ok", Pal.Moss);
+                Say("ui.account.linked_ok", Pal.Mint);
                 Audio.Sfx("chime2", .55f);
                 Tween.After(1.6f, () => { if (this != null) Close(); }, this);
                 yield break;
@@ -521,10 +524,9 @@ namespace GlimmerGrove
         {
             while (!task.IsCompleted) yield return null;
 
-            _busy = false;
-
             if (task.IsFaulted)
             {
+                _busy = false;
                 Debug.LogException(task.Exception);
                 Say("ui.account.failed", Pal.Rose);
                 yield break;
@@ -532,6 +534,9 @@ namespace GlimmerGrove
 
             var result = task.Result;
 
+            // The outcomes that move on (Adopted, Started, Pending, SameAccount) keep the
+            // spinner up until they do, so the old buttons never flash back before the panel
+            // changes; only the refusals hand the buttons back at once.
             switch (result.Outcome)
             {
                 case SwitchOutcome.SameAccount:
@@ -539,8 +544,8 @@ namespace GlimmerGrove
                     // ordinary mistake and this is what it looks like. Said rather than
                     // hidden: a switch that appears to do nothing reads as broken.
                     Audio.Sfx("chime2", .55f);
-                    Say("ui.account.same_account", Pal.Moss);
-                    Tween.After(1.4f, () => { if (this != null) Settle(); }, this);
+                    Say("ui.account.same_account", Pal.Mint);
+                    Tween.After(1.4f, () => { if (this != null) { _busy = false; Settle(); } }, this);
                     break;
 
                 case SwitchOutcome.Adopted:
@@ -550,13 +555,13 @@ namespace GlimmerGrove
                     // and the player has no way to tell whether they arrived at the grove they
                     // meant to until they have already left the other one.
                     _status.text = Loc.Format("ui.account.adopted_found", result.ClearedGlades);
-                    _status.color = Pal.Moss;
+                    _status.color = Pal.Mint;
                     Leave();
                     break;
 
                 case SwitchOutcome.Started:
                     Audio.Sfx("chime2", .55f);
-                    Say("ui.account.switched_new", Pal.Moss);
+                    Say("ui.account.switched_new", Pal.Mint);
                     Leave();
                     break;
 
@@ -565,7 +570,7 @@ namespace GlimmerGrove
                     // one thing the panel must not say: that they are starting fresh. It may
                     // be a grove of three chapters that simply has not arrived yet.
                     Audio.Sfx("chime2", .55f);
-                    Say("ui.account.switched_pending", Pal.Moss);
+                    Say("ui.account.switched_pending", Pal.Mint);
                     Leave();
                     break;
 
@@ -573,11 +578,13 @@ namespace GlimmerGrove
                     // The one refusal a player will actually meet, and the only one that has to
                     // make clear nothing happened: they tapped a button expecting to change
                     // accounts and are still in their own grove.
+                    _busy = false;
                     Say(result.Failure == CloudFailure.Offline
                             ? "ui.account.offline" : "ui.account.not_secured", Pal.Rose);
                     break;
 
                 default:
+                    _busy = false;
                     Report(result.Failure);
                     break;
             }
@@ -673,7 +680,7 @@ namespace GlimmerGrove
         void RunAdopt()
         {
             _busy = true;
-            Say("ui.account.working", Pal.Moss);
+            Say("ui.account.working", Pal.Mint);
             StartCoroutine(RunBecome(CloudSaveService.AdoptLinkedAccountAsync(_contested)));
         }
 

@@ -102,6 +102,16 @@ namespace GlimmerGrove.Modes
         public int ChargeCap { get; private set; } = SiegeTuning.MostCharges;
 
         /// <summary>
+        /// Whether a full tube still banks a charge. True on every ward of every graded board; the
+        /// opening tutorial turns it off once its one overcharge is banked
+        /// (<c>SiegeBoard.OneCharge</c>), so a tube kept full by its closing sweep stays a tube.
+        /// </summary>
+        public bool Banks { get; private set; } = true;
+
+        /// <summary>Stops this ward banking any more charges. See <see cref="Banks"/>.</summary>
+        internal void StopBanking() => Banks = false;
+
+        /// <summary>
         /// What a bolt from this ward is worth against a colour that is not its own, in tenths.
         /// Nought on every line a player stands (the lock, invariant 37bl); a Shuffle build may
         /// open it (<see cref="SiegeBoosts.OffColourTenths"/>).
@@ -400,7 +410,7 @@ namespace GlimmerGrove.Modes
 
             bool banked = false;
 
-            while (Fuel >= Capacity && Charges < ChargeCap)
+            while (Banks && Fuel >= Capacity && Charges < ChargeCap)
             {
                 Fuel -= Capacity;
                 Charges++;

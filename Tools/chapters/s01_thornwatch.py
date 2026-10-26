@@ -13,16 +13,14 @@ constants in code, one place, retuned for every level at once.
 **What each rung adds, in order.**
 
   1. *First Watch* - the cinematic introduction. The warlord emerges from a portal and summons
-     fifteen creepers in two waves. Three wards, three colours, no cogs or charms; the warlord is
+     fifteen creepers in two waves. Four wards, four colours, no cogs or charms; the warlord is
      a scene actor rather than an additional combat wave. Only this encounter protects the line.
   2. *The Ironward* - the **cog**. A raider the line kills leaves one lying on the hill and a
      finger takes it, so what this rung teaches is that the hill is somewhere a finger goes. One
      brute, so the ramp adds a mechanic and a monster in different levels.
-  3. *Stonewatch* - brutes in numbers, and the last rung before the line grows.
-  4. *Thornhollow* - **the fourth ward, and with it the fourth colour**. Par steps up here and it
-     is arithmetic rather than difficulty: a four-colour field cascades less than a three-colour
-     one, so a match delivers about two thirds of what it did and the same hill costs more matches
-     (`SiegeTuning.MatchGemsTenthsFor`).
+  3. *Stonewatch* - brutes in numbers.
+  4. *Thornhollow* - a heavier hill with yellow in it from the first wave. (It used to be where the
+     fourth ward arrived; every rung stands four since 2026-10-26.)
   5. *The Warlord's Gate* - the **warlord**: it walks to the middle of the hill, stops, and throws
      at the line from where nothing can reach it.
   6. *Bramble Run* - the **bulwark**, written `#r`: it carries a shield, so it halves every bolt
@@ -98,8 +96,8 @@ WIDE, TALL = 8, 5
 #:
 #: **``wards`` and ``gems`` are the same string, always.** A turret burns its own colour and
 #: nothing else, so a gem no ward carries is a move spent on nothing - both content gates refuse a
-#: level whose two disagree. The opening rungs stand **three** of each, which is the fewest a jewel
-#: board can be dealt from at all (`SiegeLayout.MinWards` records the measurement).
+#: level whose two disagree. **Every rung stands four** (2026-10-26): the opening three stood three,
+#: and on a three-colour field a run of four - a gem bomb - came on most moves.
 #:
 #: **Two bosses across ten rungs, on the fifth and the tenth, and the other two moved to the second
 #: chapter.** It shipped with four, one every two or three rungs, and that is too many for one
@@ -134,26 +132,30 @@ WIDE, TALL = 8, 5
 #: where they stood by `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine`, which is the only instrument
 #: that can see any of it (invariant 37j).
 LEVELS = (
-    dict(id="s01_firstwatch", seed=9753, swaps=14, charms="", introduction=True,
-         wards="rgb", gems="rgb", cogs=0, boss="",
-         waves=["rgbrgb", "rgbrgbrgb"]),
+    # **Four wards and four colours from the very first rung** (2026-10-26, the owner): on a
+    # three-colour field a run of four came along on most moves, so the gem bomb (MODES.md 37fk)
+    # stopped being a payoff and the swap stopped mattering. The first three rungs were re-dealt
+    # on four colours with the same opening-swap counts and the same raiders, a quarter of each
+    # wave now wearing yellow.
+    dict(id="s01_firstwatch", seed=1111, swaps=14, charms="", introduction=True,
+         wards="rgby", gems="rgby", cogs=0, boss="",
+         waves=["rgbyrg", "byrgbyrgb"]),
 
     # **The cog, on the rung where it can be met without anything else going on.** It is dropped by
     # a raider the line kills and lies on the hill until it is tapped, so what this rung really
     # teaches is that the hill is somewhere a finger goes. One brute, so a mechanic and a monster
     # arrive on different rungs.
-    dict(id="s01_ironward", seed=419, swaps=15, charms="",
-         wards="rgb", gems="rgb", cogs=25, boss="",
-         waves=["rgbrgb", "rgbrgbrgb", "rgBrgbrg"]),
+    dict(id="s01_ironward", seed=472, swaps=15, charms="",
+         wards="rgby", gems="rgby", cogs=25, boss="",
+         waves=["rgbyrg", "byrgbyrgb", "ygBrgbyr"]),
 
-    # Brutes in numbers, on the last rung before the line grows.
-    dict(id="s01_stonewatch", seed=10719, swaps=16, charms="p",
-         wards="rgb", gems="rgb", cogs=25, boss="",
-         waves=["rgbrgB", "rgbRGbrg", "RGBRGbrgb"]),
+    # Brutes in numbers.
+    dict(id="s01_stonewatch", seed=547, swaps=16, charms="p",
+         wards="rgby", gems="rgby", cogs=25, boss="",
+         waves=["rgbyrB", "ygbRGbyr", "RGBYRbygb"]),
 
-    # **The fourth ward, and with it the fourth colour.** The line has stood three since the first
-    # rung; this is where it grows, and everything after it is a four-colour field. A player who
-    # has learnt the lock on three meets the widest version of it here.
+    # **Once the fourth ward and the fourth colour arrived here**; every rung stands four now
+    # (see the first rung). Its field and its waves are unchanged.
     dict(id="s01_thornhollow", seed=4176, swaps=9, charms="p",
          wards="rgby", gems="rgby", cogs=25, boss="",
          # Two of the yellow brutes and two of the last wave's are creepers since 2026-10-25: this

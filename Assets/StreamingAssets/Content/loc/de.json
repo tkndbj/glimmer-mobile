@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Dieser Turm ist voll.\n\nTippe darauf, um die ganze Ladung auf einmal zu werfen. Sie trifft jede Farbe."
+      "text": "Tippe ihn an, um jede Farbe zu treffen!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "TIPP AUF EINEN VOLLEN TURM"
+      "text": "TURM VOLL!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Schieb ein Juwel, um drei einer Farbe aufzureihen.\n\nDer Turm dieser Farbe eröffnet das Feuer und trifft nur Plünderer seiner eigenen Farbe."
+      "text": "Kombiniere 3 Juwelen, um den Turm dieser Farbe zu laden!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "SCHIEB FÜR DREI GLEICHE"
+      "text": "3 KOMBINIEREN"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "DER AMBOSS"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Kombiniere 4 für eine Bombe. Tippe sie an, damit sie explodiert!\nKombiniere 5, um Raketen abzufeuern!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBE"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

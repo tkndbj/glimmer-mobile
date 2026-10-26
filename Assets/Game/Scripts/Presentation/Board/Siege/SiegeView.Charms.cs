@@ -189,7 +189,8 @@ namespace GlimmerGrove
             // for once: it used to ring the bomber rather than the bomb, and arrived seconds
             // before the thing it told the player to tap existed.
             // **A power gem is never announced**: the field forges it out of the player's own
-            // match (the Shuffle lane's `power_gems`), so there is no lesson to raise for it.
+            // match (the Shuffle lane's `power_gems`), so there is no lesson to raise for it - and
+            // the ladder's gem bomb is taught by the opening tutorial instead (MODES.md 37fk).
             if (charm != SiegeCharm.None && !SiegeCharms.IsPower(charm) && _announced.Add(charm)) _newly.Add(charm);
 
             // The light a power gem wears, or none (`SiegeView.Power`).
@@ -278,8 +279,9 @@ namespace GlimmerGrove
                 gem.Ring.transform.localScale = Vector3.one * (.95f + (k - .78f) * .55f);
             }
 
-            // And the power gems' own light, where a build has forged any (`SiegeView.Power`).
-            if (_board != null && _board.Boosts.PowerGems) Glowing(dt);
+            // And the power gems' own light, where a build has forged any (`SiegeView.Power`), or
+            // a gem bomb's lit fuse where a long match can forge one (`SiegeView.LongMatch`).
+            if (_board != null && (_board.Boosts.PowerGems || _board.LongMatches)) Glowing(dt);
         }
 
         float _breath;
@@ -421,6 +423,11 @@ namespace GlimmerGrove
 
                 case SiegeCharm.Nova:
                     Novaed(spark.Cell, spark.Colour, tint);
+                    break;
+
+                // The ladder's gem bomb (`SiegeView.LongMatch`).
+                case SiegeCharm.Bomb:
+                    Erupted(spark.Cell, spark.Colour, tint);
                     break;
 
                 case SiegeCharm.Prism:

@@ -48,23 +48,55 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly int EasePercent;
 
-        public SiegeRules(SiegeLayout layout) : this(layout, null) { }
+        /// <summary>
+        /// Whether a board on these rules forges a gem bomb out of a run of four and fires a salvo
+        /// out of a run of five (<see cref="SiegeLongMatch"/>, MODES.md 37fk).
+        ///
+        /// <para>
+        /// <b>True for a level read out of the catalog on the ladder or the Infinite lane</b>
+        /// (<see cref="SiegeLayout.LongMatches"/>), and false for the Shuffle lane, which sells
+        /// its own payoff as a card. <b>False on a scripted board</b> - the opening tutorial and
+        /// the advert's showcase hand in their own line - because each plays a script written
+        /// against the mode as it was, and a bomb forged mid-lesson is a lesson about something
+        /// else.
+        /// </para>
+        /// <para>
+        /// <b>Carried on the rules rather than decided by the board</b>, for <see cref="Start"/>'s
+        /// reason: a restart, a retry and a checkpoint all call <see cref="Fresh"/> again and must
+        /// deal the board the run began on. Every content gate and offline mirror builds its board
+        /// directly (<c>SiegeBoard.Build</c>) and so measures the mode without it - which stays a
+        /// floor, because a long match only ever adds (see <see cref="SiegeLongMatch"/>).
+        /// </para>
+        /// </summary>
+        public readonly bool LongMatches;
 
-        public SiegeRules(SiegeLayout layout, Wards.WardLine line) : this(layout, line, SiegeStart.Opening, 0) { }
+        public SiegeRules(SiegeLayout layout)
+            : this(layout, null, SiegeStart.Opening, 0, layout != null && layout.LongMatches) { }
 
-        SiegeRules(SiegeLayout layout, Wards.WardLine line, SiegeStart start, int easePercent) : base(0)
+        /// <summary>
+        /// Rules for a scripted board standing <paramref name="line"/>: the opening tutorial and
+        /// the showcase. A long match pays nothing on one unless its script teaches it
+        /// (<paramref name="longMatches"/>) - the tutorial does (<c>SiegeTutorial.Rules</c>), the
+        /// showcase does not.
+        /// </summary>
+        public SiegeRules(SiegeLayout layout, Wards.WardLine line, bool longMatches = false)
+            : this(layout, line, SiegeStart.Opening, 0, longMatches) { }
+
+        SiegeRules(SiegeLayout layout, Wards.WardLine line, SiegeStart start, int easePercent, bool longMatches)
+            : base(0)
         {
             Layout = layout;
             _line = line;
             Start = layout != null && layout.IsEndless ? start : SiegeStart.Opening;
             EasePercent = easePercent > 0 ? easePercent : 0;
+            LongMatches = longMatches;
         }
 
         /// <summary>
         /// The same level opened at <paramref name="start"/>. A laddered layout answers rules
         /// that open at wave one whatever it is asked, so a start can never reach a chapter.
         /// </summary>
-        public SiegeRules From(SiegeStart start) => new SiegeRules(Layout, _line, start, EasePercent);
+        public SiegeRules From(SiegeStart start) => new SiegeRules(Layout, _line, start, EasePercent, LongMatches);
 
         /// <summary>
         /// The same level with its raiders <paramref name="easePercent"/> per cent lighter. Only a
@@ -74,7 +106,7 @@ namespace GlimmerGrove.Content
         public SiegeRules Eased(int easePercent)
             => Layout == null || Layout.IsEndless || easePercent <= 0
                  ? this
-                 : new SiegeRules(Layout, _line, Start, easePercent);
+                 : new SiegeRules(Layout, _line, Start, easePercent, LongMatches);
 
         public override GameMode Mode => GameMode.Siege;
         public override ProtoGrid Grid => Layout.Grid;
@@ -90,7 +122,12 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public override IProtoBoard Fresh()
-            => SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line, Start, AssistTable.KeptPercent(EasePercent));
+        {
+            var board = SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line, Start,
+                                         AssistTable.KeptPercent(EasePercent));
+            board.LongMatches = LongMatches;
+            return board;
+        }
 
         /// <summary>
         /// Nothing to search.
@@ -221,6 +258,15 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_g")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_b")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_anvil_y")),
+
+            // **The gem bomb a run of four merges into** (MODES.md 37fk, `make_siege_art.BOMB_GEM`),
+            // one per colour. Resident with the charms for their reason - the ladder and the
+            // Infinite lane can forge one on any rung, and a bomb drawn before its picture arrived
+            // would be a white rectangle (invariant 7b).
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_bomb_r")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_bomb_g")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_bomb_b")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_bomb_y")),
 
             // What a colossus leaves on a post (`SiegeKind.Colossus`): one stone, drawn three
             // times at three sizes. Resident with the line's furniture rather than scoped to the

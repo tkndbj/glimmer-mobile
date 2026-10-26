@@ -170,14 +170,35 @@ namespace GlimmerGrove.Tests
         {
             var board = Fresh();
             board.Sheltered = true;
+            board.OneCharge = true;
 
             // The first panel is up and the hill is latched, so nothing has moved yet.
             var swap = SiegeTutorial.Taught(board);
             Assert.IsTrue(swap.Found);
 
-            Assert.IsNotNull(board.Swap(swap.A, swap.B), "the taught drag has to land");
+            var turn = board.Swap(swap.A, swap.B);
+            Assert.IsNotNull(turn, "the taught drag has to land");
+            Assert.AreEqual(3, turn.Beats[0].Cleared.Count, "the first lesson is a plain three");
 
-            // The tube climbs a match at a time and arms within the target, never past it.
+            // **The first objective**: the turret the three fed fires at the red raider walking on first.
+            Assert.Greater(Run(board, () => Fired(board)), 0, "the first match never made a turret fire");
+
+            // **The gem bomb**: the planted four is still standing after the first match, it
+            // merges into a bomb, and tapping the bomb sets it off.
+            var four = SiegeTutorial.Four(board);
+            Assert.IsTrue(four.Found, "the first match took the gem bomb's four with it");
+            Assert.AreEqual(SiegeTutorial.FourA, four.A, "the hand would point at a four somebody else found");
+
+            Assert.IsNotNull(board.Swap(four.A, four.B));
+            int bomb = SiegeTutorial.Bomb(board);
+            Assert.GreaterOrEqual(bomb, 0, "the four merged into nothing");
+
+            var blown = board.Detonate(bomb);
+            Assert.IsNotNull(blown, "the tap the bomb's panel asks for has to do something");
+            Assert.Less(SiegeTutorial.Bomb(board), 0, "the bomb was still standing after it went off");
+
+            // The tube: each move pours a share into the turret nearest to lit, and the
+            // `MatchesToArm`th lights it - or the player's own fuel already has.
             int match = 0;
 
             while (SiegeTutorial.Charged(board) < 0)
@@ -186,22 +207,15 @@ namespace GlimmerGrove.Tests
                             "a feed past the target has to brim the tube whatever else is true, "
                             + "or the screen's loop has nothing to end on");
 
-                if (match > 0)
-                {
-                    var next = SiegeTutorial.Taught(board);
-                    Assert.IsTrue(next.Found, "the field ran out of moves mid-tutorial");
-                    Assert.IsNotNull(board.Swap(next.A, next.B));
-                }
-
-                Assert.Greater(Run(board, () => SiegeTutorial.Fed(board) >= 0), 0,
-                               "match " + (match + 1) + " never reached a turret");
+                var next = SiegeTutorial.Taught(board);
+                Assert.IsTrue(next.Found, "the field ran out of moves mid-tutorial");
+                Assert.IsNotNull(board.Swap(next.A, next.B));
 
                 match++;
-                Pour(board, SiegeTutorial.Fed(board), match);
+                Pour(board, SiegeTutorial.Fullest(board), match);
             }
 
-            Assert.AreEqual(1, board.Wards[SiegeTutorial.Charged(board)].Charges,
-                            "the matches have to be worth one charge and never two");
+            Assert.AreEqual(1, Banked(board), "the tutorial banks one charge and never two");
 
             // The second panel waits for something to throw the charge at.
             int armed = -1;
@@ -214,6 +228,10 @@ namespace GlimmerGrove.Tests
             // The last beat: the grove answers, and the run finishes on its own reading.
             Run(board, () => board.IsFinished, sweep: true);
 
+            // **The overcharge happens once** (the owner, 2026-10-26): the sweep keeps every tube
+            // full, and on this board nothing banks again however it is fed.
+            for (int w = 0; w < board.Wards.Count; w++) board.Pour(w, board.Wards[w].Capacity * 2f);
+            Assert.AreEqual(0, Banked(board), "a tube kept full by the sweep banked another overcharge");
 
             Assert.IsTrue(board.IsFinished, "the tutorial's hill has to clear");
             Assert.AreEqual(board.Wards.Count, board.WardsStanding,
@@ -332,6 +350,114 @@ namespace GlimmerGrove.Tests
             }
 
             return false;
+        }
+
+        static bool Fired(SiegeBoard board)
+        {
+            for (int i = 0; i < board.Wards.Count; i++)
+                if (board.Wards[i].Shots > 0) return true;
+
+            return false;
+        }
+
+        static int Banked(SiegeBoard board)
+        {
+            int n = 0;
+            for (int i = 0; i < board.Wards.Count; i++) n += board.Wards[i].Charges;
+            return n;
+        }
+
+        /// <summary>
+        /// A player who banks and throws the one charge before the tube lesson has done the
+        /// lesson: the script must see that and go on, never wait for a charge that cannot bank.
+        /// </summary>
+        [Test]
+        public void AChargeThrownEarlyEndsTheTubeLessonRatherThanHangingIt()
+        {
+            var board = Fresh();
+            board.Sheltered = true;
+            board.OneCharge = true;
+
+            Assert.IsFalse(SiegeTutorial.Spent(board));
+
+            board.Pour(0, board.Wards[0].Capacity);
+            Assert.AreEqual(1, Banked(board));
+            Assert.IsFalse(SiegeTutorial.Spent(board), "a charge still held is a lesson still to give");
+
+            Assert.Greater(Run(board, () => SiegeTutorial.Armed(board) >= 0), 0, "nothing walked on to throw at");
+            Assert.IsTrue(board.Overcharge(0, new List<SiegeStrike>()).Landed);
+
+            Assert.IsTrue(SiegeTutorial.Spent(board), "the script would wait for ever on a charge that cannot bank");
+            Assert.Less(SiegeTutorial.Charged(board), 0);
+        }
+
+        /// <summary>
+        /// Every first move the field offers still reaches the gem bomb's lesson - the
+        /// taught three, the four itself (a bomb is then already standing), and the one stray
+        /// three beside the four, which the lesson finds a four for wherever it now is.
+        /// </summary>
+        [Test]
+        public void EveryFirstMoveStillLeavesTheBombToTeach()
+        {
+            var probe = Fresh();
+            var firsts = new List<(int, int)>();
+            for (int i = 0; i < probe.Count; i++)
+            {
+                if (i % probe.Width + 1 < probe.Width && probe.Lines(i, i + 1)) firsts.Add((i, i + 1));
+                if (i + probe.Width < probe.Count && probe.Lines(i, i + probe.Width)) firsts.Add((i, i + probe.Width));
+            }
+
+            foreach (var (a, b) in firsts)
+            {
+                var board = Fresh();
+                Assert.IsNotNull(board.Swap(a, b));
+
+                // The script asks again after every move, so what has to hold is that a four
+                // turns up within a few ordinary moves, never that it is there at once.
+                int moves = 0;
+                while (SiegeTutorial.Bomb(board) < 0 && !SiegeTutorial.Four(board).Found && moves < 6)
+                {
+                    var next = SiegeTutorial.Taught(board);
+                    Assert.IsTrue(next.Found, "the field ran out of moves");
+                    Assert.IsNotNull(board.Swap(next.A, next.B));
+                    moves++;
+                }
+
+                bool teachable = SiegeTutorial.Bomb(board) >= 0 || SiegeTutorial.Four(board).Found;
+                Assert.IsTrue(teachable, $"after a first move of {a}<->{b}, six more moves dealt no four");
+            }
+        }
+
+        /// <summary>A graded board is untouched by the tutorial's one-charge rule.</summary>
+        [Test]
+        public void OnlyTheTutorialIsLimitedToOneCharge()
+        {
+            var board = Fresh();
+            Assert.IsFalse(board.OneCharge);
+
+            board.Pour(0, board.Wards[0].Capacity);
+            board.Pour(1, board.Wards[1].Capacity);
+            Assert.AreEqual(2, Banked(board), "a board nobody limited banks every full tube");
+        }
+
+        /// <summary>The gem bomb is taught here, so the tutorial's board forges.</summary>
+        [Test]
+        public void TheTutorialForgesAndOnlyTwoMovesWerePlanted()
+        {
+            Assert.IsTrue(SiegeTutorial.Rules().LongMatches);
+
+            var board = Fresh();
+            int moves = 0;
+            for (int i = 0; i < board.Count; i++)
+            {
+                if (i % board.Width + 1 < board.Width && board.Lines(i, i + 1)) moves++;
+                if (i + board.Width < board.Count && board.Lines(i, i + board.Width)) moves++;
+            }
+
+            // The three, the four, and the three the four's own pattern always allows beside it.
+            Assert.AreEqual(3, moves);
+            Assert.IsTrue(board.Lines(SiegeTutorial.FourA, SiegeTutorial.FourB));
+            Assert.AreEqual(SiegeTutorial.FourA, SiegeTutorial.Four(board).A);
         }
 
         static char[] Cells(SiegeBoard board)

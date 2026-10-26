@@ -260,6 +260,24 @@ namespace GlimmerGrove
                         case 3: return Piece("gem_anvil_y");
                         default: return null;
                     }
+
+                // **The ladder's gem bomb** (MODES.md 37fk): a stone of its own in the colour it
+                // is worth, cut from the gems' own pack (`make_siege_art.BOMB_GEM`).
+                case SiegeCharm.Bomb:
+                    switch (colour)
+                    {
+                        case 0: return Piece("gem_bomb_r");
+                        case 1: return Piece("gem_bomb_g");
+                        case 2: return Piece("gem_bomb_b");
+                        case 3: return Piece("gem_bomb_y");
+                        default: return null;
+                    }
+
+                // The Shuffle lane's power gems keep the face of the gem they ride and wear their
+                // light over it (`SiegeView.Power`), so they have no stone of their own.
+                case SiegeCharm.RocketRow:
+                case SiegeCharm.RocketColumn:
+                case SiegeCharm.Nova:
                 case SiegeCharm.Prism:
                 case SiegeCharm.None:
                 default: return null;

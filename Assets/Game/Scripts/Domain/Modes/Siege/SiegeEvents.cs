@@ -590,11 +590,19 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly List<SiegeVolley> Volleys = new List<SiegeVolley>(4);
 
+        /// <summary>
+        /// The salvo rockets that landed this step (<see cref="SiegeLongMatch"/>): whom each one
+        /// struck and what it took, keyed by the id the beat that fired it carried
+        /// (<see cref="SiegeBeat.Rockets"/>). Empty on every board that forges nothing.
+        /// </summary>
+        public readonly List<SiegeRocketHit> Rocketed = new List<SiegeRocketHit>(5);
+
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
 
         public void Clear()
         {
+            Rocketed.Clear();
             Revived.Clear();
             Mantled = 0f;
             Repelled = 0;
@@ -633,7 +641,7 @@ namespace GlimmerGrove.Modes
                         || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
                         || Stoned.Count > 0 || Redeemed.Count > 0 || Withers.Count > 0
-                        || Revived.Count > 0 || Volleys.Count > 0
+                        || Revived.Count > 0 || Volleys.Count > 0 || Rocketed.Count > 0
                         || Mantled > 0f || Turned.Count > 0
                         || Stilled > 0f || Heaved > 0f || Hex > 0f || Beamed || Wave >= 0;
     }
@@ -797,6 +805,14 @@ namespace GlimmerGrove.Modes
         public readonly List<SiegeForging> Forged = new List<SiegeForging>(1);
 
         /// <summary>
+        /// Every rocket a run of five or more fired from this beat (<see cref="SiegeLongMatch"/>):
+        /// the cell it left, whom it was aimed at and its colour. It lands
+        /// <see cref="SiegeLongMatch.RocketLands"/> after the turn began and is reported then
+        /// (<see cref="SiegeReport.Rocketed"/>). Empty on every board that forges nothing.
+        /// </summary>
+        public readonly List<SiegeRocket> Rockets = new List<SiegeRocket>(0);
+
+        /// <summary>
         /// Every run this beat blew up (the Shuffle lane's <c>blast_gems</c>), and the cells the
         /// blasts took that no run did. Both empty on every board but a build's.
         /// </summary>
@@ -896,10 +912,54 @@ namespace GlimmerGrove.Modes
         }
     }
 
+    /// <summary>
+    /// One rocket of a salvo, fired from the field (<see cref="SiegeLongMatch"/>): a number the
+    /// landing is reported under, the cell it left, the raider it was aimed at (-1 on an empty
+    /// hill) and its colour.
+    /// </summary>
+    public readonly struct SiegeRocket
+    {
+        public readonly int Id, Cell, Raider, Colour;
+
+        public SiegeRocket(int id, int cell, int raider, int colour)
+        {
+            Id = id;
+            Cell = cell;
+            Raider = raider;
+            Colour = colour;
+        }
+    }
+
+    /// <summary>
+    /// One salvo rocket landing: the id its beat fired it under, whom it struck (-1 when the hill
+    /// was empty and it burst on the ground), what it took and whether that was the kill.
+    /// </summary>
+    public readonly struct SiegeRocketHit
+    {
+        public readonly int Id, Raider, Damage;
+        public readonly bool Killed;
+
+        public SiegeRocketHit(int id, int raider, int damage, bool killed)
+        {
+            Id = id;
+            Raider = raider;
+            Damage = damage;
+            Killed = killed;
+        }
+    }
+
     /// <summary>What one swap turned into.</summary>
     public sealed class SiegeTurn
     {
         public int A, B;
+
+        /// <summary>
+        /// Whether this turn is a gem bomb the player tapped (<c>SiegeBoard.Detonate</c>) rather
+        /// than a swap - in which case <see cref="A"/> and <see cref="B"/> are both the bomb's
+        /// cell and nothing was exchanged.
+        /// </summary>
+        public bool Tapped;
+
         public readonly List<SiegeBeat> Beats = new List<SiegeBeat>(4);
 
         /// <summary>Gems cleared altogether, which is what the flourish readout counts.</summary>

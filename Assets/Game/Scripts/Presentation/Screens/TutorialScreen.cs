@@ -21,9 +21,9 @@ namespace GlimmerGrove
     /// a different-looking board afterwards.
     /// </para>
     /// <para>
-    /// <b>Two panels and no more.</b> A match feeds the turret of its colour, and a full turret
-    /// is a button. Those are the only two things in this mode a player cannot find by looking,
-    /// and they are the two the first rung used to teach on its own - see
+    /// <b>Three panels and no more, each a line or two.</b> A match feeds the turret of its
+    /// colour; four make a bomb you tap (and five fire rockets); a full turret is a button. Those
+    /// are the things in this mode a player cannot find by looking - see
     /// <see cref="TutorialGate"/> for why teaching them here takes them off the level rather than
     /// duplicating them. Everything else the board demonstrates: the hill walks, the tubes fill,
     /// the bolts fly, the raiders fall.
@@ -140,6 +140,14 @@ namespace GlimmerGrove
         /// one raider would otherwise leave the script waiting for a second one for ever.
         /// </summary>
         const float CrowdCeiling = 6f;
+
+        /// <summary>
+        /// The longest the first lesson waits for the turret it fed to fire, and how long the
+        /// shots are then watched before the gem bomb's panel goes up. The red raider walks on
+        /// first, so the shot comes within a few seconds; the ceiling is only so a player who fed
+        /// some other colour is not held on a board with nothing for that turret to hit yet.
+        /// </summary>
+        const float ShotCeiling = 7f, Watch = 1.4f;
 
         AssetHold _hold;
         SiegeView _siege;
@@ -284,6 +292,10 @@ namespace GlimmerGrove
             // in a state it should never have been in first.
             var board = _siege.Siege;
             if (board != null) board.Sheltered = true;
+
+            // **And it shows the overcharge once.** The closing sweep keeps every tube full, so
+            // without this every match after the lesson banked another one (`SiegeBoard.OneCharge`).
+            if (board != null) board.OneCharge = true;
         }
 
         void OnDestroy()
@@ -314,43 +326,80 @@ namespace GlimmerGrove
 
             PointAlong(swap.A, swap.B);
 
+            int turns = board.Turns;
+            while (board.Turns == turns)
+            {
+                if (!this || _ended) yield break;
+                yield return null;
+            }
+
+            Unpoint();
+
+            // **The first objective, watched rather than told**: the red turret the match fed
+            // fires at the red raider walking on first (`SiegeTutorial.Wave`). The next panel
+            // waits for that shot, with a ceiling, so the player sees what a match is *for*
+            // before anything else is put in front of them.
+            float shot = Time.unscaledTime + ShotCeiling;
+            while (!Fired(board) && Time.unscaledTime < shot)
+            {
+                if (!this || _ended) yield break;
+                yield return null;
+            }
+
+            yield return new WaitForSecondsRealtime(Watch);
+            if (!this || _ended) yield break;
+
+            // ---- the gem bomb ---------------------------------------------------------
+            yield return Bombing(board);
+            if (!this || _ended) yield break;
+
             // ---- the tube ------------------------------------------------------------
-            // **Three matches, not one**, and the middle one is where the hand comes off. A
-            // turret that arms on a single move teaches that an overcharge is something that
-            // happens to you; a tube that climbs twice before it lights teaches that it is
-            // something you build, which is the loop the whole mode is. See
-            // `SiegeTutorial.MatchesToArm`.
-            // **Ended on a banked charge rather than on a count of feeds**, which is what stops
-            // it hanging: a match's own fuel lands beside the tutorial's share, so the tube can
-            // brim a feed early - and a loop still owed one would wait on `Fed`, which skips a
-            // ward that has already banked. See `SiegeTutorial.Charged`.
+            // **The board takes over, and the tube is built by the player's own moves.** The
+            // idle nudge answers a player who stalls (`SiegeView.Coached`). Each move that lands
+            // pours a share into the turret nearest to lit (`SiegeTutorial.Fullest`), so it
+            // lights on the `MatchesToArm`th move. **Ended on a banked charge rather than on a
+            // count of feeds**, so a tube the player brims early ends it early - and the board
+            // banks one charge in this whole run (`SiegeBoard.OneCharge`), so it is the only
+            // overcharge the tutorial ever shows.
+            _siege.Coached = false;
+
             int match = 0;
+            int seen = board.Turns;
 
             while (SiegeTutorial.Charged(board) < 0)
             {
                 if (!this || _ended) yield break;
 
-                int fed = SiegeTutorial.Fed(board);
-                if (fed < 0) { yield return null; continue; }
+                // **The one charge was already banked and thrown** - the player's own fuel brimmed
+                // a tube before this lesson and they found the tap themselves. Nothing can bank
+                // again (`SiegeBoard.OneCharge`), so waiting for one would never end: they have
+                // done the lesson, and the run goes on to its ending.
+                if (SiegeTutorial.Spent(board)) break;
 
-                match++;
-
-                if (match == 1)
+                if (board.Turns == seen)
                 {
-                    // **The hand goes after the first match and the board takes over.** It has
-                    // been shown; standing it over every move afterwards is a game playing
-                    // itself. What answers a player who then stalls is the board's own idle
-                    // nudge, which is exactly the feature for it and has been held off until
-                    // now (`SiegeView.Coached`).
-                    Unpoint();
-                    _siege.Coached = false;
+                    yield return null;
+                    continue;
                 }
 
-                yield return Pour(board, fed, match);
+                seen = board.Turns;
+                match++;
+
+                // The move's own fuel crosses the field first; the feed follows it in.
+                while (!_siege.AtRest && this && !_ended) yield return null;
+
+                int ward = SiegeTutorial.Fullest(board);
+                if (ward >= 0) yield return Pour(board, ward, match);
             }
 
             // The hand comes back for the one control nobody would find on their own.
             _siege.Coached = true;
+
+            if (SiegeTutorial.Charged(board) < 0)
+            {
+                yield return Sweep(board);
+                yield break;
+            }
 
             // ---- the overcharge -------------------------------------------------------
             // Waited for rather than assumed, twice over: a tube with nothing on the hill to
@@ -390,8 +439,16 @@ namespace GlimmerGrove
             yield return new WaitForSecondsRealtime(Applause);
             if (!this || _ended) yield break;
 
-            // The grove answers with everything it has, and the run ends the way every siege
-            // ends. `Finish` is raised by the board, not from here.
+            yield return Sweep(board);
+        }
+
+        /// <summary>
+        /// The last beat: the grove answers with everything it has, and the run ends the way every
+        /// siege ends. `Finish` is raised by the board, not from here; the ceiling only exists so
+        /// the first launch can never be stuck.
+        /// </summary>
+        IEnumerator Sweep(SiegeBoard board)
+        {
             float until = Time.unscaledTime + SweepCeiling;
 
             while (!_ended && Time.unscaledTime < until)
@@ -401,6 +458,133 @@ namespace GlimmerGrove
             }
 
             if (!_ended) Finish();
+        }
+
+        /// <summary>
+        /// The gem bomb (MODES.md 37fk): one panel - four make a bomb, tap it; five fire rockets -
+        /// the hand on the four, then the hand on the bomb until it goes.
+        ///
+        /// <para>
+        /// <b>It follows the player rather than insisting.</b> A player who makes some other move
+        /// is pointed at the four again wherever it now stands (<c>SiegeTutorial.Four</c>); one
+        /// who made a bomb on their own before the panel is told about the bomb they already
+        /// have; and a field with no four left on it skips the lesson rather than waiting for
+        /// one - the board can never be lost, but a script waiting for a move that does not exist
+        /// would never end.
+        /// </para>
+        /// </summary>
+        IEnumerator Bombing(SiegeBoard board)
+        {
+            while (!_siege.AtRest && this && !_ended) yield return null;
+            if (!this || _ended) yield break;
+
+            bool told = false;
+
+            if (SiegeTutorial.Bomb(board) < 0)
+            {
+                var four = SiegeTutorial.Four(board);
+
+                // **No four on the field yet** - the player's first move took the planted one with
+                // it. The board keeps playing, and every move that lands is asked again, so the
+                // lesson waits for the first four the field deals rather than being skipped; only
+                // a run that ends first goes without it.
+                int asked = board.Turns;
+
+                // No hand is up while it waits, so the board's own idle nudge may answer a player
+                // who stalls (`SiegeView.Coached`).
+                if (!four.Found) _siege.Coached = false;
+
+                while (!four.Found && SiegeTutorial.Bomb(board) < 0)
+                {
+                    if (!this || _ended) yield break;
+
+                    if (board.Turns != asked && _siege.AtRest)
+                    {
+                        asked = board.Turns;
+                        four = SiegeTutorial.Four(board);
+                    }
+
+                    yield return null;
+                }
+            }
+
+            if (SiegeTutorial.Bomb(board) < 0)
+            {
+                var four = SiegeTutorial.Four(board);
+                if (!four.Found) yield break;
+
+                yield return Tip(Mechanic.SiegeGemBomb, _siege.GemAt(four.A), Route(four.A, four.B));
+                if (!this || _ended) yield break;
+
+                told = true;
+                _siege.Coached = true;
+                PointAlong(four.A, four.B);
+
+                int seen = board.Turns;
+
+                while (SiegeTutorial.Bomb(board) < 0)
+                {
+                    if (!this || _ended) yield break;
+
+                    if (board.Turns != seen && _siege.AtRest)
+                    {
+                        seen = board.Turns;
+                        if (SiegeTutorial.Bomb(board) >= 0) break;
+
+                        // Pointed at the four wherever it now stands - or, when the move took
+                        // it, at nothing until the field deals another.
+                        four = SiegeTutorial.Four(board);
+                        if (four.Found) PointAlong(four.A, four.B);
+                        else Unpoint();
+                    }
+
+                    yield return null;
+                }
+            }
+
+            // The bomb stands: once it has settled into its socket, the hand taps it.
+            while (!_siege.AtRest && this && !_ended) yield return null;
+            if (!this || _ended) yield break;
+
+            if (!told)
+            {
+                yield return Tip(Mechanic.SiegeGemBomb, _siege.LiveCharm(SiegeCharm.Bomb), null);
+                if (!this || _ended) yield break;
+            }
+
+            _siege.Coached = true;
+            PointAt(_siege.LiveCharm(SiegeCharm.Bomb));
+
+            int was = board.Turns;
+
+            while (SiegeTutorial.Bomb(board) >= 0)
+            {
+                if (!this || _ended) yield break;
+
+                // A move made somewhere else can drop the bomb a row: the hand follows it.
+                if (board.Turns != was && _siege.AtRest)
+                {
+                    was = board.Turns;
+                    PointAt(_siege.LiveCharm(SiegeCharm.Bomb));
+                }
+
+                yield return null;
+            }
+
+            Unpoint();
+
+            // The blast and everything it pays, watched before the next thing is asked.
+            while (!_siege.AtRest && this && !_ended) yield return null;
+            yield return new WaitForSecondsRealtime(Settle);
+        }
+
+        /// <summary>Whether any turret has fired yet. What the first lesson waits to show.</summary>
+        static bool Fired(SiegeBoard board)
+        {
+            for (int i = 0; i < board.Wards.Count; i++)
+                if (board.Wards[i].Shots > 0) return true;
+
+            return false;
         }
 
         /// <summary>

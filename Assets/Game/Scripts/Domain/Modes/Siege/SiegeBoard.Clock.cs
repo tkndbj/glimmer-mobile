@@ -107,7 +107,11 @@ namespace GlimmerGrove.Modes
                 // edge is what is reported rather than the state: a tube that has *just* banked one
                 // is the frame the overcharge can be announced on, where asking "is it armed" every
                 // frame would announce it for as long as nobody spent it.
-                if (ward.Fill(charge.Fuel, out bool redeemed)) _report.Brimmed.Add(charge.Ward);
+                if (ward.Fill(charge.Fuel, out bool redeemed))
+                {
+                    _report.Brimmed.Add(charge.Ward);
+                    Banked();
+                }
 
                 // **A paid seal is reported where the fuel lands and nowhere else.** The toll is
                 // counted inside `SiegeWard.Fill` so the two doors fuel comes through cannot
@@ -123,6 +127,11 @@ namespace GlimmerGrove.Modes
             // last raider of a wave leaves the fuel arriving at a line with nothing to shoot at,
             // which is a different run from the one the player played.
             Break(dt);
+
+            // **And a long match's salvo, beside the charms and for their reason**
+            // (`SiegeBoard.LongMatch`): booked with the match's own beat, landing after its fuel.
+            // Nothing in flight on a board that forges nothing.
+            Salvoes(dt);
 
             // **The curse lands beside the charms and for their reason** (invariant 37s): booked
             // with the break's own fuel, after the fuel, so the line is fed before the hill it is

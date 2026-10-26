@@ -145,10 +145,40 @@ namespace GlimmerGrove.Modes
 
             var turn = new SiegeTurn { A = a, B = b };
 
-            // Where a power gem forms on this swap's own beat (`SiegeBoard.Gems`). Read by
-            // nothing on a board that holds no build.
+            // Where a power gem forms on this swap's own beat (`SiegeBoard.Gems`), and where a
+            // gem bomb does (`SiegeBoard.LongMatch`). Read by nothing on a board that forges
+            // neither.
             _swapA = a;
             _swapB = b;
+
+            Cascade(turn, -1);
+
+            turn.Shuffled = Settle();
+            return turn;
+        }
+
+        /// <summary>
+        /// How many turns this board has resolved - swaps and tapped bombs. Read by the opening
+        /// tutorial's script to tell a new move from an old one; no rule reads it.
+        /// </summary>
+        public int Turns { get; private set; }
+
+        /// <summary>
+        /// Resolves the field beat by beat until nothing on it lines up, fuelling the wards as it
+        /// goes - the whole of what a swap does once the two gems have traded, and the whole of
+        /// what a tapped gem bomb does (<see cref="Detonate"/>).
+        ///
+        /// <para>
+        /// <b>One loop for both, because a tap is a beat like any other.</b> The bomb is folded
+        /// into the first beat's take as if a run had reached it (<paramref name="tapped"/>), so it
+        /// goes off through <c>Spring</c>, its blast clears and pays through the same lines a
+        /// match does, and the cascade that falls in afterwards is the ordinary cascade. A second
+        /// loop for a tap would be a second opinion about what a beat pays.
+        /// </para>
+        /// </summary>
+        void Cascade(SiegeTurn turn, int tapped)
+        {
+            Turns++;
 
             int depth = 0;
             while (true)
@@ -156,6 +186,11 @@ namespace GlimmerGrove.Modes
                 for (int i = 0; i < _paid.Length; i++) _paid[i] = '\0';
 
                 var hit = SiegeLayout.Runs(_cells, Width, Height, _charms, _paid);
+
+                // A tapped bomb is the first beat's take on its own: the field is settled, so
+                // nothing else lines up, and the bomb is what sets the beat off.
+                if (depth == 0 && tapped >= 0) hit.Add(tapped);
+
                 if (hit.Count == 0) break;
 
                 depth++;
@@ -177,6 +212,12 @@ namespace GlimmerGrove.Modes
                 // round every run is added to it - so a charm a blast takes goes off on this beat.
                 // Returns on its first line on every board but the Shuffle lane's.
                 Empower(hit, beat);
+
+                // **And the ladder's and the Infinite lane's own long matches**
+                // (`SiegeBoard.LongMatch`): a run of four merges into a gem bomb and a run of five
+                // fires a salvo at the hill. Returns on its first line on every board that does
+                // not forge - the Shuffle lane, the tutorial and every gate.
+                Lengthen(hit, beat);
 
                 // **Everything a charm adds is folded into the beat that set it off, before a
                 // single cell is taken away.** A lance that takes its row and column has not
@@ -261,9 +302,6 @@ namespace GlimmerGrove.Modes
                 Collapse(beat);
                 turn.Beats.Add(beat);
             }
-
-            turn.Shuffled = Settle();
-            return turn;
         }
 
         /// <summary>

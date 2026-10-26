@@ -647,6 +647,10 @@ namespace GlimmerGrove.AssetPipeline
             "thunder", "arc", "charge",
             "voidblast",
             "secret",
+
+            // A long match on the ladder and the Infinite lane (MODES.md 37fk): the gem bomb's
+            // merge and blast, and the salvo's launch and landing.
+            "merge", "bomb", "launch", "impact",
         };
 
         // ------------------------------------------------------------ shuffle crest

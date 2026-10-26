@@ -166,7 +166,12 @@ namespace GlimmerGrove.Modes
                     _paid[cell] != '\0' ? _paid[cell] : _cells[cell]);
 
                 beat.Sprung.Add(new SiegeSpark(cell, charm, colour));
-                Attention.CharmSprung(charm, cell);
+
+                // **A gem bomb is not counted with the dealt charms**: the reading is dealt
+                // against sprung (`SiegeAttention`), and a bomb is forged by the player's own
+                // match, never dealt - so counting it would report charms spent that were never
+                // handed out.
+                if (!SiegeCharms.IsBomb(charm)) Attention.CharmSprung(charm, cell);
 
                 switch (charm)
                 {
@@ -187,6 +192,13 @@ namespace GlimmerGrove.Modes
 
                     case SiegeCharm.Nova:
                         Nova(colour, hit, queue);
+                        break;
+
+                    // **The ladder's gem bomb** (`SiegeBoard.LongMatch`): the square round it,
+                    // taken by this beat exactly as a lance's cross is - so a bomb that reaches a
+                    // charm sets it off, and a chain of bombs is one beat.
+                    case SiegeCharm.Bomb:
+                        Burst(cell, colour, hit, queue);
                         break;
 
                     case SiegeCharm.Storm:
@@ -362,7 +374,7 @@ namespace GlimmerGrove.Modes
             if (at < 0) return;
 
             var ward = _wards[at];
-            bool banked = ward.Alive && ward.Charges < SiegeTuning.MostCharges;
+            bool banked = ward.Alive && ward.Banks && ward.Charges < SiegeTuning.MostCharges;
 
             if (banked)
             {

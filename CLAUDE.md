@@ -435,12 +435,12 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 ### The tutorial
 
 53. **The tutorial is the live mode with a script beside it** (`TutorialScreen` over a real `SiegeBoard` from
-   `SiegeTutorial`), teaching two things.
-53a. **It teaches `siege_fuel` and `siege_brim`**; skipping marks both.
+   `SiegeTutorial`), teaching three things.
+53a. **It teaches `siege_fuel`, `siege_gem_bomb` (match 4, tap; match 5) and `siege_brim`**, one short panel each; skipping marks fuel and brim. Its board banks one overcharge in the whole run (`SiegeBoard.OneCharge`).
 53b. **It stores nothing new** (`TutorialGate`: `siege_brim` seen, or any level opened).
 53c. **It cannot be lost**: `SiegeBoard.Sheltered`, read by `Bear` and `Topple`, protects every ward.
 53d. **The board is code and reaches no content gate**, so `TutorialTests` plays the whole script.
-53e. **A feed is a third of a tube; the loop ends on `Charged`, not a count.**
+53e. **A feed is half a tube, poured per move into the fullest turret; the loop ends on `Charged`, not a count.**
 53f. **The second panel waits for a crowd, with a ceiling**; `SiegeTutorial` writes through existing doors only.
 53g. **The hand picks up the gem that joins the line** (`SiegeTutorial.Oriented`).
 

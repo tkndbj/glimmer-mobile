@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Cette tourelle est pleine.\n\nTouche-la pour lancer toute la charge d'un coup. Elle touche n'importe quelle couleur."
+      "text": "Touche-la pour frapper toutes les couleurs !"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "TOUCHE UNE TOURELLE PLEINE"
+      "text": "TOURELLE PLEINE !"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Fais glisser une gemme pour en aligner trois de la même couleur.\n\nLa tourelle de cette couleur ouvre le feu, et ne touche que les pillards de sa couleur."
+      "text": "Aligne 3 gemmes pour alimenter la tourelle de cette couleur !"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "GLISSE POUR EN ALIGNER TROIS"
+      "text": "ALIGNE 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "L'ENCLUME"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Aligne-en 4 pour créer une bombe. Touche-la pour la faire exploser !\nAligne-en 5 pour tirer des roquettes !"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBE"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

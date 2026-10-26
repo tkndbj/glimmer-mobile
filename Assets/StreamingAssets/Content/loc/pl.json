@@ -5967,19 +5967,19 @@
     },
     {
       "key": "ui.tip.siege_brim.body",
-      "text": "Ta wieża jest pełna.\n\nDotknij jej, by rzucić cały ładunek naraz. Trafia każdy kolor."
+      "text": "Dotknij jej, by trafić każdy kolor!"
     },
     {
       "key": "ui.tip.siege_brim.title",
-      "text": "DOTKNIJ PEŁNEJ WIEŻY"
+      "text": "WIEŻA PEŁNA!"
     },
     {
       "key": "ui.tip.siege_fuel.body",
-      "text": "Przesuń klejnot, by ustawić trzy w jednym kolorze.\n\nWieża tego koloru otwiera ogień i trafia tylko najeźdźców swojego koloru."
+      "text": "Ułóż 3 klejnoty, by zasilić wieżę tego koloru!"
     },
     {
       "key": "ui.tip.siege_fuel.title",
-      "text": "PRZESUŃ I UŁÓŻ TRZY"
+      "text": "UŁÓŻ 3"
     },
     {
       "key": "ui.tip.siege_lance.body",
@@ -6044,6 +6044,14 @@
     {
       "key": "ui.tip.siege_anvil.title",
       "text": "KOWADŁO"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.body",
+      "text": "Ułóż 4, by zrobić bombę. Dotknij jej, by wybuchła!\nUłóż 5, by wystrzelić rakiety!"
+    },
+    {
+      "key": "ui.tip.siege_gem_bomb.title",
+      "text": "4 = BOMBA"
     },
     {
       "key": "ui.tip.siege_obsidian.title",

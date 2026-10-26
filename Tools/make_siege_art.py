@@ -539,6 +539,11 @@ GEMS = {
 #: nothing to agree with.
 PRISM_GEM = ("PNG/3.png", "a rainbow brilliant")
 
+#: The gem bomb a run of four merges into on the ladder and the Infinite lane (MODES.md 37fk),
+#: cut from the same match-3 pack as the four gems and the prism - one hand drew all of them, so
+#: the bomb sits on the field as one of the set rather than as a sticker from somewhere else.
+BOMB_GEM = ("PNG/bomb.png", "a fused bomb")
+
 #: The other two charms, as **gems of their own** rather than as a mark worn over an ordinary one.
 #:
 #: **What was wrong before is that a charmed gem was an ordinary gem with a sticker on it.** The
@@ -1798,6 +1803,68 @@ def charm_gem(im, hue):
     """
     return fit(hued(im, hue, pull=CHARM_PULL, sat_gain=CHARM_SAT, sat_floor=CHARM_FLOOR),
                TILE, 0.94)
+
+
+def body_only(im, floor=225, feather=2, opening=3):
+    """The solid body of a pack picture, without the loose dust the artist scattered round it.
+
+    **The match-3 pack draws its bomb inside a cloud of soot** - a blurred halo and a dozen
+    detached flecks. Hue-rotated, that cloud becomes a coloured haze round the stone, which on a
+    forty-pixel cell reads as the bomb being out of focus. So the body is taken as what is
+    *connected* to the picture's centre at near-full alpha (a flood fill, with a small opening
+    first so a fleck touching the rim does not ride along), grown back by `feather` pixels so
+    the artist's own antialiased edge survives, and everything else is dropped. Pure NumPy, so
+    it adds no dependency.
+    """
+    a = np.asarray(im).astype(np.float32)
+    alpha = a[..., 3]
+    mask = alpha > floor
+
+    def spread(m):
+        g = m.copy()
+        g[1:, :] |= m[:-1, :]
+        g[:-1, :] |= m[1:, :]
+        g[:, 1:] |= m[:, :-1]
+        g[:, :-1] |= m[:, 1:]
+        return g
+
+    def shrink(m):
+        return ~spread(~m)
+
+    opened = mask
+    for _ in range(opening):
+        opened = shrink(opened)
+    for _ in range(opening):
+        opened = spread(opened)
+
+    h, w = opened.shape
+    body = np.zeros_like(opened)
+    body[h // 2, w // 2] = opened[h // 2, w // 2]
+
+    while True:
+        grown = spread(body) & opened
+        if (grown == body).all():
+            break
+        body = grown
+
+    for _ in range(feather + opening):
+        body = spread(body)
+
+    a[..., 3] = np.where(body, alpha, 0.0)
+    return Image.fromarray(a.astype(np.uint8), "RGBA")
+
+
+def bomb_gem(im, hue):
+    """The gem bomb (MODES.md 37fk): the match-3 pack's bomb, its soot taken off (`body_only`) and
+    painted one of the four ward colours exactly as a charmed gem is (`charm_gem`), so a bomb
+    still says which turret its blast feeds first.
+
+    Cut at 0.90 of the room rather than a charm's 0.94: a bomb is round and fills its box where
+    the cut stones are pointed, so at the charms' figure it drew visibly larger than the gems
+    round it.
+    """
+    return fit(hued(body_only(im), hue, pull=CHARM_PULL, sat_gain=CHARM_SAT, sat_floor=CHARM_FLOOR),
+               TILE, 0.90)
 
 
 def rubble(im):
@@ -4176,6 +4243,12 @@ def build():
     # what the cell is worth. See `CHARM_GEMS` for what replaced the mark and why - and for why the
     # other three charms are cut by `make_charm_gems.py` instead.
     made["Siege/gem_prism.png"] = fit(read(match3, PRISM_GEM[0]), TILE, 0.88)
+
+    # **The gem bomb** a run of four merges into (MODES.md 37fk): the same pack as the four and the
+    # prism, painted into each ward colour so a bomb still says which turret it feeds.
+    bomb = read(match3, BOMB_GEM[0])
+    for letter, hue in WARD_HUES:
+        made["Siege/gem_bomb_%s.png" % letter] = bomb_gem(bomb, hue)
 
     # Absent is a checkout without the gem pack, which is the same bargain every other root here
     # strikes: the eight PNGs are simply not offered and `--check` has nothing to hold them to.

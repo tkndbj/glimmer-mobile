@@ -18,6 +18,24 @@ namespace GlimmerGrove
         {
             if (!Playable) return;
 
+            // **Except on a gem bomb** (MODES.md 37fk), which is the one stone on this field a
+            // tap sets off. A turn like a swap, charged like one, and drawn through the same
+            // `Resolve` - the fuse burns for the swap's own beat, then the blast is the first beat.
+            if (_board.Detonates(cell))
+            {
+                HideCoach();
+                Stir();
+
+                var blown = _board.Detonate(cell);
+                if (blown == null) return;
+
+                Took(blown.Worth);
+
+                Busy = true;
+                StartCoroutine(Resolve(blown));
+                return;
+            }
+
             // A tap is not this mode's verb. The gem leans and comes back, which is the genre's
             // own answer to a tap on a jewel - and the screen says the sentence, rate-limited, so
             // a player poking about is answered once rather than shouted at.
@@ -89,22 +107,33 @@ namespace GlimmerGrove
 
         IEnumerator Resolve(SiegeTurn turn)
         {
-            var ga = _gems[turn.A];
-            var gb = _gems[turn.B];
+            if (turn.Tapped)
+            {
+                // **A tapped bomb burns its fuse for exactly the swap's beat** (`SiegeView.LongMatch`),
+                // because the model books everything this turn pays - fuel, a salvo - from a turn
+                // that opens with that beat. Nothing is exchanged.
+                Lighting(turn.A);
+                yield return new WaitForSecondsRealtime(SiegeTuning.SwapFor);
+            }
+            else
+            {
+                var ga = _gems[turn.A];
+                var gb = _gems[turn.B];
 
-            Tween.Move(ga.Img.rectTransform, CentreOf(turn.B), SiegeTuning.SwapFor * .94f,
-                       Ease.OutQuad);
-            Tween.Move(gb.Img.rectTransform, CentreOf(turn.A), SiegeTuning.SwapFor * .94f,
-                       Ease.OutQuad);
-            Audio.SfxVaried("rotate_a", .3f);
+                Tween.Move(ga.Img.rectTransform, CentreOf(turn.B), SiegeTuning.SwapFor * .94f,
+                           Ease.OutQuad);
+                Tween.Move(gb.Img.rectTransform, CentreOf(turn.A), SiegeTuning.SwapFor * .94f,
+                           Ease.OutQuad);
+                Audio.SfxVaried("rotate_a", .3f);
 
-            yield return new WaitForSecondsRealtime(SiegeTuning.SwapFor);
+                yield return new WaitForSecondsRealtime(SiegeTuning.SwapFor);
 
-            var keep = _gems[turn.A];
-            _gems[turn.A] = _gems[turn.B];
-            _gems[turn.B] = keep;
-            Place(turn.A);
-            Place(turn.B);
+                var keep = _gems[turn.A];
+                _gems[turn.A] = _gems[turn.B];
+                _gems[turn.B] = keep;
+                Place(turn.A);
+                Place(turn.B);
+            }
 
             for (int i = 0; i < turn.Beats.Count; i++)
                 yield return Beat(turn.Beats[i]);
@@ -141,6 +170,10 @@ namespace GlimmerGrove
             // forged, and runs going off as blasts. Both null on every board but a build's.
             var forges = Forges(beat);
             var blown = Blasting(beat);
+
+            // **A run of five's salvo leaving the field** (`SiegeView.LongMatch`). Nothing on a
+            // board that forges nothing.
+            Launched(beat);
 
             // **And what the field secrets throw at the hill off this beat** - comets off the
             // power gems, a rainbow off a cascade (`SiegeView.Secrets`). Nothing on any other board.
@@ -181,7 +214,12 @@ namespace GlimmerGrove
                 // stood, and pays from there (`SiegeView.Power`). Never on a board without a build.
                 if (forges != null && forges.TryGetValue(cell, out int forge))
                 {
-                    IntoForge(gem, cell, forge, paid, paid >= 0 ? TintOf(paid) : Pal.Cream);
+                    var hue = paid >= 0 ? TintOf(paid) : Pal.Cream;
+
+                    // A gem bomb's run spirals into it (`SiegeView.LongMatch`); a power gem's
+                    // flies straight.
+                    if (MergesInto(beat, forge)) IntoBomb(gem, cell, forge, paid, hue);
+                    else IntoForge(gem, cell, forge, paid, hue);
                     _gems[cell] = null;
                     continue;
                 }
