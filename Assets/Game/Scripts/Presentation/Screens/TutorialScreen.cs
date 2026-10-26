@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
@@ -46,6 +47,12 @@ namespace GlimmerGrove
     /// gate exactly as finishing does, and the hardware key points at it rather than acting on
     /// its own - a first-timer must never be dropped out of the game's opening by a gesture they
     /// did not mean.
+    /// </para>
+    /// <para>
+    /// <b>Both endings are the first sortie's opening (invariant 53h).</b> Finishing and skipping
+    /// raise the same finale - the Gemfire wordmark, the line, one key - and part at the key
+    /// (<see cref="FirstSortie.After"/>): a tutorial played through slides on to the loadout, a
+    /// skipped one to the map. Neither drops the player on the hub.
     /// </para>
     /// </summary>
     public sealed class TutorialScreen : View
@@ -118,20 +125,6 @@ namespace GlimmerGrove
         const float SweepCeiling = 35f;
 
         /// <summary>
-        /// Where the closing line and its key stand, measured up from the middle of the display.
-        ///
-        /// <b>Both are well above centre, and a render is why.</b> The middle of this screen is
-        /// exactly where the ward line stands - three turrets, their health bars and their rank
-        /// crests - so a panel centred the ordinary way lands its sentence across the turrets and
-        /// puts its one key on top of them, which reads as something dropped on the board rather
-        /// than as the board being finished with. Seated over the hill instead, which is the
-        /// ground the player has just cleared and the only part of this screen that is empty by
-        /// the time they are read. <c>Tools/render_tutorial.py --finale</c> is the only thing
-        /// that can say so.
-        /// </summary>
-        const float LineSeat = 480f, KeySeat = 250f;
-
-        /// <summary>
         /// The longest the second panel waits for a crowd before settling for one raider.
         ///
         /// <b>The other half of <c>SiegeTutorial.Crowd</c>, and it lives here because it is a
@@ -151,9 +144,12 @@ namespace GlimmerGrove
 
         AssetHold _hold;
         SiegeView _siege;
-        RectTransform _host, _coach;
+        RectTransform _host, _coach, _ribbon;
         Btn _skip;
         bool _ready, _ended;
+
+        /// <summary>The finale's key has been pressed and the next screen is on its way.</summary>
+        bool _leaving;
 
         public override bool Ready => _ready;
 
@@ -231,6 +227,10 @@ namespace GlimmerGrove
 
             if (mode != null) art.AddRange(mode.ArtFor(null));
 
+            // The wordmark the finale is crowned with. Held here with the board, so it is resident
+            // before either ending can ask for it and let go with the screen (invariant 7b).
+            art.AddRange(AssetManifest.LogoAssets());
+
             // The ground is not held here: `Bg/plain` is in the global set (`Scenery.Plain`),
             // so it is resident before this screen exists and outlives it.
 
@@ -245,8 +245,9 @@ namespace GlimmerGrove
             var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.tutorial.title").Upper(),
                                              new Vector2(BannerW, BannerH), new Vector2(.5f, 1f),
                                              new Vector2(0f, cy), BannerSize);
-            ribbon.transform.localScale = Vector3.zero;
-            Tween.Pop(ribbon.transform, 0f, .5f, .06f);
+            _ribbon = (RectTransform)ribbon.transform;
+            _ribbon.localScale = Vector3.zero;
+            Tween.Pop(_ribbon, 0f, .5f, .06f);
 
             // **A worded key rather than a glyph.** Every other corner key in this game is an
             // arrow or a gear, and a player who has been in the app for four seconds has no
@@ -763,11 +764,11 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the endings
         /// <summary>
-        /// The hill is clear. One panel, one key, and the game.
+        /// The hill is clear: the finale, and the first sortie's way on.
         ///
         /// <b>Latched, because there are three ways in</b> - the board's victory, the board's
         /// defeat, and the ceiling on the last beat - and a celebration drawn twice is a
-        /// celebration drawn over itself.
+        /// celebration drawn over itself. <see cref="Skip"/> shares the latch.
         /// </summary>
         void Finish()
         {
@@ -777,91 +778,12 @@ namespace GlimmerGrove
             Unpoint();
             if (_siege != null) _siege.Locked = true;
 
-            StartCoroutine(Curtain());
-        }
-
-        IEnumerator Curtain()
-        {
-            // A beat for the board's own celebration to be seen before anything covers it.
-            yield return new WaitForSecondsRealtime(.35f);
-            if (!this) yield break;
-
-            Flow.Flash(Pal.Gold, .34f, .55f);
-
-            // **The way out goes first, because there is nothing left to skip.** A key that says
-            // SKIP standing beside one that says CONTINUE is two answers to a question with one,
-            // and the scrim below only stops it being *pressed*.
-            Retire();
-
-            var scrim = UIKit.Scrim(Content, .66f);
-            var safe = SafeArea.Node("Finale", Content);
-
-            UIKit.Halo(safe, Pal.Gold, 820f, .34f, new Vector2(0f, LineSeat));
-
-            // Capitals, at the owner's instruction (2026-10-02): the closing line is a title.
-            var line = UIKit.Titled("Line", safe, Loc.Get("ui.tutorial.win").Upper(), 66, Pal.Cream,
-                                    TextAnchor.MiddleCenter, new Vector2(880f, 240f),
-                                    new Vector2(.5f, .5f), new Vector2(0f, LineSeat),
-                                    3f, 5f, wrap: true);
-            UIKit.Shrinkable(line, 34);
-
-            line.transform.localScale = Vector3.zero;
-            Tween.Pop(line.transform, 0f, .58f);
-
-            Burst.Sparks(safe, new Vector2(0f, LineSeat), Pal.Gold, 22, 260f);
-
-            var go = UIKit.TextButton("Go", safe, Skins.Affirm,
-                                      Loc.Get("ui.tutorial.go").Upper(), 34,
-                                      new Vector2(460f, 122f), new Vector2(.5f, .5f),
-                                      new Vector2(0f, KeySeat), Done);
-
-            var rt = (RectTransform)go.transform;
-            var group = UIKit.Group(rt);
-            group.alpha = 0f;
-
-            var seat = rt.anchoredPosition;
-            rt.anchoredPosition = seat + new Vector2(0f, -54f);
-
-            Tween.Fade(group, 1f, .34f).Delay(.26f);
-
-            // **A sheen rather than a breath, and it is not a taste.** A breathing key writes
-            // `localScale` every frame for as long as it stands, and `Btn`'s own press does the
-            // same - so the two fight and the breath wins, which is a button that does not
-            // depress under a thumb. A sheen is the house cue for the one key on a screen
-            // (the chest's COLLECT, the hub's PLAY) and it touches nothing the press wants.
-            Tween.Move(rt, seat, .42f, Ease.OutBack).Delay(.26f)
-                 .OnDone(() =>
-                 {
-                     if (!rt) return;
-
-                     // The rest scale is read after the arrival has finished with it, which is
-                     // `Btn.Rehome`'s whole reason: a key whose home was captured mid-pop
-                     // springs to the wrong size on the first press.
-                     go.Rehome();
-                     Sheen.Attach(rt, 3.2f);
-                 });
-
-            if (scrim != null) scrim.raycastTarget = true;
+            StartCoroutine(Curtain(finished: true));
         }
 
         /// <summary>
-        /// Takes the way out off the screen, once there is nothing left to leave.
-        ///
-        /// Faded and switched off rather than destroyed, so <see cref="OnBack"/> has something to
-        /// point at for the frames before the finale's own key arrives.
-        /// </summary>
-        void Retire()
-        {
-            if (_skip == null) return;
-
-            _skip.Interactable = false;
-            Tween.Fade(UIKit.Group((RectTransform)_skip.transform), 0f, .22f);
-        }
-
-        void Done() => Leave();
-
-        /// <summary>
-        /// The corner key: out of the tutorial and into the game, exactly as finishing it is.
+        /// The corner key: out of the tutorial, onto the same finale finishing raises, and from
+        /// its key straight to the map (<see cref="FirstSortie.After"/>).
         ///
         /// <b>It closes the gate too</b>, and that is the whole meaning of the word: a player who
         /// says they know this must not then be shown the same two panels on the first rung. See
@@ -873,13 +795,312 @@ namespace GlimmerGrove
             _ended = true;
 
             Unpoint();
-            Leave();
+            if (_siege != null) _siege.Locked = true;
+
+            StartCoroutine(Curtain(finished: false));
         }
 
-        void Leave()
+        /// <summary>The finale's root, kept so its exit can take it away as one.</summary>
+        RectTransform _finale;
+
+        /// <summary>The wordmark's rig and the light behind it, which leave first and upwards.</summary>
+        RectTransform _crown;
+        Vector2 _crownHome;
+        Image _halo, _rays;
+
+        /// <summary>The finale's line, which fades as the wordmark lifts.</summary>
+        Text _line;
+
+        /// <summary>The finale's one key.</summary>
+        Btn _go;
+
+        /// <summary>When the line and the key follow the wordmark in, after the finale starts.</summary>
+        const float LineDelay = .34f, KeyDelay = .56f;
+
+        /// <summary>How large the wordmark starts, and how long it takes to land.</summary>
+        const float StrikeFrom = 1.55f, Strike = .5f;
+
+        /// <summary>
+        /// The finale: the Gemfire wordmark struck in over the board, the line under it, one key.
+        ///
+        /// <para>
+        /// <b>The gate closes the moment the tutorial is over, however it ended</b>, rather than on
+        /// the key: a player who leaves the app on this screen has finished the tutorial, and their
+        /// next launch belongs to the hub (<see cref="TutorialGate.Spend"/>; invariant 53b). Nothing
+        /// else is written - where the key leads is decided now and stored nowhere.
+        /// </para>
+        /// <para>
+        /// <b>Laid out by <see cref="FinaleStack"/></b>: hung from the top of the safe area, clear
+        /// of the ward line in the middle, and scaled as one on a short canvas.
+        /// <c>Tools/render_tutorial.py --finale</c> draws the same numbers.
+        /// </para>
+        /// </summary>
+        IEnumerator Curtain(bool finished)
         {
             TutorialGate.Spend();
-            Flow.Go<HomeScreen>();
+            SortieAnalytics.Track(finished ? SortieAnalytics.Finished : SortieAnalytics.Skipped);
+
+            var route = FirstSortie.After(finished);
+
+            if (finished)
+            {
+                // A beat for the board's own celebration to be seen before anything covers it.
+                yield return new WaitForSecondsRealtime(.35f);
+                if (!this) yield break;
+
+                Flow.Flash(Pal.Gold, .34f, .55f);
+            }
+
+            // **The way out goes first, because there is nothing left to skip** - and the title
+            // with it, because the wordmark is about to stand where it stands.
+            Retire();
+
+            UIKit.Scrim(Content, .66f);
+            var safe = SafeArea.Node("Finale", Content);
+
+            var mark = AssetLibrary.Sprite(AssetManifest.GameLogo);
+            float aspect = mark != null && mark.rect.height > 0f ? mark.rect.width / mark.rect.height : 0f;
+            var stack = FinaleStack.For(safe.rect.height, aspect);
+
+            _finale = UIKit.Box("Stack", safe, new Vector2(FinaleStack.LogoW, stack.Height),
+                                new Vector2(.5f, 1f), Vector2.zero);
+            _finale.pivot = new Vector2(.5f, 1f);
+            _finale.anchoredPosition = new Vector2(0f, -stack.StackTop);
+            _finale.localScale = Vector3.one * stack.Scale;
+
+            Crown(_finale, stack, mark);
+
+            // Capitals, at the owner's instruction (2026-10-02): the closing line is a title.
+            var line = _line = UIKit.Titled("Line", _finale, Loc.Get("ui.tutorial.win").Upper(), 66, Pal.Cream,
+                                    TextAnchor.MiddleCenter,
+                                    new Vector2(FinaleStack.LineW, FinaleStack.LineH),
+                                    new Vector2(.5f, 1f), new Vector2(0f, -stack.LineY),
+                                    3f, 5f, wrap: true);
+            UIKit.Shrinkable(line, 34);
+
+            line.transform.localScale = Vector3.zero;
+            Tween.Pop(line.transform, 0f, .52f, LineDelay);
+
+            _go = UIKit.TextButton("Go", _finale, Skins.Affirm,
+                                   Loc.Get("ui.tutorial.go").Upper(), 34,
+                                   new Vector2(FinaleStack.KeyW, FinaleStack.KeyH),
+                                   new Vector2(.5f, 1f), new Vector2(0f, -stack.KeyY),
+                                   () => Proceed(route));
+
+            var go = _go;
+            var rt = (RectTransform)go.transform;
+            var group = UIKit.Group(rt);
+            group.alpha = 0f;
+
+            var seat = rt.anchoredPosition;
+            rt.anchoredPosition = seat + new Vector2(0f, -54f);
+
+            Tween.Fade(group, 1f, .34f).Delay(KeyDelay);
+
+            // **A sheen rather than a breath, and it is not a taste.** A breathing key writes
+            // `localScale` every frame for as long as it stands, and `Btn`'s own press does the
+            // same - so the two fight and the breath wins, which is a button that does not
+            // depress under a thumb. A sheen is the house cue for the one key on a screen
+            // (the chest's COLLECT, the hub's PLAY) and it touches nothing the press wants.
+            Tween.Move(rt, seat, .42f, Ease.OutBack).Delay(KeyDelay)
+                 .OnDone(() =>
+                 {
+                     if (!rt) return;
+
+                     // The rest scale is read after the arrival has finished with it, which is
+                     // `Btn.Rehome`'s whole reason: a key whose home was captured mid-pop
+                     // springs to the wrong size on the first press.
+                     go.Rehome();
+                     Sheen.Attach(rt, 3.2f);
+                 });
+        }
+
+        /// <summary>
+        /// The wordmark, struck in: a wash of light opening behind it, the mark landing from
+        /// large with one overshoot, sparks in the game's two colours on the impact, then a sheen
+        /// across the lettering and a slow float while it stands.
+        ///
+        /// <para>
+        /// <b>Every value has one writer</b> (CRAFT, "two tweens on one value are a bug"): the
+        /// strike scales the image, the float moves the rig holding it, the fade is the rig's
+        /// group, and the exit scales the whole stack. <b>A missing sprite draws the light and no
+        /// mark</b> rather than a white rectangle (invariant 7b), and the stack below keeps its
+        /// place, because it was laid out on the shipped shape.
+        /// </para>
+        /// </summary>
+        void Crown(RectTransform stack, FinaleStack layout, Sprite mark)
+        {
+            var at = new Vector2(0f, -layout.LogoY);
+
+            var halo = _halo = UIKit.Img("Halo", stack, Art.Glow(128, 2.1f), Pal.A(Pal.Gold, 0f),
+                                 new Vector2(1240f, 620f), new Vector2(.5f, 1f), at);
+            Tween.Fade(halo, .36f, .5f).Delay(.06f);
+
+            var rays = _rays = UIKit.Img("Rays", stack, Art.Rays(256, 14), Pal.A(Pal.Sun, 0f),
+                                 Vector2.one * 1120f, new Vector2(.5f, 1f), at);
+            Tween.Fade(rays, .16f, .7f).Delay(.12f);
+            Tween.RotateBy((RectTransform)rays.transform, -360f, 48f, Ease.Linear).Loop(-1, false);
+
+            if (mark == null) return;
+
+            var rig = _crown = UIKit.Box("Crown", stack, new Vector2(FinaleStack.LogoW, layout.LogoH),
+                                new Vector2(.5f, 1f), at);
+            _crownHome = at;
+            var shown = UIKit.Group(rig);
+            shown.alpha = 0f;
+
+            var logo = UIKit.Img("Logo", rig, mark, Color.white,
+                                 new Vector2(FinaleStack.LogoW, layout.LogoH),
+                                 new Vector2(.5f, .5f), Vector2.zero);
+            logo.preserveAspect = true;
+
+            var lrt = (RectTransform)logo.transform;
+            lrt.localScale = Vector3.one * StrikeFrom;
+
+            Tween.Fade(shown, 1f, .16f);
+            Tween.Run(Strike, Ease.OutBack, t =>
+            {
+                if (lrt) lrt.localScale = Vector3.one * Mathf.LerpUnclamped(StrikeFrom, 1f, t);
+            }, lrt, "scale");
+
+            // `Burst` places its spray about the middle of its parent, where everything else
+            // here is hung from the top, so the impact point is said in its frame.
+            var impact = new Vector2(0f, layout.Height * .5f - layout.LogoY);
+
+            Tween.After(Strike * .55f, () =>
+            {
+                if (!rig) return;
+
+                Burst.Sparks(stack, impact, Pal.Gold, 26, 420f, 30f, .7f);
+                Burst.Sparks(stack, impact, Pal.Aqua, 18, 340f, 24f, .6f);
+                Audio.Sfx("unlock", .6f);
+            }, rig);
+
+            Tween.After(Strike + .2f, () =>
+            {
+                if (!rig) return;
+
+                Sheen.Attach(lrt, 3.6f, .18f);
+                Tween.Bob(rig, 7f, 3.4f);
+            }, rig);
+        }
+
+        /// <summary>How far into the wordmark's lift the next screen starts sliding in.</summary>
+        const float LiftLead = .24f;
+
+        /// <summary>How long the wordmark takes to rise off the top of the display.</summary>
+        const float Lift = .62f;
+
+        /// <summary>
+        /// The finale's key: where it leads was decided when the finale went up.
+        ///
+        /// <para>
+        /// <b>Two beats, not one.</b> The wordmark rises off the top - a small dip first, so it
+        /// reads as taking off rather than being pulled - while the line and the key fade; the
+        /// next screen starts sliding in from the right <see cref="LiftLead"/> into that, so the
+        /// eye follows the mark out before it meets the shelf coming in. Played on a device, the
+        /// two starting together read as the loadout appearing at once.
+        /// </para>
+        /// <para>
+        /// <b>Latched, and put back only if the screen change was refused</b>, so a second tap
+        /// cannot start a second slide and a refused one cannot leave the finale half gone with
+        /// a key that does nothing.
+        /// </para>
+        /// </summary>
+        void Proceed(SortieRoute route)
+        {
+            if (_leaving) return;
+            _leaving = true;
+
+            LiftOff();
+            Audio.Sfx("whoosh", .4f);
+
+            Tween.After(LiftLead, () =>
+            {
+                if (!this) return;
+
+                bool going = route == SortieRoute.Loadout
+                    ? Flow.Slide<LoadoutScreen>(v => v.Sortie = true)
+                    : Flow.Slide<LevelsScreen>();
+
+                if (!going)
+                {
+                    Restore();
+                    _leaving = false;
+                    return;
+                }
+
+                SortieAnalytics.Track(SortieAnalytics.Continued);
+            }, this);
+        }
+
+        /// <summary>
+        /// The finale leaving: the wordmark and its light up and away, the line and key faded.
+        ///
+        /// <b>The float is stopped first</b>, because it and the lift both write the rig's
+        /// position (CRAFT: two tweens on one value are a bug); stopping it hands the rig back
+        /// to its rest, and the lift starts from there.
+        /// </summary>
+        void LiftOff()
+        {
+            if (_crown != null && _finale != null)
+            {
+                Tween.KillChannel(_crown, "bob");
+
+                // Off the top of the display: the rig is drawn inside the scaled stack, so the
+                // distance is said in the stack's own units.
+                float scale = Mathf.Max(.01f, _finale.localScale.y);
+                float up = (-_finale.anchoredPosition.y) / scale - _crown.anchoredPosition.y
+                           + _crown.sizeDelta.y + 160f;
+
+                Tween.Move(_crown, _crown.anchoredPosition + new Vector2(0f, up), Lift, Ease.InBack);
+                Tween.Fade(UIKit.Group(_crown), 0f, Lift * .5f, Ease.InQuad).Delay(Lift * .5f);
+            }
+
+            if (_halo != null) Tween.Fade(_halo, 0f, Lift * .7f);
+            if (_rays != null) Tween.Fade(_rays, 0f, Lift * .5f);
+            if (_line != null) Tween.Fade(_line, 0f, .22f, Ease.InQuad);
+            if (_go != null) Tween.Fade(UIKit.Group((RectTransform)_go.transform), 0f, .2f, Ease.InQuad);
+        }
+
+        /// <summary>
+        /// The finale put back where it stood, for the one case its exit is refused: another
+        /// screen change already under way. Instant, because nothing about that moment wants
+        /// a second animation.
+        /// </summary>
+        void Restore()
+        {
+            // Each fade and move below supersedes the exit's on its own channel, so nothing is
+            // killed that should keep running - the rays go on turning.
+            if (_crown != null)
+            {
+                Tween.Move(_crown, _crownHome, .16f).OnDone(() =>
+                {
+                    if (_crown && !_leaving) Tween.Bob(_crown, 7f, 3.4f);
+                });
+                Tween.Fade(UIKit.Group(_crown), 1f, .16f);
+            }
+
+            if (_halo != null) Tween.Fade(_halo, .36f, .16f);
+            if (_rays != null) Tween.Fade(_rays, .16f, .16f);
+            if (_line != null) Tween.Fade(_line, 1f, .16f);
+            if (_go != null) Tween.Fade(UIKit.Group((RectTransform)_go.transform), 1f, .16f);
+        }
+
+        /// <summary>
+        /// Takes the way out and the title off the screen, once there is nothing left to leave.
+        ///
+        /// Faded and switched off rather than destroyed, so <see cref="OnBack"/> has something to
+        /// point at for the frames before the finale's own key arrives.
+        /// </summary>
+        void Retire()
+        {
+            if (_ribbon != null) Tween.Fade(UIKit.Group(_ribbon), 0f, .3f);
+
+            if (_skip == null) return;
+
+            _skip.Interactable = false;
+            Tween.Fade(UIKit.Group((RectTransform)_skip.transform), 0f, .22f);
         }
 
         /// <summary>
@@ -889,7 +1110,7 @@ namespace GlimmerGrove
         /// game.</b> The control that does it is already on the screen and already says what it
         /// is, so the honest answer to the key is to make it obvious - and to swallow the press,
         /// because the alternative (<c>Flow</c>'s default) is no navigation at all from here.
-        /// </b>
+        /// On the finale its key is the only way on, and the press is swallowed for that reason.
         /// </summary>
         public override bool OnBack()
         {

@@ -153,11 +153,22 @@ namespace GlimmerGrove.EditorTools
             // enabled" in the log on any launch where consent is granted.
             plist.root.SetBoolean("FIREBASE_ANALYTICS_COLLECTION_ENABLED", false);
 
+            // Consent mode (invariant 55a): every purpose starts DENIED until AnalyticsSetup
+            // applies the player's answer, the iOS twin of the four google_analytics_default_*
+            // flags in GlimmerMeasurement.androidlib. With analytics_storage denied, Analytics
+            // sends events without identifiers and models from them, so collection can be on
+            // before the consent form without identifying anybody. setConsent persists across
+            // launches, so these only ever speak for a first launch.
+            plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_ANALYTICS_STORAGE", false);
+            plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_STORAGE", false);
+            plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_USER_DATA", false);
+            plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS", false);
+
             plist.WriteToFile(plistPath);
 
             Debug.Log("[Privacy] NSUserTrackingUsageDescription, CFBundleLocalizations, " +
-                      "ITSAppUsesNonExemptEncryption and FIREBASE_ANALYTICS_COLLECTION_ENABLED " +
-                      "written into Info.plist");
+                      "ITSAppUsesNonExemptEncryption, FIREBASE_ANALYTICS_COLLECTION_ENABLED and " +
+                      "the four consent mode defaults written into Info.plist");
 
             WriteTranslations(pathToBuiltProject, sentences);
             LinkTrackingFramework(pathToBuiltProject);

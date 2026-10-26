@@ -6,6 +6,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Wards;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -1668,11 +1669,10 @@ namespace GlimmerGrove
         /// <b>What earns a lesson here, and what does not.</b> A map is a chain of glades and
         /// most of it is self-evident: tap a node, drag to look around, read the stars on a disc.
         /// What is not self-evident is the furniture round the edge, and every piece of it hides
-        /// something a player would otherwise never find. The <b>loadout bar</b> is a row of
-        /// pictures that looks like a status line and is the only way into the turret shelf
-        /// (<c>Mechanic.MapLoadout</c>). The <b>plaque</b> carries the chapter's name and not the
-        /// one rule this screen cannot draw - that stars, not clears, open the next chapter
-        /// (<c>Mechanic.MapChapterGate</c>, invariant 21). The <b>track pill</b> is a closed
+        /// something a player would otherwise never find. The <b>plaque</b> carries the chapter's
+        /// name and not the one rule this screen cannot draw - that stars, not clears, open the
+        /// next chapter (<c>Mechanic.MapChapterGate</c>, invariant 21), taught only once the
+        /// first chapter is behind the player (<see cref="ChapterGateLesson"/>). The <b>track pill</b> is a closed
         /// drop-down naming only the ladder you are already on, and every other lane is reached
         /// through it and nothing else (<c>Mechanic.LaneDoor</c>, one lesson per lane); the
         /// <b>mode pill</b> above it
@@ -1681,8 +1681,9 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>In the order a player meets them</b>, working down from the thing they are about to
-        /// use: what they are taking in, then what this chapter is worth, then where else there
-        /// is to go. They are chained rather than raised together by
+        /// use: what this chapter is worth, then where else there is to go. (The loadout bar's
+        /// lesson, <c>Mechanic.MapLoadout</c>, is retired: a new player now meets the shelf itself
+        /// on the first sortie before they ever see this screen - invariant 53h.) They are chained rather than raised together by
         /// <see cref="ScreenLessons"/>, which is also what keeps the beat between them the same
         /// one the grove and every board uses.
         /// </para>
@@ -1750,21 +1751,15 @@ namespace GlimmerGrove
         /// </remarks>
         List<ScreenLesson> Lessons()
         {
-            var queue = new List<ScreenLesson>(4);
-
-            // What you are taking in. First because it is the one piece of this chrome a player
-            // is about to act on: the next thing they do is open a level with it.
-            //
-            // **`Spotlight` rather than the bar's own transform**, which is the bar's rect and
-            // stops under the orange tab standing proud of it - so the ring was drawn round
-            // everything except the one part of that control that says it is a control. See
-            // `LoadoutBar.Overhang`.
-            ScreenLessons.Offer(queue, Mechanic.MapLoadout, _kit ? _kit.Spotlight : null);
+            var queue = new List<ScreenLesson>(3);
 
             // What this chapter is worth. Only where there is a gate to describe: the last
             // chapter of a mode and a lane holding one chapter both answer `ChapterGate.Open`,
-            // and a lesson about a rule nothing is applying is spent for good.
-            if (_entry != null)
+            // and a lesson about a rule nothing is applying is spent for good. And only once the
+            // player has cleared the first chapter's worth of the ladder - before that the rule
+            // cannot stop them, so the panel would be spent on the day it means least.
+            if (_entry != null && ChapterGateLesson.Due(
+                    WardSeats.ClearedIn(_index, Mode, PlayerProgress.IsCleared)))
             {
                 var gate = LevelUnlock.GateAfter(_index, _entry.Id);
 

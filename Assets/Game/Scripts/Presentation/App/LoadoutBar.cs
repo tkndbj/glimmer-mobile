@@ -77,17 +77,11 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Named because something other than the tab needs it.</b> The bar's rect is the
         /// shelf, and the tab is a child hung off its top edge and drawn outside it - so
-        /// anything that wants the bar's <em>outline</em> rather than its rect (a lesson's ring,
-        /// invariant 44d's mirror) gets a box with the one part of this control that says it is
-        /// a control cut off the top. Reported from a device exactly that way: the tip pointing
-        /// at the loadout drew its ring under the orange tab. <see cref="Spotlight"/> is the
-        /// answer and this is its arithmetic, kept beside the placement it has to agree with.
-        /// </para>
-        /// <para>
-        /// <b>Public because something other than a lesson's ring needs it now.</b> Anything placed
+        /// anything that wants the bar's <em>outline</em> rather than its rect gets a box with the
+        /// one part of this control that says it is a control cut off the top. Anything placed
         /// <em>above</em> this bar has to clear the tab rather than the plate - the endless hub's
-        /// key is the first thing in this game measured against the shelf from outside it
-        /// (<c>EndlessHub.Band</c>).
+        /// key is measured against the shelf from outside it (<c>EndlessHub.Band</c>). (The map's
+        /// lesson that rang this bar was retired with invariant 53h, and the ring's node with it.)
         /// </para>
         /// </summary>
         public const float Overhang = TabH - TabLift;
@@ -137,19 +131,6 @@ namespace GlimmerGrove
         }
 
         readonly List<Kit> _kits = new List<Kit>(Kits);
-
-        /// <summary>
-        /// The whole control, tab included: what to ring when pointing at this bar.
-        ///
-        /// <para>
-        /// <b>A rectangle rather than a number, because the caller must not do this arithmetic.</b>
-        /// A screen handed <c>Overhang</c> would have to add it to a rect it did not build, in
-        /// the space of an overlay it does not own, and a second caller would have to get the
-        /// same sum right again. This is an empty node - no graphic, so no raycast - stretched
-        /// over the shelf and up past the tab, and it moves with the bar for free.
-        /// </para>
-        /// </summary>
-        public RectTransform Spotlight { get; private set; }
 
         /// <summary>
         /// Builds the bar along the bottom of <paramref name="host"/>.
@@ -226,12 +207,6 @@ namespace GlimmerGrove
 
             BuildTurrets(rt, turretMid);
             BuildKits(rt, kitMid);
-
-            // The shelf plus the tab standing proud of it. Built last so it is the top sibling
-            // and empty so it draws and catches nothing; see `Spotlight`.
-            Spotlight = UIKit.Node("Spotlight", rt);
-            Spotlight.offsetMin = Vector2.zero;
-            Spotlight.offsetMax = new Vector2(0f, Overhang);
 
             // Both ledgers, and the loadout as well: a turret bought elsewhere, a kit spent in a
             // run and a line re-stood on the shelf all change what this says. Detached first,

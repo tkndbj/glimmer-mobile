@@ -3854,6 +3854,10 @@
       "text": "Al"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Her bölüm daha zor.\nYetişmek için kulelerini güçlendir!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Birinci Nöbet"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "SONRAKİ BÖLGEYİ AÇ"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "Bir bölüme götürdüklerin bunlar.\n\nKulelerini ve çantanı seçmek için dokun."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "TEÇHİZATIN"
     },
     {
       "key": "ui.tip.lane_infinite.body",

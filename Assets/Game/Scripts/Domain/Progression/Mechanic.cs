@@ -693,9 +693,20 @@ namespace GlimmerGrove.Progression
         // copy of it was one copy too many.
 
         /// <summary>
+        /// <b>Retired 2026-10-26: no screen raises this and its id must never be reused.</b>
+        ///
+        /// <para>
+        /// A new player now meets the turret shelf itself before they ever see the map - the
+        /// first sortie slides them from the tutorial's finale onto the loadout, where its own two
+        /// lessons are taught on the controls they describe (invariant 53h) - so a panel on the
+        /// map pointing at the way in arrives after the player has already been through it.
+        /// Removed at the owner's instruction. Kept as a member because a lesson id travels in
+        /// the save (<c>tipsSeen</c>). What it taught, for the history:
+        /// </para>
+        /// <para>
         /// That the shelf along the foot of the map is what the player is taking into the next
         /// siege, and that it is also the way in to changing it.
-        ///
+        /// </para>
         /// <para>
         /// <b>It is a readout that happens to be a door, which is exactly what has to be
         /// taught.</b> The bar shows four turrets and five kit slots and looks like a status
@@ -997,7 +1008,8 @@ namespace GlimmerGrove.Progression
             ModeSwitch, LuckySpin,
             // Grove and GroveShop are retired and deliberately absent. See the remarks above.
             // MapTrack is retired and deliberately absent; LaneDoor replaced it.
-            MapLoadout, MapChapterGate, LaneInfinite, LaneShuffle,
+            // MapLoadout is retired and deliberately absent; the first sortie replaced it.
+            MapChapterGate, LaneInfinite, LaneShuffle,
             LoadoutSeats, LoadoutKit,
             // MergeGoal, MergeFeed, PairsCombo, PairsCurse and ChallengeHill are retired and
             // deliberately absent. See the remarks on MergeSwipe.
@@ -1031,6 +1043,7 @@ namespace GlimmerGrove.Progression
             Grove, GroveShop,
             MergeGoal, MergeFeed, PairsCombo, PairsCurse, ChallengeHill,
             MapTrack,
+            MapLoadout,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

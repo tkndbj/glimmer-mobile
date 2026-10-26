@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
@@ -327,6 +329,8 @@ namespace GlimmerGrove
 
             Paint();
 
+            if (Sortie) PrepareSortie();
+
             // The shelf's twenty thumbnails. Asked for rather than awaited: the grid draws itself
             // now and repaints when they land, because an `Image` with a null sprite is a white
             // rectangle rather than a blank (invariant 7b) and a screen that waited would show
@@ -386,6 +390,7 @@ namespace GlimmerGrove
             // twenty pictures resident for the life of a session to draw one screen is memory
             // bounded by how much content exists rather than by what is on the screen (7b).
             _shelfArt?.Dispose();
+            _guideArt?.Dispose();
 
             WardLedger.Changed -= Paint;
             WardLoadout.Changed -= Paint;
@@ -553,7 +558,15 @@ namespace GlimmerGrove
             ScreenLessons.Offer(queue, Mechanic.LoadoutSeats, _line);
             ScreenLessons.Offer(queue, Mechanic.LoadoutKit, _kitTab);
 
-            if (queue.Count == 0) return;
+            // On the first sortie the guide follows the last of them - or, for a player who has
+            // met both, follows the same beat with none (invariant 53h).
+            System.Action then = Sortie ? Guide : (System.Action)null;
+
+            if (queue.Count == 0)
+            {
+                if (then != null) Tween.After(TeachDelay, then, this);
+                return;
+            }
 
             // A turret panel left up across a navigation would put a lesson behind it, and a
             // lesson nobody sees is one that can never be shown again - so `ScreenLessons.Show`
@@ -561,7 +574,7 @@ namespace GlimmerGrove
             Tween.After(TeachDelay, () =>
             {
                 if (!this) return;
-                ScreenLessons.Show(this, queue);
+                ScreenLessons.Show(this, queue, then);
             }, this);
         }
 
@@ -774,7 +787,7 @@ namespace GlimmerGrove
         void BuildGrid()
         {
             _viewport = UIKit.Node("Viewport", Safe);
-            _viewport.offsetMin = new Vector2(0f, 40f);
+            _viewport.offsetMin = new Vector2(0f, FootNow);
             _viewport.offsetMax = new Vector2(0f, -(HeaderHeight + LineHeight + TabsHeight));
 
             var catcher = _viewport.gameObject.AddComponent<Image>();

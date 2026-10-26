@@ -32,6 +32,35 @@ namespace GlimmerGrove.Analytics
         static void SetCollection(bool allowed) => FirebaseAnalytics.SetAnalyticsCollectionEnabled(allowed);
 
         public void MarkReady() => _delivery.MarkReady();
+
+        /// <summary>
+        /// Hands the four consent-mode purposes to the SDK (<c>setConsent</c>), which persists
+        /// them across launches. Called only once the dependency check has passed, and before
+        /// <see cref="MarkReady"/> lets the first event out. False when the native call threw;
+        /// the manifest's denied defaults then still stand, which is the safe side.
+        /// </summary>
+        public bool ApplyConsent(GlimmerGrove.Privacy.AnalyticsConsent consent)
+        {
+            try
+            {
+                FirebaseAnalytics.SetConsent(new Dictionary<ConsentType, Firebase.Analytics.ConsentStatus>
+                {
+                    { ConsentType.AnalyticsStorage, Status(consent.AnalyticsStorage) },
+                    { ConsentType.AdStorage, Status(consent.AdStorage) },
+                    { ConsentType.AdUserData, Status(consent.AdUserData) },
+                    { ConsentType.AdPersonalization, Status(consent.AdPersonalization) },
+                });
+                return true;
+            }
+            catch (Exception)
+            {
+                // No exception message: native failures can include configuration or device data.
+                return false;
+            }
+        }
+
+        static Firebase.Analytics.ConsentStatus Status(bool granted)
+            => granted ? Firebase.Analytics.ConsentStatus.Granted : Firebase.Analytics.ConsentStatus.Denied;
         public void SetCollectionAllowed(bool allowed) => _delivery.SetCollectionAllowed(allowed);
         public void Tick() => _delivery.Tick();
 

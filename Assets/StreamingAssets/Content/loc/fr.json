@@ -3854,6 +3854,10 @@
       "text": "Récupérer"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Chaque niveau est plus dur.\nAméliore tes tourelles pour suivre !"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La première garde"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "OUVRE LE CHAPITRE SUIVANT"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "Voici ce que tu emportes dans un niveau.\n\nTouche pour choisir tes tourelles et ton sac."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "TON ÉQUIPEMENT"
     },
     {
       "key": "ui.tip.lane_infinite.body",

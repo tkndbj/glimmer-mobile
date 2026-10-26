@@ -103,14 +103,23 @@ namespace GlimmerGrove.Privacy
         /// <summary>The iOS tracking prompt's answer. See <see cref="TrackingStatus"/>.</summary>
         public readonly TrackingStatus Tracking;
 
+        /// <summary>
+        /// Google's per-purpose consent-mode answer, as UMP wrote it (<see cref="ConsentModeValues"/>).
+        /// Not ready on all four until a CMP that writes it has answered. What Analytics is told
+        /// is derived from it (<see cref="AnalyticsConsent.For"/>); advertising does not read it.
+        /// </summary>
+        public readonly ConsentModeValues ConsentMode;
+
         public AdPrivacySignals(bool gdprApplies, ConsentStatus gdpr, bool doNotSell,
-                                bool childDirected, TrackingStatus tracking)
+                                bool childDirected, TrackingStatus tracking,
+                                ConsentModeValues consentMode = default)
         {
             GdprApplies = gdprApplies;
             Gdpr = gdpr;
             DoNotSell = doNotSell;
             ChildDirected = childDirected;
             Tracking = tracking;
+            ConsentMode = consentMode;
         }
 
         /// <summary>
@@ -189,12 +198,12 @@ namespace GlimmerGrove.Privacy
         public bool Equals(AdPrivacySignals other)
             => GdprApplies == other.GdprApplies && Gdpr == other.Gdpr
             && DoNotSell == other.DoNotSell && ChildDirected == other.ChildDirected
-            && Tracking == other.Tracking;
+            && Tracking == other.Tracking && ConsentMode.Equals(other.ConsentMode);
 
         public override bool Equals(object obj) => obj is AdPrivacySignals other && Equals(other);
 
         public override int GetHashCode()
-            => (GdprApplies, Gdpr, DoNotSell, ChildDirected, Tracking).GetHashCode();
+            => (GdprApplies, Gdpr, DoNotSell, ChildDirected, Tracking, ConsentMode).GetHashCode();
 
         public static bool operator ==(AdPrivacySignals a, AdPrivacySignals b) => a.Equals(b);
         public static bool operator !=(AdPrivacySignals a, AdPrivacySignals b) => !a.Equals(b);
@@ -202,6 +211,6 @@ namespace GlimmerGrove.Privacy
         public override string ToString()
             => $"gdpr {(GdprApplies ? "applies" : "n/a")}/{Gdpr}, doNotSell {DoNotSell}, " +
                $"child {ChildDirected}, att {Tracking} → " +
-               $"personalised {AllowsPersonalisation}, deviceId {AllowsDeviceId}";
+               $"personalised {AllowsPersonalisation}, deviceId {AllowsDeviceId}, consent mode {ConsentMode}";
     }
 }

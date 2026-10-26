@@ -7,6 +7,10 @@
     python Tools/render_loadout.py --level 60 --held eclipse*2 --scroll 4200
     python Tools/render_loadout.py --shelf kit      # the utility shelf
     python Tools/render_loadout.py --columns 4      # what it used to look like
+    python Tools/render_loadout.py --guide          # the first sortie's guide at the foot (53h)
+    python Tools/render_loadout.py --battle         # ...and the BATTLE key that replaces him
+    python Tools/render_loadout.py --guide --lang de
+    python Tools/render_loadout.py --measure        # the guide's sentence in every Latin table
 
 **Why this exists.** A shelf's column count is the one number on this screen that nothing in
 this project can check: two across and four across both parse, both compile, both address
@@ -101,6 +105,27 @@ STARS_MOST = 5
 # WardTier.Opens / .Gates — the shelf rung each band starts at, and its keeper wall.
 TIER_OPENS = (1, 11, 18, 21)
 TIER_NAMES = {1: "TIER I", 2: "TIER II", 3: "TIER III", 4: "LEGENDARY"}
+
+# GuideDock - the first sortie's foot (invariant 53h). Origin bottom-left of the safe area, y up;
+# this mirror has no safe inset, so the safe area is the canvas.
+FIGURE_H, MARGIN, FOOT = 300.0, 24.0, 18.0
+HEAD_CLEAR, GUN_LINE, VISOR = 0.22, 0.42, 0.56
+BUBBLE_MAX_W, LEFT = 720.0, 24.0
+PAD_TOP, BODY_GAP, BUTTON_H, BUTTON_W, PAD_BOTTOM = 28.0, 18.0, 92.0, 300.0, 24.0
+BODY_INSET = 36.0
+BEAK, BEAK_OUT, CORNER = 46.0, 10.0, 28.0
+HEADROOM = 20.0
+KEY_W, KEY_H, KEY_FOOT = 620.0, 178.0, 30.0
+
+# SortieGuide - the sentence's size, its floor, and the room it shrinks into; the key's caption.
+BODY_SIZE, BODY_FLOOR, BODY_ROOM = 34, 24, 132.0
+GOT_IT_SIZE = 36
+INK = (33, 41, 51)                                          # SortieGuide.Ink (.13, .16, .20)
+
+# LoadoutScreen.Sortie - the shade under the dock: the header's own ink.
+FOOT_INK, FOOT_ALPHA = (5, 15, 23), 0.82
+
+GUIDE = REPO / "Assets" / "Game" / "Art" / "Ui" / "Guide" / "idle" / "f00.png"
 
 # Skins
 PLATE_BLUE, PLATE_ORANGE = "Hud/plate_blue", "Hud/plate_orange"
@@ -425,13 +450,167 @@ def draw(shelf, level, held, stars, colour, standing, scroll):
     return clip(sheet, grid, top)
 
 
+#: How much of the foot the dock takes, which the viewport is raised by (`LoadoutScreen.FootNow`).
+FOOT_BAND = 0.0
+
+
 def clip(sheet, grid, top):
     """`RectMask2D` on the viewport: everything outside it is not drawn at all."""
     view = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    box = (0, int(top), W, int(H - VIEWPORT_FOOT))
+    box = (0, int(top), W, int(H - max(VIEWPORT_FOOT, FOOT_BAND)))
     view.paste(grid.crop(box), box[:2])
     sheet.alpha_composite(view)
     return sheet
+
+
+# --------------------------------------------------------------------------- the first sortie
+def table(lang):
+    rows = json.loads((REPO / "Assets/StreamingAssets/Content/loc" / f"{lang}.json").read_text("utf-8"))
+    return {e["key"]: e["text"] for e in rows["entries"]}
+
+
+def figure_aspect():
+    im = Image.open(GUIDE)
+    return im.width / im.height
+
+
+def body_fit(sentence, width):
+    """`SortieGuide.Build`'s sizing: shrink from 34 until the sentence fits `BODY_ROOM`, never
+    below 24. Returns (size, lines). Greedy wrap at 1.2 lines, `hudkit.shrunk`'s approximation."""
+    probe = ImageDraw.Draw(Image.new("RGBA", (8, 8)))
+    for px in range(BODY_SIZE, BODY_FLOOR - 1, -1):
+        f = K.font(px)
+        lines = []
+        # Each authored line break starts a fresh line, as uGUI's does (invariant 6c keeps the
+        # breaks the same in every table).
+        for paragraph in sentence.split("\n"):
+            line = ""
+            for word in paragraph.split(" "):
+                trial = word if not line else line + " " + word
+                if probe.textlength(trial, font=f) <= width or not line:
+                    line = trial
+                else:
+                    lines.append(line)
+                    line = word
+            if line:
+                lines.append(line)
+        if len(lines) * px * 1.2 <= BODY_ROOM or px == BODY_FLOOR:
+            return px, lines
+    return BODY_FLOOR, []
+
+
+def dock(width, aspect, body_h):
+    """`GuideDock.For`, line for line. Centres in the dock's frame: origin bottom-left, y up."""
+    fw = FIGURE_H * aspect
+    figure = (width - MARGIN - fw / 2, FOOT + FIGURE_H / 2, fw, FIGURE_H)
+    right = width - MARGIN - fw + fw * HEAD_CLEAR
+    bw = min(BUBBLE_MAX_W, right - LEFT)
+    bh = PAD_TOP + body_h + BODY_GAP + BUTTON_H + PAD_BOTTOM
+    gun = FOOT + FIGURE_H * GUN_LINE
+    visor = FOOT + FIGURE_H * VISOR
+    bottom = max(gun, visor - bh + BEAK)
+    bubble = (right - bw / 2, bottom + bh / 2, bw, bh)
+    beak_y = min(max(visor, bottom + CORNER + BEAK / 2), bottom + bh - CORNER - BEAK / 2)
+    beak = (right + BEAK_OUT, beak_y)
+    band = max(FOOT + FIGURE_H, bottom + bh) + HEADROOM
+    return figure, bubble, beak, band
+
+
+def shade(sheet, band):
+    """The dark fade the dock stands on (`Art.FadeUp` in the header's ink, dark at the foot)."""
+    h = int(band + 70)
+    fade = Image.new("RGBA", (W, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(fade)
+    for y in range(h):
+        d.line([(0, y), (W, y)], fill=(*FOOT_INK, int(255 * FOOT_ALPHA * y / max(1, h - 1))))
+    sheet.alpha_composite(fade, (0, int(H - h)))
+
+
+def guide(sheet, lang, report=None):
+    """The guide standing and speaking: `SortieGuide` at rest. Returns the band it takes."""
+    s = table(lang)
+    aspect = figure_aspect()
+    _, (_, _, bw, _), _, _ = dock(W, aspect, 0)
+
+    size, lines = body_fit(s["ui.guide.upgrade"], bw - BODY_INSET * 2)
+    body_h = len(lines) * size * 1.2
+    figure, bubble, beak, band = dock(W, aspect, body_h)
+
+    if report is not None:
+        widest = max(K.font(size).getlength(ln) for ln in lines)
+        report.append((lang, size, len(lines), widest, bw - BODY_INSET * 2, body_h))
+
+    shade(sheet, band)
+
+    def down(y):                                            # the dock's y-up into the sheet's
+        return H - y
+
+    fx, fy, fw, fh = figure
+    K.paste(sheet, K.glow(int(fw * .78), 1.6, (0, 0, 0), .38).resize((int(fw * .78), 40)),
+            fx, down(FOOT + 8 + 20))
+
+    bx, by, bw, bh = bubble
+    diamond = Image.new("RGBA", (int(BEAK), int(BEAK)), (0, 0, 0, 0))
+    ImageDraw.Draw(diamond).polygon([(BEAK / 2, 0), (BEAK, BEAK / 2), (BEAK / 2, BEAK), (0, BEAK / 2)],
+                                    fill=(255, 255, 255, 255))
+    K.paste(sheet, diamond, beak[0], down(beak[1]))
+    K.paste(sheet, K.round_rect(bw, bh, CORNER, (255, 255, 255)), bx, down(by))
+    K.paste(sheet, K.round_rect(bw, bh, CORNER, (26, 33, 43), alpha=.16, width=3), bx, down(by))
+
+    top = down(by + bh / 2)
+    for i, ln in enumerate(lines):
+        K.text(sheet, ln, bx, top + PAD_TOP + size * 1.2 * (i + .5), size, fill=INK, outline=0)
+
+    gy = down(by - bh / 2 + PAD_BOTTOM + BUTTON_H / 2)
+    K.paste(sheet, K.skin("btn_green", BUTTON_W, BUTTON_H), bx, gy)
+    K.one_line(sheet, s["ui.common.got_it"], bx, gy - BUTTON_H * K.PILL_FACE_LIFT,
+               BUTTON_W - 40, GOT_IT_SIZE, GOT_IT_SIZE // 2)
+
+    K.paste(sheet, K.fit(Image.open(GUIDE).convert("RGBA"), (fw, fh)), fx, down(fy))
+    return band
+
+
+def battle(sheet, lang):
+    """The BATTLE key risen into the foot: the hub's own key (`HomeScreen.BuildPlay`)."""
+    s = table(lang)
+    shade(sheet, KEY_FOOT + KEY_H + HEADROOM)
+
+    cy = H - (KEY_FOOT + KEY_H / 2)
+    face = cy - KEY_H * K.PILL_FACE_LIFT
+    K.paste(sheet, K.skin("Hud/btn_gold", KEY_W, KEY_H), W / 2, cy)
+
+    glyph = K.fit(K.load("ic_battle")[0], (112, 112))
+    label = s["ui.home.battle"]
+    lw = K.font(62).getlength(label)
+    block = glyph.width + 18 + lw
+    K.paste(sheet, glyph, W / 2 - block / 2 + glyph.width / 2, face)
+    K.text(sheet, label, W / 2 - block / 2 + glyph.width + 18 + lw / 2, face, 62)
+
+
+def measure():
+    """The guide's sentence in every Latin-script table, against the room the bubble gives it.
+
+    Arabic is skipped - this font has no Arabic forms, and the game shapes it through
+    `ArabicText` at runtime - so `ArabicTextTests` carries that table, as it does for every
+    other mirror here."""
+    report = []
+    for lang in ("en", "es", "pt", "fr", "de", "it", "tr", "pl"):
+        guide(Image.new("RGBA", (W, H), (0, 0, 0, 255)), lang, report)
+
+    bad = []
+    print("%-6s %4s %5s %8s %8s %8s" % ("lang", "at", "lines", "widest", "room", "height"))
+    for lang, size, lines, widest, room, height in report:
+        over = widest > room + .5 or height > BODY_ROOM + .5
+        if over:
+            bad.append(lang)
+        print("%s %-4s %4d %5d %8.1f %8.1f %8.1f%s" % ("<-" if over else "  ", lang, size, lines,
+                                                       widest, room, height,
+                                                       "   AT FLOOR" if size == BODY_FLOOR else ""))
+    if bad:
+        print("\nthe guide's sentence does not fit in: " + ", ".join(bad))
+        return False
+    print("\nthe guide's sentence fits in every table.")
+    return True
 
 
 def main():
@@ -457,6 +636,13 @@ def main():
                     help="the seat being filled, which is the colour every turret is worn in")
     ap.add_argument("--scroll", type=float, default=0.0,
                     help="how far down the shelf has been scrolled, in canvas units")
+    ap.add_argument("--guide", action="store_true",
+                    help="the first sortie's guide standing at the foot, speaking (invariant 53h)")
+    ap.add_argument("--battle", action="store_true",
+                    help="the BATTLE key that rises in the guide's place")
+    ap.add_argument("--lang", default="en", help="the table the guide's sentence is drawn from")
+    ap.add_argument("--measure", action="store_true",
+                    help="measure the guide's sentence in every Latin table; error on a spill")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
 
@@ -470,9 +656,26 @@ def main():
     # every slot, so what is owned on red says nothing about blue (`WardHolding`).
     held = {x.strip() for x in a.held.split(",") if x.strip()}
 
+    if a.measure:
+        sys.exit(0 if measure() else 1)
+
+    global FOOT_BAND
+    if a.guide and a.battle:
+        sys.exit("--guide and --battle are two moments; draw one at a time")
+    if a.guide or a.battle:
+        probe = Image.new("RGBA", (W, H))
+        FOOT_BAND = guide(probe, a.lang) if a.guide else KEY_FOOT + KEY_H + HEADROOM
+
     sheet = draw(a.shelf, a.level, held, a.stars, a.colour, a.standing, a.scroll)
 
+    if a.guide:
+        guide(sheet, a.lang)
+    elif a.battle:
+        battle(sheet, a.lang)
+
     kind = "tablet" if a.tablet else "tall" if a.tall_tablet else "phone"
+    if a.guide or a.battle:
+        kind += "_guide" if a.guide else "_battle"
     out = Path(a.out) if a.out else REPO / "Tools" / "out" / f"loadout_{a.shelf}_{kind}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     sheet.convert("RGB").save(out)

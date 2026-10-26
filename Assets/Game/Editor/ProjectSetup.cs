@@ -109,6 +109,7 @@ namespace GlimmerGrove.EditorTools
             expected.AddRange(AssetManifest.AllShuffleCrests());
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
             expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
+            expected.AddRange(AssetManifest.SortieAssets());
 
             var present = IndexAssetsByAddress();
             var missing = new List<string>();
@@ -280,7 +281,21 @@ namespace GlimmerGrove.EditorTools
             // else in that folder is a mask.
             ("/Art/Bg/ident_word", TextureImporterCompression.Uncompressed),
 
+            // **The Gemfire wordmark, and it is a file for `ident_word`'s reason** - nothing else
+            // in `/Art/Bg/` is lettering. Faceted, saturated and outlined in black, it is the rank
+            // badges' kind of picture, and it measured like one: `compare_texture_formats.py`'s
+            // ASTC put it at **35.1 dB** RGB at 6x6 against the 41.1 the turrets ship at, and
+            // 41.3 at 4x4. It is drawn once in a player's life, on the first screen they finish
+            // (`TutorialScreen`), from a scope that is let go when they leave; 1400x567 at 4x4 is
+            // 0.8 MB for those seconds. Cut by `Tools/make_sortie_art.py`.
+            ("/Art/Bg/gemfire_logo", TextureImporterCompression.CompressedHQ),
+
             ("/Art/Critters/", TextureImporterCompression.CompressedHQ),
+
+            // Sprocket's two reels (`SortieGuide`), cut from the same pack as `Critters/c3` and
+            // graded with it for the same measurement: 38.5 dB at 6x6, 47.3 at 4x4. Held only
+            // while the first sortie's loadout stands.
+            ("/Art/Ui/Guide/", TextureImporterCompression.CompressedHQ),
             ("/Art/Companions/", TextureImporterCompression.CompressedHQ),
 
             // **The worst-measuring folder in the game, and it is not close.** The rank badges

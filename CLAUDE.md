@@ -443,6 +443,13 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 53e. **A feed is half a tube, poured per move into the fullest turret; the loop ends on `Charged`, not a count.**
 53f. **The second panel waits for a crowd, with a ceiling**; `SiegeTutorial` writes through existing doors only.
 53g. **The hand picks up the gem that joins the line** (`SiegeTutorial.Oriented`).
+53h. **The tutorial hands on to a first sortie, never the hub** (`FirstSortie`): finished or skipped
+   raises one finale (wordmark, line, key; `FinaleStack`), the gate spent as it rises; the key slides
+   (`Flow.Slide`) a finished run to `LoadoutScreen{Sortie}` - its two lessons, then `SortieGuide`
+   (`GuideDock`), then BATTLE - and a skipped one to the map. Nothing stored; the instance flag is the
+   state. Map's `map_kit` lesson is spent; `map_gate` waits for 10 ladder clears (`ChapterGateLesson`).
+   Funnel: `SortieAnalytics`. Held by `FirstSortieTests`, `make_sortie_art.py --check`,
+   `render_tutorial.py --captions`, `render_loadout.py --measure`.
 
 ### Keeper levels for sale
 
@@ -488,7 +495,7 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 
 55. **The consent form comes before Apple's tracking prompt on every path, and both wait for the hub.** The
    splash only refreshes (`AdPrivacy.PrepareAsync`) and commits there when nothing is owed; what is owed is
-   put by `ConsentMoment` on an idle hub (`AskAsync`), so a new player meets the tutorial first and an
+   put by `ConsentMoment` on an idle hub (`AskAsync`; an idle map settles `LaunchCalm` but never asks), so a new player meets the tutorial first and an
    answered one is never asked. `UmpConsentGateway` bounds the two server calls, waits for a shown form
    without a clock, and drops a form the hub is no longer idle for. ATT only when `ConsentSettled`. Held by
    `PrivacyTests`.
@@ -497,6 +504,14 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    starting plus six rewarded loads on the hub's first frames was a stutter on every connected launch).
    A rewarded unit is queued through `AdLoadQueue`, never loaded beside another. Held by `PrivacyTests` and
    `AdLoadQueueTests`.
+
+55b. **Analytics runs in Google's consent mode, never gated on the ad answer.** Collection is on (only a
+   child-directed install collects nothing); each purpose comes from UMP's `UMP_consentModeValues`
+   (`ConsentModeStore` → `AnalyticsConsent.For`), granted only by `1`, by `3`, or - when no digit speaks
+   (`0`/`4`) - by UMP resolving the player outside every regulated region. Denied defaults ship in the
+   manifest and the plist; consent is set before the first event (`AnalyticsSetup.PushConsent`). Unanswered
+   or denied, events go without identifiers. **AdMob ▸ Privacy & messaging must have consent mode on**, or
+   EEA players stay modelled-only. Held by `ConsentModeTests`.
 
 ### Daily challenges
 

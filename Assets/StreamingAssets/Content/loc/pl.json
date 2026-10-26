@@ -3854,6 +3854,10 @@
       "text": "Odbierz"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Każdy poziom jest trudniejszy.\nUlepszaj wieże, by nadążyć!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Pierwsza warta"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "OTWÓRZ KOLEJNY ROZDZIAŁ"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "To zabierasz na poziom.\n\nDotknij, by wybrać wieże i plecak."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "TWÓJ EKWIPUNEK"
     },
     {
       "key": "ui.tip.lane_infinite.body",

@@ -3854,6 +3854,10 @@
       "text": "Resgatar"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Cada nível fica mais difícil.\nMelhore suas torres para acompanhar!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "A primeira vigília"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "ABRA O PRÓXIMO CAPÍTULO"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "Isto é o que você leva para um nível.\n\nToque para escolher suas torres e sua mochila."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "SEU EQUIPAMENTO"
     },
     {
       "key": "ui.tip.lane_infinite.body",

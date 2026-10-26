@@ -17,6 +17,15 @@ namespace GlimmerGrove.Analytics
         static FirebaseAnalyticsSink _firebase;
         static AdRevenueTracker _adRevenue;
 
+        /// <summary>What Analytics is told now, derived from the latest privacy answer.</summary>
+        static AnalyticsConsent _consent;
+
+        /// <summary>Whether the native SDK has passed its dependency check and may be called.</summary>
+        static bool _sdkReady;
+
+        /// <summary>The last consent handed to the SDK, so an unchanged answer is not re-sent.</summary>
+        static AnalyticsConsent? _applied;
+
         static partial void InstallFirebase()
         {
             if (_firebase != null) return;
@@ -25,8 +34,10 @@ namespace GlimmerGrove.Analytics
             _adRevenue = new AdRevenueTracker(_firebase, AdRevenueSources.ForCurrentPlatform(), DiagnoseAdRevenue);
             AdRevenue.Install(_adRevenue);
 
-            AdPrivacy.Changed += ApplyCollectionRule;
-            if (AdPrivacy.IsResolved) ApplyCollectionRule(AdPrivacy.Signals);
+            // Applied at once, from the restrictive answer if nothing is resolved yet: collection
+            // on, every purpose denied, so the launch is measured without identifying anybody.
+            AdPrivacy.Changed += ApplyConsentRule;
+            ApplyConsentRule(AdPrivacy.IsResolved ? AdPrivacy.Signals : AdPrivacySignals.Restricted);
             _ = StartFirebaseAsync();
         }
 
@@ -40,6 +51,10 @@ namespace GlimmerGrove.Analytics
                     Debug.LogWarning("[Analytics] Firebase dependencies unavailable; delivery remains closed");
                     return;
                 }
+                // Consent before the first event: the SDK is told what it may carry, and only
+                // then does delivery open.
+                _sdkReady = true;
+                PushConsent();
                 _firebase.MarkReady();
             }
             catch (Exception)
@@ -49,15 +64,38 @@ namespace GlimmerGrove.Analytics
             }
         }
 
-        static void ApplyCollectionRule(AdPrivacySignals signals)
+        /// <summary>
+        /// Google's consent mode (invariant 55a): collection stays on and each purpose says what
+        /// it may carry (<see cref="AnalyticsConsent.For"/>). Before the player has answered, or
+        /// where they denied it, <c>analytics_storage</c> is denied and Analytics sends events
+        /// without identifiers for modelling; a granted answer makes them full events. Nothing is
+        /// inferred from the advertising answer - the purposes come from UMP's own
+        /// <c>UMP_consentModeValues</c>, so the console's consent mode setting decides them.
+        /// </summary>
+        static void ApplyConsentRule(AdPrivacySignals signals)
         {
-            // Existing product eligibility is intentionally retained pending approval of an
-            // analytics-specific consent integration. This advertising flag is NOT evidence of
-            // analytics_storage permission. Delivery must never infer consent from it itself.
-            // Read the event's value: AdPrivacy sets IsResolved after raising Changed.
-            bool allowed = signals.AllowsPersonalisation;
-            _adRevenue.SetCollectionAllowed(allowed);
-            _firebase.SetCollectionAllowed(allowed);
+            _consent = AnalyticsConsent.For(signals);
+
+            _adRevenue.SetCollectionAllowed(_consent.Collect);
+            _firebase.SetCollectionAllowed(_consent.Collect);
+
+            PushConsent();
+        }
+
+        static void PushConsent()
+        {
+            if (!_sdkReady) return;
+            if (_applied.HasValue && _applied.Value.Equals(_consent)) return;
+
+            if (_firebase.ApplyConsent(_consent))
+            {
+                _applied = _consent;
+                Debug.Log($"[Analytics] consent mode applied: {_consent}");
+            }
+            else
+            {
+                Debug.LogWarning("[Analytics] consent mode could not be applied; the denied defaults stand");
+            }
         }
 
         static partial void TickFirebase()

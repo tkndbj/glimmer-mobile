@@ -390,9 +390,13 @@ namespace GlimmerGrove.Privacy
             // Reported false rather than guessed: the CCPA signal is a separate obligation and
             // claiming an opt-out nobody made would suppress ads for every American player.
             // When a US privacy flow is added it belongs beside this, not inside it.
+            // Google's per-purpose answer for consent mode, which UMP writes beside its own state
+            // once it has one. Read with every snapshot, so a form answered, a privacy-options
+            // revisit and a refresh at launch all carry it (see `AnalyticsConsent`).
             return new AdPrivacySignals(applies, consent, doNotSell: false,
                                         childDirected: AdPrivacy.ChildDirected,
-                                        tracking: TrackingStatus.NotDetermined);
+                                        tracking: TrackingStatus.NotDetermined,
+                                        consentMode: ConsentModeStore.Read());
         }
     }
 }

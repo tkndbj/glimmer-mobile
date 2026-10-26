@@ -352,6 +352,46 @@ namespace GlimmerGrove.AssetPipeline
                 AssetRequest.Sprite(IdentWord),
             };
 
+        // ---------------------------------------------------------------- the first sortie
+        /// <summary>
+        /// The Gemfire wordmark the tutorial's finale is crowned with (invariant 53h), cut by
+        /// <c>Tools/make_sortie_art.py</c> from the owner's own file.
+        ///
+        /// <para>
+        /// <b>Scoped for <see cref="SplashBackdrop"/>'s reason</b>: it is drawn once in a
+        /// player's life, so <c>TutorialScreen</c> holds it with the rest of its art and lets
+        /// it go when the screen does. Named here so the audit and the build gate can see it.
+        /// </para>
+        /// </summary>
+        public const string GameLogo = BackdropRoot + "gemfire_logo";
+
+        /// <summary>
+        /// Sprocket standing and walking: the guide who speaks on the first sortie's loadout
+        /// (<c>SortieGuide</c>). Two frame folders, each a label of its own.
+        /// </summary>
+        public const string GuideIdle = UiRoot + "Guide/idle";
+        public const string GuideWalk = UiRoot + "Guide/walk";
+
+        /// <summary>What the tutorial's finale draws beyond the mode's own art.</summary>
+        public static List<AssetRequest> LogoAssets()
+            => new List<AssetRequest> { AssetRequest.Sprite(GameLogo) };
+
+        /// <summary>What the guide draws. Loaded only on the loadout a first sortie opens.</summary>
+        public static List<AssetRequest> GuideAssets()
+            => new List<AssetRequest>
+            {
+                AssetRequest.SpriteSet(GuideIdle),
+                AssetRequest.SpriteSet(GuideWalk),
+            };
+
+        /// <summary>Everything the first sortie loads, for the audit, the build gate and the labels.</summary>
+        public static List<AssetRequest> SortieAssets()
+        {
+            var list = LogoAssets();
+            list.AddRange(GuideAssets());
+            return list;
+        }
+
         // ---------------------------------------------------------------- global
         static readonly string[] UiSprites =
         {

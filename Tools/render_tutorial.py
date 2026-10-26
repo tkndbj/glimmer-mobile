@@ -3,7 +3,7 @@
 
     python Tools/render_tutorial.py --opening      # the board as it is met, before the wave
     python Tools/render_tutorial.py --charged      # a tube armed and a wave walking
-    python Tools/render_tutorial.py --finale       # the line the tutorial ends on
+    python Tools/render_tutorial.py --finale       # the finale both endings raise (invariant 53h)
     python Tools/render_tutorial.py --contact      # all three side by side
     python Tools/render_tutorial.py --captions     # measure every caption, and error on a spill
     python Tools/render_tutorial.py --out out/tutorial.png
@@ -82,19 +82,26 @@ SKIP_W, SKIP_SIZE, SKIP_MARGIN = 168.0, 26, 96.0
 #: here, which is the axis flip a mirror was once caught getting wrong (invariant 44d).
 FACE_LIFT = 0.0231
 
-#: `TutorialScreen.Curtain` — the scrim, the halo behind the line, the line's own box and the
-#: key under it.
+#: `TutorialScreen.Curtain` — the scrim over the board.
 SCRIM = 0.66
-HALO_SIZE, HALO_ALPHA = 820.0, 0.34
-LINE_BOX = (880.0, 240.0)
-#: `TutorialScreen.LineSeat` / `.KeySeat` - both measured up from the middle of the
-#: display, and both well above it because the middle is where the ward line stands.
-LINE_SIZE, LINE_FLOOR, LINE_SEAT = 66, 34, 480.0
-GO_W, GO_H, GO_SIZE, KEY_SEAT = 460.0, 122.0, 34, 250.0
 
-#: `Boot.RefHeight` puts the finale's node at the middle of the display; it is built into a
-#: fresh safe-area layer, which on a display with nothing in the way insets by nothing.
-CENTRE_Y = H / 2.0
+#: `FinaleStack` — the wordmark, the line and the key, hung from the top of the safe area and
+#: ending `FLOOR` above its middle, where the ward line stands. Scaled as one on a short canvas.
+STACK_TOP, FLOOR = 64.0, 170.0
+LOGO_W = 900.0
+LINE_W, LINE_H = 880.0, 156.0
+GO_W, GO_H = 460.0, 122.0
+LOGO_GAP, KEY_GAP = 18.0, 40.0
+
+#: `TutorialScreen.Curtain` — the line's size and floor, and the key's caption.
+LINE_SIZE, LINE_FLOOR, GO_SIZE = 66, 34, 34
+
+#: `TutorialScreen.Crown` — the light behind the wordmark at rest: the halo's box and alpha, and
+#: the fan of rays' size and alpha (`Art.Rays(256, 14)` in `Pal.Sun`).
+HALO_BOX, HALO_ALPHA = (1240.0, 620.0), 0.36
+RAYS_SIZE, RAYS_COUNT, RAYS_ALPHA = 1120, 14, 0.16
+
+LOGO = REPO / "Assets" / "Game" / "Art" / "Bg" / "gemfire_logo.png"
 
 
 def strings():
@@ -198,9 +205,13 @@ def chrome(sheet, txt, report=None, retired=False):
     """The title and the way out. `TutorialScreen.BuildChrome`.
 
     `retired` is `TutorialScreen.Retire`: once the finale is up there is nothing left to skip,
-    so the key is faded away and the corner is empty. Drawn as absent rather than as dim,
-    because that is what a group faded to nought is."""
+    so the key is faded away and the corner is empty - and the title with it, because the
+    wordmark stands where it stood. Drawn as absent rather than as dim, because that is what a
+    group faded to nought is."""
     cy = 22.0 + BANNER_H / 2.0
+
+    if retired:
+        return
 
     ribbon = K.skin("ribbon_orange", RIBBON_W, BANNER_H)
     plate = Image.new("RGBA", ribbon.size, (0, 0, 0, 0))
@@ -235,23 +246,56 @@ def pill(sheet, skin, caption, size, cx, cy, wide, tall, report=None, what=None)
 
 
 # ------------------------------------------------------------------ the finale
+def stack(safe_h, aspect):
+    """`FinaleStack.For`, line for line: (logo height, stack height, scale, stack top)."""
+    logo_h = LOGO_W / aspect
+    height = logo_h + LOGO_GAP + LINE_H + KEY_GAP + GO_H
+    room = safe_h * 0.5 - FLOOR - STACK_TOP
+    scale = 0.0 if room <= 0 else min(1.0, room / height)
+    spare = max(0.0, room - height * scale)
+    return logo_h, height, scale, STACK_TOP + spare * 0.5
+
+
 def curtain(sheet, txt, report=None):
-    """`TutorialScreen.Curtain` — the scrim, the line, and the one key."""
+    """`TutorialScreen.Curtain` and `.Crown` at rest: the scrim, the wordmark in its light, the
+    line, and the one key - every centre out of `stack`, every size multiplied by its scale."""
     wash = Image.new("RGBA", (W, H), (10, 18, 26, int(255 * SCRIM)))
     sheet.alpha_composite(wash)
 
-    K.paste(sheet, K.glow(int(HALO_SIZE), 2.1, K.GOLD, HALO_ALPHA),
-            W / 2, CENTRE_Y - LINE_SEAT)
+    mark = Image.open(LOGO).convert("RGBA")
+    logo_h, height, k, top = stack(H, mark.width / mark.height)
 
-    size = K.shrunk(sheet, txt("ui.tutorial.win"), W / 2, CENTRE_Y - LINE_SEAT,
-                    LINE_BOX[0], LINE_BOX[1], LINE_SIZE, LINE_FLOOR, outline=3)
+    def y(offset):
+        return top + offset * k
+
+    logo_y = y(logo_h / 2)
+    line_y = y(logo_h + LOGO_GAP + LINE_H / 2)
+    key_y = y(logo_h + LOGO_GAP + LINE_H + KEY_GAP + GO_H / 2)
+
+    halo = K.glow(int(HALO_BOX[0] * k), 2.1, K.GOLD, HALO_ALPHA)
+    K.paste(sheet, halo.resize((int(HALO_BOX[0] * k), int(HALO_BOX[1] * k)), Image.LANCZOS),
+            W / 2, logo_y)
+
+    fan = K.rays(int(RAYS_SIZE * k), RAYS_COUNT)
+    light = Image.new("RGBA", fan.size, (*K.SUN, 0))
+    light.putalpha(fan.point(lambda v: int(v * RAYS_ALPHA)))
+    K.paste(sheet, light, W / 2, logo_y)
+
+    K.paste(sheet, K.fit(mark, (LOGO_W * k, logo_h * k)), W / 2, logo_y)
+
+    size = K.shrunk(sheet, txt("ui.tutorial.win").upper(), W / 2, line_y,
+                    LINE_W * k, LINE_H * k, int(LINE_SIZE * k), int(LINE_FLOOR * k), outline=3)
 
     if report is not None:
-        report.append(("win line", txt("ui.tutorial.win"), size, LINE_SIZE,
-                       K.font(size).getlength(txt("ui.tutorial.win")), LINE_BOX[0]))
+        report.append(("win line", txt("ui.tutorial.win").upper(), size, int(LINE_SIZE * k),
+                       K.font(size).getlength(txt("ui.tutorial.win").upper()), LINE_W * k))
 
-    pill(sheet, "btn_green", txt("ui.tutorial.go").upper(), GO_SIZE,
-         W / 2, CENTRE_Y - KEY_SEAT, GO_W, GO_H, report, "continue")
+    pill(sheet, "btn_green", txt("ui.tutorial.go").upper(), int(GO_SIZE * k),
+         W / 2, key_y, GO_W * k, GO_H * k, report, "continue")
+
+    if report is not None:
+        report.append(("stack", "bottom %.0f of %.0f, scale %.2f" % (y(height), H / 2 - FLOOR, k),
+                       0, 0, y(height), H / 2 - FLOOR))
 
 
 # ------------------------------------------------------------------ the pictures
@@ -274,7 +318,7 @@ def charged(txt):
 
 
 def finale(txt, report=None):
-    """The hill cleared, and the one key out."""
+    """The hill cleared: the wordmark, the line, and the one key on (invariant 53h)."""
     sheet = board(0)
     chrome(sheet, txt, retired=True)
     curtain(sheet, txt, report)

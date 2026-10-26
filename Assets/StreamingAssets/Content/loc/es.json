@@ -3854,6 +3854,10 @@
       "text": "Reclamar"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Cada nivel es más difícil.\n¡Mejora tus torres para no quedarte atrás!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La primera guardia"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "ABRE EL SIGUIENTE CAPÍTULO"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "Esto es lo que llevas a un nivel.\n\nTócalo para elegir tus torres y tu mochila."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "TU EQUIPO"
     },
     {
       "key": "ui.tip.lane_infinite.body",

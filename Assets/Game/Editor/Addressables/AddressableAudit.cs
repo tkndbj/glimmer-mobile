@@ -100,6 +100,10 @@ namespace GlimmerGrove.EditorTools
             // Loaded by the launch screen into a scope of its own rather than preloaded, so it
             // is requested by the game and absent from the global list. See SplashAssets.
             expected.AddRange(AssetManifest.SplashAssets());
+
+            // The first sortie's wordmark and guide, for the splash's reason: scoped, held by
+            // the two screens that draw them, and asked for by nothing at boot.
+            expected.AddRange(AssetManifest.SortieAssets());
             expected.AddRange(AssetManifest.AllChapterAssets(bodies));
 
             // The Shuffle hub's crest, one per language: the global list holds only the active

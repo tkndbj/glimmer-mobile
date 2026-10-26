@@ -1334,7 +1334,7 @@ namespace GlimmerGrove
 
         // =============================================================== the exits
         /// <summary>
-        /// Next, replay and map, on one row.
+        /// Next, replay and home, on one row.
         ///
         /// <para>
         /// The primary is flanked rather than stacked over the two secondaries, which is what
@@ -1391,9 +1391,15 @@ namespace GlimmerGrove
 
             // Skins.Nav rather than the literal, so this panel moves with the rule the rest of
             // the chrome now follows. Replay keeps its own orange: only the greys moved.
-            UIKit.IconButton("Map", Panel, Skins.Nav, "ic_home", new Vector2(138f, 138f),
+            //
+            // **The house key goes to the house**, at the owner's instruction (2026-10-26). It
+            // wears `ic_home` - the nav bar's own HOME glyph - and used to open the map, so the one
+            // key on this panel that names a place took the player somewhere else. The map is
+            // still one tap away on a chapter's end (`ui.win.glades`) and is where the back key
+            // goes; this is the way to the hub, its chests and its offers.
+            UIKit.IconButton("Home", Panel, Skins.Nav, "ic_home", new Vector2(138f, 138f),
                              new Vector2(.5f, 0f), new Vector2(SideButtonX, ButtonY),
-                             () => Close(() => Leave(() => Flow.Go<LevelsScreen>())));
+                             () => Close(() => Leave(() => Flow.Go<HomeScreen>())));
 
             return nextButton;
         }
@@ -1402,7 +1408,7 @@ namespace GlimmerGrove
         bool _offerAccount;
 
         /// <summary>
-        /// Every exit from this panel - next, replay, the map, the back key - goes through here once
+        /// Every exit from this panel - next, replay, home, the back key - goes through here once
         /// the panel has closed, carrying what the player tapped. One thing at most borrows the tap
         /// before it is honoured, so a new player meets one moment after a run, never a stack:
         ///

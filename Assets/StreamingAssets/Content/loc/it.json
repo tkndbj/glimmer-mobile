@@ -3854,6 +3854,10 @@
       "text": "Riscuoti"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Ogni livello è più difficile.\nPotenzia le tue torrette per stare al passo!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "La prima veglia"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "APRI IL PROSSIMO CAPITOLO"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "Ecco cosa porti in un livello.\n\nToccalo per scegliere le torrette e lo zaino."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "IL TUO SCHIERAMENTO"
     },
     {
       "key": "ui.tip.lane_infinite.body",

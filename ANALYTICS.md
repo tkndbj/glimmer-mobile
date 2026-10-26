@@ -4,24 +4,17 @@
 
 The delivery fix changes no game events, reward paths, purchases, ad callbacks, consent prompts,
 progression, save schema or server calls. Firebase installation and the bounded retry pump run
-independently of the ad provider. Consent preparation and eligibility retain the existing product
-behavior pending approval of an analytics-specific consent integration.
+independently of the ad provider.
 
 The separately approved LevelPlay revenue bridge is documented in `REVENUE_ANALYTICS.md`.
 It adds `ad_impression` for reviewed Android bidder instances through this same delivery controller;
 it adds no manual purchase events and does not change the eligibility rule described here.
 
-**The legacy `AdPrivacySignals.AllowsPersonalisation` mapping remains in `ApplyCollectionRule`. It is
-not proof of analytics permission. This patch must not be described as completing consent integration.**
-
-The approved consent-related scope is the reliability fix only. The owner has not approved regional
-analytics defaults, changes to AdMob settings/messages, additional dialogs, native consent
-startup changes, or analytics-data/identity resets. None were implemented. Existing eligibility
-and analytics availability are retained; no global-disable workaround was added.
-
-Explicit analytics consent remains blocked by the disabled AdMob Consent Mode purposes and the
-absence of an approved worldwide regional policy. Changing the current eligibility to require
-an unavailable purpose would suppress measurement for existing players; that change is pending.
+**Superseded (2026-10-26):** the legacy rule that gated collection on
+`AdPrivacySignals.AllowsPersonalisation` (`ApplyCollectionRule`) is gone. Analytics consent is now
+Google's consent mode, read per purpose from UMP - see "Analytics consent: Google consent mode" below.
+The delivery guarantees that follow are unchanged; "collection allowed" now means "not a
+child-directed install", and what an event may carry is decided by the consent-mode purposes.
 
 ## Delivery guarantees and limits
 
@@ -53,43 +46,43 @@ Diagnostics use fixed categories, aggregate counts and pending counts. They neve
 names, payloads, player/device identifiers, receipts, consent strings or exception messages. Repeated
 diagnostics are logged on the first occurrence and powers of two, keeping volume bounded.
 
-## Product approval still required: analytics-specific consent
+## Analytics consent: Google consent mode (approved by the owner, 2026-10-26)
 
-No separate analytics permission source exists in the current implementation. `CanRequestAds()`
-means advertising requests may proceed; it does not establish `analytics_storage` permission.
+Analytics no longer waits for the advertising answer, and no event is dropped for want of one.
+It runs in Google's **consent mode, advanced**: collection is on, and four purposes say what an
+event may carry. With `analytics_storage` denied, Analytics on a mobile app sends events without any
+device or user identifier and uses them for behavioural modelling; granted, they are full events.
+So EEA players are measured, unidentified, from the first launch - before and without the consent
+form - and the form can wait for the hub (invariant 55) without the funnel in front of it going dark.
 
-The smallest candidate is Google's UMP Consent Mode integration on the existing CMP message:
+How it is built (invariant 55b):
 
-Google documents this mechanism for existing EEA, UK and Swiss choices. For other supported regions,
-the analytics policy must define applicable opt-outs and regional defaults explicitly; the current
-advertising geography flag is not sufficient evidence of analytics permission.
+- **Defaults ship denied.** `GlimmerMeasurement.androidlib` and `IosPrivacyPlist` set the four
+  `google_analytics_default_allow_*` / `GOOGLE_ANALYTICS_DEFAULT_ALLOW_*` flags to false, beside the
+  existing collection-off flag, so nothing the native SDK does before managed code runs can carry an
+  identifier.
+- **The purposes come from UMP itself.** `ConsentModeStore` reads `UMP_consentModeValues` (Android
+  default SharedPreferences, iOS standard user defaults; digits `ad_storage`, `ad_user_data`,
+  `ad_personalization`, `analytics_storage`; `0` not ready, `1` granted, `2` denied, `3` not
+  applicable, `4` unconfigured) with every privacy snapshot. `AnalyticsConsent.For` grants a purpose
+  only on `1` or `3`, or, when no digit speaks (`0`/`4`), when UMP has resolved the player outside
+  every regulated region. An advertising answer never grants analytics. Do-not-sell and
+  child-directed withhold `ad_user_data` and `ad_personalization`; child-directed collects nothing.
+- **Order.** `AnalyticsSetup` applies `setConsent` once Firebase's dependency check passes and before
+  delivery opens, then again on every privacy change (a form answered, a privacy-options revisit).
+  `setConsent` persists across launches. The log says `[Analytics] consent mode applied: ...`.
 
-1. Review the configured consent message, analytics purpose and applicable regional policy. Decide
-   whether the existing message can cover analytics without adding a separate player-facing prompt.
-2. Enable the appropriate Consent Mode/analytics purpose in AdMob Privacy & messaging. Confirm native
-   UMP and Firebase initialization ordering and purpose updates on real supported devices.
-   The analytics checkbox is under European regulations > Settings and appears only when advertising
-   consent mode is enabled. Google applies these settings across the account's configured European
-   messages, so inspect the existing account configuration and approve the scope before changing it.
-3. Read Google's documented `UMP_consentModeValues`, whose fourth digit is `analytics_storage`:
-   `1` granted, `2` denied, `0` unavailable, `3` not applicable, `4` purpose unconfigured. Unknown,
-   malformed or unconfigured data must not manufacture a grant. Treatment of `3` and regional defaults
-   requires an explicit product/privacy decision.
-4. Feed that verified decision into `SetCollectionAllowed`, separately from all advertising signals.
-   Refresh it at consent updates/withdrawal and make permission acquisition independent of mediation
-   availability. Leave the existing ad policy and SDK consent purposes intact.
+**Required console step (do this before the release reaches the stores):** AdMob ▸ Privacy &
+messaging ▸ European regulations ▸ Settings ▸ turn **consent mode** on and include the
+**analytics** purpose. Without it UMP reports `4` for `analytics_storage` in the EEA, and EEA players
+stay modelled-only even after agreeing. UMP versions in use meet Google's minimums (Android 4.0.0 ≥
+3.2.0, iOS 3.1.0 ≥ 3.0.0).
 
 References:
 - https://developers.google.com/funding-choices/fc-sdks
 - https://developers.google.com/admob/android/privacy/consent-mode
-- https://developers.google.com/tag-platform/security/guides/app-consent?consentmode=basic&platform=android
-- https://support.google.com/admob/answer/16053245?hl=en
-
-Changing to that signal while the dashboard purpose is absent could stop measurement for affected
-players. Automatically enabling it, adding a new consent prompt, or assuming that a region permits
-analytics would exceed this reliability fix. Until approved, consent eligibility/prompt timing and
-the existing no-ad-provider consent behavior remain unchanged. Pre-consent tutorial activity cannot
-be recovered by queue replay.
+- https://developers.google.com/tag-platform/security/guides/app-consent?consentmode=advanced&platform=android
+- https://support.google.com/analytics/answer/9976101
 
 ## Validation
 

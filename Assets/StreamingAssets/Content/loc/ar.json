@@ -3854,6 +3854,10 @@
       "text": "استلام"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "كل مرحلة أصعب من سابقتها.\nطور أبراجك لتواكبها!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "الحراسة الأولى"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "افتح المنطقة التالية"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "هذا ما تأخذه معك إلى المرحلة.\n\nانقره لتختار أبراجك وحقيبتك."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "تشكيلتك"
     },
     {
       "key": "ui.tip.lane_infinite.body",

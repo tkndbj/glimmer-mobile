@@ -24,6 +24,16 @@
     replaces Unity's launcher manifest rather than merging into it. A library manifest is merged,
     is ours, and is the smallest thing that can carry one flag.
 
+    CONSENT MODE (invariant 55a)
+    The four google_analytics_default_allow_* flags below start every consent mode purpose
+    DENIED, which is Google's documented default for an app that asks later. Once
+    AnalyticsSetup has applied the player's answer (AnalyticsConsent, from UMP's
+    UMP_consentModeValues) it switches collection on; with analytics_storage still denied,
+    Analytics sends events without any device or user identifier and models from them, so
+    nothing is lost before the consent form and nothing identifies a player who has not
+    agreed. setConsent persists across launches, so these defaults only ever speak for a
+    first launch.
+
     The package is a namespace rather than code: AGP 9 refuses a namespace shared by two modules
     (see Tools/make_appsflyer_connector.py for what that costs), so it must be unique.
 -->
@@ -35,6 +45,18 @@
     <application>
         <meta-data
             android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_analytics_storage"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_storage"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_user_data"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
             android:value="false" />
     </application>
 </manifest>

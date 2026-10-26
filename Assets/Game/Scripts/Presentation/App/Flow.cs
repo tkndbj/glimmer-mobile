@@ -434,27 +434,9 @@ namespace GlimmerGrove
 
             void Swap()
             {
-                foreach (var m in _modals) if (m) UnityEngine.Object.Destroy(m.gameObject);
-                _modals.Clear();
-
-                // A departing panel belongs to the screen it was paying into, and goes with it.
-                // Its flight's lease lets the readouts go at once (RewardFlight.TieTo); its
-                // entries would stop owing at their deadline regardless (ReadoutLedger).
-                foreach (var m in _departing) if (m) UnityEngine.Object.Destroy(m.gameObject);
-                _departing.Clear();
+                ClearPanels();
                 if (Current) UnityEngine.Object.Destroy(Current.gameObject);
-
-                var rt = UIKit.Node(view.Name, Screens);
-                var screen = (View)rt.gameObject.AddComponent(view);
-                configure?.Invoke(screen);
-                screen.Init();
-                Current = screen;
-                if (screen.WantsSilence) Audio.Silence();
-                else if (screen.Track != null) Audio.Music(screen.Track, volume: screen.TrackLevel);
-
-                // Applied on every swap rather than only when it changes, so the answer is
-                // always the incoming screen's own - see View.WantsMultiTouch.
-                Touches();
+                Raise(view, configure);
             }
 
             if (instant)
@@ -477,6 +459,158 @@ namespace GlimmerGrove
                 Swap();
                 WhenReady(Current, () => IrisOpen(() => { Busy = false; Current.OnPresented(); }));
             });
+        }
+
+        /// <summary>
+        /// Every panel standing over the screen goes with it. Shared by both ways of changing
+        /// screen, so neither can leave a panel behind that the other would have taken.
+        /// </summary>
+        static void ClearPanels()
+        {
+            foreach (var m in _modals) if (m) UnityEngine.Object.Destroy(m.gameObject);
+            _modals.Clear();
+
+            // A departing panel belongs to the screen it was paying into, and goes with it.
+            // Its flight's lease lets the readouts go at once (RewardFlight.TieTo); its
+            // entries would stop owing at their deadline regardless (ReadoutLedger).
+            foreach (var m in _departing) if (m) UnityEngine.Object.Destroy(m.gameObject);
+            _departing.Clear();
+        }
+
+        /// <summary>
+        /// Builds a screen and makes it the current one: its music, and the finger rule.
+        /// What a screen change <em>is</em>, once, whichever transition hides it.
+        /// </summary>
+        static View Raise(Type view, Action<View> configure)
+        {
+            var rt = UIKit.Node(view.Name, Screens);
+            var screen = (View)rt.gameObject.AddComponent(view);
+            configure?.Invoke(screen);
+            screen.Init();
+            Current = screen;
+            if (screen.WantsSilence) Audio.Silence();
+            else if (screen.Track != null) Audio.Music(screen.Track, volume: screen.TrackLevel);
+
+            // Applied on every swap rather than only when it changes, so the answer is
+            // always the incoming screen's own - see View.WantsMultiTouch.
+            Touches();
+            return screen;
+        }
+
+        // ------------------------------------------------------------ the slide
+        /// <summary>
+        /// How long the incoming screen takes to cross the display. Eased in and out
+        /// (<c>InOutCubic</c>), so it gathers speed and settles rather than arriving at full
+        /// tilt - played on a device, a fast-out curve read as the screen appearing at once.
+        /// </summary>
+        public const float SlideTime = .72f;
+
+        /// <summary>How far the outgoing screen is pushed, as a share of the display's width.</summary>
+        const float SlideParallax = .3f;
+
+        /// <summary>How dark the outgoing screen is by the time it is covered.</summary>
+        const float SlideShade = .55f;
+
+        /// <summary>
+        /// Changes screen by sliding the new one in over the old, rather than through the iris.
+        ///
+        /// <para>
+        /// <b>For a change that is one continuous thought rather than a navigation</b>, and
+        /// there is exactly one: the first sortie (invariant 53h), where the tutorial's finale
+        /// hands straight on to the loadout or the map. The iris says "you went somewhere"; a
+        /// slide says "and next", which is what a scene that is still being told should say.
+        /// Every navigation a player chooses keeps the iris.
+        /// </para>
+        /// <para>
+        /// <b>Everything a screen change is, it still is</b> - <see cref="Raise"/> and
+        /// <see cref="ClearPanels"/> are the iris's own, and <see cref="Busy"/> is held from the
+        /// first frame to the last, so a second navigation and the hardware key are refused
+        /// exactly as they are behind the iris. What differs is only that the outgoing screen
+        /// stays alive until the incoming one has covered it, which is the whole effect.
+        /// </para>
+        /// <para>
+        /// <b>It waits for <see cref="View.Ready"/> with the incoming screen off the display</b>,
+        /// so a map still reading its chapter is never slid in half-drawn; the outgoing screen
+        /// stays in front of the player meanwhile, under <see cref="ReadyTimeout"/>'s ceiling.
+        /// <b>Neither screen takes a tap until it is over</b>: the incoming one is not
+        /// interactable until it lands, and the outgoing one stops catching raycasts at once.
+        /// The tweens are owned by <see cref="Screens"/>, which is never destroyed, so the
+        /// landing - and with it <see cref="Busy"/> going false - cannot be lost to either
+        /// screen being torn down; each step guards the object it touches.
+        /// </para>
+        /// </summary>
+        /// <returns>
+        /// False when another screen change is already under way and this one was refused, so a
+        /// caller that has put its own controls away can put them back.
+        /// </returns>
+        public static bool Slide<T>(Action<T> configure = null) where T : View
+        {
+            if (Busy) return false;
+
+            Busy = true;
+
+            var outgoing = Current;
+            ClearPanels();
+
+            var screen = Raise(typeof(T), v => configure?.Invoke((T)v));
+
+            float width = Size.x;
+            var incoming = screen.Root;
+            var arriving = UIKit.Group(incoming);
+            arriving.interactable = false;
+            arriving.blocksRaycasts = false;
+            incoming.anchoredPosition = new Vector2(width, 0f);
+
+            // Clipped to its own rect while it travels. A screen is free to draw past its edges
+            // - a backdrop cut wider for parallax, a scrolled painting - and the iris never had
+            // to care; here anything hanging off the incoming screen's left edge would be drawn
+            // across the outgoing one before the edge itself arrived.
+            var clip = incoming.gameObject.AddComponent<RectMask2D>();
+
+            // Drawn over everything the outgoing screen holds, so the shade darkens the whole
+            // of it rather than whatever happened to be built before it.
+            RectTransform leaving = null;
+            Image shade = null;
+
+            if (outgoing)
+            {
+                leaving = outgoing.Root;
+
+                var going = UIKit.Group(leaving);
+                going.interactable = false;
+                going.blocksRaycasts = false;
+
+                shade = UIKit.Img("Shade", leaving, Art.Pixel, new Color(0f, 0f, 0f, 0f));
+                shade.raycastTarget = false;
+                shade.transform.SetAsLastSibling();
+            }
+
+            WhenReady(screen, () =>
+            {
+                Tween.Run(SlideTime, Ease.InOutCubic, t =>
+                {
+                    if (incoming) incoming.anchoredPosition = new Vector2(width * (1f - t), 0f);
+                    if (leaving) leaving.anchoredPosition = new Vector2(-width * SlideParallax * t, 0f);
+                    if (shade) shade.color = new Color(0f, 0f, 0f, SlideShade * t);
+                }, Screens).OnDone(() =>
+                {
+                    if (outgoing) UnityEngine.Object.Destroy(outgoing.gameObject);
+
+                    if (incoming)
+                    {
+                        incoming.anchoredPosition = Vector2.zero;
+                        arriving.interactable = true;
+                        arriving.blocksRaycasts = true;
+                    }
+
+                    if (clip) UnityEngine.Object.Destroy(clip);
+
+                    Busy = false;
+                    if (Current) Current.OnPresented();
+                });
+            });
+
+            return true;
         }
 
         /// <summary>

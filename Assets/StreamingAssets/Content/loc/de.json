@@ -3854,6 +3854,10 @@
       "text": "Abholen"
     },
     {
+      "key": "ui.guide.upgrade",
+      "text": "Jedes Level wird schwerer.\nVerbessere deine Türme, um mitzuhalten!"
+    },
+    {
       "key": "ui.season.0.name",
       "text": "Die erste Wacht"
     },
@@ -5844,14 +5848,6 @@
     {
       "key": "ui.tip.map_gate.title",
       "text": "ÖFFNE DAS NÄCHSTE KAPITEL"
-    },
-    {
-      "key": "ui.tip.map_kit.body",
-      "text": "Das nimmst du mit in ein Level.\n\nTippe darauf, um deine Türme und deine Ausrüstung zu wählen."
-    },
-    {
-      "key": "ui.tip.map_kit.title",
-      "text": "DEINE AUFSTELLUNG"
     },
     {
       "key": "ui.tip.lane_infinite.body",

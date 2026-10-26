@@ -80,6 +80,13 @@ namespace GlimmerGrove.EditorTools
             if (!managed) return false;
 
             int dot = relative.LastIndexOf('.');
+
+            // **Only a file the game can load is given an address.** A folder under `Art/` is a
+            // place people drop things - a `.zip` of turret reels kept as a backup was addressed
+            // by the import hook like any picture, and the Addressables build then refused the
+            // whole player build ("Cannot recognize file type"). Worse, it took the address of
+            // the reel folder beside it. What is not on this list is not ours to ship.
+            if (dot < 0 || !Loadable.Contains(relative.Substring(dot).ToLowerInvariant())) return false;
             if (dot > 0) relative = relative.Substring(0, dot);
 
             address = relative;
@@ -87,6 +94,15 @@ namespace GlimmerGrove.EditorTools
         }
 
         public static bool IsManaged(string assetPath) => TryAddressFor(assetPath, out _);
+
+        /// <summary>
+        /// The file types the game loads from the managed folders: pictures, sound, faces, and
+        /// the fonts' licence texts (addressed beside them since the font drop). Lower case.
+        /// </summary>
+        static readonly HashSet<string> Loadable = new HashSet<string>
+        {
+            ".png", ".jpg", ".jpeg", ".wav", ".mp3", ".ogg", ".ttf", ".otf", ".txt",
+        };
 
         /// <summary>
         /// Folder-shaped addresses the game loads with <c>LoadAll</c>. Addressables has
@@ -121,6 +137,11 @@ namespace GlimmerGrove.EditorTools
             // importing as loose sprites with no label - addressed, audited green and
             // completely unloadable (37at).
             foreach (var request in AssetManifest.ChestAssets(ProgressionRules.Table.Tasks))
+                if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
+
+            // The first sortie's guide, for the chests' reason: a scope on one loadout asks for
+            // its two reels and nothing else does, so without this they import unlabelled.
+            foreach (var request in AssetManifest.SortieAssets())
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
 
             // **Every mode's own art, asked without a chapter, and it is the one entry here that

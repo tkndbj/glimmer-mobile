@@ -43,6 +43,16 @@ namespace GlimmerGrove
     /// the hub" for both: the dialog that must not be laid over a hub still arriving, and the
     /// native start-up that must not be paid on the frames the player is watching it arrive.
     /// </para>
+    /// <para>
+    /// <b>The launch calms on an idle map too; the questions wait for the hub (invariant 53h).</b>
+    /// A new player's first sortie goes from the tutorial to the loadout and the map and may not
+    /// see the hub for several levels. Holding <see cref="LaunchCalm"/> for it would hold back
+    /// rewarded videos, offers and reminders for every player who owes no form, so the map
+    /// settles it as the hub does. The consent form and Apple's prompt are still only ever put
+    /// on the hub, at the owner's instruction: met over the map straight after the tutorial
+    /// they read as a wall. Nothing is lost while they wait - analytics runs in consent mode
+    /// (<c>AnalyticsConsent</c>), sending events without identifiers until the answer arrives.
+    /// </para>
     /// </summary>
     public static class ConsentMoment
     {
@@ -62,7 +72,7 @@ namespace GlimmerGrove
         /// </summary>
         public static void Tick()
         {
-            if (!HubIsIdle())
+            if (!CalmStage())
             {
                 _idleSince = -1f;
                 return;
@@ -76,19 +86,27 @@ namespace GlimmerGrove
             // Idle for a beat: the launch has calmed, whether or not anything is owed.
             LaunchCalm.Settle();
 
-            if (!AdPrivacy.Owed) return;
+            if (!AdPrivacy.Owed || !HubIsIdle()) return;
 
             _idleSince = -1f;
             Begin();
         }
 
         /// <summary>
+        /// The player is standing on the hub or the map with nothing in front of it: the launch
+        /// has calmed. See <see cref="HubIsIdle"/> for where the questions are asked.
+        /// </summary>
+        static bool CalmStage()
+            => (Flow.Current is HomeScreen || Flow.Current is LevelsScreen) && Quiet();
+
+        /// <summary>
         /// The player is standing on the hub with nothing in front of it. Asked by the poll and
         /// again by <see cref="AdPrivacy.AskAsync"/> before each dialog.
         /// </summary>
-        static bool HubIsIdle()
-            => Flow.Current is HomeScreen
-            && !Flow.Busy
+        static bool HubIsIdle() => Flow.Current is HomeScreen && Quiet();
+
+        static bool Quiet()
+            => !Flow.Busy
             && !Flow.Covered
             && !ReleaseGate.IsShut
             && Application.isFocused;

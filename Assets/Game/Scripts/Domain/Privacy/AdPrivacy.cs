@@ -387,7 +387,7 @@ namespace GlimmerGrove.Privacy
         /// </summary>
         static AdPrivacySignals With(AdPrivacySignals resolved, TrackingStatus tracking)
             => new AdPrivacySignals(resolved.GdprApplies, resolved.Gdpr, resolved.DoNotSell,
-                                    ChildDirected, tracking);
+                                    ChildDirected, tracking, resolved.ConsentMode);
 
         /// <summary>
         /// Adopts an answer. <c>IsResolved</c> is set <em>after</em> <c>Changed</c> is raised,
