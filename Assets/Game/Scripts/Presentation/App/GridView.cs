@@ -90,6 +90,7 @@ namespace GlimmerGrove
         /// Held until the first frame that has one; see <see cref="Show"/>.
         /// </summary>
         int _openAt = -1;
+        float _openOffset = -1f;
         bool _openCentred;
         bool _openPending;
 
@@ -98,6 +99,13 @@ namespace GlimmerGrove
 
         /// <summary>The scroll view, for an owner that wants to jump to the top.</summary>
         public ScrollRect Scroll => _scroll;
+
+        /// <summary>
+        /// How far down the list is scrolled, in units from the top. An owner leaving for
+        /// another screen keeps it and hands it back to <see cref="Show"/> as
+        /// <c>openOffset</c> on return, so the player lands exactly where they left.
+        /// </summary>
+        public float Offset => _content ? Mathf.Max(0f, _content.anchoredPosition.y) : 0f;
 
         /// <summary>
         /// Builds the viewport, the mask, the scroll view and the content node, and returns the
@@ -174,8 +182,16 @@ namespace GlimmerGrove
         /// until the first frame the viewport has a height, moves there <em>before</em> realising
         /// any cell, and spends the entrance on the rows the player actually sees.
         /// </para>
+        /// <para>
+        /// <b><paramref name="openOffset"/> opens the list at a scroll position</b> read earlier
+        /// from <see cref="Offset"/> - a return to a list the player left, which must come back
+        /// as it was rather than re-centred on a row. Held and landed exactly as
+        /// <paramref name="openAt"/> is, clamped to the list as it now is; ignored when
+        /// <paramref name="openAt"/> is given.
+        /// </para>
         /// </summary>
-        public void Show(int count, bool animate = true, int openAt = -1, bool centre = true)
+        public void Show(int count, bool animate = true, int openAt = -1, bool centre = true,
+                         float openOffset = -1f)
         {
             _count = Mathf.Max(0, count);
             _animate = animate;
@@ -195,8 +211,9 @@ namespace GlimmerGrove
             _lastRow = 0;
 
             _openAt = openAt >= 0 && openAt < _count ? openAt : -1;
+            _openOffset = _openAt < 0 && _count > 0 && openOffset > 0f ? openOffset : -1f;
             _openCentred = centre;
-            _openPending = _openAt >= 0;
+            _openPending = _openAt >= 0 || _openOffset > 0f;
 
             if (_openPending && _viewport.rect.height <= 0f) return;   // see Open
 
@@ -215,7 +232,8 @@ namespace GlimmerGrove
                 _openPending = false;
                 _shownAt = Time.unscaledTime;           // the entrance is spent on these rows
                 Resize();
-                Place(_openAt, _openCentred);
+                if (_openAt >= 0) Place(_openAt, _openCentred);
+                else PlaceAt(_openOffset);
             }
 
             Window(force: true);
@@ -345,6 +363,14 @@ namespace GlimmerGrove
 
             float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);
             _content.anchoredPosition = new Vector2(0f, Mathf.Clamp(want, 0f, most));
+            if (_scroll) _scroll.velocity = Vector2.zero;
+        }
+
+        /// <summary>Moves the content to a scroll offset, clamped to the list as it is now.</summary>
+        void PlaceAt(float offset)
+        {
+            float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);
+            _content.anchoredPosition = new Vector2(0f, Mathf.Clamp(offset, 0f, most));
             if (_scroll) _scroll.velocity = Vector2.zero;
         }
 

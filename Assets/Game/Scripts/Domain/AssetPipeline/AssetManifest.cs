@@ -581,6 +581,8 @@ namespace GlimmerGrove.AssetPipeline
             "Hud/plate_flat",
             "ic_nav_home", "ic_nav_shop",
             "ic_nav_ranks", "ic_nav_profile", "ic_battle", "ic_chest_wood", "ic_streak", "ic_padlock",
+            // The first three places' score frames on all three leaderboard tabs.
+            "rank1", "rank2", "rank3",
             "Hud/lander", "Hud/beam", "Hud/room",
 
             // The two painted banners, each drawn on the kit's blue plate and each the whole

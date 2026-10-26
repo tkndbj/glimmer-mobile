@@ -10,6 +10,10 @@
     python Tools/render_boards.py --row          # one row at 1:1, which is what the badge
                                                  # question is actually about
     python Tools/render_boards.py --contact      # all of the above on one sheet
+    python Tools/render_boards.py --long         # the top three framed, under the widest names
+    python Tools/render_boards.py --measure      # every language's widest figure and the
+                                                 # widest names against their boxes; exit 1
+                                                 # on any caption at its floor
 
 **Written because this screen had no mirror at all.** It is the screen a player meets the
 moment they tap BOARDS, it is a hundred rows of one widget, and every question about it — is
@@ -35,7 +39,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import hudkit as k                                        # noqa: E402
-from PIL import Image                                     # noqa: E402
+from PIL import Image, ImageDraw                          # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 RANK_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank"
@@ -53,7 +57,7 @@ HEADER_H = 312.0
 TAB_W, TAB_H, TAB_GAP, TAB_Y = 270.0, 88.0, 16.0, 230.0
 TAB_PT, TAB_FLOOR = 30, 18
 TABS = [("endless", "track.infinite.name"), ("shuffle", "track.shuffle.name"), ("normal", "track.main.name")]
-ROW_H = 176.0
+ROW_H = 196.0
 PLATE_W, PLATE_H = 940.0, 160.0
 BADGE = 132.0
 BOTTOM_PAD = 24.0
@@ -62,10 +66,19 @@ GRID_W = 960.0
 # Row.  (x from the plate's left edge, y from its centre)
 PLACE_X, PLACE_BOX, PLACE_PT = 78.0, (120.0, 66.0), 40
 BADGE_X = 214.0
-NAME_X, NAME_Y, NAME_BOX, NAME_PT = 515.0, 24.0, (430.0, 50.0), 34
-WORTH_X, WORTH_Y, WORTH_BOX, WORTH_PT = 515.0, -30.0, (430.0, 52.0), 38
+NAME_X, NAME_Y, NAME_BOX, NAME_PT = 450.0, 0.0, (300.0, 100.0), 34
+# The figure: MiddleRight, anchored at the plate's right centre (`Row._wave`).
+WORTH_X, WORTH_BOX, WORTH_PT = -178.0, (284.0, 100.0), 52
 
-SHRINK_FLOOR_PLACE, SHRINK_FLOOR_NAME, SHRINK_FLOOR_WORTH = 20, 20, 18
+SHRINK_FLOOR_PLACE, SHRINK_FLOOR_NAME, SHRINK_FLOOR_WORTH = 20, 20, 24
+
+# The first three places' score frames (`Row.ScoreFrame`): a box anchored at the plate's right
+# centre, the figure in a window of anchors over it, and the name narrowed beside it.
+UI_ART = REPO / "Assets" / "Game" / "Art" / "Ui"
+FRAME_BOX, FRAME_X = (456.0, 254.5), -198.0
+FRAME_WINDOW = (.32, .40, .80, .60)
+FRAME_PT, FRAME_FLOOR, FRAME_INSET = 38, 10, 4.0
+FRAMED_NAME_X, FRAMED_NAME_Y, FRAMED_NAME_BOX = 416.0, 0.0, (232.0, 100.0)
 
 
 def rungs():
@@ -77,6 +90,47 @@ def rungs():
 def strings():
     rows = json.loads(LOC.read_text(encoding="utf8"))["entries"]
     return {r["key"]: r["text"] for r in rows}
+
+
+def best_fit(s, box_w, box_h, size, floor):
+    """Unity's Best Fit over a wrapped label: (size, lines). Greedy on spaces, and a word wider
+    than the line is broken by character, as Unity's generator breaks it."""
+    draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    for px in range(int(size), int(floor) - 1, -1):
+        f = k.font(px)
+        lines, line = [], ""
+        for word in s.split(" "):
+            trial = word if not line else line + " " + word
+            if draw.textlength(trial, font=f) <= box_w:
+                line = trial
+                continue
+            if line:
+                lines.append(line)
+            line = ""
+            for ch in word:
+                if line and draw.textlength(line + ch, font=f) > box_w:
+                    lines.append(line)
+                    line = ""
+                line += ch
+        if line:
+            lines.append(line)
+        if len(lines) * px * 1.2 <= box_h or px == int(floor):
+            return px, lines
+    return int(floor), [s]
+
+
+def middle_left(sheet, s, left, cy, box_w, box_h, size, floor, fill):
+    """A `TextAnchor.MiddleLeft` Shrinkable: the wrapped block centred on the box's middle."""
+    px, lines = best_fit(s, box_w, box_h, size, floor)
+    top = cy - (len(lines) - 1) * px * 1.2 / 2
+    for i, ln in enumerate(lines):
+        k.text(sheet, ln, left, top + i * px * 1.2, px, fill=fill, anchor="l")
+    return px
+
+
+def score_frame(place):
+    path = UI_ART / ("rank%d.png" % place)
+    return Image.open(path).convert("RGBA") if 1 <= place <= 3 and path.exists() else None
 
 
 def badge(rid):
@@ -110,13 +164,31 @@ def draw_row(sheet, top, entry, mine=False):
     # `UIKit.Titled` at MiddleLeft inside a box that pivots at centre, so the text starts at the
     # box's own left edge — `UIKit.Box` always pivots at centre (invariant 44d, which is where
     # three "faults" in another mirror turned out to live).
-    k.shrunk_left(sheet, entry["name"], left + NAME_X - NAME_BOX[0] / 2, cy - NAME_Y - NAME_BOX[1] / 2,
-                  NAME_BOX[0], NAME_BOX[1], NAME_PT, SHRINK_FLOOR_NAME,
-                  (255, 247, 230))
+    frame = score_frame(entry["place"])
+    if frame is not None:
+        fx = left + PLATE_W + FRAME_X
+        k.paste(sheet, k.fit(frame, FRAME_BOX), fx, cy)
+        x0, y0, x1, y1 = FRAME_WINDOW
+        bl = fx - FRAME_BOX[0] / 2
+        bt = cy - FRAME_BOX[1] / 2
+        ww = (x1 - x0) * FRAME_BOX[0] - FRAME_INSET * 2
+        wh = (y1 - y0) * FRAME_BOX[1] - FRAME_INSET * 2
+        wcx = bl + (x0 + x1) / 2 * FRAME_BOX[0]
+        wcy = bt + (1 - (y0 + y1) / 2) * FRAME_BOX[1]
+        k.shrunk(sheet, entry["figure"], wcx, wcy, ww, wh, FRAME_PT, FRAME_FLOOR, k.GOLD, outline=2)
+        middle_left(sheet, entry["name"], left + FRAMED_NAME_X - FRAMED_NAME_BOX[0] / 2,
+                    cy - FRAMED_NAME_Y, FRAMED_NAME_BOX[0], FRAMED_NAME_BOX[1], NAME_PT,
+                    SHRINK_FLOOR_NAME, (255, 247, 230))
+        return
 
-    k.shrunk_left(sheet, entry["figure"], left + WORTH_X - WORTH_BOX[0] / 2,
-                  cy - WORTH_Y - WORTH_BOX[1] / 2,
-                  WORTH_BOX[0], WORTH_BOX[1], WORTH_PT, SHRINK_FLOOR_WORTH, k.GOLD)
+    middle_left(sheet, entry["name"], left + NAME_X - NAME_BOX[0] / 2, cy - NAME_Y,
+                NAME_BOX[0], NAME_BOX[1], NAME_PT, SHRINK_FLOOR_NAME, (255, 247, 230))
+
+    px, lines = best_fit(entry["figure"], WORTH_BOX[0], WORTH_BOX[1], WORTH_PT, SHRINK_FLOOR_WORTH)
+    right = left + PLATE_W + WORTH_X + WORTH_BOX[0] / 2
+    top = cy - (len(lines) - 1) * px * 1.2 / 2
+    for i, ln in enumerate(lines):
+        k.text(sheet, ln, right, top + i * px * 1.2, px, fill=k.GOLD, anchor="r")
 
 
 def tabs(sheet, live, loc):
@@ -221,6 +293,36 @@ def empties(loc):
     return sheet
 
 
+LONGEST = ["WWWWWWWWWWWWWWWW", "MMMMMMMM MMMMMMM", "Marigold Quickst", "Silverleaf Wande", "Pip"]
+
+
+def measure(loc_dir):
+    """The frame's figure must stay one line above its floor in every language, at the
+    largest number either board can show; a name must stay above its floor in either box."""
+    ww = (FRAME_WINDOW[2] - FRAME_WINDOW[0]) * FRAME_BOX[0] - FRAME_INSET * 2
+    wh = (FRAME_WINDOW[3] - FRAME_WINDOW[1]) * FRAME_BOX[1] - FRAME_INSET * 2
+    bad = 0
+    for path in sorted(loc_dir.glob("*.json")):
+        if path.stem == "ar":
+            continue        # drawn by GameFontArabic, which hudkit does not carry
+        rows = {r["key"]: r["text"] for r in json.loads(path.read_text(encoding="utf8"))["entries"]}
+        for s in (rows["ui.board.row_wave"].format(9999), "9999999"):
+            for label, w, h, pt, floor in (("frame", ww, wh, FRAME_PT, FRAME_FLOOR),
+                                           ("plain", WORTH_BOX[0], WORTH_BOX[1], WORTH_PT, SHRINK_FLOOR_WORTH)):
+                px, lines = best_fit(s, w, h, pt, floor)
+                ok = len(lines) == 1 and px > floor
+                bad += not ok
+                print("%-4s %-5s %-18s %2d  %s" % (path.stem, label, s, px, "ok" if ok else "FAIL"))
+    for name in LONGEST:
+        for label, box in (("framed", FRAMED_NAME_BOX), ("plain", NAME_BOX)):
+            px, lines = best_fit(name, box[0], box[1], NAME_PT, SHRINK_FLOOR_NAME)
+            ok = px > SHRINK_FLOOR_NAME
+            bad += not ok
+            print("name %-6s %-18s %2d x%d  %s" % (label, name, px, len(lines), "ok" if ok else "FAIL"))
+    print("%d at the floor" % bad)
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--unranked", action="store_true", help="no row carries a badge")
@@ -230,7 +332,12 @@ def main():
     ap.add_argument("--shuffle", action="store_true", help="the Shuffle tab live")
     ap.add_argument("--normal", action="store_true", help="the Normal tab live")
     ap.add_argument("--contact", action="store_true", help="all of it on one sheet")
+    ap.add_argument("--long", action="store_true", help="the framed rows under the widest names")
+    ap.add_argument("--measure", action="store_true", help="captions against their boxes")
     args = ap.parse_args()
+
+    if args.measure:
+        return measure(LOC.parent)
 
     ladder = rungs()
     loc = strings()
@@ -261,7 +368,13 @@ def main():
         print(f"wrote {out}  {sheet.size[0]}x{sheet.size[1]}  - look at it")
         return 0
 
-    if args.row:
+    if args.long:
+        shown = entries(ladder, "all", top=9999)
+        for entry, name in zip(shown, LONGEST + NAMES):
+            entry["name"] = name
+            entry["figure"] = "Wave 9999"
+        sheet = board(shown, live="shuffle", loc=loc)
+    elif args.row:
         sheet = one_row(ladder)
     elif args.empty:
         sheet = empties(loc)
@@ -272,7 +385,7 @@ def main():
     elif args.normal:
         shown = entries(ladder, "mixed")
         for i, entry in enumerate(shown):
-            entry["figure"] = loc["ui.board.row_score"].format((375000 - i * 1300) // 100)
+            entry["figure"] = str((375000 - i * 1300) // 100)
         sheet = board(shown, live="normal", loc=loc)
     elif args.shuffle:
         sheet = board(entries(ladder, "all", top=64), live="shuffle", loc=loc)

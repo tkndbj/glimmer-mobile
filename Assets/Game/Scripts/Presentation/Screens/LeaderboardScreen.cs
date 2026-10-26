@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Social;
@@ -70,8 +71,9 @@ namespace GlimmerGrove
         /// How tall a row is, and the badge is what decides it.
         ///
         /// <para>
-        /// <b>132 while a row carried a companion's head, 176 now.</b> A portrait is a face and
-        /// reads at any size; a rank badge is a piece of shaped metal whose whole meaning is in
+        /// <b>132 while a row carried a companion's head, 176 for the badge, 196 now</b> (36 between
+        /// plates, so a top-three score frame standing proud of its plate still clears the next). A portrait is a
+        /// face and reads at any size; a rank badge is a piece of shaped metal whose whole meaning is in
         /// its silhouette - bronze against silver against gold, wings against spikes - and at
         /// 84 units the seven of them are one smudge. The badge is cut at 256 and drawn at 132
         /// on the map and the ranks page (<c>RankBadge.MarkSize</c>, <c>RanksScreen</c>), so a
@@ -84,7 +86,7 @@ namespace GlimmerGrove
         /// many of them are visible at once.
         /// </para>
         /// </summary>
-        const float RowHeight = 176f;
+        const float RowHeight = 196f;
 
         /// <summary>The plate inside a row, and the badge on it. See <see cref="RowHeight"/>.</summary>
         const float PlateWidth = 940f, PlateHeight = 160f, BadgeSize = 132f;
@@ -107,6 +109,18 @@ namespace GlimmerGrove
         /// the map's chapter): an id this screen does not offer is ignored.
         /// </summary>
         static string s_lastBoard;
+
+        /// <summary>
+        /// Where the list stood when a row was opened: the board and its scroll offset, for the
+        /// life of the process. Taken once, by <see cref="ReturnFromProfile"/>, so only the
+        /// profile's way back restores it; the nav bar's BOARDS key still opens at the top.
+        /// A hint like <see cref="s_lastBoard"/>: a board this screen no longer offers is ignored,
+        /// and an offset past a list that has since shrunk is clamped by the grid.
+        /// </summary>
+        static (string boardId, float offset) s_left;
+
+        /// <summary>The offset to open the first paint of <see cref="_boardId"/> at; below 0, none.</summary>
+        float _returnOffset = -1f;
 
         /// <summary>
         /// The boards this screen offers, left to right. The Infinite lane first, because it is
@@ -189,6 +203,22 @@ namespace GlimmerGrove
         // Keep the stored precision for ranking and sum before dividing, so fractional
         // improvements across different levels still contribute to the displayed total.
         static long DisplayNormalScore(long score) => Math.Max(0L, score) / 100L;
+
+        /// <summary>
+        /// Comes back to the board and scroll position the player left from to open a profile.
+        /// Called by <see cref="PublicProfileScreen"/>'s way back, as configuration (before
+        /// <c>Build</c>), so the first paint lands at the place - under the iris when the board
+        /// is cached, which a board read moments ago is - rather than at the top and then jumping.
+        /// </summary>
+        public void ReturnFromProfile()
+        {
+            var left = s_left;
+            s_left = default;
+            if (!Offered(left.boardId)) return;
+
+            _boardId = left.boardId;
+            _returnOffset = left.offset;
+        }
 
         /// <summary>Opens straight onto a particular board. Used by nothing yet; kept for a deep link.</summary>
         public void ShowBoard(string boardId)
@@ -339,6 +369,7 @@ namespace GlimmerGrove
             // (`GroveBoard.FetchBoardAsync`), so flipping back and forth costs no reads.
             _board = LeaderboardBoard.None;
             _failed = false;
+            _returnOffset = -1f;
             _grid?.Show(0);
 
             // No sound of its own: the tab is a Btn and has already spoken (Btn.ClickSfx).
@@ -404,7 +435,15 @@ namespace GlimmerGrove
             if (!LeaderboardBoard.IsNormal(_boardId) || before.BoardId != _boardId
                 || next.BoardId != _boardId)
             {
-                _grid?.Show(next.Entries.Count);
+                // A return from a profile lands where it left, with no entrance: it is the same
+                // page coming back, not a new one. Spent on the first paint of the board,
+                // whatever it holds, so a later refresh never yanks the list back there.
+                float returnTo = _returnOffset;
+                _returnOffset = -1f;
+                if (returnTo >= 0f && next.BoardId == _boardId)
+                    _grid?.Show(next.Entries.Count, animate: false, openOffset: returnTo);
+                else
+                    _grid?.Show(next.Entries.Count);
             }
             else if (before.Entries.Count != next.Entries.Count)
             {
@@ -501,6 +540,8 @@ namespace GlimmerGrove
         {
             if (!entry.IsValid) return;
 
+            if (_grid) s_left = (_boardId, _grid.Offset);
+
             // Silent, for the row's own reason: it is a button and has already clicked.
             Flow.Go<PublicProfileScreen>(v => v.Show(entry.OwnerId, entry));
         }
@@ -518,8 +559,8 @@ namespace GlimmerGrove
         sealed class Row : IGridCell
         {
             readonly LeaderboardScreen _screen;
-            readonly Image _plate, _badge;
-            readonly Text _place, _name, _wave;
+            readonly Image _plate, _badge, _scoreFrame;
+            readonly Text _place, _name, _wave, _framedWave;
             readonly Btn _button;
 
             LeaderboardEntry _entry;
@@ -561,16 +602,43 @@ namespace GlimmerGrove
                 _badge.preserveAspect = true;
                 _badge.raycastTarget = false;
 
+                // The name owns the left of the plate, both lines of it, so a long one wraps
+                // rather than shrinking to its floor; `Bind` narrows it beside a score frame.
                 _name = UIKit.Shrinkable(
                     UIKit.Titled("Name", _plate.transform, string.Empty, 34,
                                  new Color(1f, .97f, .90f), TextAnchor.MiddleLeft,
-                                 new Vector2(430f, 50f), new Vector2(0f, .5f), new Vector2(515f, 24f),
-                                 3f, 2f), 20);
+                                 NameBox, new Vector2(0f, .5f), NamePos, 3f, 2f), 20);
 
+                // The figure the board is ordered on, large and flush right: the column a
+                // player's eye runs down. From fourth place on; the first three wear it in a frame.
                 _wave = UIKit.Shrinkable(
-                    UIKit.Titled("Wave", _plate.transform, string.Empty, 38, Pal.Gold,
-                                 TextAnchor.MiddleLeft, new Vector2(430f, 52f),
-                                 new Vector2(0f, .5f), new Vector2(515f, -30f), 3f, 0f), 18);
+                    UIKit.Titled("Wave", _plate.transform, string.Empty, 52, Pal.Gold,
+                                 TextAnchor.MiddleRight, new Vector2(284f, 100f),
+                                 new Vector2(1f, .5f), new Vector2(-178f, 0f), 3f, 0f), 24);
+
+                // The three frames are drawn on a 16:9 canvas with a wide transparent margin
+                // (the art is ~89% of its width and ~67% of its height), so the box is sized
+                // for the drawn frame: 172 tall, a touch taller than the plate's 160, with its
+                // right edge just past the plate's, so it reads as a tag pinned to the card.
+                _scoreFrame = UIKit.Img("ScoreFrame", _plate.transform, null, Color.white,
+                                        new Vector2(456f, 254.5f), new Vector2(1f, .5f),
+                                        new Vector2(-198f, 0f));
+                _scoreFrame.preserveAspect = true;
+                _scoreFrame.raycastTarget = false;
+
+                // The artwork's recessed panel is right of centre. Keep the label inside its
+                // straight inner edges, including its outline, as the whole card scales.
+                var window = UIKit.Node("ScoreWindow", _scoreFrame.transform);
+                window.anchorMin = new Vector2(.32f, .40f);
+                window.anchorMax = new Vector2(.80f, .60f);
+                window.offsetMin = window.offsetMax = Vector2.zero;
+                window.gameObject.AddComponent<RectMask2D>();
+                _framedWave = UIKit.Shrinkable(
+                    UIKit.Titled("Value", window, string.Empty, 38, Pal.Gold,
+                                 TextAnchor.MiddleCenter, outline: 2f, shadow: 0f), 10);
+                _framedWave.rectTransform.offsetMin = new Vector2(4f, 4f);
+                _framedWave.rectTransform.offsetMax = new Vector2(-4f, -4f);
+                _scoreFrame.gameObject.SetActive(false);
             }
 
             public void Bind(int index)
@@ -588,9 +656,23 @@ namespace GlimmerGrove
                 // **The keeper level is not printed**, at the owner's instruction (2026-09-22):
                 // a board is about the lane, and a second number beside the one it is ordered
                 // on is a number to misread it by. The entry still carries it for the profile.
+                // The Normal board's figure is a bare number (owner, 2026-10-26): its tab already
+                // says what the number is, and a wave count is the only figure that needs a word.
                 _wave.text = LeaderboardBoard.IsNormal(_screen._boardId)
-                    ? Loc.Format("ui.board.row_score", DisplayNormalScore(_entry.NormalScore))
+                    ? DisplayNormalScore(_entry.NormalScore).ToString(CultureInfo.InvariantCulture)
                     : Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry));
+
+                var frame = ScoreFrame(_entry.Rank);
+                bool framed = frame != null;
+                _scoreFrame.sprite = frame;
+                _scoreFrame.gameObject.SetActive(framed);
+                _wave.gameObject.SetActive(!framed);
+                _framedWave.text = _wave.text;
+                // Framed, the name has the gap between badge (ends at 280) and the frame's notch
+                // (starts at ~540) and both lines of the plate, so the longest name (16,
+                // GroveNames.MaxLength) wraps to two lines rather than shrinking to its floor.
+                _name.rectTransform.sizeDelta = framed ? new Vector2(232f, 100f) : NameBox;
+                _name.rectTransform.anchoredPosition = framed ? new Vector2(416f, 0f) : NamePos;
 
                 // **The badge is the server's answer, and an absent one draws nothing.** Below
                 // the first rung is an ordinary state and so is a card published before this
@@ -607,6 +689,20 @@ namespace GlimmerGrove
                          && _entry.OwnerId == CloudState.UserId;
 
                 _plate.sprite = Art.S("Ui/" + (mine ? Skins.PlateOrange : Skins.PlateBlue));
+            }
+
+            // Unframed, the name runs from the badge (ends at 280) to the figure (starts at 620).
+            static readonly Vector2 NameBox = new Vector2(300f, 100f), NamePos = new Vector2(450f, 0f);
+
+            static Sprite ScoreFrame(int place)
+            {
+                switch (place)
+                {
+                    case 1: return Art.S("Ui/rank1");
+                    case 2: return Art.S("Ui/rank2");
+                    case 3: return Art.S("Ui/rank3");
+                    default: return null;
+                }
             }
 
             void Open() => _screen.Visit(_entry);

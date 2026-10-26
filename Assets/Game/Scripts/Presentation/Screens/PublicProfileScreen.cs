@@ -594,7 +594,7 @@ namespace GlimmerGrove
 
             UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", new Vector2(112f, 112f),
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
-                             () => Flow.Go<LeaderboardScreen>());
+                             () => Flow.Go<LeaderboardScreen>(v => v.ReturnFromProfile()));
 
             // Small, quiet, and in the corner opposite Back. A report control is not something a
             // screen should invite - it is something a player has to be able to find once they
@@ -718,7 +718,7 @@ namespace GlimmerGrove
 
         public override bool OnBack()
         {
-            Flow.Go<LeaderboardScreen>();
+            Flow.Go<LeaderboardScreen>(v => v.ReturnFromProfile());
             return true;
         }
     }

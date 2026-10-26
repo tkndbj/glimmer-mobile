@@ -446,8 +446,8 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 53f. **The second panel waits for a crowd, with a ceiling**; `SiegeTutorial` writes through existing doors only.
 53g. **The hand picks up the gem that joins the line** (`SiegeTutorial.Oriented`).
 53h. **The tutorial hands on to a first sortie, never the hub** (`FirstSortie`): finished or skipped
-   raises one finale (wordmark, line, key; `FinaleStack`), the gate spent as it rises; the key slides
-   (`Flow.Slide`) a finished run to `LoadoutScreen{Sortie}` - its two lessons, then `SortieGuide`
+   raises one finale (wordmark, line, key; `FinaleStack`), the gate spent as it rises; the key takes
+   a finished run to `LoadoutScreen{Sortie}` - its two lessons, then `SortieGuide`
    (`GuideDock`), then BATTLE - and a skipped one to the map. Nothing stored; the instance flag is the
    state. Map's `map_kit` lesson is spent; `map_gate` waits for 10 ladder clears (`ChapterGateLesson`).
    Funnel: `SortieAnalytics`. Held by `FirstSortieTests`, `make_sortie_art.py --check`,

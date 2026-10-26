@@ -10106,10 +10106,6 @@
       "text": "Klejnoty: {0}"
     },
     {
-      "key": "ui.board.row_score",
-      "text": "Punkty {0}"
-    },
-    {
       "key": "ui.board.your_score",
       "text": "Twoje punkty: {0}"
     },

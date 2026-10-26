@@ -51,7 +51,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Both endings are the first sortie's opening (invariant 53h).</b> Finishing and skipping
     /// raise the same finale - the Gemfire wordmark, the line, one key - and part at the key
-    /// (<see cref="FirstSortie.After"/>): a tutorial played through slides on to the loadout, a
+    /// (<see cref="FirstSortie.After"/>): a tutorial played through goes on to the loadout, a
     /// skipped one to the map. Neither drops the player on the hub.
     /// </para>
     /// </summary>
@@ -996,12 +996,12 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The wordmark eases off the top while the line and the key fade, then the next screen
-        /// slides in from the right. Building that screen after the lift keeps its setup work
-        /// from interrupting the wordmark's motion.
+        /// arrives through the iris, the same screen change as everywhere else. Building that
+        /// screen after the lift keeps its setup work from interrupting the wordmark's motion.
         /// </para>
         /// <para>
         /// <b>Latched, and put back only if the screen change was refused</b>, so a second tap
-        /// cannot start a second slide and a refused one cannot leave the finale half gone with
+        /// cannot start a second change and a refused one cannot leave the finale half gone with
         /// a key that does nothing.
         /// </para>
         /// </summary>
@@ -1017,16 +1017,16 @@ namespace GlimmerGrove
             {
                 if (!this) return;
 
-                bool going = route == SortieRoute.Loadout
-                    ? Flow.Slide<LoadoutScreen>(v => v.Sortie = true)
-                    : Flow.Slide<LevelsScreen>();
-
-                if (!going)
+                // Flow.Go refuses while another screen change is under way.
+                if (Flow.Busy)
                 {
                     Restore();
                     _leaving = false;
                     return;
                 }
+
+                if (route == SortieRoute.Loadout) Flow.Go<LoadoutScreen>(v => v.Sortie = true);
+                else Flow.Go<LevelsScreen>();
 
                 SortieAnalytics.Track(SortieAnalytics.Continued);
             }, this);

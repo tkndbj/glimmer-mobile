@@ -10106,10 +10106,6 @@
       "text": "{0} mücevher"
     },
     {
-      "key": "ui.board.row_score",
-      "text": "Puan {0}"
-    },
-    {
       "key": "ui.board.your_score",
       "text": "Puanın: {0}"
     },

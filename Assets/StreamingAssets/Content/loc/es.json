@@ -10106,10 +10106,6 @@
       "text": "{0} gemas"
     },
     {
-      "key": "ui.board.row_score",
-      "text": "Puntos {0}"
-    },
-    {
       "key": "ui.board.your_score",
       "text": "Tus puntos: {0}"
     },

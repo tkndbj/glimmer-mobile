@@ -10106,10 +10106,6 @@
       "text": "{0} Juwelen"
     },
     {
-      "key": "ui.board.row_score",
-      "text": "Punkte {0}"
-    },
-    {
       "key": "ui.board.your_score",
       "text": "Deine Punkte: {0}"
     },

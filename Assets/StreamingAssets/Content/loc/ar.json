@@ -10106,10 +10106,6 @@
       "text": "الجواهر: {0}"
     },
     {
-      "key": "ui.board.row_score",
-      "text": "النقاط {0}"
-    },
-    {
       "key": "ui.board.your_score",
       "text": "نقاطك: {0}"
     },

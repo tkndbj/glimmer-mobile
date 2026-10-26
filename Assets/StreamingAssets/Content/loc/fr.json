@@ -10106,10 +10106,6 @@
       "text": "{0} gemmes"
     },
     {
-      "key": "ui.board.row_score",
-      "text": "Score {0}"
-    },
-    {
       "key": "ui.board.your_score",
       "text": "Ton score : {0}"
     },

@@ -239,6 +239,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_ember_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 019449a351cd11e418a831ddda5c2eb8
+    m_Address: Art/Ui/rank1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 01b8efcfaaca37141ba9556a2fc324cc
     m_Address: Art/Fx/Siege/shot_prism_b/f05
     m_ReadOnly: 0
@@ -17608,6 +17613,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/maw_muzzle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6849da110aed2f64e8c2bd84452c030a
+    m_Address: Art/Ui/rank3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6864205700b0d474bb09a223b01c6fb0
     m_Address: Art/Siege/hill8
@@ -40085,6 +40095,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/courtBulwark_r
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb0c1a190f208cd42abc7bd6f9dd24d7
+    m_Address: Art/Ui/rank2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eb12f7765cbb5f04a9cbab0dd3f58ed4
     m_Address: Art/Fx/Siege/snare/f01
