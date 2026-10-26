@@ -1,0 +1,21 @@
+{
+  "points": [
+    { "name": "three stars at target", "stars": 3, "moves": 20, "target": 20, "score": 1300 },
+    { "name": "two stars", "stars": 2, "moves": 25, "target": 20, "score": 1200 },
+    { "name": "one star", "stars": 1, "moves": 30, "target": 20, "score": 1100 },
+    { "name": "one saved move", "stars": 3, "moves": 19, "target": 20, "score": 1320 },
+    { "name": "quarter target saved", "stars": 3, "moves": 15, "target": 20, "score": 1400 },
+    { "name": "half target saved caps bonus", "stars": 3, "moves": 10, "target": 20, "score": 1500 },
+    { "name": "very low moves remains capped", "stars": 3, "moves": 1, "target": 20, "score": 1500 },
+    { "name": "integer rounding", "stars": 3, "moves": 5, "target": 7, "score": 1414 },
+    { "name": "missing moves earns no bonus", "stars": 3, "moves": 0, "target": 20, "score": 1300 },
+    { "name": "negative moves earns no bonus", "stars": 3, "moves": -1, "target": 20, "score": 1300 },
+    { "name": "not cleared", "stars": 0, "moves": 1, "target": 20, "score": 0 },
+    { "name": "negative stars", "stars": -1, "moves": 1, "target": 20, "score": 0 },
+    { "name": "stars capped", "stars": 99, "moves": 1, "target": 20, "score": 1500 },
+    { "name": "zero target refused", "stars": 3, "moves": 1, "target": 0, "score": 0 },
+    { "name": "large target integer math", "stars": 3, "moves": 500000, "target": 1000000, "score": 1500 },
+    { "name": "oversized target refused", "stars": 3, "moves": 1, "target": 1000001, "score": 0 },
+    { "name": "oversized moves cannot overflow", "stars": 3, "moves": 2147483647, "target": 20, "score": 1300 }
+  ]
+}

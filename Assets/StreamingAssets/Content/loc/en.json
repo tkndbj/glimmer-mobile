@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "{0} gems"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Score {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "Your score: {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "Your best results across Normal chapter levels add up to your all-time score. Clear levels, earn more stars and finish in fewer moves to improve it. Replays count only when they improve your best."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "The board shows the top {0} players by Normal score. Your total includes only Normal chapter levels."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "The Normal board is published every {0} minute. Your own score updates after a better clear; the shared list follows after syncing."
     }
   ]
 }

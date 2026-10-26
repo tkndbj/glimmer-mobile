@@ -1237,6 +1237,9 @@ namespace GlimmerGrove.Cloud
             {
                 var snapshot = await CloudCancel.Within(
                     _db.Collection(GrovesCollection).Document(ownerId).GetSnapshotAsync(), ReadSeconds, cancellation);
+                if (!snapshot.Exists)
+                    snapshot = await CloudCancel.Within(
+                        _db.Collection("normalCards").Document(ownerId).GetSnapshotAsync(), ReadSeconds, cancellation);
                 if (!snapshot.Exists) return (CloudResult.Success, Social.GroveCard.Empty);
 
                 return (CloudResult.Success, ReadCard(ownerId, snapshot.ToDictionary()));
@@ -1292,7 +1295,8 @@ namespace GlimmerGrove.Cloud
                         rows.Add(new Social.LeaderboardEntry(
                             rank, ownerId, Text(entry, "name"), Text(entry, "avatar"),
                             (int)ReadLong(entry, "level"), (int)ReadLong(entry, "wave"),
-                            Text(entry, "rung"), (int)ReadLong(entry, "shuffle")));
+                            Text(entry, "rung"), (int)ReadLong(entry, "shuffle"),
+                            ReadLong(entry, "normalScore")));
 
                         if (rows.Count >= Social.LeaderboardBoard.MaxRows) break;
                     }
@@ -1532,7 +1536,8 @@ namespace GlimmerGrove.Cloud
                 // The best-graded Shuffle run (MODES.md 59o), absent for a keeper with none. Read
                 // through the one parser the save's rows use, so a card and a save cannot come to
                 // disagree about what a run is, and every figure is bounded again on the way in.
-                Shuffle.ShuffleRecord.FromWire(document.TryGetValue("shuffleTop", out object top) ? top : null));
+                Shuffle.ShuffleRecord.FromWire(document.TryGetValue("shuffleTop", out object top) ? top : null),
+                ReadLong(document, "normalScore"));
         }
 
         static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)

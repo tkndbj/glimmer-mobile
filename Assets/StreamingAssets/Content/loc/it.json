@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "{0} gemme"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Punti {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "I tuoi punti: {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "I tuoi risultati migliori nei livelli dei capitoli normali formano il punteggio totale. Completa livelli, ottieni più stelle e usa meno mosse. Le ripetizioni contano solo se migliori il record."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "La classifica mostra i migliori {0} giocatori per punti Normale. Contano solo i livelli dei capitoli normali."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "La classifica Normale viene pubblicata ogni {0} minuto. I tuoi punti aumentano con un risultato migliore; la lista condivisa segue dopo la sincronizzazione."
     }
   ]
 }

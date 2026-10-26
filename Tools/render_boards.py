@@ -50,9 +50,9 @@ HEADER_H = 312.0
 
 # The lane tabs (`TabWidth`, `TabHeight`, `TabGap`, `TabY`). A `UIKit.TextButton` anchored at the
 # top centre pivots at its own centre (44d), so `TAB_Y` is the centre's depth below the top.
-TAB_W, TAB_H, TAB_GAP, TAB_Y = 300.0, 88.0, 16.0, 230.0
+TAB_W, TAB_H, TAB_GAP, TAB_Y = 270.0, 88.0, 16.0, 230.0
 TAB_PT, TAB_FLOOR = 30, 18
-TABS = [("endless", "track.infinite.name"), ("shuffle", "track.shuffle.name")]
+TABS = [("endless", "track.infinite.name"), ("shuffle", "track.shuffle.name"), ("normal", "track.main.name")]
 ROW_H = 176.0
 PLATE_W, PLATE_H = 940.0, 160.0
 BADGE = 132.0
@@ -144,6 +144,9 @@ def board(entries, title="BOARDS", live="endless", loc=None):
     tabs(sheet, live, loc if loc is not None else strings())
 
     top = HEADER_H
+    if live == "normal":
+        k.text(sheet, (loc or strings())["ui.board.your_score"].format(245000 // 100), k.W / 2, 314, 28, k.GOLD)
+        top += 56
     for entry in entries:
         if top + ROW_H > k.H - k.NAV_HEIGHT - BOTTOM_PAD:
             break
@@ -225,12 +228,13 @@ def main():
     ap.add_argument("--empty", action="store_true", help="the six refusals")
     ap.add_argument("--row", action="store_true", help="three rows at 1:1")
     ap.add_argument("--shuffle", action="store_true", help="the Shuffle tab live")
+    ap.add_argument("--normal", action="store_true", help="the Normal tab live")
     ap.add_argument("--contact", action="store_true", help="all of it on one sheet")
     args = ap.parse_args()
 
     ladder = rungs()
     loc = strings()
-    out = REPO / "boards.png"
+    out = REPO / (".utmp/normal-boards.png" if args.normal else "boards.png")
 
     if args.contact:
         full = board(entries(ladder, "all"), loc=loc)
@@ -265,6 +269,11 @@ def main():
         sheet = board(entries(ladder, "none"), loc=loc)
     elif args.mixed:
         sheet = board(entries(ladder, "mixed"), loc=loc)
+    elif args.normal:
+        shown = entries(ladder, "mixed")
+        for i, entry in enumerate(shown):
+            entry["figure"] = loc["ui.board.row_score"].format((375000 - i * 1300) // 100)
+        sheet = board(shown, live="normal", loc=loc)
     elif args.shuffle:
         sheet = board(entries(ladder, "all", top=64), live="shuffle", loc=loc)
     else:

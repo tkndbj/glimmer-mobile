@@ -17,6 +17,9 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldPath, FieldValue, Firestore, Timestamp } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { onDocumentWritten } from "firebase-functions/v2/firestore";
+import { backfillNormalScores, normalInputsChanged, normalProfileChanged, publishNormalBoard, sameNormalCard } from "./normal-board";
+import { normalScore, usableNormalScoring } from "./normal-scores";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 
@@ -2022,7 +2025,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<Publish
  * exactly the card the player would have published (the name claimed, the takedowns asked, the
  * opt-out honoured, the level derived). Null when the account has no save.
  */
-async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcome | null> {
+async function publishCardFor(db: Firestore, uid: string, normalOnly = false): Promise<PublishOutcome | null> {
   const [saveSnapshot, groveSnapshot, walletSnapshot] = await Promise.all([
     db.doc(PATHS.player(uid)).get(),
     db.doc(GROVE_PATHS.groveConfig).get(),
@@ -2048,6 +2051,7 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
 
   const config = await loadProgressionConfig();
   const curve = (config as { keeper?: KeeperCurve }).keeper ?? DEFAULT_KEEPER_CURVE;
+  const normalReady = usableNormalScoring(config.normalScoring);
 
   // The star ledger plus the Infinite lane, which is the one source of XP this server cannot
   // recompute and so can only bound (`endlessXp`, and invariant 13's fourth clause). The two are
@@ -2096,7 +2100,9 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
   const stored = (save.wallet as Record<string, unknown> | undefined)?.displayName;
   const wanted = nameKey(stored);
 
-  if (wanted.length > 0 && holding?.key !== wanted) {
+  // Background Normal projection is read-only over player state. Existing clients'
+  // interactive publish still claims a requested name through the established path.
+  if (!normalOnly && wanted.length > 0 && holding?.key !== wanted) {
     try {
       const claim = await claimName_(db, uid, stored, nowUnix, list);
       holding = claim.holding;
@@ -2122,14 +2128,35 @@ async function publishCardFor(db: Firestore, uid: string): Promise<PublishOutcom
     uid, save, groveConfig, config, level, nowUnix, publishableName(holding), list, earnedLevel
   );
 
-  await db.doc(GROVE_PATHS.card(uid)).set(card);
+  // Keep Normal-only players out of the existing collection: Infinite's percentile
+  // sampler uses that population. The projection and moderation rules are shared.
+  const liveCard = { ...card };
+  delete liveCard.normalScore;
+
+  // The save can advance while name/config lookups are in flight. Commit only the
+  // projection of the version we read, so an older publish cannot replace a newer score.
+  // This reads and locks the save; it never writes player progress or the wallet.
+  await db.runTransaction(async (tx) => {
+    const normalRef = db.doc(GROVE_PATHS.normalCard(uid));
+    const [latest, previousNormal] = await tx.getAll(saveSnapshot.ref, normalRef);
+    if (!latest.exists || !latest.updateTime?.isEqual(saveSnapshot.updateTime!))
+      throw new HttpsError("aborted", "save advanced during card publication; retry");
+    if (normalReady && (card.normalScore ?? 0) > 0) {
+      if (!sameNormalCard(previousNormal.data(), card as unknown as Record<string, unknown>))
+        tx.set(normalRef, card);
+    } else if (normalReady && previousNormal.exists) {
+      tx.delete(normalRef);
+    }
+    if (!normalOnly && ((card.wave ?? 0) > 0 || (card.shuffle ?? 0) > 0))
+      tx.set(db.doc(GROVE_PATHS.card(uid)), liveCard);
+  });
 
   // Onto the boards in the same call, so the list a player opens after their run already
   // has them on it. After the card and never before: the card is the truth, the rebuild reads
   // it, and a placement that fails is a row that arrives within fifteen minutes rather than
   // at once — which is why this is logged and not thrown.
   try {
-    const placed = await placeOnBoards(db, uid, card, nowUnix);
+    const placed = normalOnly ? [] : await placeOnBoards(db, uid, liveCard, nowUnix);
     if (placed.length > 0) logger.info("card placed on boards", { uid, boards: placed });
   } catch (error) {
     logger.warn("could not place the card on the boards", { uid, error: String(error) });
@@ -2532,6 +2559,54 @@ export const deleteAccount = onCall(
  * No retry policy and no alerting, like every other schedule here: a run that never happens
  * leaves the last list standing, and the next one is a quarter of an hour away.
  */
+/** Normal alone: one shared snapshot each minute, no live document contention. */
+export const publishNormalLeaderboard = onSchedule(
+  { region: REGION, schedule: "* * * * *", timeZone: "Etc/UTC", timeoutSeconds: 120,
+    retryCount: 2, maxInstances: 1 },
+  async () => {
+    const rows = await publishNormalBoard(getFirestore());
+    logger.info("normal leaderboard published", { rows });
+  }
+);
+
+/** Old production clients also qualify: a server trigger follows the persisted bests.
+ * Unrelated saves exit without reads. Duplicate events recompute, never add points.
+ * The existing client publish path remains the prompt path for new clients.
+ */
+export const publishNormalProgress = onDocumentWritten(
+  { region: REGION, document: "players/{uid}", retry: true, timeoutSeconds: 120 },
+  async (event) => {
+    const after = event.data?.after;
+    if (!after?.exists) {
+      // Also closes the window where an in-flight publish overlapped account deletion.
+      if (event.data?.before.exists) await withdrawCard(event.params.uid);
+      return;
+    }
+    const save = after.data()!;
+    const before = event.data?.before.data();
+    if (!normalInputsChanged(before, save)) return;
+    const config = await loadProgressionConfig();
+    if (!usableNormalScoring(config.normalScoring)) throw new Error("Normal scoring config is not seeded");
+    const score = normalScore(save.levels, config.normalScoring);
+    const old = normalScore(before?.levels, config.normalScoring);
+    if (score === old && optedIn(save) === optedIn(before ?? {}) && !normalProfileChanged(before, save)) return;
+    if (score <= 0 && old <= 0) return;
+    await publishCardFor(getFirestore(), event.params.uid, true);
+  }
+);
+
+/** One resumable pass; once marked done, subsequent ticks only read its checkpoint. */
+export const backfillNormalLeaderboard = onSchedule(
+  { region: REGION, schedule: "*/5 * * * *", timeZone: "Etc/UTC", timeoutSeconds: 540,
+    maxInstances: 1, retryCount: 1 },
+  async () => {
+    const config = await loadProgressionConfig();
+    const result = await backfillNormalScores(getFirestore(), config.normalScoring,
+      (uid) => publishCardFor(getFirestore(), uid, true));
+    if (result.processed > 0) logger.info("normal leaderboard backfill", result);
+  }
+);
+
 export const publishGroveBoards = onSchedule(
   { region: REGION, schedule: "*/15 * * * *", timeZone: "Etc/UTC", timeoutSeconds: 120 },
   async () => {

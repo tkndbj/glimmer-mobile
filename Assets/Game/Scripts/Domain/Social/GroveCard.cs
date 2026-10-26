@@ -117,6 +117,8 @@ namespace GlimmerGrove.Social
         /// </summary>
         public readonly int ShuffleWave;
 
+        public readonly long NormalScore;
+
         /// <summary>
         /// The keeper's best-graded Shuffle run - grade, build score, its wave and its build's
         /// figures (MODES.md 59o) - or null for a keeper who has never banked one. What the
@@ -143,7 +145,7 @@ namespace GlimmerGrove.Social
                          IReadOnlyList<int> rungs = null,
                          string rungId = null,
                          int shuffleWave = 0,
-                         Shuffle.ShuffleRecord shuffleTop = null)
+                         Shuffle.ShuffleRecord shuffleTop = null, long normalScore = 0L)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
@@ -156,6 +158,7 @@ namespace GlimmerGrove.Social
                         : shuffleWave > Shuffle.ShuffleLedger.MaxWave ? Shuffle.ShuffleLedger.MaxWave
                         : shuffleWave;
             ShuffleTop = shuffleTop;
+            NormalScore = Math.Max(0L, normalScore);
             PublishedUnix = publishedUnix < 0L ? 0L : publishedUnix;
 
             // The seats, in colour order, with a rung beside each. Two lists rather than a pair
@@ -252,7 +255,8 @@ namespace GlimmerGrove.Social
             // which is what stops a publish being asked for on every sync.
             return Build(ownerId, name, keeperLevel, EndlessLedger.Best, nowUnix,
                          line, rungs, Ranks.RankLedger.Held?.Id, Shuffle.ShuffleLedger.Best,
-                         Shuffle.ShuffleLedger.Top);
+                         Shuffle.ShuffleLedger.Top,
+                         ProgressionRules.Table.NormalScores.ForPlayer(Content.GameContent.Index));
         }
 
         /// <summary>
@@ -332,14 +336,16 @@ namespace GlimmerGrove.Social
 
             return Build(ownerId, name, keeperLevel, EndlessLedger.BestIn(save), nowUnix,
                          line, rungs, rung?.Id, Shuffle.ShuffleLedger.BestIn(save),
-                         Shuffle.ShuffleLedger.TopIn(save));
+                         Shuffle.ShuffleLedger.TopIn(save),
+                         ProgressionRules.Table.NormalScores.In(save, Content.GameContent.Index));
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
         static GroveCard Build(string ownerId, string name, int keeperLevel, int bestWave,
                                long nowUnix,
                                IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs,
-                               string rungId, int shuffleWave, Shuffle.ShuffleRecord shuffleTop)
+                               string rungId, int shuffleWave, Shuffle.ShuffleRecord shuffleTop,
+                               long normalScore)
             => new GroveCard(ownerId,
                              GroveNames.Public(name),
                              keeperLevel,
@@ -349,7 +355,7 @@ namespace GlimmerGrove.Social
                              rungs,
                              rungId,
                              shuffleWave,
-                             shuffleTop);
+                             shuffleTop, normalScore);
 
         /// <summary>
         /// The seats a stored loadout names, and how far each has been taken.
@@ -441,6 +447,9 @@ namespace GlimmerGrove.Social
             // (a part written as nought would have called every card in the game changed at once).
             if (ShuffleWave > 0)
                 parts.Add("s:" + ShuffleWave.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            if (NormalScore > 0L)
+                parts.Add("normal:" + NormalScore.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
             // The best-graded Shuffle run, whole, for the wave's reason and only once there is
             // one (so this drop republishes nobody who never banked a graded run). Every part of

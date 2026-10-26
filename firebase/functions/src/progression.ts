@@ -44,6 +44,8 @@ export interface RewardRuleInput {
 }
 
 export interface ProgressionConfig {
+  /** Frozen targets for Normal leaderboard v1; no effect on rewards. */
+  normalScoring?: import("./normal-scores").NormalScoring;
   /** Bumped by the seed script whenever the table changes. */
   version: number;
   rewards: RewardRule;

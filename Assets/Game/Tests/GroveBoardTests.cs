@@ -212,7 +212,7 @@ namespace GlimmerGrove.Tests
             // `LeaderboardBoard.All` mirrors. A board named here and not there is a screen
             // that draws an empty list for ever with nothing to say why; a board named there
             // and not here is a nightly write nobody can read.
-            CollectionAssert.AreEqual(new[] { "endless", "shuffle" }, LeaderboardBoard.All);
+            CollectionAssert.AreEqual(new[] { "endless", "shuffle", "normal" }, LeaderboardBoard.All);
 
             var seen = new HashSet<string>(StringComparer.Ordinal);
 

@@ -228,7 +228,7 @@ wire or rules mistake reaches live accounts.
 19p. **What a public profile draws is what the score counted, in one walk**; an unvouched seat is omitted.
    Free turrets publish `free`.
 19q. **A board row opens a chooser; a profile shows only what is held** — no prices, padlocks or taps.
-19r. **A board is live via the publish** (`placeOnBoards`, gated by a cached cutoff); `rebuildBoards` every
+19r. **Wave boards are live via the publish** (`placeOnBoards`, gated by a cached cutoff); `rebuildBoards` every
    fifteen minutes is the net; a withdrawal scrubs the row in the same call. The panel prints the cadence
    (`LeaderboardBoard.RebuildMinutes`).
 19s. **A gate that waits on something must be the thing that asks for it** — or find it need not wait.
@@ -238,6 +238,8 @@ wire or rules mistake reaches live accounts.
 19v. **A change to what a card shows is repaired by the server, never by re-spelling the client's
    fingerprint**: raise `CARD_SHAPE_SINCE` (grove.ts, to a moment after the deploy is live) and
    `repairGroveCards` rebuilds every older card through `publishCardFor`, the player's own path.
+19w. **Normal scores use frozen targets and a separate `normalCards` projection**, preserving Infinite's
+   sample. One-minute transactional snapshots; retryable projections; a leased, checkpointed backfill.
 
 ### Modes — in `Assets/Game/MODES.md`
 

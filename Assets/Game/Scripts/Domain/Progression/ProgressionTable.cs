@@ -225,6 +225,8 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public AssistTable Assist { get; }
 
+        public Social.NormalScores NormalScores { get; private set; } = Social.NormalScores.Empty;
+
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
         /// of its own.
@@ -721,12 +723,14 @@ namespace GlimmerGrove.Progression
             // And the helping hand. Read against the utility catalog, whose items the gift hands
             // over. Absent is the feature off, and so is a block with a fault in it.
             var assist = AssistTable.Resolve(dto.assist, utilities, problems);
+            var normalScores = Social.NormalScores.Resolve(dto.normalScoring, problems);
 
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
                           endless, xpBoost, ranks, keeperLevels, keeperMilestones,
                           endlessCheckpoints, welcome, firstSteps, assist);
+            table.NormalScores = normalScores;
             return true;
         }
 

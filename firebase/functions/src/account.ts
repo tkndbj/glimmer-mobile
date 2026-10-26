@@ -158,13 +158,15 @@ async function removeFromPublicView(db: Firestore, uid: string): Promise<{
   boardsScrubbed: number;
 }> {
   const cardRef = db.doc(GROVE_PATHS.card(uid));
-  const card = await cardRef.get();
+  const normalRef = db.doc(GROVE_PATHS.normalCard(uid));
+  const [card, normal] = await Promise.all([cardRef.get(), normalRef.get()]);
 
   if (card.exists) await cardRef.delete();
+  if (normal.exists) await normalRef.delete();
 
   const boardsScrubbed = await scrubBoards(db, uid);
 
-  return { cardRemoved: card.exists, boardsScrubbed };
+  return { cardRemoved: card.exists || normal.exists, boardsScrubbed };
 }
 
 // ---------------------------------------------------------------------- the keeper name

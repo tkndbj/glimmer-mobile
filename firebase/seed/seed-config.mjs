@@ -22,6 +22,7 @@ import { execSync } from "node:child_process";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pathToFileURL } from "node:url";
+import { readNormalScoring } from "./normal-config.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
@@ -218,6 +219,7 @@ function buildProgressionConfig() {
       rewards: defaults,
       chapterRewards,
       levelChapters,
+      normalScoring: readNormalScoring(progression, manifest),
       seeds: readSeeds(),
       daily: readDaily(progression),
       ads: readAds(progression),

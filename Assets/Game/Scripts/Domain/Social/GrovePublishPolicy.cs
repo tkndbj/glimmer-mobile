@@ -134,7 +134,7 @@ namespace GlimmerGrove.Social
         /// </para>
         /// </summary>
         public static bool WorthPublishing(GroveCard card)
-            => card != null && (card.BestWave > 0 || card.ShuffleWave > 0);
+            => card != null && (card.BestWave > 0 || card.ShuffleWave > 0 || card.NormalScore > 0L);
 
         string _publishedFingerprint = string.Empty;
         string _wantedFingerprint = string.Empty;

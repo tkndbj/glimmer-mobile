@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// a header the player scrolls past to reach the thing they came for.
     /// </para>
     /// <para>
-    /// <b>Two tabs, one per lane (2026-10-10).</b> The Endless Watch is how far anybody has held
+    /// <b>One tab per track.</b> Normal totals chapter bests. The Endless Watch is how far anybody has held
     /// the line on the Infinite lane (invariant 43), and the Shuffle board how far anybody has got
     /// with a dealt build (MODES.md 59). Each tab wears its lane's own name (<c>track.*.name</c>),
     /// so a tab and the hub that leads to it cannot disagree. The finest groves - what
@@ -64,7 +64,7 @@ namespace GlimmerGrove
         const float HeaderHeight = 312f;
 
         /// <summary>The lane tabs: their size, the gap between them, and where their centres sit.</summary>
-        const float TabWidth = 300f, TabHeight = 88f, TabGap = 16f, TabY = -230f;
+        const float TabWidth = 270f, TabHeight = 88f, TabGap = 16f, TabY = -230f;
 
         /// <summary>
         /// How tall a row is, and the badge is what decides it.
@@ -112,13 +112,16 @@ namespace GlimmerGrove
         /// The boards this screen offers, left to right. The Infinite lane first, because it is
         /// the board every earlier build opened on.
         /// </summary>
-        static readonly string[] Tabs = { LeaderboardBoard.Endless, LeaderboardBoard.Shuffle };
+        static readonly string[] Tabs = { LeaderboardBoard.Endless, LeaderboardBoard.Shuffle, LeaderboardBoard.Normal };
 
         readonly Btn[] _tabs = new Btn[Tabs.Length];
 
         RectTransform _viewport;
         GridView _grid;
         Text _empty;
+        Text _ownScore;
+        float _normalRefreshAt;
+        string _rowsOwnerId;
 
         LeaderboardBoard _board = LeaderboardBoard.None;
         bool _fetching;
@@ -161,6 +164,31 @@ namespace GlimmerGrove
         {
             GroveBoard.Published -= OnPublished;
         }
+
+        void Update()
+        {
+            if (!Living || !LeaderboardBoard.IsNormal(_boardId) || _fetching
+                || !GroveBoard.IsAvailable || Net.Offline || Time.unscaledTime < _normalRefreshAt) return;
+            Fetch();
+        }
+
+        void PaintOwnScore()
+        {
+            bool normal = LeaderboardBoard.IsNormal(_boardId);
+            if (_ownScore)
+            {
+                _ownScore.gameObject.SetActive(normal);
+                if (normal)
+                    _ownScore.text = Loc.Format("ui.board.your_score",
+                        DisplayNormalScore(Progression.ProgressionRules.Table.NormalScores.ForPlayer(
+                            GlimmerGrove.Content.GameContent.Index)));
+            }
+            if (_viewport) _viewport.offsetMax = new Vector2(0f, -(HeaderHeight + (normal ? 56f : 0f)));
+        }
+
+        // Keep the stored precision for ranking and sum before dividing, so fractional
+        // improvements across different levels still contribute to the displayed total.
+        static long DisplayNormalScore(long score) => Math.Max(0L, score) / 100L;
 
         /// <summary>Opens straight onto a particular board. Used by nothing yet; kept for a deep link.</summary>
         public void ShowBoard(string boardId)
@@ -230,6 +258,11 @@ namespace GlimmerGrove
             // is a fact about the population rather than about the player's standing. The tabs
             // name the board instead, and the rows print the figure it is ordered on.
             BuildTabs(chrome);
+            _ownScore = UIKit.Shrinkable(
+                UIKit.Titled("OwnNormalScore", chrome, string.Empty, 28, Pal.Gold,
+                             TextAnchor.MiddleCenter, new Vector2(820f, 44f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -314f), 2f, 0f), 20);
+            PaintOwnScore();
         }
 
         /// <summary>
@@ -269,6 +302,7 @@ namespace GlimmerGrove
             {
                 case LeaderboardBoard.Endless: return Loc.Get("track.infinite.name");
                 case LeaderboardBoard.Shuffle: return Loc.Get("track.shuffle.name");
+                case LeaderboardBoard.Normal: return Loc.Get("track.main.name");
                 default: throw new ArgumentOutOfRangeException(nameof(boardId), boardId, "no tab for this board");
             }
         }
@@ -332,6 +366,9 @@ namespace GlimmerGrove
         {
             if (_fetching) return;
 
+            _normalRefreshAt = Time.unscaledTime + 60f;
+            PaintOwnScore();
+
             _fetching = true;
             _failed = false;
             PaintEmpty();
@@ -347,16 +384,65 @@ namespace GlimmerGrove
             if (asked != _boardId) { Fetch(); return; }
 
             _failed = !result.Ok;
-            _board = board ?? LeaderboardBoard.None;
-
-            // A new list, so it animates. A repaint of the same list does not - the rule
-            // GridView exists to keep, and the reason the shop stopped flickering.
-            _grid?.Show(_board.Entries.Count);
+            // A temporary refresh failure must not empty an already visible Normal list.
+            if (result.Ok || !LeaderboardBoard.IsNormal(asked) || _board.BoardId != asked)
+                ApplyBoard(board ?? LeaderboardBoard.None);
             PaintEmpty();
         });
 
+        /// <summary>
+        /// Adopt every snapshot, including its freshness stamp, while touching only changed
+        /// cells of a Normal list already on screen. No recycling, entrance or scroll reset.
+        /// </summary>
+        internal void ApplyBoard(LeaderboardBoard next)
+        {
+            var before = _board;
+            _board = next;
+            string owner = CloudState.UserId;
+            bool ownerChanged = _rowsOwnerId != owner;
+
+            if (!LeaderboardBoard.IsNormal(_boardId) || before.BoardId != _boardId
+                || next.BoardId != _boardId)
+            {
+                _grid?.Show(next.Entries.Count);
+            }
+            else if (before.Entries.Count != next.Entries.Count)
+            {
+                // Growth/shrinkage is a resize of this list, not a different list.
+                // Relist preserves the position and clamps it only if the end moved up.
+                _grid?.Relist(next.Entries.Count);
+            }
+            else
+            {
+                for (int i = 0; i < next.Entries.Count; i++)
+                {
+                    var row = next.Entries[i];
+                    if (!SameEntry(before.Entries[i], row)
+                        || (ownerChanged && (row.OwnerId == owner || row.OwnerId == _rowsOwnerId)))
+                        _grid?.Refresh(i); // Only realised cells bind; offscreen rows cost no UI work.
+                }
+            }
+            _rowsOwnerId = owner;
+        }
+
+        // Include the metadata passed when a row is tapped, not just its visible labels.
+        // Board timestamps and population are deliberately absent: neither changes a card.
+        static bool SameEntry(LeaderboardEntry a, LeaderboardEntry b)
+            => a.Rank == b.Rank && a.OwnerId == b.OwnerId && a.Name == b.Name
+            && a.AvatarId == b.AvatarId && a.KeeperLevel == b.KeeperLevel && a.RungId == b.RungId
+            && a.Wave == b.Wave && a.ShuffleWave == b.ShuffleWave && a.NormalScore == b.NormalScore;
+
         void OnPublished()
         {
+            if (LeaderboardBoard.IsNormal(_boardId))
+            {
+                // Normal's shared snapshot publishes on its minute cadence. Our own card
+                // publishing does not make that snapshot newer, so avoid a redundant read.
+                PaintOwnScore();
+                if (_rowsOwnerId != CloudState.UserId) ApplyBoard(_board);
+                return;
+            }
+
             // Our own row may have moved, and the cached boards were dropped when the card
             // was published, so this is a real fetch rather than a redraw.
             Fetch();
@@ -502,7 +588,9 @@ namespace GlimmerGrove
                 // **The keeper level is not printed**, at the owner's instruction (2026-09-22):
                 // a board is about the lane, and a second number beside the one it is ordered
                 // on is a number to misread it by. The entry still carries it for the profile.
-                _wave.text = Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry));
+                _wave.text = LeaderboardBoard.IsNormal(_screen._boardId)
+                    ? Loc.Format("ui.board.row_score", DisplayNormalScore(_entry.NormalScore))
+                    : Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry));
 
                 // **The badge is the server's answer, and an absent one draws nothing.** Below
                 // the first rung is an ordinary state and so is a card published before this

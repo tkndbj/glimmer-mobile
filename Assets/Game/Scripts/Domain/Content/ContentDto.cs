@@ -1125,6 +1125,9 @@ namespace GlimmerGrove.Content
         /// </summary>
         public KeeperLadderDto keeperLevels;
 
+        /// <summary>Normal leaderboard v1's frozen move targets. No save or economy state.</summary>
+        public Social.NormalScoringDto normalScoring;
+
         /// <summary>
         /// The chests a keeper level pays on the way up (invariant 57d). Optional; see
         /// <see cref="Progression.KeeperMilestoneTable"/>.

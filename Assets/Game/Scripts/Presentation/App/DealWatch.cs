@@ -33,7 +33,7 @@ namespace GlimmerGrove
             var alert = plate.gameObject.AddComponent<ShopTabAlert>();
             var corner = new Vector2(1f, 1f);
             var at = new Vector2(-16f, -12f);
-            alert._deal = WaitingBadge.Alert(plate, corner, at, WaitingBadge.DealPurple, 1f);
+            alert._deal = WaitingBadge.Alert(plate, corner, at, Pal.Gold, 1f);
             alert._gift = WaitingBadge.Gift(plate, corner, at, Pal.Gold, 1f);
             return alert;
         }

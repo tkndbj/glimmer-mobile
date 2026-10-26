@@ -145,7 +145,7 @@ async function show(uid) {
   if (!summary) return console.log(`${uid} has never been reported.`);
 
   const wallet = await readDoc(`players/${uid}/private/wallet`);
-  const card = await readDoc(`groves/${uid}`);
+  const card = await readDoc(`groves/${uid}`) ?? await readDoc(`normalCards/${uid}`);
   const bar = await threshold();
 
   const held = wallet?.name ?? {};
@@ -203,6 +203,9 @@ async function hide(uid) {
   if (!dropped.ok && dropped.status !== 404) {
     throw new Error(`taking the card down failed: ${dropped.status} ${await dropped.text()}`);
   }
+  const normalDropped = await fetch(`${FS}/normalCards/${uid}`, { method: "DELETE", headers: auth });
+  if (!normalDropped.ok && normalDropped.status !== 404)
+    throw new Error(`taking the Normal card down failed: ${normalDropped.status} ${await normalDropped.text()}`);
 
   await patch(`nameReports/${uid}`, { deniedUnix: int(now) });
 

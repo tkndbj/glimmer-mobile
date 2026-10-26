@@ -119,9 +119,10 @@ namespace GlimmerGrove
             // percentile that is drawn from Infinite waves alone - true of one board and a false
             // promise on the other.
             bool shuffle = LeaderboardBoard.IsShuffle(BoardId);
+            bool normal = LeaderboardBoard.IsNormal(BoardId);
 
             answers.Add(new Answer("ic_trophy", "ui.board.info_boards_title",
-                                   shuffle
+                                   normal ? Loc.Get("ui.board.info_normal_body") : shuffle
                                        ? Loc.Get("ui.board.info_shuffle_body")
                                        : Loc.Format("ui.board.info_boards_body",
                                                     Loc.Get("ui.board.endless"))));
@@ -133,7 +134,7 @@ namespace GlimmerGrove
             // coloured emblem that fights the two flat white glyphs above it - a column of
             // three marks that is one mark's worth of decoration is not a column.
             answers.Add(new Answer("ic_profile", "ui.board.info_place_title",
-                                   Loc.Format(shuffle ? "ui.board.info_place_shuffle"
+                                   Loc.Format(normal ? "ui.board.info_place_normal" : shuffle ? "ui.board.info_place_shuffle"
                                                       : "ui.board.info_place_body",
                                               LeaderboardBoard.MaxRows)));
 
@@ -161,6 +162,16 @@ namespace GlimmerGrove
         string TallyBody()
         {
             long built = Board?.BuiltUnix ?? 0L;
+            int minutes = LeaderboardBoard.IsNormal(BoardId)
+                ? LeaderboardBoard.NormalRebuildMinutes : LeaderboardBoard.RebuildMinutes;
+            if (LeaderboardBoard.IsNormal(BoardId))
+            {
+                string text = Loc.Format("ui.board.info_normal_tally", minutes);
+                if (built > 0L)
+                    text += "\n" + Loc.Format("ui.visit.updated", Profile.LongCountdown(
+                        System.Math.Max(0L, GameClock.NowUnix() - built)));
+                return text;
+            }
             if (built <= 0L)
                 return Loc.Format("ui.board.info_tally_body", LeaderboardBoard.RebuildMinutes);
 

@@ -985,8 +985,8 @@ namespace GlimmerGrove
             }, rig);
         }
 
-        /// <summary>How far into the wordmark's lift the next screen starts sliding in.</summary>
-        const float LiftLead = .24f;
+        /// <summary>Let the wordmark finish lifting before building and sliding in the next screen.</summary>
+        const float LiftLead = Lift;
 
         /// <summary>How long the wordmark takes to rise off the top of the display.</summary>
         const float Lift = .62f;
@@ -995,11 +995,9 @@ namespace GlimmerGrove
         /// The finale's key: where it leads was decided when the finale went up.
         ///
         /// <para>
-        /// <b>Two beats, not one.</b> The wordmark rises off the top - a small dip first, so it
-        /// reads as taking off rather than being pulled - while the line and the key fade; the
-        /// next screen starts sliding in from the right <see cref="LiftLead"/> into that, so the
-        /// eye follows the mark out before it meets the shelf coming in. Played on a device, the
-        /// two starting together read as the loadout appearing at once.
+        /// The wordmark eases off the top while the line and the key fade, then the next screen
+        /// slides in from the right. Building that screen after the lift keeps its setup work
+        /// from interrupting the wordmark's motion.
         /// </para>
         /// <para>
         /// <b>Latched, and put back only if the screen change was refused</b>, so a second tap
@@ -1038,14 +1036,16 @@ namespace GlimmerGrove
         /// The finale leaving: the wordmark and its light up and away, the line and key faded.
         ///
         /// <b>The float is stopped first</b>, because it and the lift both write the rig's
-        /// position (CRAFT: two tweens on one value are a bug); stopping it hands the rig back
-        /// to its rest, and the lift starts from there.
+        /// position (CRAFT: two tweens on one value are a bug). Keep its displayed position when
+        /// stopping it so the lift continues without snapping back to rest.
         /// </summary>
         void LiftOff()
         {
             if (_crown != null && _finale != null)
             {
+                var from = _crown.anchoredPosition;
                 Tween.KillChannel(_crown, "bob");
+                _crown.anchoredPosition = from;
 
                 // Off the top of the display: the rig is drawn inside the scaled stack, so the
                 // distance is said in the stack's own units.
@@ -1053,7 +1053,7 @@ namespace GlimmerGrove
                 float up = (-_finale.anchoredPosition.y) / scale - _crown.anchoredPosition.y
                            + _crown.sizeDelta.y + 160f;
 
-                Tween.Move(_crown, _crown.anchoredPosition + new Vector2(0f, up), Lift, Ease.InBack);
+                Tween.Move(_crown, from + new Vector2(0f, up), Lift, Ease.InOutCubic);
                 Tween.Fade(UIKit.Group(_crown), 0f, Lift * .5f, Ease.InQuad).Delay(Lift * .5f);
             }
 

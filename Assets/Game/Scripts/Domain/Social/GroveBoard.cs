@@ -556,10 +556,16 @@ namespace GlimmerGrove.Social
             if (!LeaderboardBoard.IsKnown(boardId))
                 return (CloudResult.Failed(CloudFailure.Rejected, "unknown board"), LeaderboardBoard.None);
 
-            if (_boards.TryGetValue(boardId, out var held) && _now - held.at < CacheSeconds)
+            double cacheSeconds = LeaderboardBoard.IsNormal(boardId) ? 60d : CacheSeconds;
+            if (_boards.TryGetValue(boardId, out var held) && _now - held.at < cacheSeconds)
                 return (CloudResult.Success, held.board);
 
             var (result, board) = await Backend.ReadLeaderboardAsync(boardId, cancellation);
+
+            // Keep Normal's last published snapshot useful when a refresh fails offline.
+            // Its BuiltUnix still tells the info panel how old the cached list is.
+            if (!result.Ok && LeaderboardBoard.IsNormal(boardId) && held.board != null)
+                return (CloudResult.Success, held.board);
 
             if (result.Ok && board != null) _boards[boardId] = (board, _now);
 

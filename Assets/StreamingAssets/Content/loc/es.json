@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "{0} gemas"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Puntos {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "Tus puntos: {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "Tus mejores resultados en los niveles de capítulos normales forman tu puntuación histórica. Completa niveles, consigue más estrellas y usa menos movimientos. Repetir solo cuenta si mejoras tu récord."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "La tabla muestra a los {0} mejores jugadores por puntos de Normal. Solo cuentan los niveles de capítulos normales."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "La tabla Normal se publica cada {0} minuto. Tus puntos se actualizan al mejorar un resultado; la lista compartida se renueva tras sincronizar."
     }
   ]
 }

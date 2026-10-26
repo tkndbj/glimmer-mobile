@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "Klejnoty: {0}"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Punkty {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "Twoje punkty: {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "Twoje najlepsze wyniki na zwykłych poziomach rozdziałów tworzą łączny wynik. Kończ poziomy, zdobywaj więcej gwiazdek i używaj mniej ruchów. Powtórki liczą się tylko wtedy, gdy poprawisz rekord."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "Ranking pokazuje {0} najlepszych graczy według punktów trybu Normalnego. Liczą się tylko zwykłe poziomy rozdziałów."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "Ranking Normalny jest publikowany co {0} minutę. Twoje punkty rosną po lepszym wyniku; wspólna lista aktualizuje się po synchronizacji."
     }
   ]
 }

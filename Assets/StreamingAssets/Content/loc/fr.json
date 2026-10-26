@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "{0} gemmes"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Score {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "Ton score : {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "Tes meilleurs résultats dans les niveaux des chapitres normaux composent ton score total. Termine des niveaux, gagne plus d’étoiles et utilise moins de coups. Rejouer ne compte que si tu améliores ton record."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "Le classement affiche les {0} meilleurs joueurs selon leur score Normal. Seuls les niveaux des chapitres normaux comptent."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "Le classement Normal est publié toutes les {0} minute. Ton score augmente après un meilleur résultat ; la liste commune suit après synchronisation."
     }
   ]
 }

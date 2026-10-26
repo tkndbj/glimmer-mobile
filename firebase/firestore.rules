@@ -287,6 +287,13 @@ service cloud.firestore {
     // sign-in run one query over every published card in the game and bill this project a
     // read per card, as often as it likes — the only read in these rules whose cost would
     // have grown with the size of the collection rather than with the number of players.
+    // Normal cards have the same public-read/server-write contract. Keeping them
+    // separate preserves the existing Infinite percentile population.
+    match /normalCards/{uid} {
+      allow get: if signedIn();
+      allow list, create, update, delete: if false;
+    }
+
     match /groves/{uid} {
       allow get: if signedIn();
       allow list, write: if false;

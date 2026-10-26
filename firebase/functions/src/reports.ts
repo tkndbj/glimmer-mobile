@@ -261,6 +261,7 @@ export async function reportKeeper(
   if (reporterUid === targetUid) return { outcome: "self", reports: 0 };
 
   const cardRef = db.doc(GROVE_PATHS.card(targetUid));
+  const normalRef = db.doc(GROVE_PATHS.normalCard(targetUid));
   const walletRef = db.doc(PATHS.wallet(targetUid));
   const summaryRef = db.doc(REPORT_PATHS.summary(subject, targetUid));
   const reporterRef = db.doc(REPORT_PATHS.reporter(subject, targetUid, reporterUid));
@@ -269,14 +270,14 @@ export async function reportKeeper(
   const day = Math.floor(nowUnix / SECONDS_PER_DAY);
 
   return db.runTransaction(async (tx: Transaction) => {
-    const [cardSnapshot, walletSnapshot, summarySnapshot, reporterSnapshot, quotaSnapshot] =
-      await tx.getAll(cardRef, walletRef, summaryRef, reporterRef, quotaRef);
+    const [cardSnapshot, walletSnapshot, summarySnapshot, reporterSnapshot, quotaSnapshot, normalSnapshot] =
+      await tx.getAll(cardRef, walletRef, summaryRef, reporterRef, quotaRef, normalRef);
 
     const name: NameHolding | null = heldName(walletSnapshot.data());
 
     const card = cardSnapshot.exists
       ? (cardSnapshot.data() as Record<string, unknown> | undefined)
-      : undefined;
+      : normalSnapshot.data() as Record<string, unknown> | undefined;
 
     if (nothingToReport(subject, card, name)) {
       return { outcome: "nothing" as ReportOutcome, reports: 0 };
@@ -344,7 +345,8 @@ export async function reportKeeper(
       // The live card is corrected in the same transaction rather than left for the next
       // publish. A takedown that waits on the player to publish again is a takedown that may
       // never happen — and the delay is visible to exactly the people who reported it.
-      tx.update(cardRef, { name: fallbackName(targetUid) });
+      if (cardSnapshot.exists) tx.update(cardRef, { name: fallbackName(targetUid) });
+      if (normalSnapshot.exists) tx.update(normalRef, { name: fallbackName(targetUid) });
     }
 
     return { outcome: (hide ? "hidden" : "recorded") as ReportOutcome, reports };

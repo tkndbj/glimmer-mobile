@@ -26,6 +26,7 @@
  */
 
 import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
+import { normalScore, NORMAL_BOARD } from "./normal-scores";
 import { logger } from "firebase-functions";
 
 import {
@@ -42,6 +43,8 @@ import { builtInBlocklist } from "./blocklist";
 export const GROVE_PATHS = {
   card: (uid: string) => `groves/${uid}`,
   cards: "groves",
+  normalCard: (uid: string) => `normalCards/${uid}`,
+  normalCards: "normalCards",
   board: (boardId: string) => `leaderboards/${boardId}`,
   groveConfig: "config/grove",
   ranksConfig: "config/groveRanks",
@@ -1029,6 +1032,7 @@ export function boardName(
  * client the update wall admits reads an absent field as nothing.
  */
 export interface GroveCardDoc {
+  normalScore?: number;
   name: string;
   avatar: string;
   level: number;
@@ -1152,6 +1156,7 @@ export function buildCard(
   const wave = bestWave(save);
   const shuffle = shuffleWave(save);
   const graded = shuffleTop(save);
+  const normal = normalScore(save.levels, progression.normalScoring);
 
   // Both spread for Firestore's reason and omitted when empty for the document's: absent and
   // empty are one answer to every reader.
@@ -1175,6 +1180,7 @@ export function buildCard(
     ...(wave > 0 ? { wave } : {}),
     ...(shuffle > 0 ? { shuffle } : {}),
     ...(graded ? { shuffleTop: graded } : {}),
+    ...(normal > 0 ? { normalScore: normal } : {}),
     ...(rung.length > 0 ? { rung } : {}),
     ...(companions.length > 0 ? { companions } : {}),
     ...(line.length > 0 ? { line } : {}),
@@ -1204,6 +1210,7 @@ export const RANK_SAMPLE_SIZE = 5000;
 export const BOARD_ROWS = 100;
 
 export interface RankedGrove {
+  normalScore?: number;
   uid: string;
   name: string;
   avatar: string;
@@ -1286,7 +1293,9 @@ export function deciles(sorted: number[]): number[] {
  * league boards `l0` to `l8` that cut its number into bands. `pruneRetiredBoards` is what
  * takes their documents away.
  */
-export const BOARD_IDS = ["endless", "shuffle"];
+export const BOARD_IDS = ["endless", "shuffle", NORMAL_BOARD];
+/** Normal has its own bounded one-minute publisher; existing lane schedules stay intact. */
+export const LIVE_BOARD_IDS = ["endless", "shuffle"];
 
 /** The alphabet a Firebase uid is drawn from, for the sampling cursor. See `randomCursor`. */
 const UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -1389,11 +1398,12 @@ async function sampleRanks(db: FirebaseFirestore.Firestore): Promise<RankSample>
  * composite index. That is not an accident — it is why a board is ordered on a figure the card
  * already carries rather than on one derived at query time.
  */
-export type BoardField = "wave" | "shuffle";
+export type BoardField = "wave" | "shuffle" | "normalScore";
 
 const BOARD_FIELD: Record<string, BoardField> = {
   endless: "wave",
   shuffle: "shuffle",
+  normal: "normalScore",
 };
 
 /**
@@ -1411,7 +1421,7 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
   const field = BOARD_FIELD[boardId];
   if (!field) return [];
 
-  const snapshot = await db.collection("groves")
+  const snapshot = await db.collection(boardId === NORMAL_BOARD ? GROVE_PATHS.normalCards : GROVE_PATHS.cards)
                            .orderBy(field, "desc").limit(BOARD_ROWS).get();
 
   const rows: RankedGrove[] = [];
@@ -1447,7 +1457,8 @@ async function countOf(db: FirebaseFirestore.Firestore, boardId: string): Promis
   const field = BOARD_FIELD[boardId];
   if (!field) return 0;
 
-  const snapshot = await db.collection("groves").where(field, ">", 0).count().get();
+  const snapshot = await db.collection(boardId === NORMAL_BOARD ? GROVE_PATHS.normalCards : GROVE_PATHS.cards)
+    .where(field, ">", 0).count().get();
   return snapshot.data().count;
 }
 
@@ -1494,6 +1505,7 @@ export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
     level: typeof card.level === "number" ? Math.floor(card.level) : 1,
     wave: typeof card.wave === "number" ? Math.floor(card.wave) : 0,
     ...positive("shuffle", card.shuffle),
+    ...positive("normalScore", card.normalScore),
 
     // Spread rather than written, for the card's own reason: Firestore refuses `undefined`,
     // and an unranked keeper's row carries no key at all rather than an empty string in every
@@ -1540,6 +1552,7 @@ export function readRows(raw: unknown): RankedGrove[] {
       level: typeof row.level === "number" ? Math.floor(row.level) : 1,
       wave: typeof row.wave === "number" ? Math.floor(row.wave) : 0,
       ...positive("shuffle", row.shuffle),
+      ...positive("normalScore", row.normalScore),
       ...(typeof row.rung === "string" && row.rung.length > 0 ? { rung: row.rung } : {}),
     });
   }
@@ -1616,7 +1629,8 @@ function sameRow(a: RankedGrove, b: RankedGrove): boolean {
   return a.uid === b.uid && a.name === b.name && a.avatar === b.avatar && a.level === b.level
     && (a.rung ?? "") === (b.rung ?? "")
       && a.wave === b.wave
-      && figureOf(a, "shuffle") === figureOf(b, "shuffle");
+      && figureOf(a, "shuffle") === figureOf(b, "shuffle")
+      && figureOf(a, "normalScore") === figureOf(b, "normalScore");
 }
 
 /**
@@ -1676,7 +1690,7 @@ export async function placeOnBoards(db: FirebaseFirestore.Firestore, uid: string
   const changedBoards: string[] = [];
   const nowMs = Date.now();
 
-  for (const boardId of BOARD_IDS) {
+  for (const boardId of LIVE_BOARD_IDS) {
     const field = BOARD_FIELD[boardId];
     if (!field) continue;
 
@@ -1779,7 +1793,7 @@ export async function rebuildBoards(): Promise<{ boards: number; pruned: string[
   const db = getFirestore();
 
   const [tops, pruned] = await Promise.all([
-    Promise.all(BOARD_IDS.map((id) => topOf(db, id))),
+    Promise.all(LIVE_BOARD_IDS.map((id) => topOf(db, id))),
     pruneRetiredBoards(db),
   ]);
 
@@ -1788,7 +1802,7 @@ export async function rebuildBoards(): Promise<{ boards: number; pruned: string[
   const builtUnix = Math.floor(Date.now() / 1000);
   const batch = db.batch();
 
-  BOARD_IDS.forEach((boardId, i) => {
+  LIVE_BOARD_IDS.forEach((boardId, i) => {
     batch.set(db.doc(GROVE_PATHS.board(boardId)),
               { entries: tops[i], builtUnix, ...populationOf(tops[i]) }, { merge: true });
   });
@@ -1797,11 +1811,11 @@ export async function rebuildBoards(): Promise<{ boards: number; pruned: string[
   forgetBoardCache();
 
   logger.info("rebuilt boards", {
-    boards: BOARD_IDS.length,
-    rows: Object.fromEntries(BOARD_IDS.map((id, i) => [id, tops[i].length])),
+    boards: LIVE_BOARD_IDS.length,
+    rows: Object.fromEntries(LIVE_BOARD_IDS.map((id, i) => [id, tops[i].length])),
   });
 
-  return { boards: BOARD_IDS.length, pruned };
+  return { boards: LIVE_BOARD_IDS.length, pruned };
 }
 
 /**
@@ -1872,6 +1886,11 @@ export async function rebuildGroveRanks(): Promise<{ population: Record<string, 
   const batch = db.batch();
 
   BOARD_IDS.forEach((boardId, i) => {
+    if (boardId === NORMAL_BOARD) {
+      // Normal's one-minute transactional publisher alone owns its rows.
+      batch.set(db.doc(GROVE_PATHS.board(boardId)), { population: population[boardId] ?? 0 }, { merge: true });
+      return;
+    }
     batch.set(db.doc(GROVE_PATHS.board(boardId)), {
       entries: tops[i],
       population: population[boardId] ?? 0,
@@ -1934,7 +1953,10 @@ export function saveRevision(save: Record<string, unknown>): number {
 
 export async function withdrawCard(uid: string): Promise<void> {
   const db = getFirestore();
-  await db.doc(GROVE_PATHS.card(uid)).delete();
+  const removal = db.batch();
+  removal.delete(db.doc(GROVE_PATHS.card(uid)));
+  removal.delete(db.doc(GROVE_PATHS.normalCard(uid)));
+  await removal.commit();
 
   // The row goes with the card. While a board was a nightly tally this was left to the
   // rebuild — the player still existed and the row was stale for at most a day — but a board

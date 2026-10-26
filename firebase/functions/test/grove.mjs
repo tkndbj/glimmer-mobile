@@ -581,7 +581,7 @@ console.log("\nranking");
   // what takes their documents away. The deletion scrub deliberately does not read this list —
   // it walks the collection instead, because a board that has been retired but not yet pruned
   // is exactly where a deleted keeper's name would otherwise survive (invariant 27).
-  equal("two boards, and no more", BOARD_IDS.length, 2);
+  equal("three boards, and no more", BOARD_IDS.length, 3);
   equal("the endless board is named first", BOARD_IDS[0], "endless");
   equal("the shuffle board is named second", BOARD_IDS[1], "shuffle");
 
@@ -591,7 +591,7 @@ console.log("\nranking");
   // Mirrored by `LeaderboardBoard.All`, and the client refuses a board id outside its own
   // list before it spends a read on it — so an id here that the client does not know is a
   // board nobody can ever open.
-  equal("the list the client mirrors", BOARD_IDS.join(","), "endless,shuffle");
+  equal("the list the client mirrors", BOARD_IDS.join(","), "endless,shuffle,normal");
 }
 
 /** True when nothing in this value is undefined — what Firestore actually demands. */

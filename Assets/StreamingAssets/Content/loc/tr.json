@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "{0} mücevher"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Puan {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "Puanın: {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "Normal bölüm seviyelerindeki en iyi sonuçların toplamı tüm zamanların puanını oluşturur. Seviyeleri tamamla, daha fazla yıldız kazan ve daha az hamleyle bitir. Tekrarlar yalnızca en iyi sonucunu iyileştirirse sayılır."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "Tablo, Normal puanına göre ilk {0} oyuncuyu gösterir. Toplamına yalnızca Normal bölüm seviyeleri dahildir."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "Normal sıralaması her {0} dakikada bir yayınlanır. Daha iyi bir sonuçtan sonra kendi puanın güncellenir; ortak liste eşitlemeden sonra yenilenir."
     }
   ]
 }

@@ -10104,6 +10104,26 @@
     {
       "key": "ui.offer.gems_amount",
       "text": "{0} Juwelen"
+    },
+    {
+      "key": "ui.board.row_score",
+      "text": "Punkte {0}"
+    },
+    {
+      "key": "ui.board.your_score",
+      "text": "Deine Punkte: {0}"
+    },
+    {
+      "key": "ui.board.info_normal_body",
+      "text": "Deine besten Ergebnisse in normalen Kapitelleveln ergeben deine Gesamtpunktzahl. Schließe Level ab, verdiene mehr Sterne und brauche weniger Züge. Wiederholungen zählen nur bei einer Verbesserung."
+    },
+    {
+      "key": "ui.board.info_place_normal",
+      "text": "Die Bestenliste zeigt die besten {0} Spieler nach Normal-Punkten. Nur normale Kapitellevel zählen zur Gesamtpunktzahl."
+    },
+    {
+      "key": "ui.board.info_normal_tally",
+      "text": "Die Normal-Bestenliste wird alle {0} Minute veröffentlicht. Deine Punkte steigen nach einem besseren Abschluss; die gemeinsame Liste folgt nach der Synchronisierung."
     }
   ]
 }

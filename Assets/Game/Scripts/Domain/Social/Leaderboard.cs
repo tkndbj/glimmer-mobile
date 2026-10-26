@@ -52,8 +52,11 @@ namespace GlimmerGrove.Social
         /// </summary>
         public readonly int ShuffleWave;
 
+        public readonly long NormalScore;
+
         public LeaderboardEntry(int rank, string ownerId, string name, string avatarId,
-                                int keeperLevel, int wave = 0, string rungId = null, int shuffleWave = 0)
+                                int keeperLevel, int wave = 0, string rungId = null, int shuffleWave = 0,
+                                long normalScore = 0L)
         {
             RungId = rungId ?? string.Empty;
             Rank = rank < 1 ? 1 : rank;
@@ -63,6 +66,7 @@ namespace GlimmerGrove.Social
             KeeperLevel = keeperLevel < 1 ? 1 : keeperLevel;
             Wave = wave < 0 ? 0 : wave;
             ShuffleWave = shuffleWave < 0 ? 0 : shuffleWave;
+            NormalScore = Math.Max(0L, normalScore);
         }
 
         public bool IsValid => OwnerId.Length > 0;
@@ -81,7 +85,7 @@ namespace GlimmerGrove.Social
     /// reason a scheduled job writes it.
     /// </para>
     /// <para>
-    /// <b>There are exactly two boards and each is one of the game's ladders.</b>
+    /// <b>Three boards, one per track.</b> Normal sums chapter bests; the other two rank waves.
     /// <see cref="Endless"/> is the Infinite lane's own board: how far anybody has held the line
     /// (invariant 43), and <see cref="Shuffle"/> is the Shuffle lane's (MODES.md 59). Each is one
     /// document ordered on one card field, each is exact at any player count, and none costs a
@@ -124,6 +128,9 @@ namespace GlimmerGrove.Social
         /// </summary>
         public const string Shuffle = "shuffle";
 
+        public const string Normal = "normal";
+        public const int NormalRebuildMinutes = 1;
+
         /// <summary>
         /// Every board this build knows how to ask for, in the order the screen offers them.
         ///
@@ -132,7 +139,7 @@ namespace GlimmerGrove.Social
         /// one no search can find and no gate can check. Mirrored by <c>BOARD_IDS</c> in
         /// <c>functions/src/grove.ts</c>, which is what decides the boards that actually exist.
         /// </summary>
-        public static readonly IReadOnlyList<string> All = new[] { Endless, Shuffle };
+        public static readonly IReadOnlyList<string> All = new[] { Endless, Shuffle, Normal };
 
         /// <summary>
         /// How many rows a board carries.
@@ -213,7 +220,8 @@ namespace GlimmerGrove.Social
         /// </summary>
         public static bool IsKnown(string boardId)
             => string.Equals(boardId, Endless, StringComparison.Ordinal)
-            || string.Equals(boardId, Shuffle, StringComparison.Ordinal);
+            || string.Equals(boardId, Shuffle, StringComparison.Ordinal)
+            || string.Equals(boardId, Normal, StringComparison.Ordinal);
 
         /// <summary>
         /// Whether this board is the Infinite lane's.
@@ -231,6 +239,9 @@ namespace GlimmerGrove.Social
         /// <summary>Whether this board is the Shuffle lane's. See <see cref="IsEndless"/>.</summary>
         public static bool IsShuffle(string boardId)
             => string.Equals(boardId, Shuffle, StringComparison.Ordinal);
+
+        public static bool IsNormal(string boardId)
+            => string.Equals(boardId, Normal, StringComparison.Ordinal);
 
         /// <summary>
         /// The wave a row prints on this board: the figure the board is ordered on, and no

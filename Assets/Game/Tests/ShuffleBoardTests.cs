@@ -222,7 +222,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void EveryTabIsABoardTheServerWritesAndWearsALanesName()
         {
-            CollectionAssert.AreEqual(new[] { LeaderboardBoard.Endless, LeaderboardBoard.Shuffle },
+            CollectionAssert.AreEqual(new[] { LeaderboardBoard.Endless, LeaderboardBoard.Shuffle, LeaderboardBoard.Normal },
                                       LeaderboardScreen.Offers);
 
             foreach (string boardId in LeaderboardScreen.Offers)
