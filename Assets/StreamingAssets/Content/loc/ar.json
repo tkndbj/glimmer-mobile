@@ -3742,6 +3742,10 @@
       "text": "معركة"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "استئناف · الموجة {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "أفضل موجة: {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "الرئيسية"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "حفظ وخروج"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "كل جولة جديدة"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "انقر هنا لحفظ جولتك ومتابعتها لاحقا."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "احفظ جولتك"
     },
     {
       "key": "ui.tip.merge_swipe.body",

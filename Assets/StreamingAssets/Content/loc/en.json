@@ -3742,6 +3742,10 @@
       "text": "BATTLE"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "RESUME · WAVE {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "Best wave {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "HOME"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "SAVE & QUIT"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "NEW EVERY RUN"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Tap here to save your run and continue it later."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "SAVE YOUR RUN"
     },
     {
       "key": "ui.tip.merge_swipe.body",

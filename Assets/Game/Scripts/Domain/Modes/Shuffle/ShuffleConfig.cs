@@ -104,6 +104,30 @@ namespace GlimmerGrove.Shuffle
         /// Hooks the launch read: the first settled sync of the process asks once. Idempotent;
         /// called from <c>Boot</c>.
         /// </summary>
+        /// <summary>
+        /// <see cref="Current"/> together with the document it was read from (null for the
+        /// build's own figures), so a run can keep the very figures it opened on beyond the life
+        /// of the process (<see cref="ShuffleSnapshot.Tuning"/>, MODES.md 59s).
+        /// </summary>
+        public static ShuffleTuning CurrentWithBody(out string body)
+        {
+            body = null;
+
+            try
+            {
+                Load();
+                if (_current == null) return ShuffleTuning.Shipped;
+
+                body = _body;
+                return _current;
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogException(e);
+                return ShuffleTuning.Shipped;
+            }
+        }
+
         public static void Attach()
         {
             if (_attached) return;

@@ -1351,7 +1351,8 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    closes on nothing but a card: a hand walked away from is a build nobody chose. Asked from
    `Running`, so a hand is never dealt over a pause, a lesson or a board still arriving, and never
    dealt twice (an open hand is one `Owed` answers false for).
-59g. **The seed is the run's and is stored nowhere.** A build is a thing that happens to one run
+59g. **The seed is the run's and is stored nowhere** - but in the suspended run, which goes with the run
+   (59s). A build is a thing that happens to one run
    (`ShuffleRun.SeedNow`, the clock); a fixture hands in a constant and deals the same hands twice.
    The run's own stream is the build's (`SiegeBoosts.Roll100`), never the field's and never the
    hill's: a crit roll per bolt would otherwise move which gem the next refill deals (41).
@@ -1628,6 +1629,41 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    `firebase/seed/shuffle.json` revision 4 (the sixteen rows at their shipped figures, nothing else
    moved) was **published 2026-10-20** after a snapshot of revision 3; an older client skips the
    unknown cards (59l), so live builds play what they played. Next retune is revision 5.
+59s. **A run outlives the app: it is suspended on the device at every hand and resumed on the wave
+   after it** (2026-10-27, the owner: "a proper pause, they can close the app and continue").
+   `ShuffleSnapshot` is the run at a hand (`ShuffleRun.Owed`) - seed, cards taken by id in order,
+   hands dealt, the open hand, refreshes, the build's stream and unspent lives, continues, every post's
+   health, standing, fuel, charges and rank, and the tuning document it opened on (59l) - written
+   by a managed codec read through `StrictJson` (a missing or unknown field is refused, not a
+   nought). `ShuffleResume` keeps one per level and account, **device-local and flushed**
+   (`DevicePrefs`): no save field, no rules release, no server, nothing billed. The screen suspends
+   at the run's first move (no hand yet: it reopens on wave one), a hand (empty or not), a take and
+   a refresh, **only once the run is committed** (a run nobody
+   paid a heart for is never resumable), and **lets go before anything is paid** at the ending, a
+   forfeit, a restart, a retry and **the frame the line falls** (before the continue offer, so
+   closing the app over it is no free second try; a bought continue is suspended again at the next
+   hand). **Resuming** opens the board through `SiegeStart(wave, 0)` (43f's door; the field is dealt
+   fresh, a wave stepping out at the hand steps out again), folds the build back from its cards
+   (`ShuffleRun.Resume`, 59e) and carries the stream and spent lives (`SiegeBoosts.Carry`), seats
+   the posts (`SiegeBoard.Seat`, clamped inside the build), carries the continue count
+   (`RunContinueFlow.Carry`) and commits **without a second heart** (`RunScreen.CommitCarried`; the
+   door lets a waiting run in on an empty bar, `PlayRoute.CanOpen`). **Paid once**: the waves before
+   the resumed board are `_carried` and banked with its own (`WavesThisRun + _carried`, 59q); a
+   snapshot that cannot be resumed (a card withdrawn by an update, a tuning this build cannot read,
+   a changed line) is let go and its waves paid as a forfeit would, cleared first. The hub's key
+   says `ui.shuffle.resume` (RESUME · WAVE n) while one waits (`EndlessHub.Reading.Resume`).
+   **The pause menu on this lane only** (`RunScreen.Suspends`) offers SAVE & QUIT
+   (`ui.pause.save_quit`) in place of LEVELS and HOME: the snapshot is kept, nothing is forfeited,
+   banked or charged, and the player lands on the lane's hub (`SaveAndQuit`); a run with no move
+   made just leaves. The header's back key is still a forfeit (it asks). **One lesson**,
+   `shuffle_save`, rings the pause key once in a player's life, after the first card a run takes
+   (`Lesson.Later`, `Teach` in `Take`). Analytics `shuffle_resumed` (`outcome`
+   saved/resumed/dropped). **Known and accepted**: a player may
+   close the app mid-wave to replay from the last hand - at most two waves, never past a fallen line.
+   A new run-long fact on the board or the build is a new snapshot field, or a resumed run quietly
+   differs. **Held by** `ShuffleResumeTests` (a resumed run is the suspended run, every build figure
+   by reflection, a dozen hands, four seeds; every refusal; the store) and the Editor's
+   `ShuffleResumeScreenTests`; `render_endless.py --shuffle --resume N` and `--measure`.
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the

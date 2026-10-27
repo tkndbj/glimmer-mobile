@@ -796,6 +796,14 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic LaneShuffle = new Mechanic("lane_shuffle", 1);
 
         /// <summary>
+        /// A Shuffle run can be saved and picked up later (MODES.md 59s): rings the pause key,
+        /// whose menu holds SAVE &amp; QUIT on this lane. Raised once, after the first card a run
+        /// takes - a calm beat, the moment the run has something worth keeping - never at the
+        /// opening, where it would queue behind the board's own lessons on a first run.
+        /// </summary>
+        public static readonly Mechanic ShuffleSave = new Mechanic("shuffle_save");
+
+        /// <summary>
         /// The lesson that points at a lane's door, or an invalid mechanic for the main ladder.
         ///
         /// <para>
@@ -1010,6 +1018,7 @@ namespace GlimmerGrove.Progression
             // MapTrack is retired and deliberately absent; LaneDoor replaced it.
             // MapLoadout is retired and deliberately absent; the first sortie replaced it.
             MapChapterGate, LaneInfinite, LaneShuffle,
+            ShuffleSave,
             LoadoutSeats, LoadoutKit,
             // MergeGoal, MergeFeed, PairsCombo, PairsCurse and ChallengeHill are retired and
             // deliberately absent. See the remarks on MergeSwipe.

@@ -52,9 +52,16 @@ namespace GlimmerGrove
         /// answer, which is what makes the safe behaviour the default rather than the thing
         /// somebody remembered.
         /// </para>
+        /// <para>
+        /// <b>A suspended Shuffle run always may</b> (MODES.md 59s): its heart was paid at the
+        /// door the first time, and resuming it charges nothing, so an empty bar is no reason to
+        /// keep a player from a run they already paid for. Asked second, so the store is only
+        /// read when the hearts have already said no.
+        /// </para>
         /// </summary>
         public static bool CanOpen(LevelId level)
-            => HeartStake.CanBegin(GameContent.Index, level, Wallet.Hearts.Count);
+            => HeartStake.CanBegin(GameContent.Index, level, Wallet.Hearts.Count)
+            || Shuffle.ShuffleResume.Holds(level);
 
         /// <summary>
         /// Opens the level, or refuses and says why. Answers whether the door opened, so a

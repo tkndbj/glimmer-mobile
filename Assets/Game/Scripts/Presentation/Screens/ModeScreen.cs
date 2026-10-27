@@ -353,6 +353,12 @@ namespace GlimmerGrove
         protected virtual HeaderKey RightKey => new HeaderKey("ic_restart", RestartLevel);
 
         /// <summary>
+        /// The header's right-hand key as drawn (the pause key on a run that has one), for a
+        /// lesson to ring; null until the header is built.
+        /// </summary>
+        protected RectTransform RightKeyNode { get; private set; }
+
+        /// <summary>
         /// The header: a way back, and either a way to start again or a way to pause.
         ///
         /// <para>
@@ -393,8 +399,9 @@ namespace GlimmerGrove
             BuildLevelTag(bar, KeyY);
 
             var key = RightKey;
-            UIKit.IconButton("RightKey", bar, Skins.Nav, key.Icon, new Vector2(118f, 118f),
-                             new Vector2(1f, .5f), new Vector2(-102f, KeyY), key.Press);
+            var right = UIKit.IconButton("RightKey", bar, Skins.Nav, key.Icon, new Vector2(118f, 118f),
+                                         new Vector2(1f, .5f), new Vector2(-102f, KeyY), key.Press);
+            RightKeyNode = right != null ? (RectTransform)right.transform : null;
 
             // Beside the restart key. Built for every mode and shown only by the ones whose
             // board actually teaches something, which is RunScreen's to decide once the board

@@ -371,6 +371,34 @@ namespace GlimmerGrove
         /// Missing one costs a player a heart they did not owe on their next launch, so it is
         /// deliberately cheap and idempotent rather than conditional.
         /// </summary>
+        /// <summary>
+        /// Marks a run carried over from an earlier session as begun, <b>without settling its
+        /// stake a second time</b> - the Shuffle lane's suspended run (MODES.md 59s), whose heart
+        /// was paid at the door the first time it was committed. A run owed at its ending is
+        /// still owed, so the guard is raised exactly as <see cref="Commit"/> raises it.
+        /// </summary>
+        protected void CommitCarried()
+        {
+            if (Committed || !StakeLevel.IsValid) return;
+
+            Committed = true;
+
+            if (OwedAtEnding) RunGuard.Begin(StakeLevel);
+        }
+
+        /// <summary>
+        /// Whether this run can be put away and picked up later - the Shuffle lane's (MODES.md
+        /// 59s). The pause menu then offers <see cref="SaveAndQuit"/> in place of its two ways
+        /// out; every other run says no and keeps the menu it always had.
+        /// </summary>
+        protected internal virtual bool Suspends => false;
+
+        /// <summary>
+        /// Puts the run away for later and leaves it, unforfeited. Only asked of a run that
+        /// <see cref="Suspends"/>; nothing for any other.
+        /// </summary>
+        protected internal virtual void SaveAndQuit() { }
+
         protected void Resolve()
         {
             Committed = false;

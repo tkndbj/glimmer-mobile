@@ -429,14 +429,22 @@ def points(sheet, top):
         K.text(sheet, say, x, cy, 34, fill=(255, 255, 255), outline=3, anchor="l")
 
 
-def battle(sheet, top, wall=0):
+def battle(sheet, top, wall=0, resume=0, lang="en", floored=None):
     """`EndlessHub.Battle` - the way in, and the same key wearing its wall when there is one.
 
     **The locked face is a whole screen and no gate can look at it.** The caption is a sentence
     rather than a word (invariant 42e: the strip names the level, because LOCKED says a player
     cannot have this and not what would change that), so the one question is whether it still
     reads inside a pill sized for BATTLE - which is what this draws and prints.
+
+    **A suspended Shuffle run's key** (`resume`, MODES.md 59s) says `ui.shuffle.resume` in
+    `lang` - RESUME and the wave - shrunk the way `UIKit.OneLine(play, 34)` shrinks it; a caption
+    still too wide at 34 is appended to `floored` (invariant 19n).
     """
+    if resume > 0 and wall <= 0:
+        resumed(sheet, top, resume, lang, floored if floored is not None else [])
+        return
+
     cx, cy = W / 2, top + BUTTON_CENTRE
     shut = wall > 0
 
@@ -638,8 +646,40 @@ def best_run(sheet, top, grade, lang, floored):
                     floored, outline=2)
 
 
+#: `UIKit.OneLine(play, 34)`: the size the key's caption may shrink to before it is clipped.
+KEY_FLOOR = 34
+
+
+def resumed(sheet, top, wave, lang, floored):
+    """The key over a suspended run: the gold pill, the battle glyph and RESUME · WAVE n, set at
+    62 and shrunk one point at a time to the floor, as `OneLine` does on the device."""
+    import render_shuffle as R
+
+    cx, cy = W / 2, top + BUTTON_CENTRE
+    K.paste(sheet, K.glow(760, 2.1, K.SUN, 0.26), cx, cy)
+    K.paste(sheet, K.skin("Hud/btn_gold", BUTTON_W, BUTTON_H), cx, cy)
+
+    glyph = K.fit(Image.open(K.UI / "ic_battle.png").convert("RGBA"), (112, 112))
+    caption = R.table(lang)["ui.shuffle.resume"].format(wave)
+    room = BUTTON_W - 40 - glyph.width - 14
+
+    size = 62
+    while size > KEY_FLOOR and R.face(caption, size)[1].getlength(R.face(caption, size)[0]) > room:
+        size -= 1
+    shown, font = R.face(caption, size)
+    wide = font.getlength(shown)
+    if wide > room:
+        floored.append("%s: the key %r is %.0f wide at its floor in %.0f" % (lang, caption, wide, room))
+    print("  %s: the key says %r at %d" % (lang, caption, size))
+
+    block = glyph.width + 14 + wide
+    K.paste(sheet, glyph, cx - block / 2 + glyph.width / 2, cy)
+    ImageDraw.Draw(sheet).text((cx - block / 2 + glyph.width + 14, cy - size * .62), shown, font=font,
+                               fill=(255, 242, 219), stroke_width=4, stroke_fill=(23, 36, 51))
+
+
 def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, start=1, first=0,
-           grade="s_plus", lang="en", floored=None):
+           grade="s_plus", lang="en", floored=None, resume=0):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
     row = LANES[LANE]
@@ -670,7 +710,7 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, sta
         checkpoint(layer, 100, start, first)
     if row.get("stats"):
         best_run(layer, 100, grade if played else None, lang, floored if floored is not None else [])
-    battle(layer, 100, wall)
+    battle(layer, 100, wall, resume, lang, floored)
     if scale < 1.0:
         layer = layer.resize((int(W * scale), int(layer.height * scale)), Image.LANCZOS)
     sheet.alpha_composite(layer, (int((W - layer.width) / 2), int(top - 100 * scale)))
@@ -723,9 +763,12 @@ def main():
                     help="with --shuffle: the best run's grade (d .. s_plus_plus), or 'none' for a "
                          "keeper with no graded run yet")
     ap.add_argument("--lang", default="en", help="with --shuffle: the best run's language")
+    ap.add_argument("--resume", type=int, default=0, metavar="WAVE",
+                    help="with --shuffle: draw the key over a suspended run reopening on this wave "
+                         "(MODES.md 59s), in --lang")
     ap.add_argument("--measure", action="store_true",
-                    help="with --shuffle: every grade and the empty state in every language; "
-                         "fail on a caption at its floor")
+                    help="with --shuffle: every grade and the empty state in every language, and the "
+                         "key over a suspended run at a four-digit wave; fail on a caption at its floor")
     ap.add_argument("--out", type=Path, default=Path("Tools/out/endless.png"))
     args = ap.parse_args()
 
@@ -741,10 +784,12 @@ def main():
             for grade in R.GRADE_IDS + ["none"]:
                 screen(K.H, played=grade != "none", grade=None if grade == "none" else grade,
                        lang=lang, floored=floored)
+            # The widest a suspended run's key gets: a four-digit wave, on the squarest canvas.
+            screen(SHORT_H, lang=lang, floored=floored, resume=1999)
         if floored:
             sys.exit("best run: captions at their floor:" + "".join("\n  " + f for f in floored))
-        print("best run: every caption of %d grade(s) and the empty state in %d language(s) fits"
-              % (len(R.GRADE_IDS), len(langs)))
+        print("best run: every caption of %d grade(s) and the empty state in %d language(s) fits, "
+              "and the resume key in each" % (len(R.GRADE_IDS), len(langs)))
         return
 
     # A wall is met by an account that has not run the lane, so the two states arrive together
@@ -758,7 +803,8 @@ def main():
                  rank=max(0, args.rank),
                  start=0 if args.first > 0 else max(0, args.start),
                  first=max(0, args.first),
-                 grade=None if args.grade == "none" else args.grade, lang=args.lang)
+                 grade=None if args.grade == "none" else args.grade, lang=args.lang,
+                 resume=max(0, args.resume) if args.shuffle else 0)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

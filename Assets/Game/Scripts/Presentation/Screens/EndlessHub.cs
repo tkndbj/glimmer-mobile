@@ -256,23 +256,31 @@ namespace GlimmerGrove
             /// </summary>
             public readonly string Run;
 
-            public Reading(int best, bool unlocked, string wall, string run = null)
+            /// <summary>
+            /// The wave a suspended Shuffle run reopens on, nought for none (MODES.md 59s): the
+            /// fifth fact, device-local and per account, so a switch of account redraws the key.
+            /// </summary>
+            public readonly int Resume;
+
+            public Reading(int best, bool unlocked, string wall, string run = null, int resume = 0)
             {
                 Best = best;
                 Unlocked = unlocked;
                 Wall = wall ?? string.Empty;
                 Run = run ?? string.Empty;
+                Resume = resume;
             }
 
             /// <summary>What the column would draw for this level right now, on this lane.</summary>
             public static Reading Of(GameTrack lane, LevelDefinition level, bool unlocked, string wall)
             {
                 var hub = HubLane.Of(lane);
-                return new Reading(hub.BestOf(level), unlocked, wall, hub.TopOf(level)?.Fingerprint());
+                return new Reading(hub.BestOf(level), unlocked, wall, hub.TopOf(level)?.Fingerprint(),
+                                   ResumeWave(lane, level, unlocked));
             }
 
             public bool Equals(Reading other)
-                => Best == other.Best && Unlocked == other.Unlocked
+                => Best == other.Best && Unlocked == other.Unlocked && Resume == other.Resume
                 && string.Equals(Run ?? string.Empty, other.Run ?? string.Empty, StringComparison.Ordinal)
                 && string.Equals(Wall ?? string.Empty, other.Wall ?? string.Empty, StringComparison.Ordinal);
 
@@ -284,11 +292,20 @@ namespace GlimmerGrove
                 {
                     int h = Best;
                     h = h * 31 + (Unlocked ? 1 : 0);
+                    h = h * 31 + Resume;
                     h = h * 31 + StringComparer.Ordinal.GetHashCode(Run ?? string.Empty);
                     return h * 31 + StringComparer.Ordinal.GetHashCode(Wall ?? string.Empty);
                 }
             }
         }
+
+        /// <summary>
+        /// The wave the key offers to resume on: a suspended run on the Shuffle lane's open level
+        /// (<see cref="GlimmerGrove.Shuffle.ShuffleResume"/>), else nought. Never the Infinite
+        /// lane's, which suspends nothing, and never behind a wall, which says the wall instead.
+        /// </summary>
+        static int ResumeWave(GameTrack lane, LevelDefinition level, bool unlocked)
+            => lane.Dealt && unlocked && level != null ? GlimmerGrove.Shuffle.ShuffleResume.WaveFor(level.Id) : 0;
 
         /// <summary>
         /// Whether a column drawn from <paramref name="drawn"/> has to be drawn again for
@@ -465,7 +482,8 @@ namespace GlimmerGrove
             Record(column, owner, hub, level, arriving);
             if (hub.Checkpoints) Checkpoint(column, level, arriving);
             if (hub.Stats) ShuffleHubStrip.Build(column, EndlessHubLayout.SlotCentre(slot), hub.TopOf(level), arriving);
-            Battle(column, unlocked, wall, open, EndlessHubLayout.ButtonCentreFor(slot), arriving);
+            Battle(column, unlocked, wall, open, EndlessHubLayout.ButtonCentreFor(slot), arriving,
+                   ResumeWave(lane, level, unlocked));
 
             return host;
         }
@@ -1014,9 +1032,14 @@ namespace GlimmerGrove
         /// the wall gets said out loud - a control that swallows a tap is a broken button
         /// (invariant 16o).
         /// </para>
+        /// <para>
+        /// <b>A run waiting to be picked up is said on the key</b> (MODES.md 59s): RESUME and the
+        /// wave it reopens on, in place of BATTLE, because that is what the key now does - and
+        /// a player who closed the app mid-run should not have to guess whether it kept.
+        /// </para>
         /// </summary>
         static void Battle(RectTransform host, bool unlocked, string wall, Action open, float centre,
-                           bool arriving)
+                           bool arriving, int resume)
         {
             // **The wall's own sentence is set to fit rather than abbreviated**, because what
             // makes it worth printing is that it names the level (invariant 42e) and every
@@ -1027,6 +1050,7 @@ namespace GlimmerGrove
 
             var play = UIKit.TextButton("Battle", host, unlocked ? Skins.Battle : Skins.Shut,
                                         named ? wall.Upper()
+                                              : resume > 0 ? Loc.Format("ui.shuffle.resume", resume)
                                               : Loc.Get("ui.endless.battle"),
                                         named ? 38 : 62,
                                         new Vector2(EndlessHubLayout.ButtonWidth,

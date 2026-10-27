@@ -3742,6 +3742,10 @@
       "text": "COMBAT"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "REPRENDRE · VAGUE {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "Meilleure vague {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "ACCUEIL"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "SAUVER ET QUITTER"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "CHAQUE PARTIE EST NOUVELLE"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Touche ici pour sauvegarder ta partie et la reprendre plus tard."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "SAUVEGARDE TA PARTIE"
     },
     {
       "key": "ui.tip.merge_swipe.body",

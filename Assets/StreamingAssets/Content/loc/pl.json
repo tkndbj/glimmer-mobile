@@ -3742,6 +3742,10 @@
       "text": "BITWA"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "WZNÓW · FALA {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "Najlepsza fala: {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "START"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "ZAPISZ I WYJDŹ"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "KAŻDA GRA INNA"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Dotknij tutaj, by zapisać grę i wrócić do niej później."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "ZAPISZ GRĘ"
     },
     {
       "key": "ui.tip.merge_swipe.body",

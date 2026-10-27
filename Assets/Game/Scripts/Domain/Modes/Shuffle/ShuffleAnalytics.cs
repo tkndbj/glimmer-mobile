@@ -38,6 +38,57 @@ namespace GlimmerGrove.Shuffle
                 "tuning", run.Tuning.Revision);
         }
 
+        /// <summary>A run was put away from the pause menu, picked up again, or could not be (MODES.md 59s).</summary>
+        public const string Resumed = "shuffle_resumed";
+
+        /// <summary>
+        /// A suspended run was picked up: the wave it reopened on and the hands it carried, so a
+        /// dashboard can read how often runs outlive the app and how deep they are when they do.
+        /// </summary>
+        public static void TrackResumed(LevelId level, ShuffleRun run, int wave)
+        {
+            if (run == null) return;
+
+            Telemetry.Track(Resumed,
+                "level_id", level.Value,
+                "outcome", "resumed",
+                "wave", wave,
+                "hand", run.Hands,
+                "tuning", run.Tuning.Revision);
+        }
+
+        /// <summary>
+        /// A run was put away from the pause menu (SAVE &amp; QUIT): the wave it will reopen on
+        /// and the hands it holds, so a dashboard can read how often players save rather than
+        /// close the app, and whether they come back.
+        /// </summary>
+        public static void TrackSaved(LevelId level, ShuffleRun run, int wave)
+        {
+            if (run == null) return;
+
+            Telemetry.Track(Resumed,
+                "level_id", level.Value,
+                "outcome", "saved",
+                "wave", wave,
+                "hand", run.Hands,
+                "tuning", run.Tuning.Revision);
+        }
+
+        /// <summary>
+        /// A suspended run could not be picked up and was let go, with why - a card withdrawn by
+        /// an update, a tuning this build cannot read, or a damaged value. Should be rare; a
+        /// spike after a release is a release that broke resuming.
+        /// </summary>
+        public static void TrackDropped(LevelId level, string fault)
+        {
+            string why = string.IsNullOrEmpty(fault) ? "unknown" : fault.Length <= 100 ? fault : fault.Substring(0, 100);
+
+            Telemetry.Track(Resumed,
+                "level_id", level.Value,
+                "outcome", "dropped",
+                "fault", why);
+        }
+
         public static void TrackRun(LevelDefinition level, int waves, ShuffleRun run)
         {
             if (level == null || run == null) return;

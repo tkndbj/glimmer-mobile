@@ -3742,6 +3742,10 @@
       "text": "BATALLA"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "SEGUIR · OLEADA {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "Mejor oleada {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "INICIO"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "GUARDAR Y SALIR"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "CADA PARTIDA ES NUEVA"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Toca aquí para guardar tu partida y seguirla más tarde."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "GUARDA TU PARTIDA"
     },
     {
       "key": "ui.tip.merge_swipe.body",

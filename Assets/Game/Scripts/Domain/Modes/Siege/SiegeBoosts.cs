@@ -950,6 +950,28 @@ namespace GlimmerGrove.Modes
 
         bool Chance(int perHundred) => perHundred >= 100 || Roll100() < perHundred;
 
+        // ------------------------------------------------------------------ a suspended run
+        /// <summary>
+        /// Where this build's own stream stands. Read only to suspend a Shuffle run
+        /// (<c>ShuffleSnapshot</c>, MODES.md 59s), so the run picks the stream up where it left it
+        /// and a hand dealt after the resume is the hand the run would have been dealt.
+        /// </summary>
+        internal uint Stream => _rng;
+
+        /// <summary>
+        /// Puts back what a suspended run held that is not a function of its cards: the stream,
+        /// and the second winds and phoenixes still unspent. Called once, after the cards are
+        /// folded back on (<c>ShuffleBuild.Compile</c> counts every life as unspent).
+        /// </summary>
+        internal void Carry(uint stream, int secondWinds, int phoenixes)
+        {
+            Guard();
+
+            _rng = stream == 0u ? 2463534242u : stream;
+            SecondWinds = secondWinds < 0 ? 0 : secondWinds;
+            Phoenixes = phoenixes < 0 ? 0 : phoenixes;
+        }
+
         /// <summary>lowbias32, so a slice of the stream is as good as the whole (invariant 37cj).</summary>
         static uint Avalanche(uint x)
         {

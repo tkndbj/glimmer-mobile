@@ -3742,6 +3742,10 @@
       "text": "BATTAGLIA"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "RIPRENDI · ONDATA {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "Ondata migliore {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "HOME"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "SALVA ED ESCI"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "OGNI PARTITA È NUOVA"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Tocca qui per salvare la partita e riprenderla più tardi."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "SALVA LA PARTITA"
     },
     {
       "key": "ui.tip.merge_swipe.body",

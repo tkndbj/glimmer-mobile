@@ -870,7 +870,13 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            MakePanel(new Vector2(840f, 1040f), Loc.Get("ui.pause.title"));
+            // **A run that can be put away offers that instead of the two ways out** (the Shuffle
+            // lane, MODES.md 59s): SAVE & QUIT keeps the run and goes back to its hub, so the
+            // levels and home keys - each a forfeit of it - are not offered beside it. One key
+            // fewer, so the panel is one key's pitch shorter and the toggles keep their gap.
+            bool suspends = Screen != null && Screen.Suspends;
+
+            MakePanel(new Vector2(840f, suspends ? 1040f - KeyPitch : 1040f), Loc.Get("ui.pause.title"));
 
             UIKit.TextButton("Resume", Panel, "btn_green", Loc.Get("ui.pause.resume"), 52, new Vector2(600f, 140f),
                              new Vector2(.5f, 1f), new Vector2(0f, -230f), Resume);
@@ -878,32 +884,45 @@ namespace GlimmerGrove
                              new Vector2(.5f, 1f), new Vector2(0f, -390f),
                              () => { _handedOn = true; Close(() => Screen?.RestartLevel()); });
 
-            // Both exits go through the screen rather than straight at Flow, because leaving a
-            // run that has begun costs a heart and the screen is what knows whether this one
-            // has. Navigating from here directly was the third of five ways to walk away from a
-            // countdown for free - see RunGuard.
-            UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 48, new Vector2(600f, 130f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -535f),
-                             () =>
-                             {
-                                 _handedOn = true;
-                                 Close(() =>
+            if (suspends)
+            {
+                UIKit.TextButton("SaveQuit", Panel, "btn_blue", Loc.Get("ui.pause.save_quit"), 48, new Vector2(600f, 130f),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -535f),
+                                 () =>
                                  {
-                                     if (Screen) Screen.LeaveToMap();
-                                     else Flow.Go<LevelsScreen>();
+                                     _handedOn = true;
+                                     Close(() => { if (Screen) Screen.SaveAndQuit(); });
                                  });
-                             });
-            UIKit.TextButton("Home", Panel, "btn_red", Loc.Get("ui.pause.home"), 48, new Vector2(600f, 130f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -680f),
-                             () =>
-                             {
-                                 _handedOn = true;
-                                 Close(() =>
+            }
+            else
+            {
+                // Both exits go through the screen rather than straight at Flow, because leaving a
+                // run that has begun costs a heart and the screen is what knows whether this one
+                // has. Navigating from here directly was the third of five ways to walk away from a
+                // countdown for free - see RunGuard.
+                UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 48, new Vector2(600f, 130f),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -535f),
+                                 () =>
                                  {
-                                     if (Screen) Screen.LeaveToHome();
-                                     else Flow.Go<HomeScreen>();
+                                     _handedOn = true;
+                                     Close(() =>
+                                     {
+                                         if (Screen) Screen.LeaveToMap();
+                                         else Flow.Go<LevelsScreen>();
+                                     });
                                  });
-                             });
+                UIKit.TextButton("Home", Panel, "btn_red", Loc.Get("ui.pause.home"), 48, new Vector2(600f, 130f),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -680f),
+                                 () =>
+                                 {
+                                     _handedOn = true;
+                                     Close(() =>
+                                     {
+                                         if (Screen) Screen.LeaveToHome();
+                                         else Flow.Go<HomeScreen>();
+                                     });
+                                 });
+            }
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(600f, 150f), new Vector2(.5f, 0f), new Vector2(0f, 128f));
             // Two, straddling the middle rather than taking the outer thirds - ReadoutRow's
@@ -915,6 +934,9 @@ namespace GlimmerGrove
             UIKit.Titled("Hint", Panel, Loc.Get("ui.settings.toggle_row"), 26, new Color(.42f, .30f, .22f, .8f),
                          TextAnchor.MiddleCenter, new Vector2(600f, 40f), new Vector2(.5f, 0f), new Vector2(0f, 46f), 0f, 0f);
         }
+
+        /// <summary>The distance between two keys' centres on this panel (-390 to -535).</summary>
+        const float KeyPitch = 145f;
 
         // Only the way out. Handing the board back is OnDestroy's job, so that every way
         // out gets it and not just this one.

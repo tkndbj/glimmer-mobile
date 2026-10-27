@@ -3742,6 +3742,10 @@
       "text": "SAVAŞ"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "DEVAM ET · AŞAMA {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "En iyi aşama {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "ANA SAYFA"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "KAYDET VE ÇIK"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "HER OYUN YENİ"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Oyununu kaydetmek ve sonra devam etmek için buraya dokun."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "OYUNUNU KAYDET"
     },
     {
       "key": "ui.tip.merge_swipe.body",

@@ -20,7 +20,9 @@ namespace GlimmerGrove.Shuffle
     /// <b>Seeded per run and stored nowhere.</b> A build is a thing that happens, not a thing
     /// that is kept: a run that ends is gone, and the next one is dealt afresh. The seed is the
     /// screen's to choose (the clock, or a fixture's constant), so a test can deal the same hands
-    /// twice and a player never meets the same run twice.
+    /// twice and a player never meets the same run twice. <b>The one exception is a run still
+    /// going</b>: it is suspended on the device at every hand (<see cref="ShuffleSnapshot"/>,
+    /// MODES.md 59s) so closing the app does not end it, and the snapshot goes with the run.
     /// </para>
     /// </summary>
     public sealed class ShuffleRun
@@ -172,6 +174,61 @@ namespace GlimmerGrove.Shuffle
         /// hand as it last stood.
         /// </summary>
         public IReadOnlyList<IReadOnlyList<ShuffleCard>> Dealt => _hands;
+
+        /// <summary>
+        /// The run <paramref name="snapshot"/> was taken of, picked up where it stopped (MODES.md
+        /// 59s), on <paramref name="tuning"/> - the snapshot's own document, read back - or null
+        /// with a <paramref name="fault"/> when it cannot be honoured whole.
+        ///
+        /// <para>
+        /// <b>The build is folded back from its cards in the order they were taken</b> (59e), so
+        /// it is the build the run held, bonds and all; then the three things a build holds that
+        /// are not a function of its cards are put back - its stream, and the second winds and
+        /// phoenixes it has not spent. A card this build no longer deals, or one the build would
+        /// refuse, refuses the whole snapshot: a run resumed short of a card is a different run.
+        /// </para>
+        /// <para>
+        /// <b>Hands dealt before the last are counted, not kept</b>: what a hand number decides
+        /// (its tier table and promise, 59e) is read off the count, and nothing in a run reads
+        /// an old hand back. <see cref="Dealt"/> holds an empty hand for each.
+        /// </para>
+        /// </summary>
+        public static ShuffleRun Resume(ShuffleSnapshot snapshot, ShuffleTuning tuning, out string fault)
+        {
+            fault = null;
+            if (snapshot == null) { fault = "no snapshot"; return null; }
+            if (tuning == null) { fault = "no tuning"; return null; }
+
+            var run = new ShuffleRun(snapshot.Seed, tuning);
+
+            for (int i = 0; i < snapshot.Taken.Count; i++)
+            {
+                var card = tuning.Find(snapshot.Taken[i]);
+                if (card == null) { fault = $"card '{snapshot.Taken[i]}' is no longer dealt"; return null; }
+                if (!run.Build.Take(card)) { fault = $"card '{card.Id}' could not be taken again"; return null; }
+            }
+
+            List<ShuffleCard> open = null;
+            if (snapshot.Open.Count > 0)
+            {
+                open = new List<ShuffleCard>(snapshot.Open.Count);
+                for (int i = 0; i < snapshot.Open.Count; i++)
+                {
+                    var card = tuning.Find(snapshot.Open[i]);
+                    if (card == null) { fault = $"card '{snapshot.Open[i]}' is no longer dealt"; return null; }
+                    if (open.Contains(card)) { fault = $"card '{card.Id}' is on the table twice"; return null; }
+                    open.Add(card);
+                }
+            }
+
+            for (int i = open != null ? 1 : 0; i < snapshot.Hands; i++) run._hands.Add(new List<ShuffleCard>(0));
+            if (open != null) run._hands.Add(open);
+
+            run.Open = open;
+            run.Refreshes = snapshot.Refreshes;
+            run.Build.Boosts.Carry(snapshot.Stream, snapshot.SecondWinds, snapshot.Phoenixes);
+            return run;
+        }
 
         /// <summary>
         /// A seed for a fresh run: the clock's ticks folded to thirty-two bits, never nought.

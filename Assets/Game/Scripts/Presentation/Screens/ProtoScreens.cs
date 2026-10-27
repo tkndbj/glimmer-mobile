@@ -304,6 +304,17 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// Lets go of the held rules, so the next deal asks <see cref="Ruled"/> again. For a lane
+        /// whose next run opens somewhere other than where this one did - the Shuffle lane's
+        /// resumed run is opened part-way up (MODES.md 59s) and a restart of it opens at wave one.
+        /// </summary>
+        protected void Rerule()
+        {
+            _rules = null;
+            _ruled = null;
+        }
+
+        /// <summary>
         /// What this screen makes of a level's own rules before a board is dealt from them: the
         /// Infinite lane's checkpoint, and on a chapter the helping hand's quiet easing of a level
         /// the player keeps losing (invariant 66). <b>The one seam a lane of this mode that plays by

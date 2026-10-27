@@ -91,6 +91,18 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// Picks up the counts of a run carried over from an earlier session (the Shuffle lane's
+        /// suspended run, MODES.md 59s), so the next continue is priced where the run left it and
+        /// closing the app is never a way to buy one cheaper. Called on a fresh flow, right after
+        /// <see cref="Reset"/>.
+        /// </summary>
+        public void Carry(int taken, int watched)
+        {
+            _taken = taken < 0 ? 0 : taken;
+            _watched = watched < 0 ? 0 : watched;
+        }
+
+        /// <summary>
         /// One frame of the count, from <see cref="RunScreen"/>'s own frame and before the run's
         /// tick, so the frame that says GO is the frame the run moves.
         ///

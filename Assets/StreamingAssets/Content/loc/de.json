@@ -3742,6 +3742,10 @@
       "text": "KAMPF"
     },
     {
+      "key": "ui.shuffle.resume",
+      "text": "WEITER · WELLE {0}"
+    },
+    {
       "key": "ui.endless.best",
       "text": "Beste Welle {0}"
     },
@@ -4552,6 +4556,10 @@
     {
       "key": "ui.pause.home",
       "text": "START"
+    },
+    {
+      "key": "ui.pause.save_quit",
+      "text": "SPEICHERN & BEENDEN"
     },
     {
       "key": "ui.pause.restart",
@@ -5864,6 +5872,14 @@
     {
       "key": "ui.tip.lane_shuffle.title",
       "text": "JEDE RUNDE NEU"
+    },
+    {
+      "key": "ui.tip.shuffle_save.body",
+      "text": "Tippe hier, um deine Runde zu speichern und später weiterzuspielen."
+    },
+    {
+      "key": "ui.tip.shuffle_save.title",
+      "text": "RUNDE SPEICHERN"
     },
     {
       "key": "ui.tip.merge_swipe.body",
