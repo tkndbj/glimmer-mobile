@@ -657,7 +657,6 @@ def play(sheet, foot):
 KEY_BREATH, BONUS_PAD = .03, 8.0
 MEDAL_ASPECT = 322.0 / 384.0
 MEDAL_DISC_X, MEDAL_DISC_Y, MEDAL_DISC_W = .4984, .3971, .5932
-FEATURE_GAP = 24.0
 UNDER_PAD, UNDER_MAX_H, UNDER_MIN_H = 14.0, 230.0, 140.0
 FEATURE_BOTTOM = ROW_TOP + ROW_HEIGHT
 BONUS_WORD_SIZE, BONUS_WORD_FLOOR, BONUS_LINE_SPACING = 46, 12, .88
@@ -667,17 +666,14 @@ LANGS = ("en", "es", "pt", "fr", "de", "it", "tr", "pl", "ar")
 CANVASES = (1890.0, 1920.0, 2340.0, 2400.0, 2520.0)
 
 
-def streak_x(paired):
-    """`HubFoot.StreakX`: the streak box's centre across - the left half of the row, or all of it."""
-    return -(CHALLENGE_W - (CHALLENGE_W - FEATURE_GAP) / 2) / 2 if paired else 0.0
-
-
-def bonus_geometry(foot, canvas_h, safe_top=0.0, paired=True):
-    """`HubFoot.BonusAt`: under the streak box when the canvas leaves room, beside the key when it does not."""
+def bonus_geometry(foot, canvas_h, safe_top=0.0):
+    """`HubFoot.BonusAt`: under the streak box, on the boxes' left edge, when the canvas leaves room; beside the
+    key when it does not."""
     room = canvas_h - safe_top - FEATURE_BOTTOM - foot.top
     h = min(UNDER_MAX_H, room - 2 * UNDER_PAD)
     if h >= UNDER_MIN_H:
-        under, x, y, w = True, streak_x(paired), foot.top + room / 2, h * MEDAL_ASPECT
+        under, w, y = True, h * MEDAL_ASPECT, foot.top + room / 2
+        x = -CHALLENGE_W / 2 + w / 2
     else:
         column = CHALLENGE_W / 2 - foot.play_w / 2 * (1 + KEY_BREATH)
         under, w = False, min(column - 2 * BONUS_PAD, foot.play_h * MEDAL_ASPECT)
@@ -820,7 +816,7 @@ def screen(paired=True, verbose=False, waiting=True, welcome=False, bonus=True, 
     K.rail(sheet, top=True)
 
     foot = Foot(welcome)
-    medal = bonus_geometry(foot, H, 0.0, paired) if bonus else None
+    medal = bonus_geometry(foot, H, 0.0) if bonus else None
     if medal:
         free_bonus_shine(sheet, medal)
     top_bar(sheet, waiting)

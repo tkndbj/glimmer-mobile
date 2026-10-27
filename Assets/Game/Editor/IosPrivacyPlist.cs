@@ -82,6 +82,9 @@ namespace GlimmerGrove.EditorTools
 
         const string TrackingPlistKey = "NSUserTrackingUsageDescription";
 
+        /// <summary>AppsFlyer's SKAdNetwork postback endpoint, as its iOS SDK documentation gives it.</summary>
+        internal const string AttributionReportEndpoint = "https://appsflyer-skadnetwork.com/";
+
         /// <summary>Where the per-language folders are written, inside the generated Xcode project.</summary>
         const string LocalizationFolder = "GemfireLocalizations";
 
@@ -164,11 +167,20 @@ namespace GlimmerGrove.EditorTools
             plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_USER_DATA", false);
             plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS", false);
 
+            // Where iOS sends a copy of each SKAdNetwork install postback: AppsFlyer, the game's
+            // attribution provider, at the endpoint its documentation names. Apple still sends every
+            // ad network its own postback; this only adds the developer's copy, which is what lets
+            // AppsFlyer report installs from players who declined tracking. It carries no player
+            // data of ours and needs no consent - Apple sends it, aggregated and delayed. Apple
+            // allows one endpoint, so moving to another provider is a change to this line.
+            plist.root.SetString("NSAdvertisingAttributionReportEndpoint", AttributionReportEndpoint);
+
             plist.WriteToFile(plistPath);
 
             Debug.Log("[Privacy] NSUserTrackingUsageDescription, CFBundleLocalizations, " +
-                      "ITSAppUsesNonExemptEncryption, FIREBASE_ANALYTICS_COLLECTION_ENABLED and " +
-                      "the four consent mode defaults written into Info.plist");
+                      "ITSAppUsesNonExemptEncryption, FIREBASE_ANALYTICS_COLLECTION_ENABLED, " +
+                      "the four consent mode defaults and NSAdvertisingAttributionReportEndpoint " +
+                      "written into Info.plist");
 
             WriteTranslations(pathToBuiltProject, sentences);
             LinkTrackingFramework(pathToBuiltProject);

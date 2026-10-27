@@ -260,13 +260,12 @@ namespace GlimmerGrove.Tests
         public void TheMedalTouchesNothingOnAnyCanvas()
         {
             foreach (bool welcome in new[] { false, true })
-            foreach (bool paired in new[] { false, true })
             foreach (float canvas in Canvases)
             foreach (float safeTop in SafeTops)
             {
                 var foot = HubFoot.For(welcome);
-                var spot = foot.BonusAt(canvas, safeTop, paired);
-                string where = $"{(welcome ? "welcome" : "plain")}, {(paired ? "paired" : "alone")}, {canvas} tall, safe {safeTop}";
+                var spot = foot.BonusAt(canvas, safeTop);
+                string where = $"{(welcome ? "welcome" : "plain")}, {canvas} tall, safe {safeTop}";
                 float breath = 1f + HubFoot.KeyBreath;
                 float half = spot.H * .5f * breath;
 
@@ -275,7 +274,8 @@ namespace GlimmerGrove.Tests
                     float rowFoot = canvas - safeTop - HubFoot.FeatureBottom;   // up from the bottom
                     Assert.LessOrEqual(spot.Y + half, rowFoot, $"{where}: under the streak box, never over it");
                     Assert.GreaterOrEqual(spot.Y - half, foot.Top, $"{where}: and never over the BATTLE key");
-                    Assert.AreEqual(HubFoot.StreakX(paired), spot.X, .01f, $"{where}: centred under the streak box");
+                    Assert.AreEqual(-HubFoot.Width * .5f, spot.X - spot.W * .5f, .01f,
+                                    $"{where}: its left edge on the left edge of the boxes above");
                     Assert.LessOrEqual(spot.H, HubFoot.UnderMaxH);
                 }
                 else
@@ -297,20 +297,20 @@ namespace GlimmerGrove.Tests
         {
             foreach (bool welcome in new[] { false, true })
             {
-                var spot = HubFoot.For(welcome).BonusAt(2400f, 90f, true);
+                var spot = HubFoot.For(welcome).BonusAt(2400f, 90f);
                 Assert.IsTrue(spot.Under, "a 20:9 phone leaves room under the streak box");
                 Assert.AreEqual(HubFoot.UnderMaxH, spot.H, "and the medal is drawn at its full size there");
             }
 
-            Assert.IsFalse(HubFoot.For(true).BonusAt(HubFoot.ShortestCanvas, 0f, true).Under,
+            Assert.IsFalse(HubFoot.For(true).BonusAt(HubFoot.ShortestCanvas, 0f).Under,
                            "the squarest canvas leaves no room, so it stands beside the key");
         }
 
         [Test]
         public void TheCaptionSitsInsideTheMedalsDisc()
         {
-            foreach (var spot in new[] { HubFoot.For(false).BonusAt(2400f, 90f, true),
-                                         HubFoot.For(true).BonusAt(HubFoot.ShortestCanvas, 0f, true) })
+            foreach (var spot in new[] { HubFoot.For(false).BonusAt(2400f, 90f),
+                                         HubFoot.For(true).BonusAt(HubFoot.ShortestCanvas, 0f) })
             {
                 float r = spot.W * HubFoot.MedalDiscW * .5f;
                 Assert.LessOrEqual(spot.CaptionW, 2f * r + .01f, "no wider than the disc");

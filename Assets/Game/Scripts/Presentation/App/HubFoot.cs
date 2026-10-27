@@ -127,17 +127,11 @@ namespace GlimmerGrove
         public const float MedalAspect = 322f / 384f;
         public const float MedalDiscX = .4984f, MedalDiscY = .3971f, MedalDiscW = .5932f;
 
-        /// <summary>The air between the feature row's two boxes (<c>HomeScreen.RowGap</c>).</summary>
-        public const float FeatureGap = 24f;
-
         /// <summary>
         /// Under the streak box: the air kept above and below the medal, its tallest, and the shortest it
         /// may be drawn there before it is too small to read - below that it stands beside the key instead.
         /// </summary>
         public const float UnderPad = 14f, UnderMaxH = 230f, UnderMinH = 140f;
-
-        /// <summary>The streak box's centre across, from the canvas middle: the left half, or the whole row.</summary>
-        public static float StreakX(bool paired) => paired ? -(Width - (Width - FeatureGap) * .5f) * .5f : 0f;
 
         /// <summary>
         /// The air between the feature row's foot and the BATTLE key's top on a canvas
@@ -150,8 +144,8 @@ namespace GlimmerGrove
         /// Where the FREE BONUS medal stands (invariant 67; the owner, 2026-10-27: under the streak box).
         ///
         /// <para>
-        /// <b>Under the streak box when the canvas leaves room for it</b>: centred under the box, centred in
-        /// the air between the row and the key, as tall as that air allows less <see cref="UnderPad"/> each
+        /// <b>Under the streak box when the canvas leaves room for it</b>: its left edge on the left edge of
+        /// the boxes above (the owner, 2026-10-27), centred in the air between the row and the key, as tall as that air allows less <see cref="UnderPad"/> each
         /// way and no taller than <see cref="UnderMaxH"/> - so it touches neither. Most phones leave 400
         /// units and more.
         /// </para>
@@ -162,12 +156,12 @@ namespace GlimmerGrove
         /// streak's side, still under the box. Either way nothing is ever drawn over anything.
         /// </para>
         /// </summary>
-        public BonusSpot BonusAt(float canvasH, float safeTop, bool paired)
+        public BonusSpot BonusAt(float canvasH, float safeTop)
         {
             float room = RoomUnderRow(canvasH, safeTop);
             float h = System.Math.Min(UnderMaxH, room - 2f * UnderPad);
             if (h >= UnderMinH)
-                return new BonusSpot(true, StreakX(paired), Top + room * .5f, h * MedalAspect, h);
+                return new BonusSpot(true, -Width * .5f + h * MedalAspect * .5f, Top + room * .5f, h * MedalAspect, h);
 
             float column = Width * .5f - PlayW * .5f * (1f + KeyBreath);
             float w = System.Math.Min(column - 2f * BonusPad, PlayH * MedalAspect);

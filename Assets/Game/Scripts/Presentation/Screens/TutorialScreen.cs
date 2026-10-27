@@ -1042,7 +1042,11 @@ namespace GlimmerGrove
 
                 Burst.Sparks(stack, impact, Pal.Gold, 26, 420f, 30f, .7f);
                 Burst.Sparks(stack, impact, Pal.Aqua, 18, 340f, 24f, .6f);
-                Audio.Sfx("unlock", .6f);
+
+                // The game's own victory sound, at the board's level (`BoardView`'s win), not the
+                // unlock chime it used to strike with (the owner, 2026-10-27): the tutorial's end is
+                // a win, and it should sound like every other one.
+                Audio.Sfx("win", .90f);
             }, rig);
 
             Tween.After(Strike + .2f, () =>

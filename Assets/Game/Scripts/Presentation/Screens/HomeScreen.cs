@@ -1490,8 +1490,8 @@ namespace GlimmerGrove
         /// Tapped, it opens <see cref="FreeBonusOverlay"/>.
         ///
         /// <para>
-        /// <b>Its place and size are <see cref="HubFoot.BonusAt"/>'s, never typed here</b>: centred under the
-        /// streak box in the air between the feature row and the BATTLE key, as big as that air allows - or,
+        /// <b>Its place and size are <see cref="HubFoot.BonusAt"/>'s, never typed here</b>: under the streak
+        /// box, its left edge on the boxes' left edge, in the air between the feature row and the BATTLE key, as big as that air allows - or,
         /// on a canvas too short to leave any, in the column beside the key. It can touch neither the row,
         /// the key nor the strip under it on any canvas (<c>FreeBonusTests</c>). It is re-placed when the
         /// canvas changes size, never rebuilt. The caption is fitted by measurement to the disc
@@ -1572,7 +1572,7 @@ namespace GlimmerGrove
         {
             if (!_freeBonus) return;
 
-            var spot = _foot.BonusAt(Content.rect.height, SafeArea.Top, _focusBox != null);
+            var spot = _foot.BonusAt(Content.rect.height, SafeArea.Top);
             var at = new Vector2(spot.X, spot.Y);
             var size = new Vector2(spot.W, spot.H);
 
