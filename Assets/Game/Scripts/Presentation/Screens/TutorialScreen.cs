@@ -463,21 +463,28 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The gem bomb (MODES.md 37fk): one panel - four make a bomb, tap it; five fire rockets -
-        /// the hand on the four, then the hand on the bomb until it goes.
+        /// the hand on the four, then the hand on the bomb until one goes off.
         ///
         /// <para>
         /// <b>It follows the player rather than insisting.</b> A player who makes some other move
         /// is pointed at the four again wherever it now stands (<c>SiegeTutorial.Four</c>); one
         /// who made a bomb on their own before the panel is told about the bomb they already
-        /// have; and a field with no four left on it skips the lesson rather than waiting for
-        /// one - the board can never be lost, but a script waiting for a move that does not exist
-        /// would never end.
+        /// have; and a field with no four left on it waits for the field to deal one.
+        /// </para>
+        /// <para>
+        /// <b>It ends on a bomb going off, never on the field having none</b>
+        /// (<c>SiegeBoard.BombsSprung</c>). A player who set one off before the lesson has done
+        /// it and is not taught it again; one with two bombs standing is asked to tap one, and
+        /// the hand does not move on to the second. Both shipped as the hand coming back.
         /// </para>
         /// </summary>
         IEnumerator Bombing(SiegeBoard board)
         {
             while (!_siege.AtRest && this && !_ended) yield return null;
             if (!this || _ended) yield break;
+
+            int sprung = board.BombsSprung;
+            if (sprung > 0) yield break;
 
             bool told = false;
 
@@ -495,7 +502,7 @@ namespace GlimmerGrove
                 // who stalls (`SiegeView.Coached`).
                 if (!four.Found) _siege.Coached = false;
 
-                while (!four.Found && SiegeTutorial.Bomb(board) < 0)
+                while (!four.Found && SiegeTutorial.Bomb(board) < 0 && board.BombsSprung == sprung)
                 {
                     if (!this || _ended) yield break;
 
@@ -507,6 +514,8 @@ namespace GlimmerGrove
 
                     yield return null;
                 }
+
+                if (board.BombsSprung != sprung) yield break;
             }
 
             if (SiegeTutorial.Bomb(board) < 0)
@@ -519,27 +528,49 @@ namespace GlimmerGrove
 
                 told = true;
                 _siege.Coached = true;
-                PointAlong(four.A, four.B);
 
+                // The four the field offers now, and the one the hand is drawn over (not found
+                // while it is down).
+                var want = four;
+                var shown = default(SiegeSwap);
                 int seen = board.Turns;
 
-                while (SiegeTutorial.Bomb(board) < 0)
+                while (SiegeTutorial.Bomb(board) < 0 && board.BombsSprung == sprung)
                 {
                     if (!this || _ended) yield break;
 
-                    if (board.Turns != seen && _siege.AtRest)
+                    // Asked of the model the moment a move lands, because the model resolves the
+                    // whole cascade at once: a four still in the same two cells keeps its hand,
+                    // and any other answer takes the hand down at once and puts it back over the
+                    // new four once the gems have landed - never over a gem in the air.
+                    if (board.Turns != seen)
                     {
                         seen = board.Turns;
-                        if (SiegeTutorial.Bomb(board) >= 0) break;
+                        want = SiegeTutorial.Four(board);
 
-                        // Pointed at the four wherever it now stands - or, when the move took
-                        // it, at nothing until the field deals another.
-                        four = SiegeTutorial.Four(board);
-                        if (four.Found) PointAlong(four.A, four.B);
-                        else Unpoint();
+                        if (shown.Found && !(want.Found && want.A == shown.A && want.B == shown.B))
+                        {
+                            Unpoint();
+                            shown = default;
+                        }
+                    }
+
+                    if (!shown.Found && want.Found && _siege.AtRest)
+                    {
+                        PointAlong(want.A, want.B);
+                        shown = want;
                     }
 
                     yield return null;
+                }
+
+                Unpoint();
+
+                // A move that forged a bomb and set it off in the same cascade has done the lesson.
+                if (board.BombsSprung != sprung)
+                {
+                    yield return Settled();
+                    yield break;
                 }
             }
 
@@ -554,27 +585,44 @@ namespace GlimmerGrove
             }
 
             _siege.Coached = true;
-            PointAt(_siege.LiveCharm(SiegeCharm.Bomb));
 
-            int was = board.Turns;
+            // The cell the hand is tapping, or -1 while it is down. Followed exactly as the four
+            // is: a move elsewhere that drops the bomb a row takes the hand down and puts it back
+            // on the bomb once it has landed (`SiegeView.LiveCharm` answers only a settled gem).
+            int at = -1;
 
-            while (SiegeTutorial.Bomb(board) >= 0)
+            while (board.BombsSprung == sprung && SiegeTutorial.Bomb(board) >= 0)
             {
                 if (!this || _ended) yield break;
 
-                // A move made somewhere else can drop the bomb a row: the hand follows it.
-                if (board.Turns != was && _siege.AtRest)
+                int bomb = SiegeTutorial.Bomb(board);
+
+                if (bomb != at)
                 {
-                    was = board.Turns;
-                    PointAt(_siege.LiveCharm(SiegeCharm.Bomb));
+                    if (at >= 0)
+                    {
+                        Unpoint();
+                        at = -1;
+                    }
+
+                    var gem = _siege.AtRest ? _siege.LiveCharm(SiegeCharm.Bomb) : null;
+                    if (gem != null)
+                    {
+                        PointAt(gem);
+                        at = bomb;
+                    }
                 }
 
                 yield return null;
             }
 
             Unpoint();
+            yield return Settled();
+        }
 
-            // The blast and everything it pays, watched before the next thing is asked.
+        /// <summary>The blast and everything it pays, watched before the next thing is asked.</summary>
+        IEnumerator Settled()
+        {
             while (!_siege.AtRest && this && !_ended) yield return null;
             yield return new WaitForSecondsRealtime(Settle);
         }

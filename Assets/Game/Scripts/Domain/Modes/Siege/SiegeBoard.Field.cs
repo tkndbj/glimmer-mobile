@@ -164,6 +164,14 @@ namespace GlimmerGrove.Modes
         public int Turns { get; private set; }
 
         /// <summary>
+        /// How many gem bombs have gone off on this board, however they were set off - tapped,
+        /// lined up in a match, or caught in another charm's blast. Read by the opening
+        /// tutorial's script to tell a bomb lesson already done from one still to give; no rule
+        /// reads it.
+        /// </summary>
+        public int BombsSprung { get; private set; }
+
+        /// <summary>
         /// Resolves the field beat by beat until nothing on it lines up, fuelling the wards as it
         /// goes - the whole of what a swap does once the two gems have traded, and the whole of
         /// what a tapped gem bomb does (<see cref="Detonate"/>).

@@ -428,6 +428,33 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// A player who makes the four before the lesson and sets the bomb off has done the
+        /// lesson, and the board says so. The field then still offers a four, which is why the
+        /// script asks <c>BombsSprung</c> rather than the field: asking the field taught the
+        /// bomb a second time.
+        /// </summary>
+        [Test]
+        public void ABombSetOffBeforeTheLessonIsCountedSoItIsNotTaughtAgain()
+        {
+            var board = Fresh();
+            board.Sheltered = true;
+            board.OneCharge = true;
+
+            var three = SiegeTutorial.Taught(board);
+            Assert.IsNotNull(board.Swap(three.A, three.B));
+            Assert.AreEqual(0, board.BombsSprung, "a plain three set off a bomb");
+
+            var four = SiegeTutorial.Four(board);
+            Assert.IsNotNull(board.Swap(four.A, four.B));
+            Assert.AreEqual(0, board.BombsSprung, "forging a bomb is not setting one off");
+
+            Assert.IsNotNull(board.Detonate(SiegeTutorial.Bomb(board)));
+            Assert.AreEqual(1, board.BombsSprung, "the tap the lesson asks for was not counted");
+            Assert.IsTrue(SiegeTutorial.Four(board).Found,
+                          "the case this guards: a four still stands after the blast");
+        }
+
         /// <summary>A graded board is untouched by the tutorial's one-charge rule.</summary>
         [Test]
         public void OnlyTheTutorialIsLimitedToOneCharge()

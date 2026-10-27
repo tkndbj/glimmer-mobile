@@ -198,6 +198,7 @@ namespace GlimmerGrove.Modes
                     // taken by this beat exactly as a lance's cross is - so a bomb that reaches a
                     // charm sets it off, and a chain of bombs is one beat.
                     case SiegeCharm.Bomb:
+                        BombsSprung++;
                         Burst(cell, colour, hit, queue);
                         break;
 
