@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Dotknij tutaj, by zapisać grę i wrócić do niej później."
+      "text": "Teraz możesz wstrzymać grę w trybie „Losowa” i wrócić do niej w tym samym miejscu."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "ZAPISZ GRĘ"
+      "text": "PAUZA W KAŻDEJ CHWILI"
     },
     {
       "key": "ui.tip.merge_swipe.body",

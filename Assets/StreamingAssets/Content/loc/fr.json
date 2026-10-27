@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Touche ici pour sauvegarder ta partie et la reprendre plus tard."
+      "text": "Tu peux maintenant mettre tes parties en Mêlée en pause et reprendre là où tu t'es arrêté."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "SAUVEGARDE TA PARTIE"
+      "text": "PAUSE À TOUT MOMENT"
     },
     {
       "key": "ui.tip.merge_swipe.body",

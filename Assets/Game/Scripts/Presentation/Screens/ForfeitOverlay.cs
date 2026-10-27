@@ -79,6 +79,14 @@ namespace GlimmerGrove
         /// </summary>
         public Action OnCancel;
 
+        /// <summary>
+        /// Set only by a run that can be put away (the Shuffle lane, MODES.md 59s): the panel then
+        /// carries no sentence and no tag, only its three keys - stay, leave, and the pause menu's
+        /// SAVE &amp; QUIT at the foot (the owner, 2026-10-27). Null everywhere else, and the
+        /// panel is exactly what it was.
+        /// </summary>
+        public Action OnSaveQuit;
+
         bool _answered;
 
         /// <summary>
@@ -119,6 +127,17 @@ namespace GlimmerGrove
             bool play = Stake == Stakes.Play;
             bool watch = Stake == Stakes.Watch;
             float panelHeight = watch ? WatchHeight : play ? 700f : 800f;
+
+            // **A run that can be put away is asked with keys alone**: the ribbon, then the three
+            // keys up under it, lifted off the foot by KeysOnlyLift (the owner, 2026-10-27: "move
+            // more up"). The top key's edge sits at -(KeysOnlyHeight - 441 - 40) = -119, just
+            // under the ribbon's foot (-108, and ~-117 at the key's ends for the ribbon's tilt).
+            if (OnSaveQuit != null)
+            {
+                MakePanel(new Vector2(880f, KeysOnlyHeight), Loc.Get(TitleKey(Choice, Stake)), dismissOnScrim: false);
+                Keys();
+                return;
+            }
 
             MakePanel(new Vector2(880f, panelHeight), Loc.Get(TitleKey(Choice, Stake)), dismissOnScrim: false);
 
@@ -190,16 +209,36 @@ namespace GlimmerGrove
         /// <summary>The panel's height for a watch: the play panel less its tag.</summary>
         const float WatchHeight = 600f;
 
-        /// <summary>The two answers, anchored to the foot so they sit alike on every panel.</summary>
+        /// <summary>The distance between two keys' centres on this panel (92 to 232).</summary>
+        const float KeyPitch = 140f;
+
+        /// <summary>The panel's height when it is only its three keys (see <see cref="OnSaveQuit"/>).</summary>
+        const float KeysOnlyHeight = 600f;
+
+        /// <summary>How far the three keys of a keys-only panel are raised off the foot.</summary>
+        const float KeysOnlyLift = 40f;
+
+        /// <summary>The answers, anchored to the foot so they sit alike on every panel.</summary>
         void Keys()
         {
+            bool saves = OnSaveQuit != null;
+            float lift = saves ? KeysOnlyLift : 0f;
+
             UIKit.TextButton("Stay", Panel, "btn_green", Loc.Get("ui.forfeit.stay"), 46,
-                             new Vector2(620f, 138f), new Vector2(.5f, 0f), new Vector2(0f, 232f),
+                             new Vector2(620f, 138f), new Vector2(.5f, 0f), new Vector2(0f, saves ? 232f + KeyPitch + lift : 232f),
                              Cancel);
 
+            // With SAVE & QUIT the red key moves up a pitch and the blue one takes the foot.
             UIKit.TextButton("Go", Panel, "btn_red", Loc.Get(ConfirmKey(Choice)), 42,
-                             new Vector2(620f, 126f), new Vector2(.5f, 0f), new Vector2(0f, 92f),
+                             new Vector2(620f, 126f), new Vector2(.5f, 0f), new Vector2(0f, saves ? 232f + lift : 92f),
                              Confirm);
+
+            if (saves)
+            {
+                UIKit.TextButton("SaveQuit", Panel, "btn_blue", Loc.Get("ui.pause.save_quit"), 42,
+                                 new Vector2(620f, 126f), new Vector2(.5f, 0f), new Vector2(0f, 92f + lift),
+                                 SaveQuit);
+            }
         }
 
         void Confirm()
@@ -211,6 +250,18 @@ namespace GlimmerGrove
             OnConfirm = null;
             OnCancel = null;
             Close(() => go?.Invoke());
+        }
+
+        void SaveQuit()
+        {
+            if (_answered) return;
+            _answered = true;
+
+            var save = OnSaveQuit;
+            OnConfirm = null;
+            OnCancel = null;
+            OnSaveQuit = null;
+            Close(() => save?.Invoke());
         }
 
         void Cancel()

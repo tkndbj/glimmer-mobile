@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Tippe hier, um deine Runde zu speichern und später weiterzuspielen."
+      "text": "Du kannst Runden im Modus Gemischt jetzt pausieren und dort weitermachen, wo du aufgehört hast."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "RUNDE SPEICHERN"
+      "text": "JEDERZEIT PAUSIEREN"
     },
     {
       "key": "ui.tip.merge_swipe.body",

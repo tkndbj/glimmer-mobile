@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Tocca qui per salvare la partita e riprenderla più tardi."
+      "text": "Ora puoi mettere in pausa le partite in modalità Mescolato e riprendere da dove avevi lasciato."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "SALVA LA PARTITA"
+      "text": "PAUSA QUANDO VUOI"
     },
     {
       "key": "ui.tip.merge_swipe.body",

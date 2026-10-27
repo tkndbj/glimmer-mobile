@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "انقر هنا لحفظ جولتك ومتابعتها لاحقا."
+      "text": "يمكنك الآن إيقاف جولات وضع الخلط مؤقتا والمتابعة من حيث توقفت."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "احفظ جولتك"
+      "text": "توقف متى شئت"
     },
     {
       "key": "ui.tip.merge_swipe.body",

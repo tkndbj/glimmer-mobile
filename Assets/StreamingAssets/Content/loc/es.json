@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Toca aquí para guardar tu partida y seguirla más tarde."
+      "text": "Ahora puedes pausar tus partidas de Barajado y seguir donde lo dejaste."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "GUARDA TU PARTIDA"
+      "text": "PAUSA CUANDO QUIERAS"
     },
     {
       "key": "ui.tip.merge_swipe.body",

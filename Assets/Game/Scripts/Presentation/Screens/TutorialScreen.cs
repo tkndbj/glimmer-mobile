@@ -298,6 +298,10 @@ namespace GlimmerGrove
             // stands down for those stretches. See `SiegeView.Coached`.
             _siege.Coached = true;
 
+            // The ending's one victory sound is struck as the wordmark lands (`Crown`), so the
+            // board's own is held back rather than played a beat before it.
+            _siege.QuietTriumph = true;
+
             _siege.Solved = Finish;
 
             // **And the defeat hook goes to the same place.** `SiegeTutorial.Steady` is what
@@ -1043,9 +1047,9 @@ namespace GlimmerGrove
                 Burst.Sparks(stack, impact, Pal.Gold, 26, 420f, 30f, .7f);
                 Burst.Sparks(stack, impact, Pal.Aqua, 18, 340f, 24f, .6f);
 
-                // The game's own victory sound, at the board's level (`BoardView`'s win), not the
-                // unlock chime it used to strike with (the owner, 2026-10-27): the tutorial's end is
-                // a win, and it should sound like every other one.
+                // The ending's one victory sound: the game's own `win`, at the board's level, in
+                // place of the unlock chime it used to strike with (the owner, 2026-10-27). The
+                // board's copy is held back for it (`QuietTriumph`, set in `BuildBoard`).
                 Audio.Sfx("win", .90f);
             }, rig);
 

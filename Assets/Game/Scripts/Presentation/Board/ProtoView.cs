@@ -65,6 +65,13 @@ namespace GlimmerGrove
         /// <summary>Held by the screen until the run is allowed to advance. Starts true.</summary>
         public bool Held { get; set; } = true;
 
+        /// <summary>
+        /// Holds back the board's own <c>win</c> when the screen sounds the ending itself - the
+        /// tutorial strikes it as its wordmark lands, and two copies of one clip a second apart is a
+        /// flam, not a bigger celebration (<see cref="Triumph"/>'s own rule). The sparks still fly.
+        /// </summary>
+        public bool QuietTriumph { get; set; }
+
         public ProtoRun Run { get; private set; }
 
         protected bool Busy;
@@ -433,7 +440,7 @@ namespace GlimmerGrove
         /// </summary>
         protected virtual IEnumerator Triumph()
         {
-            Audio.Sfx("win", .8f);
+            if (!QuietTriumph) Audio.Sfx("win", .8f);
             Burst.Sparks(Field, Vector2.zero, Pal.Cream, 26, 240f);
             Shockwave(Vector2.zero, Pal.Cream, 3.2f, .55f);
 

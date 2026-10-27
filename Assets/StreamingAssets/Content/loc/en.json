@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Tap here to save your run and continue it later."
+      "text": "You can now pause Shuffle runs and continue where you left off."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "SAVE YOUR RUN"
+      "text": "PAUSE ANYTIME"
     },
     {
       "key": "ui.tip.merge_swipe.body",

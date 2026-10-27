@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Toque aqui para salvar sua partida e continuar depois."
+      "text": "Agora você pode pausar suas partidas do Embaralhado e continuar de onde parou."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "SALVE SUA PARTIDA"
+      "text": "PAUSE QUANDO QUISER"
     },
     {
       "key": "ui.tip.merge_swipe.body",

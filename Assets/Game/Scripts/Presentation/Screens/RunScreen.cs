@@ -507,6 +507,8 @@ namespace GlimmerGrove
                 v.Prepaid = prepaid;
                 v.OnConfirm = confirm;
                 v.OnCancel = Resume;
+                // A run that can be put away offers that here too, as its pause menu does (59s).
+                if (Suspends && kind == ForfeitOverlay.Kind.Leave) v.OnSaveQuit = SaveAndQuit;
             });
         }
 

@@ -5943,11 +5943,11 @@
     },
     {
       "key": "ui.tip.shuffle_save.body",
-      "text": "Oyununu kaydetmek ve sonra devam etmek için buraya dokun."
+      "text": "Artık Karışık modunda oyunu duraklatıp kaldığın yerden devam edebilirsin."
     },
     {
       "key": "ui.tip.shuffle_save.title",
-      "text": "OYUNUNU KAYDET"
+      "text": "İSTEDİĞİN ZAMAN DURAKLAT"
     },
     {
       "key": "ui.tip.merge_swipe.body",

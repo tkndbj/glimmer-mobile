@@ -129,27 +129,6 @@ namespace GlimmerGrove
 
         const float IconSize = 136f, BadgeSize = 60f;
 
-        /// <summary>
-        /// What an <em>empty</em> cell draws instead: a smaller picture, lifted, with room under
-        /// it for the caption that says what a tap does.
-        ///
-        /// <para>
-        /// <b>Measured against the well rather than against the cell.</b> The slot sprite's rim
-        /// is nine units at the sides, thirteen at the top and fourteen at the foot
-        /// (<c>Tools/make_utility_art.slot</c>), so the well a cell can actually draw in runs
-        /// y ∈ [-77, +79] and x ∈ [-83, +83]. At these figures the picture takes [-14, +74] and
-        /// the caption [-69, -21], which leaves both inside the well and seven units between them.
-        /// A <c>UIKit.Label</c> that overflows is not clipped - it keeps drawing, out over the
-        /// cell beside it (the toast's lesson, invariant 37n) - so the caption is
-        /// <see cref="UIKit.Shrinkable"/> as well, and a language that needs two lines gets
-        /// them rather than a sentence across the shelf.
-        /// </para>
-        /// </summary>
-        const float EmptyIconSize = 88f, EmptyIconLift = 30f;
-
-        /// <summary>The caption band at the foot of an empty cell.</summary>
-        const float HintW = 156f, HintH = 48f, HintY = -45f;
-
         sealed class Slot
         {
             public UtilityItem Item;
@@ -161,7 +140,6 @@ namespace GlimmerGrove
             public CanvasGroup Group;
 
             /// <summary>TAP TO BUY, drawn only while the cell is empty and the thing is sold.</summary>
-            public Text Hint;
 
             /// <summary>The wedge over the cell, radial-filled from what is left to wait.</summary>
             public Image Sweep;
@@ -364,28 +342,6 @@ namespace GlimmerGrove
             slot.Clock.fontStyle = FontStyle.Bold;
             slot.Clock.enabled = false;
 
-            // **The caption under an empty cell, and it is the one thing on this bar that says
-            // out loud what a tap does.** An empty slot has always been the shop
-            // (see <see cref="Tap"/>), and it said so only by being dim - which is a state
-            // rather than an invitation, so the one route to buying more was a picture with
-            // nothing on it. It is drawn over the well rather than under the cell because
-            // there is no room under the cell: the shelf leaves twenty-two units either side
-            // of a slot, and a `UIKit.Label` that overflows is not clipped (invariant 37n).
-            //
-            // Built for every sellable slot and shown by `Paint`, never rebuilt - invariant
-            // 16d's distinction, which is why the picture is *moved* between its two places
-            // rather than the cell being made again.
-            if (item.ForSale)
-            {
-                slot.Hint = UIKit.Shrinkable(
-                    UIKit.Titled("Hint", slot.Button.transform, Loc.Get("ui.utility.tap_to_buy"),
-                                 26, Pal.Sun, TextAnchor.MiddleCenter,
-                                 new Vector2(HintW, HintH), new Vector2(.5f, .5f),
-                                 new Vector2(0f, HintY), outline: 3f, shadow: 0f, wrap: true), 14);
-                slot.Hint.fontStyle = FontStyle.Bold;
-                slot.Hint.enabled = false;
-            }
-
             return slot;
         }
 
@@ -467,22 +423,6 @@ namespace GlimmerGrove
                 // and the wedge is drawn over a picture at full strength. Caught by
                 // `Tools/render_siege.py --cooling` and by nothing else.
                 slot.Face.color = held > 0 ? Color.white : new Color(1f, 1f, 1f, .36f);
-
-                // **The caption, and the picture moving to make room for it.** Shown only when
-                // the cell is empty *and* the thing can actually be bought - a chest-only
-                // utility invited to a shop it cannot be had from would be the panel lying
-                // before it opened - and never while the cell is cooling, because the clock is
-                // drawn across the same middle at font 56 and two readouts over one cell are
-                // two readouts nobody can read (invariant 37u, on a slot). The two states can
-                // genuinely overlap: the use that started the cooldown may have been the last
-                // one held.
-                bool inviting = held <= 0 && !cooling && slot.Item.ForSale;
-
-                if (slot.Hint != null) slot.Hint.enabled = inviting;
-
-                var face = slot.Face.rectTransform;
-                face.sizeDelta = Vector2.one * (inviting ? EmptyIconSize : IconSize);
-                face.anchoredPosition = new Vector2(0f, inviting ? EmptyIconLift : 0f);
 
                 Sweep(slot);
 

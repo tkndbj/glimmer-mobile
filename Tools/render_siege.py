@@ -160,11 +160,6 @@ def inset():
 
 #: `UtilityBar`'s own numbers.
 SLOTS, SLOT, BADGE, ICON = 5, 184, 60, 136
-#: What an empty cell draws instead - `UtilityBar.EmptyIconSize`, `EmptyIconLift` and the
-#: caption band under it. Mirrored here because whether the picture and the words clear each
-#: other inside the slot's own well is the one question about them a number cannot answer.
-EMPTY_ICON, EMPTY_LIFT = 88, 30
-HINT_W, HINT_H, HINT_Y = 156, 48, -45
 UTILITY_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility"
 #: In `order`, as `progression.json` authors it, with the seconds each one cools for. The
 #: cooldown is here because it is 228 points of screen doing something a number cannot
@@ -3345,26 +3340,13 @@ def bar(sheet, held, cooling=None):
         waiting = (cooling or {}).get(name, 0)
         full = COOLDOWNS.get(name, 0)
 
-        # An empty cell that can be *bought* from is drawn as an invitation: a smaller picture,
-        # lifted, with "TAP TO BUY" in the room under it. Never while it is cooling, because the
-        # seconds are drawn across the same middle at font 56 (`UtilityBar.Paint`).
-        inviting = n <= 0 and waiting <= 0
-
         if icon is not None:
             if n <= 0:
                 faded = icon.copy()
                 faded.putalpha(faded.split()[3].point(lambda v: int(v * 0.36)))
                 icon = faded
 
-            size = EMPTY_ICON if inviting else ICON
-            put(sheet, icon, cx, cy - (EMPTY_LIFT if inviting else 0), size, size)
-
-        if inviting:
-            font = face(26)
-            if font is not None:
-                draw_on.text((cx, cy - HINT_Y), "TAP TO BUY", font=font,
-                             fill=(255, 206, 92, 255), anchor="mm",
-                             stroke_width=3, stroke_fill=(23, 36, 51, 242))
+            put(sheet, icon, cx, cy, ICON, ICON)
 
         # The sweep, over the picture and under the badge, which is the order the hierarchy
         # draws them in - how many you hold is true whether or not it is ready.
