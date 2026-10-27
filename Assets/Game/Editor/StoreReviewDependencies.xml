@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Google Play In-App Review (invariant 68): the library StoreReview.cs asks for the Play rating box
+    through. Read by the External Dependency Manager, which writes it into mainTemplate.gradle's
+    "Android Resolver Dependencies" block; the line is committed there too, so a build made before
+    the resolver runs carries it. iOS needs nothing: SKStoreReviewController ships in StoreKit and
+    Unity binds it (UnityEngine.iOS.Device.RequestStoreReview).
+-->
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="com.google.android.play:review:2.0.2">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>

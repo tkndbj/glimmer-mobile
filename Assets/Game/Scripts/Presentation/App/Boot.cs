@@ -373,6 +373,12 @@ namespace GlimmerGrove
                 // popups behind it until the next run (`FirstStepsMoment.Hushed`).
                 FirstStepsMoment.Tick();
 
+                // And the store's rating box, after a win the player was proud of, on the first
+                // calm screen that is not a run (invariant 68). Before every hub popup: it waits
+                // the shortest beat and hushes them as it asks, so nothing is laid under the
+                // store's sheet; after the ceremony, which hushes it in turn.
+                RatingMoment.Tick();
+
                 // And a gift the owner sent, on an idle hub once the consent questions are behind
                 // the player (invariant 63). Before the deals popup, because it is the player's own
                 // money and costs nothing to take; a frame that raised it is covered, so the deal
@@ -416,6 +422,7 @@ namespace GlimmerGrove
                     DealMoment.Paused();
                     OfferMoment.Paused();
                     ReminderMoment.Paused();
+                    RatingMoment.Paused();
                 }
                 else
                 {

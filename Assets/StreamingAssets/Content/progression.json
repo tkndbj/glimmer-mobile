@@ -95,6 +95,13 @@
       { "id": "name", "gems": 60 }
     ]
   },
+  "ratingPrompt": {
+    "minClearedLevels": 20,
+    "minStars": 3,
+    "gapDays": 10,
+    "maxAsks": 3,
+    "moneyQuietMinutes": 30
+  },
   "assist": {
     "openingLosses": 1,
     "giftLosses": 2,

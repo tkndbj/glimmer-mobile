@@ -1417,7 +1417,9 @@ namespace GlimmerGrove
         /// turret delivered, the welcome bonus's day stamped, the chests delivered;</item>
         /// <item>else, at a chapter's end, the account panel (<see cref="AccountPrompts.Offer"/>),
         /// which hushes the hub's popups behind it as a step does;</item>
-        /// <item>else nothing, and the tap goes straight through.</item>
+        /// <item>else nothing, and the tap goes straight through - noting the win for the store's rating
+        /// box (<see cref="RatingMoment.NoteWin"/>), which asks for nothing here and is asked for on the
+        /// first calm screen that is not a run (invariant 68).</item>
         /// </list>
         /// Each resumes <paramref name="onward"/> exactly once however it ends.
         /// </summary>
@@ -1434,6 +1436,7 @@ namespace GlimmerGrove
                 return;
             }
 
+            RatingMoment.NoteWin(Run.Stars);
             onward();
         }
 

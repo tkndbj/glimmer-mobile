@@ -706,6 +706,21 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    and beside BATTLE where it does not (`HubFoot.BonusAt`). Held by `test/free-bonus.mjs`, the live `free-bonus.mjs`, `FreeBonusTests`,
    `render_home.py --measure`, `render_free_bonus.py --measure`, `make_free_bonus_art.py --check`.
 
+### The rating prompt
+
+68. **The store's own rating box is asked for after a proud win, pays nothing, and never knows the
+   answer** (`RatingPrompt.cs`, `RatingMoment`, `StoreReview`). Both stores forbid an incentive, and
+   neither API says whether the player rated or the box was drawn; the stores themselves stop showing it
+   to anyone who rated. The rule is one pure function (`RatingRules.Judge`) over the `ratingPrompt`
+   block: `minClearedLevels` cleared, a win at `minStars`, `gapDays` apart, `maxAsks` an install, never
+   within `moneyQuietMinutes` of a deals or offer popup; absent, never asked. `WinOverlay.Leave` notes
+   the win only in its free slot; `RatingMoment` asks on the first calm screen that is not a run,
+   re-judges, spends the ask before requesting (`glimmer.rating.asks`, per install, never in the save)
+   and hushes the hub's popups. No panel of ours before the box (Apple refuses a custom prompt). Android
+   is Play In-App Review (`StoreReviewDependencies.xml`, its line committed in `mainTemplate.gradle`),
+   reached by JNI only - **turning on Android minify needs keep rules for `com.google.android.play.core.review`**.
+   Held by `RatingPromptTests` and `compile.py`'s `pres-ios` / `pres-android` passes.
+
 ### Art credits
 
 46. **An art credit lives on the publisher's site, nowhere in the app.** No shipped vendor compels one.

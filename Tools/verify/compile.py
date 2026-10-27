@@ -328,6 +328,18 @@ ASSEMBLIES = [
                         "GlimmerGrove.Notifications"),
         defines=DEFINES + ["UNITY_IOS"],
     )),
+    ("pres-android", dict(
+        out="GlimmerGrove.Presentation.Android",
+        src=sources("Assets/Game/Scripts/Presentation"),
+        # And with UNITY_ANDROID, for the same reason: `StoreReview`'s Play In-App Review binding
+        # lives behind `#if UNITY_ANDROID && !UNITY_EDITOR`, so neither pass above compiles it and
+        # the first compiler to see a wrong signature would be a Gradle build on the owner's machine.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
+                        "GlimmerGrove.Privacy", "GlimmerGrove.Telemetry",
+                        "GlimmerGrove.Notifications"),
+        defines=DEFINES + ["UNITY_ANDROID"],
+    )),
     ("authoring", dict(
         out="GlimmerGrove.Authoring",
         src=sources("Assets/Game/Authoring"),

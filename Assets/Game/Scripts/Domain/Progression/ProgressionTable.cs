@@ -228,6 +228,12 @@ namespace GlimmerGrove.Progression
         public Social.NormalScores NormalScores { get; private set; } = Social.NormalScores.Empty;
 
         /// <summary>
+        /// When the store's rating box may be asked for (invariant 68). <see cref="Social.RatingTable.Empty"/>
+        /// - never asked - when the file carries no block or the block has a fault in it.
+        /// </summary>
+        public Social.RatingTable Rating { get; private set; } = Social.RatingTable.Empty;
+
+        /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
         /// of its own.
         ///
@@ -731,6 +737,7 @@ namespace GlimmerGrove.Progression
                           endless, xpBoost, ranks, keeperLevels, keeperMilestones,
                           endlessCheckpoints, welcome, firstSteps, assist);
             table.NormalScores = normalScores;
+            table.Rating = Social.RatingTable.Resolve(dto.ratingPrompt, problems);
             return true;
         }
 

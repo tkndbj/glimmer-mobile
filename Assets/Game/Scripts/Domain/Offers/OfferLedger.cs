@@ -200,6 +200,12 @@ namespace GlimmerGrove.Offers
             Save();
         }
 
+        /// <summary>
+        /// When a money popup - a deals popup or a personal offer - was last raised for this account, or
+        /// nought. Read by the rating prompt, which keeps away from a sales panel (invariant 68).
+        /// </summary>
+        public static long LastPopupUnix => History?.LastPopupUnix ?? 0L;
+
         /// <summary>The moment waiting for a calm screen, strongest kept.</summary>
         public static OfferTrigger Pending => _pending;
 

@@ -1186,6 +1186,13 @@ namespace GlimmerGrove.Content
         public AssistDto assist;
 
         /// <summary>
+        /// When the store's own rating box may be asked for (invariant 68). Optional; see
+        /// <see cref="Social.RatingTable"/>. <b>Reaches no server</b> and pays nothing (both stores forbid
+        /// an incentive). <b>Absent switches the feature off</b>.
+        /// </summary>
+        public RatingPromptDto ratingPrompt;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -2685,6 +2692,29 @@ namespace GlimmerGrove.Content
 
         /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
         public bool IsAuthored => giftLosses > 0 || openingLosses > 0 || easeLosses > 0;
+    }
+
+    /// <summary>The rating prompt's block. See <see cref="Social.RatingTable"/>.</summary>
+    [Serializable]
+    public sealed class RatingPromptDto
+    {
+        /// <summary>Levels cleared before the box may be asked for. 1 to 500.</summary>
+        public int minClearedLevels;
+
+        /// <summary>The stars the win must have taken. 1 to 3.</summary>
+        public int minStars;
+
+        /// <summary>Days between two asks. 1 to 365.</summary>
+        public int gapDays;
+
+        /// <summary>Asks an install may ever make. 1 to 10.</summary>
+        public int maxAsks;
+
+        /// <summary>Minutes a deals or offer popup keeps the box away. 0 to 1440.</summary>
+        public int moneyQuietMinutes;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => minClearedLevels > 0 || maxAsks > 0;
     }
 
     /// <summary>One utility in the helping hand's gift.</summary>
