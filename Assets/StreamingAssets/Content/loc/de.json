@@ -3846,6 +3846,74 @@
       "text": "Abholen"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Gratis\nBonus"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Gratis-Bonus"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Konto verknüpfen"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Spitznamen wählen"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Verknüpfen"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Name wählen"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Abholen"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Abgeholt"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Beendet"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "+{0} Edelsteine!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Du hast diesen Bonus bereits abgeholt."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Dein Konto ist noch nicht verknüpft."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Du hast noch keinen Spitznamen gewählt."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Dieser Spitzname ist nicht möglich. Bitte wähle einen anderen."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "Diese Anmeldung hat ihren Bonus bereits erhalten."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Dieser Bonus ist nicht mehr verfügbar."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Verbinde dich mit dem Internet, um diesen Bonus abzuholen."
+    },
+    {
       "key": "ui.assist.title",
       "text": "Kleine Hilfe!"
     },

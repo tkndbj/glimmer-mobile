@@ -268,8 +268,31 @@ namespace GlimmerGrove
             PaintSeal(parts, DealValue.BundlePercent(product, StoreRules.Catalog));
         }
 
+        /// <summary>
+        /// Writes a plain gem reward into a card - a free-bonus task (invariant 67): a gem heap, the
+        /// figure in the gems' colour with its gem beside it, GEMS under it, and no seal (nothing is
+        /// sold, so there is no value to state). Every field, as the two paints above write every field.
+        /// </summary>
+        public static void PaintGems(Parts parts, long gems)
+        {
+            if (parts == null) return;
+
+            SetArt(parts, GemHeapArt);
+            parts.Amount.text = gems > 0 ? gems.ToString("N0") : string.Empty;
+            parts.Amount.color = Pal.Bloom;
+            if (parts.Unit)
+            {
+                parts.Unit.text = Loc.Get("ui.shop.gems").Upper();
+                parts.Unit.color = Pal.Cream;
+            }
+
+            SetAmountGlyph(parts, true);
+            PaintSeal(parts, 0);
+        }
+
         /// <summary>The pictures a card can wear. Written out so the art scanner sees them.</summary>
-        const string CofferArt = "Ui/Shop/coins_3", BundleArt = "Ui/Shop/bundles_3", GemArt = "Ui/Shop/gems_1";
+        const string CofferArt = "Ui/Shop/coins_3", BundleArt = "Ui/Shop/bundles_3", GemArt = "Ui/Shop/gems_1",
+                     GemHeapArt = "Ui/Shop/gems_3";
 
         /// <summary>
         /// The open shape's gem beside a bundle's amount: <see cref="OpenGemSize"/> is the stone as it

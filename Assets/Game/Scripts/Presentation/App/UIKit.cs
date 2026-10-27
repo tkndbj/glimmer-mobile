@@ -627,6 +627,35 @@ namespace GlimmerGrove
             return label;
         }
 
+        /// <summary>
+        /// <see cref="OneLineLabel"/> for a caption of several lines broken by the string itself (a loc
+        /// value carrying <c>\n</c>, 6c): the lines are never re-wrapped, and the size is walked down from
+        /// <paramref name="from"/> until the widest line fits <paramref name="room"/>'s width and the block
+        /// fits its height. Measured rather than Best Fit, because Best Fit wraps a word too long for the
+        /// box into a third line, and truncates silently at its floor (19n). <paramref name="minSize"/> is
+        /// the floor; a caption still too big there is reported once, never clipped unseen.
+        /// </summary>
+        public static Text FitLines(Text label, Vector2 room, int from, int minSize)
+        {
+            if (label == null) return label;
+
+            label.resizeTextForBestFit = false;
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.verticalOverflow = VerticalWrapMode.Overflow;
+            if (from > 0) label.fontSize = from;
+
+            if (room.x <= 0f || room.y <= 0f || string.IsNullOrEmpty(label.text)) return label;
+
+            int floor = Mathf.Clamp(minSize, 1, Mathf.Max(1, label.fontSize));
+            while (label.fontSize > floor && (label.preferredWidth > room.x || label.preferredHeight > room.y))
+                label.fontSize--;
+
+            if (label.preferredWidth > room.x || label.preferredHeight > room.y)
+                Debug.LogWarning($"[UIKit] '{label.name}' does not fit {room} even at {floor}pt: \"{label.text}\"");
+
+            return label;
+        }
+
         public static Btn OneLine(Btn button, int minSize = 16)
         {
             if (button == null || button.Label == null) return button;

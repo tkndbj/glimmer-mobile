@@ -5,6 +5,10 @@
     python Tools/render_home.py --no-event      # the row with no event running
     python Tools/render_home.py --quiet         # the event box with nothing to collect
     python Tools/render_home.py --welcome       # the foot with the welcome door under it
+    python Tools/render_home.py --lang tr       # the FREE BONUS medal's caption in another language
+    python Tools/render_home.py --no-bonus      # an account the free bonus offers nothing
+    python Tools/render_home.py --height 1890   # the squarest canvas (the medal moves beside the key)
+    python Tools/render_home.py --measure       # the medal in every language, every canvas, both shapes; fails on a floor
     python Tools/render_home.py --out home.png
 
 **Why this exists.** Nothing in this project can open a PNG on the way to a build, and the
@@ -31,7 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from PIL import Image                                       # noqa: E402
+from PIL import Image, ImageDraw                                       # noqa: E402
 import hudkit as K                                          # noqa: E402
 
 W, H = K.W, K.H
@@ -649,6 +653,148 @@ def play(sheet, foot):
     K.text(sheet, "BATTLE", left + word / 2, cy - lift, 62, outline=4)
 
 
+# HubFoot's free-bonus medal (invariant 67), field for field, and HomeScreen.FreeBonusWordSize.
+KEY_BREATH, BONUS_PAD = .03, 8.0
+MEDAL_ASPECT = 322.0 / 384.0
+MEDAL_DISC_X, MEDAL_DISC_Y, MEDAL_DISC_W = .4984, .3971, .5932
+FEATURE_GAP = 24.0
+UNDER_PAD, UNDER_MAX_H, UNDER_MIN_H = 14.0, 230.0, 140.0
+FEATURE_BOTTOM = ROW_TOP + ROW_HEIGHT
+BONUS_WORD_SIZE, BONUS_WORD_FLOOR, BONUS_LINE_SPACING = 46, 12, .88
+LANGS = ("en", "es", "pt", "fr", "de", "it", "tr", "pl", "ar")
+
+# Canvas heights a phone draws the hub at: the squarest (7:4 widened), 16:9, 19.5:9, 20:9, 21:9.
+CANVASES = (1890.0, 1920.0, 2340.0, 2400.0, 2520.0)
+
+
+def streak_x(paired):
+    """`HubFoot.StreakX`: the streak box's centre across - the left half of the row, or all of it."""
+    return -(CHALLENGE_W - (CHALLENGE_W - FEATURE_GAP) / 2) / 2 if paired else 0.0
+
+
+def bonus_geometry(foot, canvas_h, safe_top=0.0, paired=True):
+    """`HubFoot.BonusAt`: under the streak box when the canvas leaves room, beside the key when it does not."""
+    room = canvas_h - safe_top - FEATURE_BOTTOM - foot.top
+    h = min(UNDER_MAX_H, room - 2 * UNDER_PAD)
+    if h >= UNDER_MIN_H:
+        under, x, y, w = True, streak_x(paired), foot.top + room / 2, h * MEDAL_ASPECT
+    else:
+        column = CHALLENGE_W / 2 - foot.play_w / 2 * (1 + KEY_BREATH)
+        under, w = False, min(column - 2 * BONUS_PAD, foot.play_h * MEDAL_ASPECT)
+        x, y, h = -(CHALLENGE_W / 2 - column / 2), foot.play_y, w / MEDAL_ASPECT
+    return {
+        "under": under, "w": w, "h": h, "x": x, "y": y, "room": room,
+        "cap_w": w * MEDAL_DISC_W, "cap_h": w * MEDAL_DISC_W * .70,
+        "cap_x": (MEDAL_DISC_X - .5) * w, "cap_y": (.5 - MEDAL_DISC_Y) * h,
+        "rays": h * 2.0, "glow": h * 2.3,
+    }
+
+
+def _face(s, size):
+    """`GameText`: Arabic shaped and reordered (`arabic_text.visual`) in `GameFontArabic` (6d)."""
+    import arabic_text
+    if arabic_text.needs(s):
+        from PIL import ImageFont
+        font = K.REPO / "Assets" / "Game" / "Fonts" / "GameFontArabic.ttf"
+        return arabic_text.visual(s), ImageFont.truetype(str(font), int(size))
+    return s, K.font(size)
+
+
+def _upper(s, lang):
+    """`Loc.Upper`: Turkish dotted i to İ first."""
+    return s.replace("i", "İ").upper() if lang == "tr" else s.upper()
+
+
+def fit_bonus_word(caption, room_w, room_h):
+    """`UIKit.FitLines`: the largest size from the design size down to the floor at which the widest
+    line fits the width and the block - lines spaced at `lineSpacing` - fits the height. Answers the
+    size, the drawn lines, whether it fit at all, and the step between lines."""
+    lines = caption.split("\n")
+    size = BONUS_WORD_SIZE
+    while True:
+        shaped = [_face(line, size) for line in lines]
+        wide = max(f.getlength(t) for t, f in shaped)
+        ascent, descent = shaped[0][1].getmetrics()
+        tall = (ascent + descent) * (1 + BONUS_LINE_SPACING * (len(lines) - 1))
+        fits = wide <= room_w and tall <= room_h
+        if fits or size <= BONUS_WORD_FLOOR:
+            return size, shaped, fits, (ascent + descent) * BONUS_LINE_SPACING
+        size -= 1
+
+
+def free_bonus_shine(sheet, g):
+    """The medal's shine - `HomeScreen.BuildFreeBonus`'s glow and turning rays - drawn straight after the
+    room, so every control is drawn over it, as on the device."""
+    cx, cy = W / 2 + g["x"], H - g["y"]
+    K.paste(sheet, K.glow(int(g["glow"]), 2.2, K.SUN, .55), cx, cy)
+    fan = K.rays(int(g["rays"]), 14)
+    lit = Image.new("RGBA", fan.size, (255, 219, 107, 0))
+    lit.putalpha(fan.point(lambda v: int(v * .42)))
+    K.paste(sheet, lit, cx, cy)
+
+
+def free_bonus(sheet, g, lang="en", verbose=False):
+    """`HomeScreen.BuildFreeBonus` - the FREE BONUS medal, with two lines of `ui.free_bonus.badge` on its disc."""
+    cx, cy = W / 2 + g["x"], H - g["y"]
+    medal = K.fit(Image.open(K.UI / "ic_free_bonus.png").convert("RGBA"), (round(g["w"]), round(g["h"])))
+    K.paste(sheet, medal, cx, cy)
+
+    caption = _upper(table(lang).get("ui.free_bonus.badge", "Free\nBonus"), lang)
+    size, shaped, fits, step = fit_bonus_word(caption, g["cap_w"], g["cap_h"])
+    middle = cy - g["cap_y"]
+    first = middle - step * (len(shaped) - 1) / 2
+    draw = ImageDraw.Draw(sheet)
+    for i, (shown, f) in enumerate(shaped):
+        x = cx + g["cap_x"] - f.getlength(shown) / 2
+        y = first + i * step - size * 0.62
+        for dx in range(-3, 4):
+            for dy in range(-3, 4):
+                if dx or dy:
+                    draw.text((x + dx, y + dy), shown, font=f, fill=(23, 36, 51, 240))
+        draw.text((x, y), shown, font=f, fill=K.CREAM)
+    if verbose:
+        print("  free bonus medal: %s, %.0fx%.0f (%.0f of room under the row); caption %d pt (%s)"
+              % ("under the streak box" if g["under"] else "beside the key", g["w"], g["h"], g["room"], size, lang))
+    return size, fits
+
+
+def table(lang):
+    import json
+    rows = json.loads((K.REPO / "Assets" / "StreamingAssets" / "Content" / "loc" / ("%s.json" % lang))
+                      .read_text(encoding="utf-8"))["entries"]
+    return {e["key"]: e["text"] for e in rows}
+
+
+def measure_bonus():
+    """Every language on every canvas in both shapes of the foot: the caption's size, and a failure on any
+    that only fits at the floor or not at all (19n's tell), or a medal over a neighbour."""
+    bad = []
+    for welcome in (False, True):
+        foot = Foot(welcome)
+        for canvas in CANVASES:
+            g = bonus_geometry(foot, canvas)
+            sizes = []
+            for lang in LANGS:
+                caption = _upper(table(lang)["ui.free_bonus.badge"], lang)
+                size, _, fits, _ = fit_bonus_word(caption, g["cap_w"], g["cap_h"])
+                sizes.append("%s %d" % (lang, size))
+                if not fits or size <= BONUS_WORD_FLOOR:
+                    bad.append((welcome, canvas, lang))
+            breath = 1 + KEY_BREATH
+            if g["under"]:
+                clear = (g["y"] + g["h"] / 2 * breath <= canvas - FEATURE_BOTTOM
+                         and g["y"] - g["h"] / 2 * breath >= foot.top)
+            else:
+                clear = (g["x"] + g["w"] / 2 * breath < -foot.play_w / 2 * breath
+                         and g["x"] - g["w"] / 2 * breath >= -CHALLENGE_W / 2 and g["h"] <= foot.play_h)
+            if not clear:
+                bad.append((welcome, canvas, "geometry"))
+            print("  %-7s %4.0f  %-6s %3.0fx%3.0f  %s%s" % (
+                "welcome" if welcome else "plain", canvas, "under" if g["under"] else "beside",
+                g["w"], g["h"], "  ".join(sizes), "" if clear else "   <-- OVERLAPS"))
+    return bad
+
+
 def clearance(foot):
     """What is left between the feature row and the BATTLE key on the squarest phone.
 
@@ -668,12 +814,15 @@ def clearance(foot):
     return top, foot.top, shortest - top - foot.top
 
 
-def screen(paired=True, verbose=False, waiting=True, welcome=False):
+def screen(paired=True, verbose=False, waiting=True, welcome=False, bonus=True, lang="en"):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.room(sheet)
     K.rail(sheet, top=True)
 
     foot = Foot(welcome)
+    medal = bonus_geometry(foot, H, 0.0, paired) if bonus else None
+    if medal:
+        free_bonus_shine(sheet, medal)
     top_bar(sheet, waiting)
     resources(sheet)
     tasks(sheet, verbose=verbose)
@@ -682,6 +831,8 @@ def screen(paired=True, verbose=False, waiting=True, welcome=False):
     loadout(sheet, foot)
     challenges(sheet, foot)
     welcome_door(sheet, foot)
+    if medal:
+        free_bonus(sheet, medal, lang, verbose)
     K.navbar(sheet, "home")
     return sheet.convert("RGB")
 
@@ -694,10 +845,25 @@ def main():
                     help="the event box with nothing waiting: no rim, no badge, no COLLECT")
     ap.add_argument("--welcome", action="store_true",
                     help="the foot with the welcome door under Daily Challenges (invariant 58)")
+    ap.add_argument("--no-bonus", action="store_true",
+                    help="an account the free bonus offers nothing: no medal (invariant 67)")
+    ap.add_argument("--lang", default="en", choices=LANGS, help="the medal's caption language")
+    ap.add_argument("--measure", action="store_true",
+                    help="the medal's caption in every language, on every canvas, both shapes; exits 1 on a floor")
+    ap.add_argument("--height", type=float, default=2400.0,
+                    help="the canvas height to draw (1890 is the squarest; 2400 a 20:9 phone)")
     ap.add_argument("--out", type=Path, default=Path("home.png"))
     args = ap.parse_args()
 
-    out = screen(paired=not args.no_event, verbose=True, waiting=not args.quiet, welcome=args.welcome)
+    if args.measure:
+        bad = measure_bonus()
+        print("free bonus medal: %s" % ("every caption fits" if not bad else "%d fault(s)" % len(bad)))
+        raise SystemExit(1 if bad else 0)
+
+    global H
+    H = K.H = int(args.height)
+    out = screen(paired=not args.no_event, verbose=True, waiting=not args.quiet, welcome=args.welcome,
+                 bonus=not args.no_bonus, lang=args.lang)
 
     for shape in (False, True):
         top, foot, spare = clearance(Foot(shape))

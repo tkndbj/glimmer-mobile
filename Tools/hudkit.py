@@ -97,8 +97,26 @@ def load(name):
         return _cache[name]
     path = UI / (name + ".png")
     im = Image.open(path).convert("RGBA")
-    _cache[name] = (im, border_of(path))
+    b = border_of(path)
+    # A sprite cut denser than the canvas (`spritePixelsToUnits` over 100) draws smaller, its
+    # sliced corners with it; bring it to canvas units so `nine` measures what Unity draws.
+    ppu = units_of(path)
+    if ppu != 100:
+        k = 100 / ppu
+        im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+        b = tuple(round(v * k) for v in b)
+    _cache[name] = (im, b)
     return _cache[name]
+
+
+def units_of(path):
+    """`spritePixelsToUnits` out of the sprite's `.meta`; 100 (the canvas's own) when absent."""
+    meta = Path(str(path) + ".meta")
+    if meta.exists():
+        for line in meta.read_text(encoding="utf8").splitlines():
+            if line.strip().startswith("spritePixelsToUnits:"):
+                return float(line.split(":", 1)[1])
+    return 100.0
 
 
 def nine(im, b, w, h):

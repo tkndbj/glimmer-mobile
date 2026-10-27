@@ -3846,6 +3846,74 @@
       "text": "Resgatar"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Bônus\ngrátis"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Bônus grátis"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Vincule sua conta"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Escolha um apelido"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Vincular"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Escolher apelido"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Resgatar"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Resgatado"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Encerrado"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "+{0} gemas!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Você já resgatou este bônus."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Sua conta ainda não está vinculada."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Você ainda não escolheu um apelido."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Esse apelido não pode ser usado. Escolha outro."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "Este login já ganhou seu bônus."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Este bônus não está mais disponível."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Conecte-se à internet para resgatar este bônus."
+    },
+    {
       "key": "ui.assist.title",
       "text": "Uma ajudinha!"
     },

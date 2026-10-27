@@ -135,6 +135,11 @@ import {
 } from "./wallet";
 import { rebuildChapterStandings } from "./standings";
 import { addPurchase } from "./payer";
+import {
+  FREE_BONUS_PATHS, FREE_BONUS_REASON, FreeBonusFacts, FreeBonusRow, IdentityDoc, bonusRows, earnedElsewhere, enrol,
+  freeBonusGrantId, identityKey, isFreeBonusTask, judgeClaim, linkedIdentities, payTask, readFreeBonus,
+  usableFreeBonusConfig, voidTask,
+} from "./free-bonus";
 
 
 initializeApp();
@@ -2426,6 +2431,163 @@ export const claimDailyPass = onCall(callOptions, async (request): Promise<{
   logger.info("daily pass claim", { uid, product, outcome: result.outcome, granted: result.granted });
 
   return { outcome: result.outcome, granted: result.granted, wallets: toReply(result.state, {}) };
+});
+
+// ------------------------------------------------------------------ the free bonus
+/**
+ * The account's linked sign-ins, read off the Auth record itself rather than the caller's token: a
+ * token is up to an hour stale, and a link made a moment ago must count (`free-bonus.ts`).
+ */
+async function freeBonusIdentities(uid: string): Promise<string[]> {
+  const user = await getAuth().getUser(uid);
+  return linkedIdentities(user.providerData);
+}
+
+/** Whether this server has ever recorded currency for the account - `readWallet`'s `everBanked`. */
+function walletBanked(raw: Record<string, unknown> | undefined): boolean {
+  return CURRENCIES.some((currency) => typeof (raw?.[currency] as { granted?: unknown } | undefined)?.granted === "number");
+}
+
+/**
+ * The free bonus's standing for this account (invariant 67): `{ live, enrolled, tasks }`.
+ *
+ * <p><b>The read enrols.</b> The first ask writes each task the config offers onto the wallet, offered
+ * if undone and exempt if done - on the Auth record's sign-ins and the wallet's name reservation - and
+ * never again, so a task done before the bonus was shown is never offered. Only a build that draws the
+ * bonus asks, which is what keeps a link made on an older build from earning it later. An account the
+ * server has never banked for is not enrolled yet (`enrolled: false`) and is asked again after its
+ * first sync, so enrolment cannot run ahead of the wallet it writes on.</p>
+ *
+ * <p>Fails closed when the block is unpublished (`live: false`): the client draws no badge and caches
+ * nothing, so publishing the block later offers it.</p>
+ */
+export const getFreeBonus = onCall(callOptions, async (request): Promise<{
+  live: boolean;
+  enrolled: boolean;
+  tasks: FreeBonusRow[];
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const block = usableFreeBonusConfig((await loadProgressionConfig() as { freeBonus?: unknown }).freeBonus);
+  if (!block) return { live: false, enrolled: false, tasks: [] };
+
+  const identities = await freeBonusIdentities(uid);
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const reply = await db.runTransaction(async (transaction) => {
+    const walletRef = db.doc(PATHS.wallet(uid));
+    const snapshot = await transaction.get(walletRef);
+    const raw = snapshot.data() as Record<string, unknown> | undefined;
+    if (!walletBanked(raw)) return { enrolled: false, tasks: [] as FreeBonusRow[], wrote: false };
+
+    // Enrolled on whether a name is *held* - a name taken down was still chosen before the offer -
+    // and paid only on a publishable one (`claimFreeBonus`), which is also what `done` reports.
+    const holding = heldName(raw);
+    const linked = identities.length > 0;
+    const enrolment: FreeBonusFacts = { linked, named: holding !== null };
+    const facts: FreeBonusFacts = { linked, named: publishableName(holding) !== null };
+
+    const { record, changed } = enrol(readFreeBonus(raw?.freeBonus), block, enrolment, nowUnix);
+
+    // A merge of the one field, so enrolment touches nothing else on the document.
+    if (changed) transaction.set(walletRef, { freeBonus: record }, { merge: true });
+
+    return { enrolled: true, tasks: bonusRows(record, facts), wrote: changed };
+  });
+
+  if (reply.wrote) logger.info("free bonus enrolled", { uid, tasks: reply.tasks.map((t) => t.id) });
+  return { live: true, enrolled: reply.enrolled, tasks: reply.tasks };
+});
+
+/**
+ * Pays one free-bonus task: `{ task }`, `link` or `name` (invariant 67).
+ *
+ * <p>Server-owned end to end, the seven-day pass's shape: the offer and the amount are on the wallet,
+ * the deed is read off the Auth record (a sign-in) or the wallet's reservation (a publishable name),
+ * and the client predicts nothing - it adopts the balances this answers with. Idempotent: a second ask
+ * answers `spent` with the balance the first one raised, so a lost reply costs a retry.</p>
+ *
+ * <p>Answers `paid`, `spent` (already paid, here or on another device), `not_done` (the server cannot
+ * see it done yet - never permanent, 13a), `used` (this sign-in already earned the bonus for another
+ * account; the task is withdrawn) or `none` (never offered to this account, or the feature is off),
+ * with the rows and the wallet every time.</p>
+ */
+export const claimFreeBonus = onCall(callOptions, async (request): Promise<{
+  outcome: string;
+  gems: number;
+  tasks: FreeBonusRow[];
+  wallets: WalletReply[];
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const task = (request.data ?? {}).task;
+  if (!isFreeBonusTask(task)) {
+    throw new HttpsError("invalid-argument", "a free bonus claim names its task: link or name");
+  }
+
+  const identities = await freeBonusIdentities(uid);
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const result = await db.runTransaction(async (transaction) => {
+    const config = await loadProgressionConfig(transaction);
+    const walletRef = db.doc(PATHS.wallet(uid));
+    const identityRefs = task === "link"
+      ? identities.map((identity) => db.doc(FREE_BONUS_PATHS.identity(identityKey(identity))))
+      : [];
+
+    const [snapshot, ...held] = await transaction.getAll(walletRef, ...identityRefs);
+    const state = readWallet(snapshot, config);
+
+    const facts: FreeBonusFacts = {
+      linked: identities.length > 0,
+      named: publishableName(state.name ?? null) !== null,
+    };
+    let record = state.freeBonus ?? {};
+
+    // With no published block nothing new is paid, but a record already written still answers truthfully.
+    const live = usableFreeBonusConfig((config as { freeBonus?: unknown }).freeBonus) !== null;
+    const verdict = live ? judgeClaim(record, task, facts) : { kind: "none" as const };
+
+    if (verdict.kind !== "pay") {
+      return { outcome: verdict.kind as string, gems: 0, state, record, facts };
+    }
+
+    if (task === "link" && earnedElsewhere(uid, held.map((doc) => doc.exists ? doc.data() as IdentityDoc : null))) {
+      record = voidTask(record, task);
+      state.freeBonus = record;
+      transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+      return { outcome: "used", gems: 0, state, record, facts };
+    }
+
+    state.gems.granted += verdict.gems;
+    record = payTask(record, task, nowUnix);
+    state.freeBonus = record;
+
+    transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+    transaction.set(db.doc(PATHS.grant(uid, freeBonusGrantId(task))), {
+      reason: FREE_BONUS_REASON,
+      task,
+      granted: { gems: verdict.gems },
+      grantedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Every sign-in the account holds now, so none of them can earn the link bonus for another
+    // account - not after a deletion either (`free-bonus.ts`).
+    for (const ref of identityRefs) transaction.set(ref, { uid, atUnix: nowUnix } as IdentityDoc);
+
+    return { outcome: "paid", gems: verdict.gems, state, record, facts };
+  });
+
+  logger.info("free bonus claim", { uid, task, outcome: result.outcome, gems: result.gems });
+
+  return {
+    outcome: result.outcome,
+    gems: result.gems,
+    tasks: bonusRows(result.record, result.facts),
+    wallets: toReply(result.state, {}),
+  };
 });
 
 /** What a client is told when the block is unpublished: nothing, honestly. */

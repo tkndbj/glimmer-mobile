@@ -3846,6 +3846,74 @@
       "text": "Al"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Ücretsiz\nBonus"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Ücretsiz Bonus"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Hesabını bağla"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Bir takma ad seç"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Bağla"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Ad seç"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Al"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Alındı"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Kapandı"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "+{0} mücevher!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Bu bonusu zaten aldın."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Hesabın henüz bağlı değil."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Henüz bir takma ad seçmedin."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Bu takma ad kullanılamaz. Lütfen başka bir tane seç."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "Bu giriş bonusunu zaten kazandı."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Bu bonus artık mevcut değil."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Bu bonusu almak için internete bağlan."
+    },
+    {
       "key": "ui.assist.title",
       "text": "Küçük Bir Yardım!"
     },

@@ -3846,6 +3846,74 @@
       "text": "Claim"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Free\nBonus"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Free Bonus"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Link your account"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Set a nickname"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Link"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Set nickname"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Claim"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Claimed"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Closed"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "+{0} gems!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "You have already claimed this bonus."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Your account is not linked yet."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Your nickname is not set yet."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "That nickname can't be used. Please choose another."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "This sign-in has already earned its bonus."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "This bonus is no longer available."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Connect to the internet to claim this bonus."
+    },
+    {
       "key": "ui.assist.title",
       "text": "A Little Help!"
     },

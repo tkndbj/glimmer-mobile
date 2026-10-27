@@ -3846,6 +3846,74 @@
       "text": "Odbierz"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Darmowy\nbonus"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Darmowy bonus"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Połącz konto"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Wybierz pseudonim"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Połącz"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Wybierz"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Odbierz"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Odebrano"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Zamknięte"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "Klejnoty: +{0}!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Ten bonus został już odebrany."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Twoje konto nie jest jeszcze połączone."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Pseudonim nie jest jeszcze wybrany."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Tego pseudonimu nie można użyć. Wybierz inny."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "To logowanie zdobyło już swój bonus."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Ten bonus nie jest już dostępny."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Połącz się z internetem, aby odebrać ten bonus."
+    },
+    {
       "key": "ui.assist.title",
       "text": "Mała pomoc!"
     },

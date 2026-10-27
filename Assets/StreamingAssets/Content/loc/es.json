@@ -3846,6 +3846,74 @@
       "text": "Reclamar"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Bono\ngratis"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Bono gratis"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Vincula tu cuenta"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Elige un apodo"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Vincular"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Elegir apodo"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Reclamar"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Reclamado"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Cerrado"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "¡+{0} gemas!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Ya has reclamado este bono."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Tu cuenta aún no está vinculada."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Aún no has elegido un apodo."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Ese apodo no se puede usar. Elige otro."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "Este inicio de sesión ya obtuvo su bono."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Este bono ya no está disponible."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Conéctate a internet para reclamar este bono."
+    },
+    {
       "key": "ui.assist.title",
       "text": "¡Una ayudita!"
     },

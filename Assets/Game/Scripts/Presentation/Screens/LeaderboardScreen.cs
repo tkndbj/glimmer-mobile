@@ -72,7 +72,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>132 while a row carried a companion's head, 176 for the badge, 196 now</b> (36 between
-        /// plates, so a top-three score frame standing proud of its plate still clears the next). A portrait is a
+        /// plates, so a top-three frame standing proud of its plate still clears the next). A portrait is a
         /// face and reads at any size; a rank badge is a piece of shaped metal whose whole meaning is in
         /// its silhouette - bronze against silver against gold, wings against spikes - and at
         /// 84 units the seven of them are one smudge. The badge is cut at 256 and drawn at 132
@@ -559,8 +559,8 @@ namespace GlimmerGrove
         sealed class Row : IGridCell
         {
             readonly LeaderboardScreen _screen;
-            readonly Image _plate, _badge, _scoreFrame;
-            readonly Text _place, _name, _wave, _framedWave;
+            readonly Image _plate, _badge, _frame;
+            readonly Text _place, _name, _wave;
             readonly Btn _button;
 
             LeaderboardEntry _entry;
@@ -610,35 +610,27 @@ namespace GlimmerGrove
                                  NameBox, new Vector2(0f, .5f), NamePos, 3f, 2f), 20);
 
                 // The figure the board is ordered on, large and flush right: the column a
-                // player's eye runs down. From fourth place on; the first three wear it in a frame.
+                // player's eye runs down.
                 _wave = UIKit.Shrinkable(
                     UIKit.Titled("Wave", _plate.transform, string.Empty, 52, Pal.Gold,
                                  TextAnchor.MiddleRight, new Vector2(284f, 100f),
                                  new Vector2(1f, .5f), new Vector2(-178f, 0f), 3f, 0f), 24);
 
-                // The three frames are drawn on a 16:9 canvas with a wide transparent margin
-                // (the art is ~89% of its width and ~67% of its height), so the box is sized
-                // for the drawn frame: 172 tall, a touch taller than the plate's 160, with its
-                // right edge just past the plate's, so it reads as a tag pinned to the card.
-                _scoreFrame = UIKit.Img("ScoreFrame", _plate.transform, null, Color.white,
-                                        new Vector2(456f, 254.5f), new Vector2(1f, .5f),
-                                        new Vector2(-198f, 0f));
-                _scoreFrame.preserveAspect = true;
-                _scoreFrame.raycastTarget = false;
-
-                // The artwork's recessed panel is right of centre. Keep the label inside its
-                // straight inner edges, including its outline, as the whole card scales.
-                var window = UIKit.Node("ScoreWindow", _scoreFrame.transform);
-                window.anchorMin = new Vector2(.32f, .40f);
-                window.anchorMax = new Vector2(.80f, .60f);
-                window.offsetMin = window.offsetMax = Vector2.zero;
-                window.gameObject.AddComponent<RectMask2D>();
-                _framedWave = UIKit.Shrinkable(
-                    UIKit.Titled("Value", window, string.Empty, 38, Pal.Gold,
-                                 TextAnchor.MiddleCenter, outline: 2f, shadow: 0f), 10);
-                _framedWave.rectTransform.offsetMin = new Vector2(4f, 4f);
-                _framedWave.rectTransform.offsetMax = new Vector2(-4f, -4f);
-                _scoreFrame.gameObject.SetActive(false);
+                // **The first three wear a frame round the whole plate** (`Ui/rank1..3`, cut by
+                // `Tools/make_board_frames.py`). A nine-slice, so the chamfered corners are drawn
+                // whole and only the straight runs stretch, stretched to the plate by anchors
+                // rather than sized, so it is the plate's shape on every screen. The band's inner
+                // half lies over the plate's rim and its outer half clears it, so neither the
+                // plate's rounded corners show past the chamfers nor a gap shows inside them.
+                // Last child, so it draws over the plate and nothing in the row draws over it.
+                _frame = UIKit.Img("Frame", _plate.transform, null, Color.white);
+                _frame.rectTransform.anchorMin = Vector2.zero;
+                _frame.rectTransform.anchorMax = Vector2.one;
+                _frame.rectTransform.offsetMin = -Vector2.one * FrameReach;
+                _frame.rectTransform.offsetMax = Vector2.one * FrameReach;
+                _frame.type = Image.Type.Sliced;
+                _frame.fillCenter = false;
+                _frame.gameObject.SetActive(false);
             }
 
             public void Bind(int index)
@@ -662,17 +654,11 @@ namespace GlimmerGrove
                     ? DisplayNormalScore(_entry.NormalScore).ToString(CultureInfo.InvariantCulture)
                     : Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry));
 
-                var frame = ScoreFrame(_entry.Rank);
-                bool framed = frame != null;
-                _scoreFrame.sprite = frame;
-                _scoreFrame.gameObject.SetActive(framed);
-                _wave.gameObject.SetActive(!framed);
-                _framedWave.text = _wave.text;
-                // Framed, the name has the gap between badge (ends at 280) and the frame's notch
-                // (starts at ~540) and both lines of the plate, so the longest name (16,
-                // GroveNames.MaxLength) wraps to two lines rather than shrinking to its floor.
-                _name.rectTransform.sizeDelta = framed ? new Vector2(232f, 100f) : NameBox;
-                _name.rectTransform.anchoredPosition = framed ? new Vector2(416f, 0f) : NamePos;
+                // Written on every bind, sprite and switch together (44mc): a recycled row that
+                // was first place scrolls down as forty-first.
+                var frame = PlaceFrame(_entry.Rank);
+                _frame.sprite = frame;
+                _frame.gameObject.SetActive(frame != null);
 
                 // **The badge is the server's answer, and an absent one draws nothing.** Below
                 // the first rung is an ordinary state and so is a card published before this
@@ -691,10 +677,19 @@ namespace GlimmerGrove
                 _plate.sprite = Art.S("Ui/" + (mine ? Skins.PlateOrange : Skins.PlateBlue));
             }
 
-            // Unframed, the name runs from the badge (ends at 280) to the figure (starts at 620).
+            // The name runs from the badge (ends at 280) to the figure (starts at 620).
             static readonly Vector2 NameBox = new Vector2(300f, 100f), NamePos = new Vector2(450f, 0f);
 
-            static Sprite ScoreFrame(int place)
+            /// <summary>
+            /// How far a place frame's box stands past the plate on every side: the band is 20
+            /// units, half of it over the plate's rim and half past it, plus the 6 units of glow
+            /// the cut keeps outside the band (<c>make_board_frames.py</c>: BAND, MARGIN, PPU).
+            /// The band's hard edge is 10 past the plate, so 960 x 180 inside a 1080 x 196 row
+            /// slot: it never meets the next row's frame nor the screen's edge.
+            /// </summary>
+            const float FrameReach = 16f;
+
+            static Sprite PlaceFrame(int place)
             {
                 switch (place)
                 {

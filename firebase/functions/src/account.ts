@@ -40,6 +40,11 @@
  *   resolves to anybody, and it is retained for fraud prevention — which is the lawful basis
  *   every store's own guidance names for exactly this document.
  *
+ * - **`bonusIdentities/{sha256(provider:providerUid)}`** — that a sign-in has earned the free bonus's
+ *   link gems (`free-bonus.ts`, invariant 67). Deleting it would make "link, claim, delete, start over,
+ *   link again" a gem faucet, `receipts`' attack at a smaller price. It holds a hash, never the
+ *   provider's own id, and a uid that no longer resolves; kept for fraud prevention, as receipts are.
+ *
  * - **`{nameReports,groveReports}/{other}/reporters/{uid}`** — reports this account filed about *other*
  *   people. They are records about somebody else, the count on the parent is denormalised
  *   from them, and removing one would either drift that count or silently un-hide a name three

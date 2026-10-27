@@ -246,6 +246,7 @@ function buildProgressionConfig() {
       })(),
       keeper: readKeeperCurve(progression),
       welcome: readWelcome(progression),
+      freeBonus: readFreeBonus(progression),
 
       // Read last because it is the only block that has to be proved against the *catalog*
       // this same run derived: a rung scoped to a chapter nobody ships is a line that can
@@ -929,6 +930,38 @@ function readWelcome(progression) {
   console.log(`  welcome: ${rows.length} quest(s); taken as money they pay `
               + Object.values(quests).map((q) => `${q.amount} ${q.currency}`).join(", "));
   return { quests };
+}
+
+/**
+ * The free bonus (invariant 67): the gems each task pays - `link` a sign-in, `name` a nickname. The
+ * tasks are code (`free-bonus.ts`, `FreeBonusTasks`); the amounts are this block. Everything
+ * `usableFreeBonusConfig` would drop is refused here, so what is published is exactly what is paid.
+ * Absent is the feature off: no badge, and nothing enrolled.
+ */
+function readFreeBonus(progression) {
+  const TASKS = new Set(["link", "name"]);
+  const MAX_GEMS = 10000;                     // mirrors FREE_BONUS_MAX_GEMS
+
+  const block = progression.freeBonus;
+  if (!block) return undefined;
+
+  const rows = Array.isArray(block.tasks) ? block.tasks : [];
+  if (rows.length === 0) throw new Error("freeBonus carries no tasks; leave the block out to switch the bonus off");
+
+  const seen = new Set();
+  const tasks = rows.map((row, i) => {
+    const where = `freeBonus task ${i}`;
+    if (!TASKS.has(row?.id)) throw new Error(`${where} is '${row?.id}'; a task is 'link' or 'name'`);
+    if (seen.has(row.id)) throw new Error(`${where} repeats '${row.id}'`);
+    seen.add(row.id);
+    if (!Number.isInteger(row.gems) || row.gems <= 0 || row.gems > MAX_GEMS) {
+      throw new Error(`${where} pays ${row?.gems} gems; a task pays a whole number from 1 to ${MAX_GEMS}`);
+    }
+    return { id: row.id, gems: row.gems };
+  });
+
+  console.log(`  freeBonus: ${tasks.map((t) => `${t.id} ${t.gems} gems`).join(", ")}`);
+  return { tasks };
 }
 
 function readEndless(progression) {

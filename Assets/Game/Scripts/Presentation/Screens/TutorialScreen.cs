@@ -5,6 +5,7 @@ using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
+using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -145,7 +146,7 @@ namespace GlimmerGrove
         AssetHold _hold;
         SiegeView _siege;
         RectTransform _host, _coach, _ribbon;
-        Btn _skip;
+        Btn _skip, _music;
         bool _ready, _ended;
 
         /// <summary>The finale's key has been pressed and the next screen is on its way.</summary>
@@ -244,7 +245,7 @@ namespace GlimmerGrove
 
             var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.tutorial.title").Upper(),
                                              new Vector2(BannerW, BannerH), new Vector2(.5f, 1f),
-                                             new Vector2(0f, cy), BannerSize);
+                                             new Vector2(-72f, cy), BannerSize);
             _ribbon = (RectTransform)ribbon.transform;
             _ribbon.localScale = Vector3.zero;
             Tween.Pop(_ribbon, 0f, .5f, .06f);
@@ -261,6 +262,26 @@ namespace GlimmerGrove
             var group = UIKit.Group((RectTransform)_skip.transform);
             group.alpha = 0f;
             Tween.Fade(group, 1f, .4f).Delay(.35f);
+
+            _music = UIKit.IconButton("Music", Safe, Skins.Nav, "ic_music",
+                                      Vector2.one * ChromeSize, new Vector2(1f, 1f),
+                                      new Vector2(-238f, cy), () =>
+                                      {
+                                          GameSettings.SetMusic(!GameSettings.MusicOn);
+                                          PaintMusic();
+                                      });
+            PaintMusic();
+
+            var musicGroup = UIKit.Group((RectTransform)_music.transform);
+            musicGroup.alpha = 0f;
+            Tween.Fade(musicGroup, 1f, .4f).Delay(.35f);
+
+            void PaintMusic()
+            {
+                bool on = GameSettings.MusicOn;
+                _music.GetComponent<Image>().sprite = Art.S("Ui/" + (on ? Skins.Nav : Skins.Resting));
+                _music.Icon.color = on ? Pal.Cream : new Color(.72f, .78f, .84f, .7f);
+            }
         }
 
         void BuildBoard()
@@ -1144,6 +1165,12 @@ namespace GlimmerGrove
         void Retire()
         {
             if (_ribbon != null) Tween.Fade(UIKit.Group(_ribbon), 0f, .3f);
+
+            if (_music != null)
+            {
+                _music.Interactable = false;
+                Tween.Fade(UIKit.Group((RectTransform)_music.transform), 0f, .22f);
+            }
 
             if (_skip == null) return;
 

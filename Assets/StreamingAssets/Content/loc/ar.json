@@ -3846,6 +3846,74 @@
       "text": "استلام"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "مكافأة\nمجانية"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "مكافأة مجانية"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "اربط حسابك"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "اختر اسمًا مستعارًا"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "ربط"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "اختر اسمًا"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "استلام"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "تم الاستلام"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "مغلق"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "الجواهر: +{0}"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "لقد استلمت هذه المكافأة بالفعل."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "حسابك غير مرتبط بعد."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "لم تختر اسمًا مستعارًا بعد."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "لا يمكن استخدام هذا الاسم. اختر اسمًا آخر."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "حصل تسجيل الدخول هذا على مكافأته بالفعل."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "هذه المكافأة لم تعد متاحة."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "اتصل بالإنترنت لاستلام هذه المكافأة."
+    },
+    {
       "key": "ui.assist.title",
       "text": "مساعدة صغيرة!"
     },

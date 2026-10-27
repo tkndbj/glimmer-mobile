@@ -3846,6 +3846,74 @@
       "text": "Récupérer"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Bonus\ngratuit"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Bonus gratuit"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Associe ton compte"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Choisis un pseudo"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Associer"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Choisir un pseudo"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Réclamer"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Réclamé"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Terminé"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "+{0} gemmes !"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Tu as déjà réclamé ce bonus."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Ton compte n'est pas encore associé."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Tu n'as pas encore choisi de pseudo."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Ce pseudo ne peut pas être utilisé. Choisis-en un autre."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "Cette connexion a déjà obtenu son bonus."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Ce bonus n'est plus disponible."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Connecte-toi à Internet pour réclamer ce bonus."
+    },
+    {
       "key": "ui.assist.title",
       "text": "Un coup de pouce !"
     },

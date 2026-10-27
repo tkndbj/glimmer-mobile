@@ -108,5 +108,105 @@ namespace GlimmerGrove
         /// is the hub overlapping itself.
         /// </summary>
         public float Spare => ShortestCanvas - FeatureBottom - Top;
+
+        // ------------------------------------------------------------- the free bonus's medal
+        /// <summary>
+        /// How far the BATTLE key swells as it breathes (<c>HomeScreen.BuildPlay</c>'s <c>Tween.Breathe</c>).
+        /// A medal beside it is kept clear of the key at its widest, not at rest.
+        /// </summary>
+        public const float KeyBreath = .03f;
+
+        /// <summary>Air on each side of the medal beside the key - also room for its own breath.</summary>
+        public const float BonusPad = 8f;
+
+        /// <summary>
+        /// The medal's cut, width over height, and its inner red disc - centre across, centre down from the
+        /// top, diameter - as fractions of the cut (<c>make_free_bonus_art.py --measure</c>; held to the
+        /// PNG by <c>FreeBonusTests</c>).
+        /// </summary>
+        public const float MedalAspect = 322f / 384f;
+        public const float MedalDiscX = .4984f, MedalDiscY = .3971f, MedalDiscW = .5932f;
+
+        /// <summary>The air between the feature row's two boxes (<c>HomeScreen.RowGap</c>).</summary>
+        public const float FeatureGap = 24f;
+
+        /// <summary>
+        /// Under the streak box: the air kept above and below the medal, its tallest, and the shortest it
+        /// may be drawn there before it is too small to read - below that it stands beside the key instead.
+        /// </summary>
+        public const float UnderPad = 14f, UnderMaxH = 230f, UnderMinH = 140f;
+
+        /// <summary>The streak box's centre across, from the canvas middle: the left half, or the whole row.</summary>
+        public static float StreakX(bool paired) => paired ? -(Width - (Width - FeatureGap) * .5f) * .5f : 0f;
+
+        /// <summary>
+        /// The air between the feature row's foot and the BATTLE key's top on a canvas
+        /// <paramref name="canvasH"/> tall whose safe area starts <paramref name="safeTop"/> down - the
+        /// row hangs from the safe area and the foot stands on the bottom, so this is what the canvas leaves.
+        /// </summary>
+        public float RoomUnderRow(float canvasH, float safeTop) => canvasH - safeTop - FeatureBottom - Top;
+
+        /// <summary>
+        /// Where the FREE BONUS medal stands (invariant 67; the owner, 2026-10-27: under the streak box).
+        ///
+        /// <para>
+        /// <b>Under the streak box when the canvas leaves room for it</b>: centred under the box, centred in
+        /// the air between the row and the key, as tall as that air allows less <see cref="UnderPad"/> each
+        /// way and no taller than <see cref="UnderMaxH"/> - so it touches neither. Most phones leave 400
+        /// units and more.
+        /// </para>
+        /// <para>
+        /// <b>Beside the key when it does not</b>: the squarest canvas leaves 56 units (6 with the welcome
+        /// door), and a medal squeezed into that would be a smudge or would overlap. It then stands in the
+        /// column between the stack's edge and the key at its widest breath, no taller than the key - on the
+        /// streak's side, still under the box. Either way nothing is ever drawn over anything.
+        /// </para>
+        /// </summary>
+        public BonusSpot BonusAt(float canvasH, float safeTop, bool paired)
+        {
+            float room = RoomUnderRow(canvasH, safeTop);
+            float h = System.Math.Min(UnderMaxH, room - 2f * UnderPad);
+            if (h >= UnderMinH)
+                return new BonusSpot(true, StreakX(paired), Top + room * .5f, h * MedalAspect, h);
+
+            float column = Width * .5f - PlayW * .5f * (1f + KeyBreath);
+            float w = System.Math.Min(column - 2f * BonusPad, PlayH * MedalAspect);
+            return new BonusSpot(false, -(Width * .5f - column * .5f), PlayY, w, w / MedalAspect);
+        }
+    }
+
+    /// <summary>
+    /// The medal's place and size (<see cref="HubFoot.BonusAt"/>): its centre across from the canvas middle
+    /// and up from the canvas bottom, and the caption's box on its disc.
+    /// </summary>
+    public readonly struct BonusSpot
+    {
+        /// <summary>True under the streak box; false beside the key, on a canvas too short for that.</summary>
+        public readonly bool Under;
+        public readonly float X, Y, W, H;
+
+        public BonusSpot(bool under, float x, float y, float w, float h)
+        {
+            Under = under;
+            X = x;
+            Y = y;
+            W = w;
+            H = h;
+        }
+
+        /// <summary>
+        /// The caption's box: the inner disc's width across and seven tenths of it down, so the two lines sit
+        /// on the red and never reach past the gold ring around it.
+        /// </summary>
+        public float CaptionW => W * HubFoot.MedalDiscW;
+        public float CaptionH => W * HubFoot.MedalDiscW * .70f;
+
+        /// <summary>The caption's centre against the medal's: the disc's centre.</summary>
+        public float CaptionX => (HubFoot.MedalDiscX - .5f) * W;
+        public float CaptionY => (.5f - HubFoot.MedalDiscY) * H;
+
+        /// <summary>The shine behind it: turning rays and a soft glow, sized off the medal.</summary>
+        public float RaysSize => H * 2.0f;
+        public float GlowSize => H * 2.3f;
     }
 }

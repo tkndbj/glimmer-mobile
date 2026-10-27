@@ -89,6 +89,12 @@
       { "level": "s03_blightfen",  "kind": "chests",  "tier": "royal",  "count": 2 }
     ]
   },
+  "freeBonus": {
+    "tasks": [
+      { "id": "link", "gems": 60 },
+      { "id": "name", "gems": 60 }
+    ]
+  },
   "assist": {
     "openingLosses": 1,
     "giftLosses": 2,

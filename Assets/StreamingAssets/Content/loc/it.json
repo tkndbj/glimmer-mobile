@@ -3846,6 +3846,74 @@
       "text": "Riscuoti"
     },
     {
+      "key": "ui.free_bonus.badge",
+      "text": "Bonus\ngratis"
+    },
+    {
+      "key": "ui.free_bonus.title",
+      "text": "Bonus gratis"
+    },
+    {
+      "key": "ui.free_bonus.link",
+      "text": "Collega il tuo account"
+    },
+    {
+      "key": "ui.free_bonus.name",
+      "text": "Scegli un nickname"
+    },
+    {
+      "key": "ui.free_bonus.do_link",
+      "text": "Collega"
+    },
+    {
+      "key": "ui.free_bonus.do_name",
+      "text": "Scegli nickname"
+    },
+    {
+      "key": "ui.free_bonus.claim",
+      "text": "Riscatta"
+    },
+    {
+      "key": "ui.free_bonus.claimed",
+      "text": "Riscattato"
+    },
+    {
+      "key": "ui.free_bonus.closed",
+      "text": "Chiuso"
+    },
+    {
+      "key": "ui.free_bonus.paid",
+      "text": "+{0} gemme!"
+    },
+    {
+      "key": "ui.free_bonus.spent",
+      "text": "Hai già riscattato questo bonus."
+    },
+    {
+      "key": "ui.free_bonus.not_linked",
+      "text": "Il tuo account non è ancora collegato."
+    },
+    {
+      "key": "ui.free_bonus.not_named",
+      "text": "Non hai ancora scelto un nickname."
+    },
+    {
+      "key": "ui.free_bonus.name_refused",
+      "text": "Quel nickname non può essere usato. Scegline un altro."
+    },
+    {
+      "key": "ui.free_bonus.used",
+      "text": "Questo accesso ha già ottenuto il suo bonus."
+    },
+    {
+      "key": "ui.free_bonus.gone",
+      "text": "Questo bonus non è più disponibile."
+    },
+    {
+      "key": "ui.free_bonus.offline",
+      "text": "Connettiti a Internet per riscattare questo bonus."
+    },
+    {
       "key": "ui.assist.title",
       "text": "Un aiutino!"
     },

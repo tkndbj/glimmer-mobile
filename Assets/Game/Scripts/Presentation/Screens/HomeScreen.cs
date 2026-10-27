@@ -10,6 +10,7 @@ using GlimmerGrove.Events;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Social;
 using GlimmerGrove.Tasks;
 using GlimmerGrove.Wards;
 using UnityEngine;
@@ -58,6 +59,7 @@ namespace GlimmerGrove
         protected override void Build()
         {
             BuildBackdrop();
+            _backdropEnd = Content.childCount;
             BuildTopBar();
             BuildResources();
             BuildTasks();
@@ -71,7 +73,14 @@ namespace GlimmerGrove
             BuildPlay(true);
             BuildChallenges(true);
             BuildWelcome(true);
+            BuildFreeBonus(true);
             _nav = NavBar.Build(Content, NavBar.Tab.Home);
+
+            // The free bonus's medal (invariant 67): drawn from this account's cache at once, and the
+            // server asked again when the answer is stale - a task taken on another phone, an offer
+            // made since. The medal appears or goes on the ledger's cue.
+            FreeBonusLedger.Changed += OnFreeBonusChanged;
+            _ = RefreshFreeBonus();
 
             // The welcome door: a day counted or a turret taken behind this screen, a sync
             // arriving with another device's claims, or the block withdrawn by a content push.
@@ -104,6 +113,7 @@ namespace GlimmerGrove
             ChallengeLedger.Changed -= OnChallengesChanged;
             WardLoadout.Changed -= OnLoadoutChanged;
             WelcomeLedger.Changed -= OnWelcomeChanged;
+            FreeBonusLedger.Changed -= OnFreeBonusChanged;
 
             _line?.Dispose();
             _welcomeArt?.Dispose();
@@ -1473,6 +1483,187 @@ namespace GlimmerGrove
             });
         }
 
+        // ------------------------------------------------------------- the free bonus
+        /// <summary>
+        /// The FREE BONUS medal (invariant 67, the owner, 2026-10-27): the owner's red starburst under the
+        /// streak box, on a turning gold shine, with two lines of <c>ui.free_bonus.badge</c> on its disc.
+        /// Tapped, it opens <see cref="FreeBonusOverlay"/>.
+        ///
+        /// <para>
+        /// <b>Its place and size are <see cref="HubFoot.BonusAt"/>'s, never typed here</b>: centred under the
+        /// streak box in the air between the feature row and the BATTLE key, as big as that air allows - or,
+        /// on a canvas too short to leave any, in the column beside the key. It can touch neither the row,
+        /// the key nor the strip under it on any canvas (<c>FreeBonusTests</c>). It is re-placed when the
+        /// canvas changes size, never rebuilt. The caption is fitted by measurement to the disc
+        /// (<see cref="UIKit.FitLines"/>) - two lines, whatever the language, never clipped.
+        /// </para>
+        /// <para>
+        /// <b>The shine is drawn behind every control</b> - straight after the room - so its rays light the
+        /// wall around the medal and pass under the streak box and the key rather than over them.
+        /// </para>
+        /// <para>
+        /// <b>Built once per shape of the foot and switched</b>, the beacon's rule: it shows while
+        /// <see cref="FreeBonusLedger.Offered"/> - an unpaid task the server offered this account - and is
+        /// gone for ever for an account that had linked and named itself before, or has taken both.
+        /// </para>
+        /// </summary>
+        Btn _freeBonus;
+        Text _freeBonusWord;
+        RectTransform _freeBonusShine;
+        Image _freeBonusRays, _freeBonusGlow;
+
+        /// <summary>The first child index after the room's backdrop: where a light behind every control goes.</summary>
+        int _backdropEnd;
+
+        void BuildFreeBonus(bool entrance)
+        {
+            if (_freeBonus) Hide(_freeBonus.gameObject);
+            if (_freeBonusShine) Hide(_freeBonusShine.gameObject);
+
+            // The shine: a soft gold glow and slowly turning rays, behind every control on the screen.
+            var shine = UIKit.Box("FreeBonusShine", Content, Vector2.one, new Vector2(.5f, 0f), Vector2.zero);
+            shine.SetSiblingIndex(Mathf.Min(_backdropEnd, Content.childCount - 1));
+            _freeBonusShine = shine;
+
+            _freeBonusGlow = UIKit.Img("Glow", shine, Art.Glow(128, 2.2f), Pal.A(Pal.Sun, .55f),
+                                       Vector2.one, new Vector2(.5f, .5f), Vector2.zero);
+            _freeBonusGlow.raycastTarget = false;
+            _freeBonusRays = UIKit.Img("Rays", shine, Art.Rays(256, 14), new Color(1f, .86f, .42f, .42f),
+                                       Vector2.one, new Vector2(.5f, .5f), Vector2.zero);
+            _freeBonusRays.raycastTarget = false;
+
+            var rays = _freeBonusRays;
+            Tween.Run(30f, Ease.Linear,
+                      t => { if (rays) rays.transform.localRotation = Quaternion.Euler(0f, 0f, -t * 360f); },
+                      rays.gameObject, "spin").Loop(-1, false);
+            var glow = _freeBonusGlow;
+            Tween.Run(1.8f, Ease.InOutSine,
+                      t => { if (glow) glow.color = Pal.A(Pal.Sun, Mathf.Lerp(.35f, .70f, t)); },
+                      glow.gameObject, "glow").Loop(-1, true);
+
+            var badge = UIKit.Button("FreeBonus", Content, Art.S("Ui/ic_free_bonus"), Vector2.one,
+                                     new Vector2(.5f, 0f), Vector2.zero, OpenFreeBonus);
+            badge.GetComponent<Image>().preserveAspect = true;
+            badge.PressScale = .94f;
+            _freeBonus = badge;
+
+            _freeBonusWord = UIKit.Titled("Word", badge.transform, Loc.Get("ui.free_bonus.badge").Upper(),
+                                          FreeBonusWordSize, Pal.Cream, TextAnchor.MiddleCenter, Vector2.one,
+                                          new Vector2(.5f, .5f), Vector2.zero, 3f, 2f);
+            _freeBonusWord.raycastTarget = false;
+            _freeBonusWord.lineSpacing = .88f;
+
+            PlaceFreeBonus();
+
+            shine.gameObject.SetActive(false);
+            badge.gameObject.SetActive(false);
+            PaintFreeBonus(entrance);
+        }
+
+        /// <summary>The caption's design size; <see cref="UIKit.FitLines"/> walks down from it.</summary>
+        const int FreeBonusWordSize = 46;
+
+        /// <summary>
+        /// Puts the medal, its caption and its shine where <see cref="HubFoot.BonusAt"/> says on this canvas.
+        /// A canvas not laid out yet reads as no room, which places the medal beside the key - never over
+        /// anything - and the next call puts it right.
+        /// </summary>
+        void PlaceFreeBonus()
+        {
+            if (!_freeBonus) return;
+
+            var spot = _foot.BonusAt(Content.rect.height, SafeArea.Top, _focusBox != null);
+            var at = new Vector2(spot.X, spot.Y);
+            var size = new Vector2(spot.W, spot.H);
+
+            var badge = (RectTransform)_freeBonus.transform;
+            badge.anchoredPosition = at;
+            badge.sizeDelta = size;
+
+            if (_freeBonusWord)
+            {
+                var room = new Vector2(spot.CaptionW, spot.CaptionH);
+                var word = _freeBonusWord.rectTransform;
+                word.sizeDelta = room;
+                word.anchoredPosition = new Vector2(spot.CaptionX, spot.CaptionY);
+                UIKit.FitLines(_freeBonusWord, room, FreeBonusWordSize, 12);
+            }
+
+            if (_freeBonusShine)
+            {
+                _freeBonusShine.anchoredPosition = at;
+                if (_freeBonusRays) _freeBonusRays.rectTransform.sizeDelta = Vector2.one * spot.RaysSize;
+                if (_freeBonusGlow) _freeBonusGlow.rectTransform.sizeDelta = Vector2.one * spot.GlowSize;
+            }
+        }
+
+        /// <summary>A canvas that changes size (a fold, a split screen) re-places the medal; nothing is rebuilt.</summary>
+        void OnRectTransformDimensionsChange()
+        {
+            if (this == null || !_freeBonus) return;
+            PlaceFreeBonus();
+        }
+
+        /// <summary>
+        /// Shows or hides the medal and its shine. It pops in when it appears - on entering the hub, or when
+        /// the server's answer arrives with an offer - and simply stands on a redraw of the foot (16d).
+        /// </summary>
+        void PaintFreeBonus(bool entrance)
+        {
+            if (!_freeBonus) return;
+
+            bool show = FreeBonusLedger.Offered;
+            var go = _freeBonus.gameObject;
+            if (show == go.activeSelf) return;
+
+            go.SetActive(show);
+            if (_freeBonusShine) _freeBonusShine.gameObject.SetActive(show);
+            if (!show) return;
+
+            PlaceFreeBonus();
+
+            var badge = _freeBonus;
+            var shine = _freeBonusShine;
+            if (!entrance)
+            {
+                badge.Rehome();
+                Tween.Breathe(badge.transform, HubFoot.KeyBreath, 2.4f, .8f);
+                return;
+            }
+
+            badge.transform.localScale = Vector3.zero;
+            if (shine)
+            {
+                shine.localScale = Vector3.zero;
+                Tween.Pop(shine, 0f, .7f, .8f);
+            }
+            Tween.Pop(badge.transform, 0f, .55f, .7f).OnDone(() =>
+            {
+                if (!badge) return;
+                badge.Rehome();
+                Tween.Breathe(badge.transform, HubFoot.KeyBreath, 2.4f, .8f);
+            });
+        }
+
+        void OnFreeBonusChanged()
+        {
+            if (this == null) return;
+            PaintFreeBonus(true);
+        }
+
+        void OpenFreeBonus()
+        {
+            if (Flow.HasModal || !FreeBonusLedger.Offered) return;
+            Flow.Modal<FreeBonusOverlay>();
+        }
+
+        /// <summary>The hub's ask, observed rather than fire-and-forget: a fault is logged, never swallowed.</summary>
+        static async Task RefreshFreeBonus()
+        {
+            try { await FreeBonusLedger.RefreshAsync(); }
+            catch (Exception e) { Debug.LogException(e); }
+        }
+
         // -------------------------------------------------------- daily challenges
         /// <summary>
         /// The second door out of the hub: the keeper ladder's buy key, word for word in its
@@ -1689,6 +1880,7 @@ namespace GlimmerGrove
             BuildPlay(false);
             BuildChallenges(false);
             BuildWelcome(false);
+            BuildFreeBonus(false);
 
             // The nav bar was built after the foot and stays on top of it.
             if (_nav) _nav.SetAsLastSibling();

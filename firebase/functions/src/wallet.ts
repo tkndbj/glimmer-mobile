@@ -22,6 +22,7 @@ import { DealsBought, readDealsBought } from "./deals";
 import { DailyPasses, PassReplyRow, passReply, readDailyPasses } from "./daily-pass";
 import { GiftReplyRow, GiftsPending, giftRows, readGiftsPending } from "./gifts";
 import { PayerRecord, payerReply, readPayer } from "./payer";
+import { FreeBonusRecord, readFreeBonus } from "./free-bonus";
 
 export interface CurrencyState {
   granted: number;
@@ -183,6 +184,15 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * only ever raised; carried through `readWallet` because every writer writes this document whole.
    */
   payer?: PayerRecord;
+
+  /**
+   * The free bonus (`free-bonus.ts`, invariant 67): per task, whether it was offered, exempt or paid,
+   * and the gems the offer promised. Server-owned for the streak floor's reason - it is the whole of
+   * the entitlement and the record that a task was paid. Written by `getFreeBonus` (the enrolment) and
+   * `claimFreeBonus` (a task paid); carried through `readWallet` because every writer writes this
+   * document whole.
+   */
+  freeBonus?: FreeBonusRecord;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -300,7 +310,7 @@ export interface WalletReply {
 /** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
 const MODELLED_WALLET_KEYS = new Set<string>([
   ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
-  "keeperBought", "challengeAds", "deals", "dailyPasses", "gifts", "payer", "streak", "updatedAt",
+  "keeperBought", "challengeAds", "deals", "dailyPasses", "gifts", "payer", "freeBonus", "streak", "updatedAt",
 ]);
 
 /**
@@ -433,6 +443,11 @@ export function readWallet(
   // and deleting this one would deal a first-purchase offer to somebody who already paid.
   const payer = readPayer((raw as { payer?: unknown } | undefined)?.payer);
   if (payer) wallet.payer = payer;
+
+  // The free bonus, carried through for exactly the reason every field above it is - and deleting
+  // this one would re-enrol the account as it stands now, so a paid task would be offered again.
+  const freeBonus = readFreeBonus((raw as { freeBonus?: unknown } | undefined)?.freeBonus);
+  if (Object.keys(freeBonus).length > 0) wallet.freeBonus = freeBonus;
 
   // **Everything else the document holds, carried through untouched - and this is the rule
   // the eight paragraphs above were each one instance of.** Every writer of this document

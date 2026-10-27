@@ -39,6 +39,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import hudkit as k                                        # noqa: E402
+import numpy as np                                        # noqa: E402
 from PIL import Image, ImageDraw                          # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
@@ -72,13 +73,9 @@ WORTH_X, WORTH_BOX, WORTH_PT = -178.0, (284.0, 100.0), 52
 
 SHRINK_FLOOR_PLACE, SHRINK_FLOOR_NAME, SHRINK_FLOOR_WORTH = 20, 20, 24
 
-# The first three places' score frames (`Row.ScoreFrame`): a box anchored at the plate's right
-# centre, the figure in a window of anchors over it, and the name narrowed beside it.
-UI_ART = REPO / "Assets" / "Game" / "Art" / "Ui"
-FRAME_BOX, FRAME_X = (456.0, 254.5), -198.0
-FRAME_WINDOW = (.32, .40, .80, .60)
-FRAME_PT, FRAME_FLOOR, FRAME_INSET = 38, 10, 4.0
-FRAMED_NAME_X, FRAMED_NAME_Y, FRAMED_NAME_BOX = 416.0, 0.0, (232.0, 100.0)
+# The first three places' frames (`Row.PlaceFrame`): a nine-slice stretched over the plate
+# and `FRAME_REACH` past it on every side (`Row.FrameReach`).
+FRAME_REACH = 16.0
 
 
 def rungs():
@@ -128,11 +125,6 @@ def middle_left(sheet, s, left, cy, box_w, box_h, size, floor, fill):
     return px
 
 
-def score_frame(place):
-    path = UI_ART / ("rank%d.png" % place)
-    return Image.open(path).convert("RGBA") if 1 <= place <= 3 and path.exists() else None
-
-
 def badge(rid):
     """One badge, as the shipped PNG. None for a rung this build does not carry — `RankArt`."""
     path = RANK_ART / (rid + ".png")
@@ -164,22 +156,6 @@ def draw_row(sheet, top, entry, mine=False):
     # `UIKit.Titled` at MiddleLeft inside a box that pivots at centre, so the text starts at the
     # box's own left edge — `UIKit.Box` always pivots at centre (invariant 44d, which is where
     # three "faults" in another mirror turned out to live).
-    frame = score_frame(entry["place"])
-    if frame is not None:
-        fx = left + PLATE_W + FRAME_X
-        k.paste(sheet, k.fit(frame, FRAME_BOX), fx, cy)
-        x0, y0, x1, y1 = FRAME_WINDOW
-        bl = fx - FRAME_BOX[0] / 2
-        bt = cy - FRAME_BOX[1] / 2
-        ww = (x1 - x0) * FRAME_BOX[0] - FRAME_INSET * 2
-        wh = (y1 - y0) * FRAME_BOX[1] - FRAME_INSET * 2
-        wcx = bl + (x0 + x1) / 2 * FRAME_BOX[0]
-        wcy = bt + (1 - (y0 + y1) / 2) * FRAME_BOX[1]
-        k.shrunk(sheet, entry["figure"], wcx, wcy, ww, wh, FRAME_PT, FRAME_FLOOR, k.GOLD, outline=2)
-        middle_left(sheet, entry["name"], left + FRAMED_NAME_X - FRAMED_NAME_BOX[0] / 2,
-                    cy - FRAMED_NAME_Y, FRAMED_NAME_BOX[0], FRAMED_NAME_BOX[1], NAME_PT,
-                    SHRINK_FLOOR_NAME, (255, 247, 230))
-        return
 
     middle_left(sheet, entry["name"], left + NAME_X - NAME_BOX[0] / 2, cy - NAME_Y,
                 NAME_BOX[0], NAME_BOX[1], NAME_PT, SHRINK_FLOOR_NAME, (255, 247, 230))
@@ -189,6 +165,14 @@ def draw_row(sheet, top, entry, mine=False):
     top = cy - (len(lines) - 1) * px * 1.2 / 2
     for i, ln in enumerate(lines):
         k.text(sheet, ln, right, top + i * px * 1.2, px, fill=k.GOLD, anchor="r")
+
+    # Last child of the plate, so it draws over everything in the row.
+    if entry["place"] in (1, 2, 3):
+        k.paste(sheet, place_frame(entry["place"]), cx, cy)
+
+
+def place_frame(place):
+    return k.skin("rank%d" % place, PLATE_W + 2 * FRAME_REACH, PLATE_H + 2 * FRAME_REACH)
 
 
 def tabs(sheet, live, loc):
@@ -297,30 +281,54 @@ LONGEST = ["WWWWWWWWWWWWWWWW", "MMMMMMMM MMMMMMM", "Marigold Quickst", "Silverle
 
 
 def measure(loc_dir):
-    """The frame's figure must stay one line above its floor in every language, at the
-    largest number either board can show; a name must stay above its floor in either box."""
-    ww = (FRAME_WINDOW[2] - FRAME_WINDOW[0]) * FRAME_BOX[0] - FRAME_INSET * 2
-    wh = (FRAME_WINDOW[3] - FRAME_WINDOW[1]) * FRAME_BOX[1] - FRAME_INSET * 2
+    """The figure must stay one line above its floor in every language, at the largest number
+    either board can show; a name must stay above its floor; and each place frame must close
+    round its plate: no plate past the band's outer edge, no gap inside its inner edge."""
     bad = 0
     for path in sorted(loc_dir.glob("*.json")):
         if path.stem == "ar":
             continue        # drawn by GameFontArabic, which hudkit does not carry
         rows = {r["key"]: r["text"] for r in json.loads(path.read_text(encoding="utf8"))["entries"]}
         for s in (rows["ui.board.row_wave"].format(9999), "9999999"):
-            for label, w, h, pt, floor in (("frame", ww, wh, FRAME_PT, FRAME_FLOOR),
-                                           ("plain", WORTH_BOX[0], WORTH_BOX[1], WORTH_PT, SHRINK_FLOOR_WORTH)):
+            for label, w, h, pt, floor in (("plain", WORTH_BOX[0], WORTH_BOX[1], WORTH_PT, SHRINK_FLOOR_WORTH),):
                 px, lines = best_fit(s, w, h, pt, floor)
                 ok = len(lines) == 1 and px > floor
                 bad += not ok
                 print("%-4s %-5s %-18s %2d  %s" % (path.stem, label, s, px, "ok" if ok else "FAIL"))
     for name in LONGEST:
-        for label, box in (("framed", FRAMED_NAME_BOX), ("plain", NAME_BOX)):
+        for label, box in (("plain", NAME_BOX),):
             px, lines = best_fit(name, box[0], box[1], NAME_PT, SHRINK_FLOOR_NAME)
             ok = px > SHRINK_FLOOR_NAME
             bad += not ok
             print("name %-6s %-18s %2d x%d  %s" % (label, name, px, len(lines), "ok" if ok else "FAIL"))
-    print("%d at the floor" % bad)
+    for place in (1, 2, 3):
+        for plate in ("Hud/plate_blue", "Hud/plate_orange"):
+            peek, gap = frame_fit(place, plate)
+            ok = peek == 0 and gap == 0
+            bad += not ok
+            print("frame rank%d %-17s peek %d px, gap %d px  %s" % (place, plate, peek, gap,
+                                                                    "ok" if ok else "FAIL"))
+    print("%d failing" % bad)
     return 1 if bad else 0
+
+
+def frame_fit(place, plate):
+    """Pixels of plate outside the frame's outer edge, and of open ground inside its inner edge."""
+    frame = place_frame(place)
+    w, h = frame.width + 8, frame.height + 8
+    under = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    k.paste(under, k.skin(plate, PLATE_W, PLATE_H), w / 2, h / 2)
+    over = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    k.paste(over, frame, w / 2, h / 2)
+    band = np.array(over.getchannel("A")) >= 128
+    # Outside is whatever a flood from the corner reaches without crossing the band.
+    walls = Image.fromarray(np.where(band, 255, 0).astype(np.uint8)).copy()   # writable
+    ImageDraw.floodfill(walls, (0, 0), 128)
+    outside = np.array(walls) == 128
+    plate_a = np.array(under.getchannel("A"))
+    peek = int(np.count_nonzero(outside & (plate_a > 8)))
+    gap = int(np.count_nonzero(~outside & ~band & (plate_a < 247)))
+    return peek, gap
 
 
 def main():

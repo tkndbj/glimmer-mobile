@@ -180,7 +180,7 @@ wire or rules mistake reaches live accounts.
 17b. **Only a caller holding the sync latch may create an account; the anonymous sign-in is single-flight.**
    Outside the latch, `AuthoriseUnlatchedAsync` may only resume.
 27. **Deleting an account removes data first and the account last**: visibility, the name, the save
-   (recursively), Apple, then the auth user — each delete-if-exists. Kept on purpose: global receipts, reports
+   (recursively), Apple, then the auth user — each delete-if-exists. Kept on purpose: global receipts, `bonusIdentities` (67), reports
    this account filed, a denied name's reservation retargeted to a tombstone uid.
 
 ### The store
@@ -690,6 +690,22 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    save field, no server. Held by `AssistTests`, `SiegeRuleTests.AnEasedBoardDealsLighterRaidersAgainstTheSamePar`,
    `content.py`; `render_assist.py --measure`.
 
+### The free bonus
+
+67. **The free bonus pays gems once per task - link a sign-in, choose a nickname - to an account that
+   had done neither when first asked; nothing is in the save** (`free-bonus.ts`, `FreeBonusLedger`). The
+   first `getFreeBonus` writes each task on the wallet as offered (undone) or exempt (done, judged on the
+   Auth record's providers and the wallet's name holding) and never re-enrols, so a task done before -
+   or on a build that never asked - is never paid. `claimFreeBonus` re-reads the deed (Auth record; a
+   *publishable* name), pays the amount copied onto the offer, marks it paid in the same transaction;
+   the client adopts the reply (61's shape). A sign-in earns the link gems once ever:
+   `bonusIdentities/{sha256(provider:uid)}`, kept on deletion (27's receipts reasoning). Tasks are
+   code, amounts the `freeBonus` block (re-seed); absent, no medal. Cached per account on the device
+   (`glimmer.freebonus.v1.{uid}`); a finished account is never asked again. The hub's medal, on a
+   turning shine drawn behind every control, stands under the streak box where the canvas leaves room
+   and beside BATTLE where it does not (`HubFoot.BonusAt`). Held by `test/free-bonus.mjs`, the live `free-bonus.mjs`, `FreeBonusTests`,
+   `render_home.py --measure`, `render_free_bonus.py --measure`, `make_free_bonus_art.py --check`.
+
 ### Art credits
 
 46. **An art credit lives on the publisher's site, nowhere in the app.** No shipped vendor compels one.
@@ -839,7 +855,9 @@ a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp
 `ward-seats.mjs`, `keeper-spend.mjs`, `daily-pass.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
 removes only those, preconditioned; players on a deals build can see them for the minute it runs),
 `admin-gift.mjs` (writes a gift onto its own new account's wallet with the owner token and claims it),
-`first-steps.mjs` (a step chest waits for the save, then pays the re-rolled amount once; deletes its account).
+`first-steps.mjs` (a step chest waits for the save, then pays the re-rolled amount once; deletes its account),
+`free-bonus.mjs` (enrols, refuses undone tasks, pays name and link once each, then starts over with the same
+Google identity and is answered `used`; deletes both accounts and its identity record).
 
 **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, Test Runner (EditMode). Reload the
 domain before believing a failure after a play-mode session.

@@ -17,7 +17,7 @@ namespace GlimmerGrove.Cloud
     /// ledger arithmetic, the retry policy - is already exercised against this.
     /// </summary>
     public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend, Referral.IReferralBackend,
-                                           Store.IDailyPassBackend
+                                           Store.IDailyPassBackend, Social.IFreeBonusBackend
     {
         public bool IsAvailable => false;
 
@@ -197,6 +197,19 @@ namespace GlimmerGrove.Cloud
             string productId, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 new Store.DailyPassClaim(Store.DailyPassClaimOutcome.Unavailable),
+                                new List<CloudWalletState>()));
+
+        public Task<(CloudResult result, Social.FreeBonusStanding standing)> ReadFreeBonusAsync(
+            CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                (Social.FreeBonusStanding)null));
+
+        public Task<(CloudResult result, Social.FreeBonusClaim claim, Social.FreeBonusStanding standing,
+                     List<CloudWalletState> wallets)> ClaimFreeBonusAsync(
+            Social.FreeBonusTask task, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                new Social.FreeBonusClaim(Social.FreeBonusClaimOutcome.Unavailable),
+                                (Social.FreeBonusStanding)null,
                                 new List<CloudWalletState>()));
     }
 }

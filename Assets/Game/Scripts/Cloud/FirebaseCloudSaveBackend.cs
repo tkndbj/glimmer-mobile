@@ -39,7 +39,7 @@ namespace GlimmerGrove.Cloud
     public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
                                                    Referral.IReferralBackend, IWalletFeed, Store.IDealBackend,
                                                    Store.IDailyPassBackend, Shuffle.IShuffleTuningBackend,
-                                                   Offers.IOfferTuningBackend
+                                                   Offers.IOfferTuningBackend, Social.IFreeBonusBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -2017,6 +2017,96 @@ namespace GlimmerGrove.Cloud
 
         static bool ReadBool(IDictionary<string, object> map, string key)
             => map.TryGetValue(key, out object value) && value is bool b && b;
+
+        // ---------------------------------------------------------------- the free bonus
+        /// <summary>
+        /// What the account is offered (invariant 67). The first ask enrols it; see <c>getFreeBonus</c>.
+        /// A task this build does not know is skipped, so a later server adds nothing this one draws.
+        /// </summary>
+        public async Task<(CloudResult result, Social.FreeBonusStanding standing)> ReadFreeBonusAsync(
+            CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), null);
+
+            try
+            {
+                var reply = await CallAsync("getFreeBonus", new Dictionary<string, object>(), cancellation);
+                return (CloudResult.Success, ReadFreeBonusStanding(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read free bonus"), null);
+            }
+        }
+
+        /// <summary>
+        /// Asks the server to pay one free-bonus task. The outcome, what it paid, the standing and the
+        /// balances come back together; a spelling this build does not know reads as <c>Unavailable</c>.
+        /// </summary>
+        public async Task<(CloudResult result, Social.FreeBonusClaim claim, Social.FreeBonusStanding standing,
+                           List<CloudWalletState> wallets)>
+            ClaimFreeBonusAsync(Social.FreeBonusTask task, CancellationToken cancellation = default)
+        {
+            var nothing = new Social.FreeBonusClaim(Social.FreeBonusClaimOutcome.Unavailable);
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), nothing, null, Empty());
+
+            try
+            {
+                var reply = await CallAsync("claimFreeBonus", new Dictionary<string, object>
+                {
+                    { "task", Social.FreeBonusTasks.Spelling(task) },
+                }, cancellation);
+
+                var outcome = Social.FreeBonusClaimOutcome.Unavailable;
+                switch (reply != null && reply.TryGetValue("outcome", out object o) ? o as string : null)
+                {
+                    case "paid":     outcome = Social.FreeBonusClaimOutcome.Paid; break;
+                    case "spent":    outcome = Social.FreeBonusClaimOutcome.Spent; break;
+                    case "not_done": outcome = Social.FreeBonusClaimOutcome.NotDone; break;
+                    case "used":     outcome = Social.FreeBonusClaimOutcome.Used; break;
+                    case "none":     outcome = Social.FreeBonusClaimOutcome.None; break;
+                }
+
+                int gems = reply != null ? (int)Math.Min(ReadLong(reply, "gems"), int.MaxValue) : 0;
+
+                // A claim's rows are the standing of a live, enrolled account: there is a record to judge.
+                var standing = ReadFreeBonusStanding(reply);
+                if (standing != null) standing.Live = standing.Enrolled = true;
+
+                return (CloudResult.Success, new Social.FreeBonusClaim(outcome, gems), standing, ReadWalletStates(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "claim free bonus"), nothing, null, Empty());
+            }
+        }
+
+        /// <summary>The <c>tasks</c> rows and the two flags; null when the reply carries no rows at all.</summary>
+        static Social.FreeBonusStanding ReadFreeBonusStanding(IDictionary<string, object> reply)
+        {
+            if (reply == null || !reply.TryGetValue("tasks", out object raw) || !(raw is IEnumerable<object> list))
+                return null;
+
+            var standing = new Social.FreeBonusStanding
+            {
+                Live = ReadBool(reply, "live"),
+                Enrolled = ReadBool(reply, "enrolled"),
+            };
+
+            foreach (var element in list)
+            {
+                if (!(element is IDictionary<string, object> row)) continue;
+                string id = row.TryGetValue("id", out object rawId) ? rawId as string : null;
+                if (!Social.FreeBonusTasks.TryParse(id, out var task)) continue;
+
+                standing.Rows.Add(new Social.FreeBonusRow(task, (int)Math.Min(ReadLong(row, "gems"), int.MaxValue),
+                                                          ReadBool(row, "paid"), ReadBool(row, "done")));
+            }
+            return standing;
+        }
 
         static long ReadLongValue(object value)
         {

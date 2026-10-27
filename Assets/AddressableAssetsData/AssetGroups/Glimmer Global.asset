@@ -543,6 +543,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 039493c07a9b5def9af4b6a73497290f
+    m_Address: Art/Ui/ic_free_bonus
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0398720eb298fbd479d0bf4a45695a57
     m_Address: Art/Siege/Wards/harpoon_r_fire/f01
     m_ReadOnly: 0
