@@ -102,6 +102,9 @@
     "maxAsks": 3,
     "moneyQuietMinutes": 30
   },
+  "attribution": {
+    "l5Reached": "s01_warlordsgate"
+  },
   "assist": {
     "openingLosses": 1,
     "giftLosses": 2,

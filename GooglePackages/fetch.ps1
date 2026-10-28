@@ -44,6 +44,7 @@ $packages = @(
     @{ id = 'com.google.firebase.firestore';          version = $FIREBASE; registry = $GOOGLE },
     @{ id = 'com.google.firebase.functions';          version = $FIREBASE; registry = $GOOGLE },
     @{ id = 'com.google.firebase.analytics';          version = $FIREBASE; registry = $GOOGLE },
+    @{ id = 'com.google.firebase.crashlytics';        version = $FIREBASE; registry = $GOOGLE },
     @{ id = 'com.google.ads.mobile';                  version = $ADS;      registry = $OPENUPM },
     @{ id = 'com.appsflyer.unity';                    version = $APPSFLYER; registry = $OPENUPM }
 )

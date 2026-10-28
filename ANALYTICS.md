@@ -68,9 +68,25 @@ How it is built (invariant 55b):
   only on `1` or `3`, or, when no digit speaks (`0`/`4`), when UMP has resolved the player outside
   every regulated region. An advertising answer never grants analytics. Do-not-sell and
   child-directed withhold `ad_user_data` and `ad_personalization`; child-directed collects nothing.
-- **Order.** `AnalyticsSetup` applies `setConsent` once Firebase's dependency check passes and before
-  delivery opens, then again on every privacy change (a form answered, a privacy-options revisit).
-  `setConsent` persists across launches. The log says `[Analytics] consent mode applied: ...`.
+- **Order (2026-10-28).** UMP's answer, then `setConsent`, then collection on (`MeasurementGate`,
+  `AnalyticsOpening`). Firebase logs `first_open` and `session_start` the moment collection turns on;
+  Android 1.1.4 turned it on as soon as the dependency check passed, with every purpose still denied,
+  seconds before the splash's answer granted them, so both went out as cookieless pings and GA showed
+  no first opens for the build. Now delivery opens on the first of: an answer committed by
+  `AdPrivacy`; the splash's refresh finishing with the form owed (opens denied - what an EEA player
+  is owed until the form); or UMP silent for 3 s after the splash asked it (20 s if nothing ever
+  asks), which opens denied and applies the answer when it comes. Events wait in the delivery queue
+  meanwhile. Every later privacy change is pushed the same way; `setConsent` persists across
+  launches. The log says `[Analytics] consent mode applied: ...` and then `[Analytics] opened on the
+  consent answer` (or `... before the consent answer; every purpose denied until it arrives`).
+- **AppsFlyer on the same gate.** Consent data and `anonymizeUser` before `startSDK`; events raised
+  before the start (the tutorial's lessons) are held, at most 32, and flushed after it under the
+  consent it applied. A time-out starts it anonymised as a GDPR player; an owed form waits for the
+  form, because an install reported anonymised is never attributed (the owner, 2026-10-28). A later
+  answer is re-applied. Log: `[Attribution] started (identified|anonymised...)`.
+- **`l5_reached`** (AppsFlyer and Analytics): the first clear of the level `progression.json`
+  names in `attribution.l5Reached` (`s01_warlordsgate`), read off the save's record before the run,
+  so once per account with nothing stored. `af_level_achieved` is unchanged.
 
 **Required console step (do this before the release reaches the stores):** AdMob ▸ Privacy &
 messaging ▸ European regulations ▸ Settings ▸ turn **consent mode** on and include the

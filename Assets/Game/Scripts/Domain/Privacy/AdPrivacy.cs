@@ -140,6 +140,20 @@ namespace GlimmerGrove.Privacy
         public static bool IsAsking => _asking;
 
         /// <summary>
+        /// The splash's step has been started: the CMP has been asked, whether or not it has
+        /// answered. Read by <c>AnalyticsSetup</c>, whose wait for the answer is measured from here
+        /// (<c>MeasurementGate</c>, invariant 55b).
+        /// </summary>
+        public static bool IsAsked => _preparing != null;
+
+        /// <summary>
+        /// The splash's step has finished: either an answer was committed, or the consent form is
+        /// owed and nothing will be until the hub. Read by <c>MeasurementGate</c>, for which the
+        /// second case is an answer too - every purpose denied until the form.
+        /// </summary>
+        public static bool IsPrepared => _prepared;
+
+        /// <summary>
         /// Raised whenever the signals change - on first resolve, when the hub's question is
         /// answered, and again if the player revisits the form. Anything holding a copy has to
         /// repaint; the settings row and the ad provider both listen rather than polling.

@@ -234,6 +234,12 @@ namespace GlimmerGrove.Progression
         public Social.RatingTable Rating { get; private set; } = Social.RatingTable.Empty;
 
         /// <summary>
+        /// Which levels the attribution milestones stand on. <see cref="Analytics.AttributionTable.Empty"/>
+        /// - none sent - when the file carries no block or the block has a fault in it.
+        /// </summary>
+        public Analytics.AttributionTable Attribution { get; private set; } = Analytics.AttributionTable.Empty;
+
+        /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
         /// of its own.
         ///
@@ -738,6 +744,7 @@ namespace GlimmerGrove.Progression
                           endlessCheckpoints, welcome, firstSteps, assist);
             table.NormalScores = normalScores;
             table.Rating = Social.RatingTable.Resolve(dto.ratingPrompt, problems);
+            table.Attribution = Analytics.AttributionTable.Resolve(dto.attribution, problems);
             return true;
         }
 

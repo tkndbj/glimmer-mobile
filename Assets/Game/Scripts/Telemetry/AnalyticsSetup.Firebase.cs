@@ -11,20 +11,23 @@ namespace GlimmerGrove.Analytics
     /// <summary>
     /// Installs Firebase independently of mediation. All native calls wait for the shared dependency
     /// check; delivery then applies native collection state explicitly, including the initial false.
+    ///
+    /// <para>
+    /// <b>The order is UMP's answer, then <c>setConsent</c>, then collection on</b> (invariant 55b,
+    /// <see cref="MeasurementGate"/>). The manifest and the plist start collection off with every
+    /// purpose denied; Firebase logs <c>first_open</c> and <c>session_start</c> the moment collection
+    /// turns on, so turning it on before the answer sent them as cookieless pings GA never reports
+    /// (Android 1.1.4: no first opens at all). Events tracked meanwhile wait in
+    /// <see cref="AnalyticsDelivery"/>'s bounded queue, as they always did for the dependency check.
+    /// </para>
     /// </summary>
     public static partial class AnalyticsSetup
     {
         static FirebaseAnalyticsSink _firebase;
         static AdRevenueTracker _adRevenue;
 
-        /// <summary>What Analytics is told now, derived from the latest privacy answer.</summary>
-        static AnalyticsConsent _consent;
-
-        /// <summary>Whether the native SDK has passed its dependency check and may be called.</summary>
-        static bool _sdkReady;
-
-        /// <summary>The last consent handed to the SDK, so an unchanged answer is not re-sent.</summary>
-        static AnalyticsConsent? _applied;
+        /// <summary>Consent before collection: what the SDK is told, and when delivery opens.</summary>
+        static AnalyticsOpening _opening;
 
         static partial void InstallFirebase()
         {
@@ -34,10 +37,11 @@ namespace GlimmerGrove.Analytics
             _adRevenue = new AdRevenueTracker(_firebase, AdRevenueSources.ForCurrentPlatform(), DiagnoseAdRevenue);
             AdRevenue.Install(_adRevenue);
 
-            // Applied at once, from the restrictive answer if nothing is resolved yet: collection
-            // on, every purpose denied, so the launch is measured without identifying anybody.
-            AdPrivacy.Changed += ApplyConsentRule;
-            ApplyConsentRule(AdPrivacy.IsResolved ? AdPrivacy.Signals : AdPrivacySignals.Restricted);
+            // The restrictive answer until a real one: eligibility (not child-directed) lets events
+            // queue now, and it is what the SDK is told if the gate times out before UMP speaks.
+            var restricted = AnalyticsConsent.For(AdPrivacySignals.Restricted);
+            _opening = new AnalyticsOpening(restricted, ApplyConsent, OpenDelivery);
+            ApplyEligibility(restricted);
             _ = StartFirebaseAsync();
         }
 
@@ -51,11 +55,9 @@ namespace GlimmerGrove.Analytics
                     Debug.LogWarning("[Analytics] Firebase dependencies unavailable; delivery remains closed");
                     return;
                 }
-                // Consent before the first event: the SDK is told what it may carry, and only
-                // then does delivery open.
-                _sdkReady = true;
-                PushConsent();
-                _firebase.MarkReady();
+                // Consent may be pushed from here on; delivery opens only when the gate allows.
+                _opening.SdkReady();
+                TryOpen();
             }
             catch (Exception)
             {
@@ -65,41 +67,58 @@ namespace GlimmerGrove.Analytics
         }
 
         /// <summary>
-        /// Google's consent mode (invariant 55a): collection stays on and each purpose says what
-        /// it may carry (<see cref="AnalyticsConsent.For"/>). Before the player has answered, or
-        /// where they denied it, <c>analytics_storage</c> is denied and Analytics sends events
-        /// without identifiers for modelling; a granted answer makes them full events. Nothing is
-        /// inferred from the advertising answer - the purposes come from UMP's own
-        /// <c>UMP_consentModeValues</c>, so the console's consent mode setting decides them.
+        /// Google's consent mode: collection stays on and each purpose says what it may carry
+        /// (<see cref="AnalyticsConsent.For"/>). Before the player has answered, or where they denied
+        /// it, <c>analytics_storage</c> is denied and Analytics sends events without identifiers for
+        /// modelling; a granted answer makes them full events. Nothing is inferred from the
+        /// advertising answer - the purposes come from UMP's own <c>UMP_consentModeValues</c>.
+        /// Every later answer (the hub's form, a privacy-options revisit) is pushed the same way.
         /// </summary>
-        static void ApplyConsentRule(AdPrivacySignals signals)
+        static partial void FirebasePrivacyChanged(AdPrivacySignals signals)
         {
-            _consent = AnalyticsConsent.For(signals);
-
-            _adRevenue.SetCollectionAllowed(_consent.Collect);
-            _firebase.SetCollectionAllowed(_consent.Collect);
-
-            PushConsent();
+            if (_opening == null) return;
+            var consent = AnalyticsConsent.For(signals);
+            ApplyEligibility(consent);
+            _opening.Consent(consent);
+            TryOpen();
         }
 
-        static void PushConsent()
+        static void ApplyEligibility(AnalyticsConsent consent)
         {
-            if (!_sdkReady) return;
-            if (_applied.HasValue && _applied.Value.Equals(_consent)) return;
-
-            if (_firebase.ApplyConsent(_consent))
-            {
-                _applied = _consent;
-                Debug.Log($"[Analytics] consent mode applied: {_consent}");
-            }
-            else
-            {
-                Debug.LogWarning("[Analytics] consent mode could not be applied; the denied defaults stand");
-            }
+            _adRevenue.SetCollectionAllowed(consent.Collect);
+            _firebase.SetCollectionAllowed(consent.Collect);
         }
+
+        static void TryOpen()
+        {
+            if (!_opening.TryOpen(_gate.AnalyticsMayOpen)) return;
+            Debug.Log(_gate.IsAnswered
+                ? "[Analytics] opened on the consent answer"
+                : "[Analytics] opened before the consent answer; every purpose denied until it arrives");
+        }
+
+        /// <summary>Crash reporting's half of the push (<c>AnalyticsSetup.Crashlytics</c>); absent without the package.</summary>
+        static partial void CrashesConsent(AnalyticsConsent consent);
+
+        static bool ApplyConsent(AnalyticsConsent consent)
+        {
+            // Crash reporting follows the same answer whether or not Analytics took it.
+            CrashesConsent(consent);
+
+            if (_firebase.ApplyConsent(consent))
+            {
+                Debug.Log($"[Analytics] consent mode applied: {consent}");
+                return true;
+            }
+            Debug.LogWarning("[Analytics] consent mode could not be applied; the denied defaults stand");
+            return false;
+        }
+
+        static void OpenDelivery() => _firebase.MarkReady();
 
         static partial void TickFirebase()
         {
+            if (_opening != null && !_opening.IsOpen) TryOpen();
             _adRevenue?.Pump();
             _firebase?.Tick();
         }

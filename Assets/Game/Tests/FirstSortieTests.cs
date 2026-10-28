@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.IO;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Content;
+using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using NUnit.Framework;
 using UnityEngine;
@@ -197,6 +200,85 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(hub.PlayH, GuideDock.KeyH);
             Assert.Less(GuideDock.KeyBand, GuideDock.For(1080f, GuideDock.ShippedAspect, 88f).Band,
                         "the key gives room back to the shelf as the guide leaves");
+        }
+
+        // ------------------------------------------------------------------ BATTLE
+
+        /// <summary>
+        /// The loadout's BATTLE opens the ladder's first level rather than the map (2026-10-28: ~12%
+        /// of v48 installs finished the loadout's lessons and never started a level from the map).
+        /// The level is read off the manifest and the save, never named in code (invariant 1).
+        /// </summary>
+        [Test]
+        public void BattleOpensTheFirstLadderLevelReadFromContent()
+        {
+            PlayerProgress.LoadFrom(new SaveFileDto());
+            try
+            {
+                var index = ShippedIndex();
+                var level = FirstSortie.BattleLevel(index);
+
+                Assert.AreEqual(index.FirstIn(index.DefaultMode), level, "BATTLE is not the ladder's first level");
+                Assert.AreEqual("s01_firstwatch", level.Value, "the shipped ladder's first level moved; is that intended?");
+                Assert.AreEqual(GameTrack.Main, index.TrackOf(level), "BATTLE must open the main ladder, not a lane");
+
+                // Derived, not pinned: a player who somehow already cleared it is sent on, as the hub would.
+                PlayerProgress.RecordRun(level, 3, 20);
+                Assert.AreNotEqual(level, FirstSortie.BattleLevel(index));
+            }
+            finally
+            {
+                PlayerProgress.LoadFrom(new SaveFileDto());
+            }
+
+            Assert.IsFalse(FirstSortie.BattleLevel(null).IsValid, "no catalog falls back to the map");
+        }
+
+        /// <summary>
+        /// The key goes through <c>PlayRoute</c> (the one door into a run, with its heart gate) and
+        /// falls back to the map; a skipped tutorial still goes to the map (the finale's route).
+        /// </summary>
+        [Test]
+        public void TheBattleKeyOpensTheRunThroughPlayRoute()
+        {
+            string source = File.ReadAllText(Path.Combine(TestJson.RepoRoot(),
+                "Assets", "Game", "Scripts", "Presentation", "Screens", "LoadoutScreen.Sortie.cs"));
+            int at = source.IndexOf("void Battle()", System.StringComparison.Ordinal);
+            Assert.GreaterOrEqual(at, 0);
+            string body = source.Substring(at, source.IndexOf('}', at) - at);
+
+            StringAssert.Contains("SortieAnalytics.Track(SortieAnalytics.Battle)", body, "sortie_battle is kept");
+            StringAssert.Contains("FirstSortie.BattleLevel(GameContent.Index)", body);
+            StringAssert.Contains("PlayRoute.Open(level)", body);
+            StringAssert.Contains("Flow.Go<LevelsScreen>()", body, "the fallback is the map");
+            Assert.AreEqual(SortieRoute.Map, FirstSortie.After(finished: false), "a skipped tutorial goes to the map");
+        }
+
+        static CatalogIndex ShippedIndex()
+        {
+            var manifest = TestJson.Object(TestJson.Parse(File.ReadAllText(Path.Combine(
+                TestJson.RepoRoot(), "Assets", "StreamingAssets", "Content", "manifest.json"))));
+
+            var builder = new CatalogIndexBuilder();
+            foreach (var child in TestJson.Children(manifest, "chapters"))
+            {
+                var row = TestJson.Object(child);
+                var levels = new List<string>();
+                foreach (var level in TestJson.Children(row, "levels")) levels.Add((string)level);
+
+                builder.Add(new ManifestChapterDto
+                {
+                    id = TestJson.Str(row, "id"),
+                    order = TestJson.Int(row, "order"),
+                    version = TestJson.Int(row, "version", 1),
+                    disabled = row.TryGetValue("disabled", out var off) && off is bool b && b,
+                    minAppVersion = TestJson.Int(row, "minAppVersion"),
+                    mode = TestJson.Str(row, "mode"),
+                    track = TestJson.Str(row, "track"),
+                    levels = levels.ToArray(),
+                }, int.MaxValue);
+            }
+            return builder.Build();
         }
 
         // ------------------------------------------------------------------ the art

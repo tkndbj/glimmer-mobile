@@ -262,6 +262,10 @@ namespace GlimmerGrove
             Flow.Init(canvas);
             root.AddComponent<Pump>();
 
+            // The launch's two milestones (boot_ready, tutorial_started), heard off the screens
+            // as they open. Before the splash, so its successor cannot open unheard.
+            LaunchWatch.Attach();
+
             // Content is loaded on the splash, where there is already a progress bar.
             Flow.Go<SplashScreen>(instant: true);
         }

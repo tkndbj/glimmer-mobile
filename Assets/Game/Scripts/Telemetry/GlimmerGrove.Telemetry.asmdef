@@ -25,6 +25,11 @@
             "define": "GLIMMER_APPSFLYER"
         },
         {
+            "name": "com.google.firebase.crashlytics",
+            "expression": "11.0",
+            "define": "GLIMMER_CRASHLYTICS"
+        },
+        {
             "name": "com.google.firebase.firestore",
             "expression": "11.0",
             "define": "GLIMMER_FIREBASE"

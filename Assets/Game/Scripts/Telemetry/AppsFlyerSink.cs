@@ -25,26 +25,25 @@ namespace GlimmerGrove.Analytics
     /// one, because it is wrong in a vocabulary somebody else is reading.
     /// </para>
     /// <para>
-    /// <b>No queue, unlike the analytics sink.</b> That one holds events because the ones it
-    /// most needs happen while its SDK is still starting. Nothing on this list can: attribution
-    /// starts the moment consent resolves on the splash, and the earliest event here is a
-    /// finished level. An event arriving before the start is therefore a real fault rather than
-    /// a race, and dropping it is how it stays visible.
+    /// <b>A small queue before the start</b> (<see cref="AttributionStart"/>, invariant 55b).
+    /// The tutorial comes first, so its lessons can be finished before UMP answers on a slow
+    /// network, and a new EEA player plays the whole tutorial before the consent form - the SDK
+    /// is not started until the answer is known. Up to <see cref="AttributionStart.MaxHeld"/>
+    /// events are held and sent after the start, under exactly the consent the start applied
+    /// (anonymised where the player has not allowed personalisation), so nothing held leaves
+    /// under a weaker consent than the player gave.
     /// </para>
     /// </summary>
     public sealed class AppsFlyerSink : IAnalyticsSink
     {
-        /// <summary>
-        /// Set once the SDK has been started. Before that, forwarding is a no-op - the SDK
-        /// would accept the call and discard it, which is the same outcome with more noise.
-        /// </summary>
-        public bool Started { get; set; }
-
+        readonly AttributionStart _out;
         readonly Dictionary<string, string> _values = new Dictionary<string, string>(4);
+
+        public AppsFlyerSink(AttributionStart output) => _out = output ?? throw new System.ArgumentNullException(nameof(output));
 
         public void Track(string eventName, IReadOnlyDictionary<string, object> properties)
         {
-            if (!Started || properties == null) return;
+            if (properties == null) return;
 
             switch (eventName)
             {
@@ -57,6 +56,16 @@ namespace GlimmerGrove.Analytics
                     Send(AFInAppEvents.LEVEL_ACHIEVED,
                          AFInAppEvents.CONTENT_ID, Text(properties, "level_id"),
                          AFInAppEvents.SCORE, Text(properties, "stars"));
+                    return;
+
+                // The first clear of the level content names as the fifth of the ladder
+                // (progression.json `attribution.l5Reached`, invariant 1), once per account. A
+                // custom name on purpose: af_level_achieved fires on every win, ~96% of starters
+                // win the first board, so it is nearly an install - and old builds keep sending it
+                // on every win, so it cannot be redefined without mixing two meanings under one name.
+                case AttributionMilestones.L5Reached:
+                    Send(AttributionMilestones.L5Reached,
+                         AFInAppEvents.CONTENT_ID, Text(properties, "level_id"));
                     return;
 
                 // A lesson met for the first time. These are the early funnel: they happen once
@@ -99,7 +108,7 @@ namespace GlimmerGrove.Analytics
             if (!string.IsNullOrEmpty(valueA)) _values[keyA] = valueA;
             if (keyB != null && !string.IsNullOrEmpty(valueB)) _values[keyB] = valueB;
 
-            AppsFlyer.sendEvent(name, _values);
+            _out.Send(name, _values);
         }
 
         /// <summary>

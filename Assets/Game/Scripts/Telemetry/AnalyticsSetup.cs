@@ -1,3 +1,4 @@
+using GlimmerGrove.Privacy;
 using UnityEngine;
 
 namespace GlimmerGrove.Analytics
@@ -28,12 +29,21 @@ namespace GlimmerGrove.Analytics
     public static partial class AnalyticsSetup
     {
         /// <summary>
+        /// When both halves may open (invariant 55b): on the splash's UMP answer, or once it has
+        /// kept them waiting too long. One gate for both, so they cannot drift apart.
+        /// </summary>
+        static MeasurementGate _gate;
+
+        /// <summary>
         /// Attaches every sink this build has. Returns immediately: both SDKs resolve in the
-        /// background, and neither is allowed to collect anything until the consent gateway
-        /// has answered.
+        /// background, and neither collects anything until the consent gateway has answered or
+        /// <see cref="MeasurementGate"/> has stopped waiting for it.
         /// </summary>
         public static void Install()
         {
+            if (_gate != null) return;
+            _gate = new MeasurementGate(() => Time.realtimeSinceStartupAsDouble);
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Telemetry.AddSink(new DebugAnalyticsSink());
 #endif
@@ -41,20 +51,51 @@ namespace GlimmerGrove.Analytics
             InstallFirebase();
             InstallAttribution();
 
+            // One subscription for both halves, so the gate has the answer before either reads it.
+            // The gateway may have resolved before this ran, or seconds afterwards.
+            AdPrivacy.Changed += PrivacyChanged;
+            if (AdPrivacy.IsResolved) PrivacyChanged(AdPrivacy.Signals);
+
 #if !GLIMMER_ANALYTICS && !GLIMMER_APPSFLYER
             Debug.Log("[Analytics] no measurement platform is installed; events go nowhere");
 #endif
         }
 
-        /// <summary>Bounded main-thread delivery/retry work; never waits for a vendor or network.</summary>
-        public static void Tick() => TickFirebase();
+        /// <summary>
+        /// Bounded main-thread delivery/retry work, and the gate's clock; never waits for a vendor
+        /// or network.
+        /// </summary>
+        public static void Tick()
+        {
+            if (_gate == null) return;
+            _gate.Observe(AdPrivacy.IsAsked, AdPrivacy.IsPrepared);
+            TickFirebase();
+            TickAttribution();
+        }
+
+        /// <summary>
+        /// Every commit, carried from the event rather than read back off <c>AdPrivacy</c>, which
+        /// sets <c>IsResolved</c> only after raising it (see <c>StartAttribution</c>).
+        /// </summary>
+        static void PrivacyChanged(AdPrivacySignals signals)
+        {
+            _gate.Answer(signals);
+            FirebasePrivacyChanged(signals);
+            AttributionPrivacyChanged(signals);
+        }
 
         /// <summary>Analytics: what people did once they were here.</summary>
         static partial void InstallFirebase();
 
         static partial void TickFirebase();
 
+        static partial void FirebasePrivacyChanged(AdPrivacySignals signals);
+
         /// <summary>Attribution: which advert they came from.</summary>
         static partial void InstallAttribution();
+
+        static partial void TickAttribution();
+
+        static partial void AttributionPrivacyChanged(AdPrivacySignals signals);
     }
 }

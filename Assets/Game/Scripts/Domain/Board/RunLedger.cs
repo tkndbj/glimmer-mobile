@@ -237,6 +237,10 @@ namespace GlimmerGrove
 
             LevelAnalytics.TrackCompleted(level, moves, stars, hintsUsed, seconds, run.FirstClear);
 
+            // The attribution milestone (l5_reached) on the first clear of the level content names,
+            // read off the record before this run, so it is once per account with nothing stored.
+            AttributionMilestones.NoteWin(level.Id, before.IsCleared, stars);
+
             // The other half of the reading. Only a chapter that was shut a moment ago is news,
             // and only the chapter directly after this one can have moved - a gate counts the
             // stars of the chapter behind it and nothing else.

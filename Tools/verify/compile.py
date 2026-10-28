@@ -265,6 +265,29 @@ ASSEMBLIES = [
         needs=next((p for p in package_plugins() if os.path.basename(p) == "Firebase.Analytics.dll"),
                    os.path.join(PACKAGE_CACHE, "Firebase.Analytics.dll")),
     )),
+    ("telemetry-crashlytics", dict(
+        out="GlimmerGrove.Telemetry.Crashlytics",
+        src=sources("Assets/Game/Scripts/Telemetry"),
+        # Crash reporting's half (`AnalyticsSetup.Crashlytics`), against the package's own DLL.
+        # Skipped, not failed, until the Editor has resolved com.google.firebase.crashlytics.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
+        defines=DEFINES + ["GLIMMER_ANALYTICS", "GLIMMER_CRASHLYTICS", "UNITY_ANDROID"],
+        needs=next((p for p in package_plugins() if os.path.basename(p) == "Firebase.Crashlytics.dll"),
+                   os.path.join(PACKAGE_CACHE, "Firebase.Crashlytics.dll")),
+    )),
+    ("telemetry-appsflyer", dict(
+        out="GlimmerGrove.Telemetry.AppsFlyer",
+        src=sources("Assets/Game/Scripts/Telemetry"),
+        # Both vendor halves together, as a store build has them: the attribution start, its
+        # queue and the shared consent gate (invariant 55b) are otherwise compiled by the Editor
+        # alone. AppsFlyer is a UPM source package, so its assembly exists only once the Editor
+        # has built it; skipped, not failed, on a clone that never has.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
+        defines=DEFINES + ["GLIMMER_ANALYTICS", "GLIMMER_APPSFLYER", "UNITY_ANDROID"],
+        needs=os.path.join(SCRIPT_ASMS, "AppsFlyer.dll"),
+    )),
     ("notify", dict(
         out="GlimmerGrove.Notifications",
         src=sources("Assets/Game/Scripts/Notifications"),

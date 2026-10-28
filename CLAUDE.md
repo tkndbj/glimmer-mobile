@@ -448,7 +448,9 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 53h. **The tutorial hands on to a first sortie, never the hub** (`FirstSortie`): finished or skipped
    raises one finale (wordmark, line, key; `FinaleStack`), the gate spent as it rises; the key takes
    a finished run to `LoadoutScreen{Sortie}` - its two lessons, then `SortieGuide`
-   (`GuideDock`), then BATTLE - and a skipped one to the map. Nothing stored; the instance flag is the
+   (`GuideDock`), then BATTLE, which opens the ladder's first level through `PlayRoute`
+   (`FirstSortie.BattleLevel`: off the manifest and the save, never named; the map only as a
+   fallback - ~12% of v48 stopped on it) - and a skipped one to the map. Nothing stored; the instance flag is the
    state. Map's `map_kit` lesson is spent; `map_gate` waits for 10 ladder clears (`ChapterGateLesson`).
    Funnel: `SortieAnalytics`. Held by `FirstSortieTests`, `make_sortie_art.py --check`,
    `render_tutorial.py --captions`, `render_loadout.py --measure`.
@@ -511,9 +513,17 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    child-directed install collects nothing); each purpose comes from UMP's `UMP_consentModeValues`
    (`ConsentModeStore` → `AnalyticsConsent.For`), granted only by `1`, by `3`, or - when no digit speaks
    (`0`/`4`) - by UMP resolving the player outside every regulated region. Denied defaults ship in the
-   manifest and the plist; consent is set before the first event (`AnalyticsSetup.PushConsent`). Unanswered
-   or denied, events go without identifiers. **AdMob ▸ Privacy & messaging must have consent mode on**, or
-   EEA players stay modelled-only. Held by `ConsentModeTests`.
+   manifest and the plist, beside collection off. **Collection opens only after UMP's answer has been applied
+   with `setConsent`** (`MeasurementGate`, `AnalyticsOpening`): Firebase logs `first_open`/`session_start` the
+   moment collection turns on, and 1.1.4 turned it on denied seconds before the grant (no first opens in GA).
+   An owed form opens it denied at once; UMP silent 3 s after being asked opens it denied and applies the
+   answer later. AppsFlyer starts on the same gate, consent before `startSDK`, holding up to 32 events
+   (`AttributionStart`) flushed under the consent the start applied; a time-out starts it anonymised as GDPR,
+   but an owed form waits for the form (an anonymised install is never attributed). Unanswered or denied,
+   events go without identifiers. **AdMob ▸ Privacy & messaging must have consent mode on**, or EEA players
+   stay modelled-only. Crashlytics starts off too (manifest, plist) and is on only where that answer grants
+   `analytics_storage` and collects at all (`CrashConsent`). Held by `ConsentModeTests`,
+   `MeasurementGateTests`, `BootAnalyticsTests`.
 
 ### Daily challenges
 
@@ -888,7 +898,9 @@ domain before believing a failure after a play-mode session.
 - The ads plugin's Editor consent stub leaves `Time.timeScale` at nought.
 
 **New dependencies are recorded here** (no `requirements.txt`): numpy, Pillow, PyMuPDF (lazy, for
-`make_siege_art.py`'s vector path). A new mode's art tool and render mirror are committed with its drop.
+`make_siege_art.py`'s vector path). Firebase Crashlytics 13.15.0 (2026-10-28; `telemetry-crashlytics`
+compiles it once the Editor has resolved the package; `Tools/measure_build.py` is its size and
+cold-start check). A new mode's art tool and render mirror are committed with its drop.
 
 Builds are gated: `ContentBuildGate` fails the build on any content error.
 

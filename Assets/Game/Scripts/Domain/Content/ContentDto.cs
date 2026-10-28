@@ -1193,6 +1193,13 @@ namespace GlimmerGrove.Content
         public RatingPromptDto ratingPrompt;
 
         /// <summary>
+        /// Which levels the attribution milestones stand on (<c>l5_reached</c>). Optional; see
+        /// <see cref="Analytics.AttributionTable"/>. <b>Reaches no server</b> and pays nothing.
+        /// <b>Absent switches the milestones off</b>.
+        /// </summary>
+        public AttributionDto attribution;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -2692,6 +2699,17 @@ namespace GlimmerGrove.Content
 
         /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
         public bool IsAuthored => giftLosses > 0 || openingLosses > 0 || easeLosses > 0;
+    }
+
+    /// <summary>The attribution milestones' block. See <see cref="Analytics.AttributionTable"/>.</summary>
+    [Serializable]
+    public sealed class AttributionDto
+    {
+        /// <summary>The level whose first clear sends <c>l5_reached</c>, by id (invariant 1).</summary>
+        public string l5Reached;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => !string.IsNullOrEmpty(l5Reached);
     }
 
     /// <summary>The rating prompt's block. See <see cref="Social.RatingTable"/>.</summary>

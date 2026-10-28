@@ -2210,6 +2210,35 @@ def check_first_steps(progression, manifest, tasks, keys, warnings):
     return errors
 
 
+def check_attribution(progression, manifest, warnings):
+    """The attribution milestones (`AttributionTable.Resolve`, offline) - and what the reader
+    cannot see: that `l5Reached` stands on a level a shipped chapter holds. A milestone on a level
+    nobody can clear is a Meta optimisation event that never fires. Printed rather than checked:
+    where it stands in its chapter, so a reshuffle of the opening is visible (it is named by id,
+    invariant 1, and moves with nothing)."""
+    errors = []
+    block = progression.get("attribution")
+    if not block:
+        warnings.append("progression.json has no 'attribution' block; l5_reached is never sent")
+        return errors
+
+    level = block.get("l5Reached") or ""
+    if not LEVEL_ID.match(level):
+        errors.append(f"attribution.l5Reached names a bad level '{level}'")
+        return errors
+
+    for chapter in manifest.get("chapters") or []:
+        if chapter.get("disabled"):
+            continue
+        levels = chapter.get("levels") or []
+        if level in levels:
+            print(f"  attribution: l5_reached on {level} (level {levels.index(level) + 1} of {chapter.get('id')})")
+            return errors
+
+    errors.append(f"attribution.l5Reached stands on '{level}', which no shipped chapter holds")
+    return errors
+
+
 def check_tasks(progression, keys, utilities, art, warnings):
     """The task slates and their chest ladder. `ContentValidation.ValidateTasks`, offline.
 
@@ -5068,6 +5097,7 @@ def main():
     # The first steps. After the roster and the tasks block, whose turrets and tiers a step hands
     # over, and against the manifest, whose levels the steps stand on.
     errors.extend(check_first_steps(progression, manifest, tasks, keys, warnings))
+    errors.extend(check_attribution(progression, manifest, warnings))
     errors.extend(check_assist(progression, keys, warnings))
 
     # The lanes. Their copy is derived from the track id, so `loc.py` cannot see it either - and

@@ -1,7 +1,9 @@
 using System.Collections;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -138,8 +140,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The hub's key exactly</b> - <c>Skins.Battle</c>, <c>ui.home.battle</c>, the
         /// <c>ic_battle</c> mark grown to the same 112 and the hub's own plain size
-        /// (<see cref="GuideDock.KeyW"/>, <see cref="GuideDock.KeyH"/>) - and it goes where the
-        /// hub's goes, the map. <b>A sheen and no breath</b>, for the finale key's reason: a
+        /// (<see cref="GuideDock.KeyW"/>, <see cref="GuideDock.KeyH"/>) - but it opens the ladder's
+        /// first level rather than the map (<see cref="Battle"/>). <b>A sheen and no breath</b>, for the finale key's reason: a
         /// breath writes the scale a press needs, and this is a key somebody is about to press.
         /// </para>
         /// </summary>
@@ -176,10 +178,20 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// Straight into the run (invariant 53h): the key says BATTLE, and a map in between was
+        /// where ~12% of v48's new players stopped. The level is <see cref="FirstSortie.BattleLevel"/>
+        /// and the door is <see cref="PlayRoute"/>, the one every run goes through. Anything it
+        /// cannot open - no ladder, a heart gate - falls back to the map, which is where this key
+        /// used to go; the first ladder level is a free run, so that is never the first sortie.
+        /// </summary>
         void Battle()
         {
             SortieAnalytics.Track(SortieAnalytics.Battle);
-            Flow.Go<LevelsScreen>();
+
+            var level = FirstSortie.BattleLevel(GameContent.Index);
+            if (level.IsValid && PlayRoute.CanOpen(level)) PlayRoute.Open(level);
+            else Flow.Go<LevelsScreen>();
         }
 
         /// <summary>

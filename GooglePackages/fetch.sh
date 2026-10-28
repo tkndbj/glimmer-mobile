@@ -86,6 +86,7 @@ fetch 'com.google.firebase.auth'               "$FIREBASE" "$GOOGLE"
 fetch 'com.google.firebase.firestore'          "$FIREBASE" "$GOOGLE"
 fetch 'com.google.firebase.functions'          "$FIREBASE" "$GOOGLE"
 fetch 'com.google.firebase.analytics'          "$FIREBASE" "$GOOGLE"
+fetch 'com.google.firebase.crashlytics'        "$FIREBASE" "$GOOGLE"
 fetch 'com.google.ads.mobile'                  "$ADS"      "$OPENUPM"
 fetch 'com.appsflyer.unity'                    "$APPSFLYER" "$OPENUPM"
 

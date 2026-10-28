@@ -156,16 +156,23 @@ namespace GlimmerGrove.EditorTools
             // enabled" in the log on any launch where consent is granted.
             plist.root.SetBoolean("FIREBASE_ANALYTICS_COLLECTION_ENABLED", false);
 
-            // Consent mode (invariant 55a): every purpose starts DENIED until AnalyticsSetup
+            // Consent mode (invariant 55b): every purpose starts DENIED until AnalyticsSetup
             // applies the player's answer, the iOS twin of the four google_analytics_default_*
-            // flags in GlimmerMeasurement.androidlib. With analytics_storage denied, Analytics
-            // sends events without identifiers and models from them, so collection can be on
-            // before the consent form without identifying anybody. setConsent persists across
-            // launches, so these only ever speak for a first launch.
+            // flags in GlimmerMeasurement.androidlib. Collection is switched on only after that
+            // answer has been applied (MeasurementGate), because first_open is logged the moment
+            // it turns on; an owed form or a silent UMP opens it denied. With analytics_storage
+            // denied, Analytics sends events without identifiers and models from them, so
+            // collection can be on before the consent form without identifying anybody.
+            // setConsent persists across launches, so these only ever speak for a first launch.
             plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_ANALYTICS_STORAGE", false);
             plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_STORAGE", false);
             plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_USER_DATA", false);
             plist.root.SetBoolean("GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS", false);
+
+            // Crashlytics starts OFF too, the twin of firebase_crashlytics_collection_enabled in
+            // GlimmerMeasurement.androidlib: AnalyticsSetup switches it on once the applied answer
+            // grants analytics_storage on an install that is not child-directed (CrashConsent).
+            plist.root.SetBoolean("FirebaseCrashlyticsCollectionEnabled", false);
 
             // Where iOS sends a copy of each SKAdNetwork install postback: AppsFlyer, the game's
             // attribution provider, at the endpoint its documentation names. Apple still sends every

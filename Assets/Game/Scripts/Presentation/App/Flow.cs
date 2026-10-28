@@ -413,6 +413,20 @@ namespace GlimmerGrove
             => Go(typeof(T), v => configure?.Invoke((T)v), instant);
 
         /// <summary>
+        /// A screen has opened and can be tapped: raised right after its <c>OnPresented</c>, once
+        /// per screen change, on either transition. Read by <c>LaunchWatch</c> (<c>boot_ready</c>,
+        /// <c>tutorial_started</c>); a listener must never navigate.
+        /// </summary>
+        public static event Action<View> Presented;
+
+        static void Present()
+        {
+            Current.OnPresented();
+            try { Presented?.Invoke(Current); }
+            catch (Exception e) { Debug.LogException(e); }
+        }
+
+        /// <summary>
         /// The same, told which screen at run time rather than at compile time.
         ///
         /// It exists so a mode can <em>name</em> its screen (see <c>ModeLook.Screen</c>) instead
@@ -443,7 +457,7 @@ namespace GlimmerGrove
             {
                 Swap();
                 Busy = false;
-                Current.OnPresented();
+                Present();
                 return;
             }
 
@@ -457,7 +471,7 @@ namespace GlimmerGrove
             IrisClose(() =>
             {
                 Swap();
-                WhenReady(Current, () => IrisOpen(() => { Busy = false; Current.OnPresented(); }));
+                WhenReady(Current, () => IrisOpen(() => { Busy = false; Present(); }));
             });
         }
 

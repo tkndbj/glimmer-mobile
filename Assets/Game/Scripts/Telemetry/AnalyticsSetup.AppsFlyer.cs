@@ -1,5 +1,6 @@
 #if GLIMMER_APPSFLYER
 using System;
+using System.Collections.Generic;
 using AppsFlyerSDK;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Persistence;
@@ -12,11 +13,16 @@ namespace GlimmerGrove.Analytics
     /// The attribution half of <see cref="AnalyticsSetup"/>.
     ///
     /// <para>
-    /// <b>Initialised at boot and started only once consent has resolved</b>, which is the
+    /// <b>Initialised at boot and started only once consent is known</b>, which is the
     /// vendor's own required order and not a house preference: consent data set after the
     /// start is consent that arrived too late for the install it was about. The two steps are
     /// separate calls for exactly that reason, so the gap between them is where the answer is
-    /// waited for.
+    /// waited for - by <see cref="MeasurementGate"/>, which opens Firebase on the same clock
+    /// (invariant 55b). It starts on the committed answer; or anonymised, as a GDPR player, when
+    /// UMP has said nothing at all for three seconds; and a new EEA player whose form is owed
+    /// waits for the form, because an install reported anonymised can never be attributed.
+    /// Events raised meanwhile are held by <see cref="AttributionStart"/> and sent after the
+    /// start, under the consent the start applied.
     /// </para>
     /// <para>
     /// <b>Nothing is ever blocked on the network.</b> The SDK is told to start as soon as the
@@ -32,7 +38,9 @@ namespace GlimmerGrove.Analytics
     public static partial class AnalyticsSetup
     {
         static AppsFlyerSink _attribution;
+        static AttributionStart _starter;
         static bool _started;
+        static bool _startFailed;
         static bool _identified;
 
         static partial void InstallAttribution()
@@ -48,7 +56,8 @@ namespace GlimmerGrove.Analytics
                 return;
             }
 
-            _attribution = new AppsFlyerSink();
+            _starter = new AttributionStart(new AppsFlyerSdk());
+            _attribution = new AppsFlyerSink(_starter);
             Telemetry.AddSink(_attribution);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -61,8 +70,8 @@ namespace GlimmerGrove.Analytics
             // app to service messages nothing reads.
             AppsFlyer.initSDK(AttributionConfig.Key, AttributionConfig.AppId, null);
 
-            AdPrivacy.Changed += StartAttribution;
-            if (AdPrivacy.IsResolved) StartAttribution(AdPrivacy.Signals);
+            // Started by AnalyticsSetup's one privacy subscription (AttributionPrivacyChanged) or,
+            // without an answer, by the gate's time-out (TickAttribution).
 
             // The join between an advert and an account. Set after the start rather than
             // before it, because AppsFlyer's wait-for-id mode holds the whole install back
@@ -72,12 +81,10 @@ namespace GlimmerGrove.Analytics
         }
 
         /// <summary>
-        /// Starts the SDK once, as soon as consent is known.
+        /// Every committed answer: starts the SDK on the first, and re-applies consent on any later
+        /// change (the hub's form after a time-out start, a privacy-options revisit), so what the
+        /// vendor is told follows the player's answer in both directions.
         ///
-        /// <para>
-        /// Idempotent because it is called from two places that race by design: the gateway
-        /// may have resolved before this assembly was installed, or seconds afterwards.
-        /// </para>
         /// <para>
         /// <b>The signals are taken from the event rather than read back off
         /// <c>AdPrivacy</c>.</b> A commit raises <c>Changed</c> and sets
@@ -90,36 +97,73 @@ namespace GlimmerGrove.Analytics
         /// no second event, because consent is answered once.
         /// </para>
         /// </summary>
-        static void StartAttribution(AdPrivacySignals signals)
+        static partial void AttributionPrivacyChanged(AdPrivacySignals signals)
         {
-            if (_started) return;
-            _started = true;
+            if (_starter == null) return;
+            StartAttribution(AttributionConsent.For(signals));
+        }
 
+        /// <summary>The gate's time-out: UMP has said nothing, so start anonymised rather than never.</summary>
+        static partial void TickAttribution()
+        {
+            if (_starter == null || _started || _startFailed) return;
+            if (_gate.AttributionMayStart(out var consent)) StartAttribution(consent);
+        }
+
+        static void StartAttribution(AttributionConsent consent)
+        {
+            if (_startFailed) return;
+
+            bool first = !_started;
+            var before = _starter.Applied;
             try
             {
-                bool allowed = signals.AllowsPersonalisation;
+                _starter.Start(consent);
+                _started = true;
 
-                // The same reading the analytics half takes, for the same reason: this project
-                // has one consent answer, so the conservative mapping is the only honest one.
-                AppsFlyer.setConsentData(signals.GdprApplies
-                    ? AppsFlyerConsent.ForGDPRUser(allowed, allowed)
+                if (first)
+                    Debug.Log($"[Attribution] started ({(consent.Anonymised ? "anonymised" : "identified")}" +
+                              $"{(_gate.IsAnswered ? "" : ", before the consent answer")}); dropped before start={_starter.Dropped}");
+                else if (!before.Equals(_starter.Applied))
+                    Debug.Log($"[Attribution] consent updated ({(consent.Anonymised ? "anonymised" : "identified")})");
+            }
+            catch (Exception e)
+            {
+                // Never fatal, for the analytics half's reason: a lost measurement is worth
+                // strictly less than a session. Not retried every frame either.
+                if (first) _startFailed = true;
+                Debug.LogWarning("[Attribution] failed to start: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// The vendor's calls, in the order <see cref="AttributionStart"/> makes them: consent data
+        /// and anonymisation first, then the start, then whatever was held.
+        /// </summary>
+        sealed class AppsFlyerSdk : IAttributionSdk
+        {
+            readonly Dictionary<string, string> _values = new Dictionary<string, string>(4);
+
+            public void ApplyConsent(AttributionConsent consent)
+            {
+                AppsFlyer.setConsentData(consent.GdprApplies
+                    ? AppsFlyerConsent.ForGDPRUser(consent.Allowed, consent.Allowed)
                     : AppsFlyerConsent.ForNonGDPRUser());
 
                 // Belt as well as braces. Consent data tells the vendor what may be shared
                 // onward; anonymising tells it not to build a device identity in the first
                 // place, which is the half that matters if the first call is ever mishandled.
-                if (!allowed) AppsFlyer.anonymizeUser(true);
-
-                AppsFlyer.startSDK();
-                _attribution.Started = true;
-
-                Debug.Log($"[Attribution] started ({(allowed ? "identified" : "anonymised")})");
+                // Set both ways, because a later answer may lift it as well as impose it.
+                AppsFlyer.anonymizeUser(consent.Anonymised);
             }
-            catch (Exception e)
+
+            public void Start() => AppsFlyer.startSDK();
+
+            public void Send(string name, IReadOnlyDictionary<string, string> values)
             {
-                // Never fatal, for the analytics half's reason: a lost measurement is worth
-                // strictly less than a session.
-                Debug.LogWarning("[Attribution] failed to start: " + e.Message);
+                _values.Clear();
+                if (values != null) foreach (var pair in values) _values[pair.Key] = pair.Value;
+                AppsFlyer.sendEvent(name, _values);
             }
         }
 
